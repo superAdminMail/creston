@@ -20,7 +20,7 @@ const publicAuthLinks = {
   login: "/auth/login",
 };
 
-const dashboardLink = "/dashboard";
+const dashboardLink = "/account";
 
 function HavenstoneMark() {
   return (
@@ -95,19 +95,10 @@ function ActionLinks({
         <div
           aria-hidden="true"
           className={cn(
-            "h-10 w-24 rounded-full border border-white/8 bg-white/6 animate-pulse",
+            "h-10 w-24 rounded-full bg-white/6 animate-pulse",
             mobile && "h-12 w-full rounded-2xl",
           )}
         />
-        {!isSignedIn ? (
-          <div
-            aria-hidden="true"
-            className={cn(
-              "h-10 w-32 rounded-full border border-white/8 bg-white/8 animate-pulse",
-              mobile && "h-12 w-full rounded-2xl",
-            )}
-          />
-        ) : null}
       </div>
     );
   }
