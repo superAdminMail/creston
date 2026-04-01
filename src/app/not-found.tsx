@@ -1,4 +1,4 @@
-﻿import RoleHomeLink from "@/components/layout/RoleHomeLink";
+import Link from "next/link";
 
 const NotFoundError = () => {
   return (
@@ -10,7 +10,12 @@ const NotFoundError = () => {
         <p className="mt-4 max-w-xl text-sm text-muted-foreground sm:text-base md:text-lg">
           Sorry, the page you are looking for does not exist.
         </p>
-        <RoleHomeLink className="mt-6 w-full max-w-xs rounded-lg bg-blue-600 px-6 py-3 text-sm text-white transition hover:bg-blue-700 sm:w-auto sm:text-base" />
+        <Link
+          href="/"
+          className="mt-6 inline-flex w-full max-w-xs items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm text-white transition hover:bg-blue-700 sm:w-auto sm:text-base"
+        >
+          Return to Havenstone
+        </Link>
       </div>
     </main>
   );

@@ -1,39 +1,39 @@
-"use client";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "@/lib/auth-client";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { OnboardingDialog } from "@/components/onboarding/onboarding-dialog";
 
-export default function OnboardingUI() {
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
+export default async function OnboardingPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  useEffect(() => {
-    if (!isPending && !session?.user) {
-      router.push("/auth/login");
-    }
-  }, [isPending, session, router]);
+  if (!session?.user?.id) {
+    redirect("/auth/login");
+  }
 
-  if (isPending)
-    return <p className="text-center mt-8 text-white">Loading...</p>;
-  if (!session?.user)
-    return <p className="text-center mt-8 text-white">Redirecting...</p>;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      hasCompletedOnboarding: true,
+      investorProfile: {
+        select: { id: true },
+      },
+    },
+  });
 
-  const { user } = session;
+  if (!user) {
+    redirect("/auth/login");
+  }
 
-  return (
-    <main className="max-w-md h-screen flex items-center justify-center flex-col mx-auto p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p>Welcome, {user.name || "User"}!</p>
-      <p>Email: {user.email}</p>
-      <Button
-        variant={"destructive"}
-        onClick={() => signOut()}
-        className=" font-medium px-4 py-2"
-      >
-        Sign Out
-      </Button>
-    </main>
-  );
+  if (user.investorProfile || user.hasCompletedOnboarding) {
+    redirect("/account/dashboard");
+  }
+
+  return <OnboardingDialog userName={user.name} />;
 }

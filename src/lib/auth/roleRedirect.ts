@@ -1,13 +1,11 @@
-import { STAFF_LOGIN_REDIRECT, DEFAULT_LOGIN_REDIRECT } from "@/routes";
-
 type KnownRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
 type StaffRole = Exclude<KnownRole, "USER">;
 
 const ROLE_DASHBOARD: Record<KnownRole, string> = {
-  SUPER_ADMIN: STAFF_LOGIN_REDIRECT,
-  ADMIN: STAFF_LOGIN_REDIRECT,
-  MODERATOR: STAFF_LOGIN_REDIRECT,
-  USER: DEFAULT_LOGIN_REDIRECT,
+  SUPER_ADMIN: "/account/dashboard/super-admin",
+  ADMIN: "/account/dashboard/admin",
+  MODERATOR: "/account/dashboard/moderator",
+  USER: "/account/dashboard/user",
 };
 
 const STAFF_ROLES = new Set<StaffRole>(["ADMIN", "SUPER_ADMIN", "MODERATOR"]);

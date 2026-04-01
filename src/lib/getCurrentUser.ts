@@ -21,7 +21,7 @@ export const getCurrentUserId = async () => {
   return user?.id ?? null;
 };
 
-export const getCurrentRole = async () => {
+export const getCurrentUserRole = async () => {
   const user = await getCurrentUser();
   return user?.role ?? null;
 };

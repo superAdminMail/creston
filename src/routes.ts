@@ -13,10 +13,10 @@ export const authRoutes = ["/auth/login", "/auth/register", "/error"];
 
 export const apiAuthPrefix = "/api/auth";
 
-export const DEFAULT_LOGIN_REDIRECT = "/";
+export const DEFAULT_LOGIN_REDIRECT = "/account/dashboard";
 
-export const STAFF_LOGIN_REDIRECT = "/profile/dashboard";
+export const STAFF_LOGIN_REDIRECT = "/account/dashboard";
 
-export const staffRoutePrefix = "/profile/dashboard";
+export const staffRoutePrefix = "/account/dashboard";
 
 export const sharedRoutes = ["/profile", "/settings"];

@@ -16,5 +16,7 @@ export async function normalizeUser(
     id: db.id,
     email: db.email,
     role: db.role,
+    name: db.name,
+    image: db.image,
   };
 }
