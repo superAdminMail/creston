@@ -3,6 +3,7 @@ import {
   BriefcaseBusiness,
   Landmark,
   Layers3,
+  type LucideIcon,
   Wallet,
 } from "lucide-react";
 
@@ -21,10 +22,6 @@ export type UserDashboardStats = {
   investmentType: string;
 };
 
-type StatIconProps = {
-  className?: string;
-};
-
 function DashboardStatCard({
   title,
   value,
@@ -34,7 +31,7 @@ function DashboardStatCard({
   title: string;
   value: string;
   subtitle?: string;
-  icon: (props: StatIconProps) => React.JSX.Element;
+  icon: LucideIcon;
 }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-[#3c9ee0]/30 hover:shadow-[0_18px_40px_rgba(0,0,0,0.24)] sm:p-5">
