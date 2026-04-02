@@ -5,30 +5,22 @@ export type ProfileImage = {
   key: string;
 };
 
-export type ProfileDTO = {
+type BaseUserDTO = {
   id: string;
   email: string;
   role: UserRole;
+  isEmailVerified: boolean;
+  hasPassword?: boolean;
 
+  profileAvatar?: ProfileImage | null;
   name?: string | null;
   username?: string | null;
   image?: string | null;
 };
 
-export type UserDTO = {
-  id: string;
-  email: string;
-  role: UserRole;
-  emailVerifiedAt: string | null;
-  isEmailVerified: boolean;
-  hasPassword?: boolean;
+export type ProfileDTO = BaseUserDTO;
 
-  profileAvatar?: ProfileImage | null;
-
-  name: string;
-  username: string;
-  image?: string | null;
-};
+export type UserDTO = BaseUserDTO;
 
 export type SessionUser = {
   id?: string | null;

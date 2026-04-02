@@ -1,24 +1,70 @@
 import { z } from "zod";
 
-export const onboardingSchema = z.object({
-  phoneNumber: z
-    .string()
-    .trim()
-    .min(7, "Phone number is too short")
-    .max(20, "Phone number is too long")
-    .optional()
-    .or(z.literal("")),
+import { getAgeFromIsoDate } from "@/lib/age";
+import { isValidPhoneInput } from "@/lib/phone";
 
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
+export const onboardingSchema = z
+  .object({
+    countryCallingCode: z
+      .string()
+      .trim()
+      .regex(/^\+\d{1,4}$/, "Enter a valid country code like +1"),
 
-  country: z.string().trim().min(2, "Country is required"),
+    phoneNumber: z
+      .string()
+      .trim()
+      .max(20, "Phone number is too long")
+      .optional()
+      .or(z.literal("")),
 
-  state: z.string().trim().min(2, "State is required"),
+    dateOfBirth: z.string().min(1, "Date of birth is required"),
+    confirmAdultAge: z.boolean().default(false),
 
-  city: z.string().trim().min(2, "City is required"),
+    country: z.string().trim().min(2, "Country is required"),
 
-  addressLine1: z.string().trim().optional().or(z.literal("")),
-  addressLine2: z.string().trim().optional().or(z.literal("")),
-});
+    state: z.string().trim().min(2, "State is required"),
 
-export type OnboardingSchemaType = z.infer<typeof onboardingSchema>;
+    city: z.string().trim().min(2, "City is required"),
+
+    addressLine1: z.string().trim().optional().or(z.literal("")),
+    addressLine2: z.string().trim().optional().or(z.literal("")),
+  })
+  .superRefine((values, ctx) => {
+    if (!isValidPhoneInput(values)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid phone number in international format.",
+        path: ["phoneNumber"],
+      });
+    }
+
+    const age = getAgeFromIsoDate(values.dateOfBirth);
+
+    if (age === null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a valid date of birth.",
+        path: ["dateOfBirth"],
+      });
+      return;
+    }
+
+    if (age < 18) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "You must be at least 18 years old to continue.",
+        path: ["dateOfBirth"],
+      });
+    }
+
+    if (!values.confirmAdultAge) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please confirm that you are ${age} years old.`,
+        path: ["confirmAdultAge"],
+      });
+    }
+  });
+
+export type OnboardingSchemaInput = z.input<typeof onboardingSchema>;
+export type OnboardingSchemaType = z.output<typeof onboardingSchema>;

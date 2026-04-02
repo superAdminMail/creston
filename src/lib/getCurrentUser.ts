@@ -12,7 +12,25 @@ export const getCurrentUser = async () => {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      name: true,
+      image: true,
+      emailVerified: true,
+      password: true,
+      profileAvatarFileAsset: {
+        select: {
+          storageKey: true,
+          url: true,
+        },
+      },
+    },
   });
+
+  if (!user) return null;
+
   return normalizeUser(user);
 };
 

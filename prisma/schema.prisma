@@ -25,9 +25,8 @@ model User {
   hasCompletedOnboarding Boolean   @default(false)
   skippedOnboardingAt    DateTime?
 
-  //   profileAvatarFileAssetId String?
-  // profileAvatarFileAsset   FileAsset? @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id], onDelete: SetNull)
-
+  profileAvatarFileAssetId String?
+  profileAvatarFileAsset   FileAsset? @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id], onDelete: SetNull)
 
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
@@ -39,6 +38,7 @@ model User {
   auditLogs       AuditLog[]       @relation("ActorAuditLogs")
 
   @@unique([email])
+  @@index([profileAvatarFileAssetId])
   @@map("user")
 }
 
@@ -114,6 +114,7 @@ model FileAsset {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  usersAsProfileAvatar     User[]            @relation("UserProfileAvatarAsset")
   investorProfilesAsAvatar InvestorProfile[] @relation("InvestorAvatar")
 
   kycDocuments KycDocument[]
@@ -147,6 +148,7 @@ model InvestorProfile {
 
   phoneNumber  String?
   dateOfBirth  DateTime?
+  age          Int       @default(18)
   country      String?
   state        String?
   city         String?
@@ -170,11 +172,11 @@ model InvestorProfile {
   @@map("investor_profile")
 }
 
-/// The customer’s actual retirement/investment account
+/// The customer’s actual investment account
 model InvestmentAccount {
   id                String  @id @default(cuid())
   investorProfileId String
-  retirementPlanId  String?
+  investmentPlanId  String?
 
   investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
 

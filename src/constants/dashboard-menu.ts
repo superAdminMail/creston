@@ -25,27 +25,18 @@ import {
 
 export type DashboardRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
 
-export type DashboardMenuLink = {
+export type DashboardNavLink = {
   name: string;
   href: string;
   icon: LucideIcon;
-  badge?: string;
-  exact?: boolean;
 };
 
-export type DashboardMenuSection = {
+export type DashboardNavSection = {
   title: string;
-  links: DashboardMenuLink[];
+  links: DashboardNavLink[];
 };
 
-export const DASHBOARD_HOME_BY_ROLE: Record<DashboardRole, string> = {
-  USER: "/account/dashboard/user",
-  MODERATOR: "/account/dashboard/moderator",
-  ADMIN: "/account/dashboard/admin",
-  SUPER_ADMIN: "/account/dashboard/super-admin",
-};
-
-export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
+export const DASHBOARD_MENU = {
   USER: [
     {
       title: "Overview",
@@ -54,7 +45,6 @@ export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
           name: "Dashboard",
           href: "/account/dashboard/user",
           icon: LayoutDashboard,
-          exact: true,
         },
       ],
     },
@@ -123,7 +113,6 @@ export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
           name: "Dashboard",
           href: "/account/dashboard/moderator",
           icon: LayoutDashboard,
-          exact: true,
         },
       ],
     },
@@ -182,7 +171,6 @@ export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
           name: "Dashboard",
           href: "/account/dashboard/admin",
           icon: LayoutDashboard,
-          exact: true,
         },
         {
           name: "Analytics",
@@ -256,7 +244,6 @@ export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
           name: "Dashboard",
           href: "/account/dashboard/super-admin",
           icon: LayoutDashboard,
-          exact: true,
         },
         {
           name: "Platform Analytics",
@@ -316,8 +303,7 @@ export const DASHBOARD_MENU: Record<DashboardRole, DashboardMenuSection[]> = {
       ],
     },
   ],
-};
+} as const satisfies Record<DashboardRole, DashboardNavSection[]>;
 
-export function getDashboardMenu(role: DashboardRole) {
-  return DASHBOARD_MENU[role] ?? DASHBOARD_MENU.USER;
-}
+export const getDashboardMenu = (role: DashboardRole): DashboardNavSection[] =>
+  DASHBOARD_MENU[role] as DashboardNavSection[];

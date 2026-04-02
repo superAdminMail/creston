@@ -1,7 +1,8 @@
-import React from "react";
+import { getUserDashboardDataAction } from "@/actions/dashboard/get-user-dashboard-data";
+import UserDashboardPage from "./UserDashboardPage";
 
-const page = () => {
-  return <div>page</div>;
-};
+export default async function Page() {
+  const { userName, stats } = await getUserDashboardDataAction();
 
-export default page;
+  return <UserDashboardPage userName={userName} stats={stats} />;
+}

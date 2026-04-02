@@ -7,7 +7,7 @@ export default function SiteLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="bg-site-shell flex min-h-screen flex-col text-foreground">
       <Navbar />
       <main className="flex min-h-0 flex-1 flex-col">
         <div className="flex min-h-full flex-1 flex-col overflow-x-hidden">

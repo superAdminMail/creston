@@ -1,12 +1,7 @@
+import { getDashboardHomeByRole } from "./dashboard-home";
+
 type KnownRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
 type StaffRole = Exclude<KnownRole, "USER">;
-
-const ROLE_DASHBOARD: Record<KnownRole, string> = {
-  SUPER_ADMIN: "/",
-  ADMIN: "/",
-  MODERATOR: "/",
-  USER: "/",
-};
 
 const STAFF_ROLES = new Set<StaffRole>(["ADMIN", "SUPER_ADMIN", "MODERATOR"]);
 
@@ -14,7 +9,7 @@ export const getDashboardRedirectForRole = (
   role: string | null | undefined,
 ): string | null => {
   if (!role) return null;
-  return ROLE_DASHBOARD[role as KnownRole] ?? null;
+  return getDashboardHomeByRole(role);
 };
 
 export const isStaffRole = (

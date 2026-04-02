@@ -1,22 +1,40 @@
-import { prisma } from "./prisma";
-import { SessionUser, ProfileDTO } from "./types";
+import type { UserRole } from "@/generated/prisma";
 
-export async function normalizeUser(
-  sessionUser: SessionUser | undefined | null,
-): Promise<ProfileDTO | null> {
-  if (!sessionUser?.email) return null;
+import { ProfileDTO, SessionUser } from "./types";
 
-  const db = await prisma.user.findUnique({
-    where: { email: sessionUser.email },
-  });
+type NormalizedAvatarAsset = {
+  storageKey: string;
+  url: string | null;
+} | null;
 
-  if (!db) return null;
+type NormalizableUser =
+  | (SessionUser & {
+      role?: UserRole | string | null;
+      emailVerified?: boolean;
+      password?: string | null;
+      profileAvatarFileAsset?: NormalizedAvatarAsset;
+    })
+  | null
+  | undefined;
+
+export function normalizeUser(user: NormalizableUser): ProfileDTO | null {
+  if (!user?.email || !user.role) return null;
+
+  const profileAvatar = user.profileAvatarFileAsset
+    ? {
+        key: user.profileAvatarFileAsset.storageKey,
+        url: user.profileAvatarFileAsset.url ?? "",
+      }
+    : null;
 
   return {
-    id: db.id,
-    email: db.email,
-    role: db.role,
-    name: db.name,
-    image: db.image,
+    id: user.id ?? "",
+    email: user.email,
+    role: user.role as UserRole,
+    isEmailVerified: user.emailVerified ?? false,
+    hasPassword: Boolean(user.password),
+    name: user.name ?? null,
+    image: profileAvatar?.url || user.image || null,
+    profileAvatar,
   };
 }

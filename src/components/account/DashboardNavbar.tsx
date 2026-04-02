@@ -3,31 +3,40 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Bell, ChevronDown, LogOut, Menu, Settings, User2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarLabel,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
+import {
+  getDashboardMenu,
+  type DashboardNavLink,
+  type DashboardRole,
+} from "@/constants/dashboard-menu";
+import type { ProfileImage } from "@/lib/types";
+import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { cn } from "@/lib/utils";
-
-type DashboardRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
-
-const DASHBOARD_HOME_BY_ROLE: Record<DashboardRole, string> = {
-  USER: "/account/dashboard/user",
-  MODERATOR: "/account/dashboard/moderator",
-  ADMIN: "/account/dashboard/admin",
-  SUPER_ADMIN: "/account/dashboard/super-admin",
-};
 
 type DashboardNavbarUser = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  profileAvatar?: ProfileImage | null;
   role: DashboardRole;
 };
 
@@ -35,6 +44,7 @@ type DashboardNavbarProps = {
   user: DashboardNavbarUser;
   onMenuClick?: () => void;
   onLogout?: () => void;
+  isSigningOut?: boolean;
 };
 
 function getRoleLabel(role: DashboardRole) {
@@ -51,7 +61,7 @@ function getRoleLabel(role: DashboardRole) {
 }
 
 function getPageTitle(pathname: string, role: DashboardRole) {
-  const base = DASHBOARD_HOME_BY_ROLE[role];
+  const base = getDashboardHomeByRole(role);
 
   if (pathname === base) return "Dashboard";
 
@@ -64,53 +74,72 @@ function getPageTitle(pathname: string, role: DashboardRole) {
     .join(" ");
 }
 
+function isNavActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function DashboardNavbar({
   user,
   onMenuClick,
   onLogout,
+  isSigningOut = false,
 }: DashboardNavbarProps) {
   const pathname = usePathname();
-
   const avatarFallback =
     user.name?.trim()?.charAt(0) || user.email?.trim()?.charAt(0) || "H";
   const firstName = user.name?.trim()?.split(" ")[0] || "Account";
   const roleLabel = getRoleLabel(user.role);
   const pageTitle = getPageTitle(pathname, user.role);
-  const dashboardHome = DASHBOARD_HOME_BY_ROLE[user.role];
+  const dashboardHome = getDashboardHomeByRole(user.role);
+  const avatarUrl = user.profileAvatar?.url || user.image || null;
+  const quickLinks = useMemo<DashboardNavLink[]>(
+    () =>
+      getDashboardMenu(user.role)
+        .flatMap((section) => Array.from(section.links))
+        .slice(0, 4),
+    [user.role],
+  );
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/10 bg-[linear-gradient(180deg,rgba(11,23,40,0.92),rgba(8,20,38,0.86))] shadow-[0_16px_42px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-      <div className="mx-auto flex min-h-[76px] w-full items-center justify-between gap-4 px-4 py-3 sm:min-h-[82px] sm:px-6 sm:py-4">
+    <motion.nav
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: "easeOut" }}
+      className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#08111d]/76"
+    >
+      <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={onMenuClick}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] text-slate-200 transition-all duration-200 hover:border-white/15 hover:bg-white/[0.08] hover:text-white hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)] lg:hidden"
-            aria-label="Open dashboard navigation"
+            className="rounded-2xl border border-slate-200 bg-white/80 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+            aria-label="Open account navigation"
           >
             <Menu className="h-5 w-5" />
           </Button>
 
           <Link
             href={dashboardHome}
-            className="flex min-w-0 items-center gap-3 rounded-2xl pr-2 transition-colors hover:bg-white/[0.03]"
+            className="flex min-w-0 items-center gap-3 rounded-[1.35rem] px-1.5 py-1 transition-colors hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
           >
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#3c9ee0]/20 bg-[linear-gradient(135deg,rgba(60,158,224,0.18),rgba(60,158,224,0.08))] shadow-[0_12px_30px_rgba(60,158,224,0.12)]">
-              <span className="text-sm font-semibold tracking-[0.18em] text-[#9ad4f4]">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(96,165,250,0.08))] text-sky-700 shadow-[0_12px_28px_rgba(14,165,233,0.12)] dark:border-sky-400/20 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(96,165,250,0.08))] dark:text-sky-200 dark:shadow-[0_14px_28px_rgba(14,165,233,0.16)]">
+              <span className="text-sm font-semibold tracking-[0.18em]">
                 HS
               </span>
             </span>
 
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-wide text-white">
+              <p className="truncate text-sm font-semibold tracking-wide text-slate-950 dark:text-white">
                 Havenstone
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <p className="truncate text-xs text-slate-400">{pageTitle}</p>
-                <span className="hidden h-1 w-1 rounded-full bg-slate-600 sm:inline-block" />
-                <span className="hidden rounded-full border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8dcdf3] sm:inline-flex">
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                  {pageTitle}
+                </p>
+                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block dark:bg-slate-600" />
+                <span className="hidden rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 sm:inline-flex dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
                   {roleLabel}
                 </span>
               </div>
@@ -123,128 +152,133 @@ export function DashboardNavbar({
             type="button"
             variant="ghost"
             size="icon"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] text-slate-300 transition-all duration-200 hover:border-white/15 hover:bg-white/[0.08] hover:text-white hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
+            className="rounded-2xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-white/15 dark:hover:bg-white/[0.08] dark:hover:text-white dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
+          <Menubar className="h-auto rounded-[1.35rem] border border-slate-200/80 bg-white/82 p-1 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <MenubarMenu>
+              <MenubarTrigger
                 className={cn(
-                  "group flex min-h-11 items-center gap-3 rounded-[1.35rem] border border-white/10 bg-white/[0.03] px-3 py-2 text-slate-300 transition-all duration-200",
-                  "hover:border-white/15 hover:bg-white/[0.08] hover:text-white hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/35",
+                  "group rounded-[1.1rem] px-2.5 py-2 text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:text-slate-950 data-[state=open]:bg-slate-100 data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-white/[0.05] dark:hover:text-white dark:data-[state=open]:bg-white/[0.06] dark:data-[state=open]:text-white",
                 )}
                 aria-label="Open account menu"
               >
-                {user.image ? (
-                  <Image
-                    src={user.image}
-                    alt={user.name ?? "User avatar"}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-[1.1rem] border border-white/10 object-cover shadow-sm"
-                  />
-                ) : (
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-[1.1rem] border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 text-sm font-semibold uppercase text-[#9ad4f4] shadow-sm">
-                    {avatarFallback}
-                  </span>
-                )}
-
-                <div className="hidden min-w-0 text-left md:block">
-                  <p className="max-w-[140px] truncate text-sm font-medium leading-tight text-white">
-                    {firstName}
-                  </p>
-                  <p className="mt-0.5 max-w-[176px] truncate text-[11px] leading-tight text-slate-400 transition-colors duration-200 group-hover:text-slate-300">
-                    {user.email ?? "No email"}
-                  </p>
-                </div>
-
-                <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 transition-colors duration-200 md:block" />
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              sideOffset={8}
-              className="w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-white/10 bg-[#0b1728]/96 p-2 text-white shadow-[0_22px_54px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:w-[18rem]"
-            >
-              <div className="px-3 py-3">
                 <div className="flex items-center gap-3">
-                  {user.image ? (
+                  {avatarUrl ? (
                     <Image
-                      src={user.image}
+                      src={avatarUrl}
                       alt={user.name ?? "User avatar"}
                       width={40}
                       height={40}
-                      className="h-10 w-10 rounded-2xl border border-white/10 object-cover shadow-sm"
+                      className="h-10 w-10 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-white/10"
                     />
                   ) : (
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 text-sm font-semibold uppercase text-[#9ad4f4] shadow-sm">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 ring-1 ring-sky-200 dark:bg-sky-400/12 dark:text-sky-200 dark:ring-sky-400/20">
                       {avatarFallback}
                     </span>
                   )}
 
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-white">
-                      {user.name || "Havenstone User"}
+                  <div className="hidden min-w-0 text-left md:block">
+                    <p className="max-w-[140px] truncate text-sm font-medium leading-tight text-slate-950 dark:text-white">
+                      {firstName}
                     </p>
-                    <p className="mt-1 break-all text-[11px] leading-5 text-slate-400">
-                      {user.email}
+                    <p className="mt-0.5 max-w-[176px] truncate text-[11px] leading-tight text-slate-500 transition-colors duration-200 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300">
+                      {user.email ?? "No email"}
                     </p>
-                    <div className="mt-2.5 inline-flex rounded-full border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8dcdf3]">
-                      {roleLabel}
-                    </div>
                   </div>
+
+                  <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 md:block dark:text-slate-500" />
                 </div>
-              </div>
+              </MenubarTrigger>
 
-              <DropdownMenuSeparator className="my-1.5 bg-white/5" />
-
-              <DropdownMenuItem
-                asChild
-                className="cursor-pointer rounded-xl px-3 py-3 text-slate-200 transition-[background-color,color,backdrop-filter] duration-200 focus:bg-white/10 focus:text-white focus:backdrop-blur-md data-[highlighted]:bg-white/10 data-[highlighted]:text-white data-[highlighted]:backdrop-blur-md"
+              <MenubarContent
+                align="end"
+                sideOffset={8}
+                className="w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 bg-white/96 p-2 text-slate-950 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1728]/96 dark:text-white dark:shadow-[0_22px_54px_rgba(0,0,0,0.32)] sm:w-[18rem]"
               >
-                <Link
-                  href={`${dashboardHome}/profile`}
-                  className="flex items-center gap-3"
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
                 >
-                  <User2 className="h-4 w-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
+                  <MenubarLabel className="px-3 py-3 font-normal">
+                    <div className="flex items-center gap-3">
+                      {avatarUrl ? (
+                        <Image
+                          src={avatarUrl}
+                          alt={user.name ?? "User avatar"}
+                          width={40}
+                          height={40}
+                          className="h-10 w-10 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-white/10"
+                        />
+                      ) : (
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 ring-1 ring-sky-200 dark:bg-sky-400/12 dark:text-sky-200 dark:ring-sky-400/20">
+                          {avatarFallback}
+                        </span>
+                      )}
 
-              <DropdownMenuSeparator className="my-1.5 bg-white/5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                          {user.name || "Havenstone User"}
+                        </p>
+                        <p className="mt-1 break-all text-[11px] leading-5 text-slate-500 dark:text-slate-400">
+                          {user.email}
+                        </p>
+                        <div className="mt-2.5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                          {roleLabel}
+                        </div>
+                      </div>
+                    </div>
+                  </MenubarLabel>
 
-              <DropdownMenuItem
-                asChild
-                className="cursor-pointer rounded-xl px-3 py-3 text-slate-200 transition-[background-color,color,backdrop-filter] duration-200 focus:bg-white/10 focus:text-white focus:backdrop-blur-md data-[highlighted]:bg-white/10 data-[highlighted]:text-white data-[highlighted]:backdrop-blur-md"
-              >
-                <Link
-                  href={`${dashboardHome}/settings`}
-                  className="flex items-center gap-3"
-                >
-                  <Settings className="h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
+                  <MenubarSeparator className="my-1.5 bg-slate-200 dark:bg-white/10" />
 
-              <DropdownMenuSeparator className="my-1.5 bg-white/5" />
+                  <MenubarItem
+                    asChild
+                    className="rounded-xl px-3 py-3 text-slate-700 dark:text-slate-200"
+                  >
+                    <Link
+                      href={`${dashboardHome}/profile`}
+                      className="flex items-center gap-3"
+                    >
+                      <User2 className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  </MenubarItem>
 
-              <DropdownMenuItem
-                onClick={onLogout}
-                className="cursor-pointer rounded-xl px-3 py-3 text-red-300 transition-[background-color,color,backdrop-filter] duration-200 focus:bg-red-500/10 focus:text-red-200 focus:backdrop-blur-md data-[highlighted]:bg-red-500/10 data-[highlighted]:text-red-200 data-[highlighted]:backdrop-blur-md"
-              >
-                <LogOut className="mr-3 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <MenubarItem
+                    asChild
+                    className="rounded-xl px-3 py-3 text-slate-700 dark:text-slate-200"
+                  >
+                    <Link
+                      href={`${dashboardHome}/settings`}
+                      className="flex items-center gap-3"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </MenubarItem>
+
+                  <MenubarSeparator className="my-1.5 bg-slate-200 dark:bg-white/10" />
+
+                  <MenubarItem
+                    onClick={onLogout}
+                    disabled={isSigningOut}
+                    variant="destructive"
+                    className="rounded-xl px-3 py-3 disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    <LogOut className="mr-3 h-4 w-4" />
+                    {isSigningOut ? "Signing out..." : "Logout"}
+                  </MenubarItem>
+                </motion.div>
+              </MenubarContent>
+            </MenubarMenu>
+          </Menubar>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

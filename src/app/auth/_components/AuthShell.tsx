@@ -30,8 +30,7 @@ export function AuthShell({
   className,
 }: AuthShellProps) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 bg-havenstone" />
+    <main className="relative ">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-5%] top-[12%] h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
         <div className="absolute right-[-3%] top-[22%] h-80 w-80 rounded-full bg-blue-400/10 blur-3xl" />

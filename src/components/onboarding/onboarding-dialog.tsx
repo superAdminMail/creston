@@ -20,15 +20,15 @@ export function OnboardingDialog({ userName }: OnboardingDialogProps) {
 
   const handleSkip = async () => {
     await skipOnboardingAction();
-    router.push("/");
+    router.push("/account/dashboard");
     router.refresh();
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="flex items-center justify-center ">
       <Dialog open>
         <DialogContent
-          className="border-white/10 bg-[var(--card)] text-[var(--foreground)] sm:max-w-2xl"
+          className="top-[calc(50%+4rem)] max-h-[calc(100dvh-9.5rem)] overflow-y-auto border-white/10 bg-[var(--card)] text-[var(--foreground)] sm:top-[calc(50%+4.75rem)] sm:max-h-[calc(100dvh-11rem)] sm:max-w-2xl"
           showCloseButton={false}
         >
           <DialogHeader>
