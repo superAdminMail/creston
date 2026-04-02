@@ -1,5 +1,6 @@
 "use server";
 
+import { format } from "date-fns";
 import { KycStatus } from "@/generated/prisma";
 import { getCurrentUser } from "@/lib/getCurrentUser";
 import { splitE164PhoneNumber } from "@/lib/phone";
@@ -55,6 +56,10 @@ function toIsoDate(value: Date | null | undefined) {
   return value ? value.toISOString().slice(0, 10) : "";
 }
 
+function formatDisplayDate(value: Date | null | undefined) {
+  return value ? format(value, "MMMM d, yyyy") : "";
+}
+
 function getCompletionSnapshot(details: CurrentUserInvestmentProfileData["details"]) {
   const completedFieldCount = PROFILE_COMPLETION_FIELDS.filter((field) =>
     Boolean(details[field]?.trim()),
@@ -104,7 +109,7 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
     fullName: user.name?.trim() || "",
     email: user.email?.trim() || "",
     phoneNumber: investorProfile?.phoneNumber?.trim() || "",
-    dateOfBirth: toIsoDate(investorProfile?.dateOfBirth),
+    dateOfBirth: formatDisplayDate(investorProfile?.dateOfBirth),
     country: investorProfile?.country?.trim() || "",
     state: investorProfile?.state?.trim() || "",
     city: investorProfile?.city?.trim() || "",
@@ -129,8 +134,8 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
     editDefaults: {
       countryCallingCode: phoneParts.countryCallingCode,
       phoneNumber: phoneParts.nationalNumber,
-      dateOfBirth: details.dateOfBirth,
-      confirmAdultAge: Boolean(details.dateOfBirth),
+      dateOfBirth: toIsoDate(investorProfile?.dateOfBirth),
+      confirmAdultAge: Boolean(investorProfile?.dateOfBirth),
       country: details.country || "United States",
       state: details.state,
       city: details.city,

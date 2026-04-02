@@ -36,11 +36,21 @@ import {
 import { createInvestorProfileAction } from "@/actions/onboarding/create-investor-profile";
 
 type InvestmentProfileFormProps = {
-  onCreateLater: () => Promise<void>;
+  onCreateLater?: () => Promise<void>;
+  initialValues?: Partial<OnboardingSchemaInput>;
+  onSubmitAction?: (values: OnboardingSchemaType) => Promise<{ success: true }>;
+  submitLabel?: string;
+  pendingLabel?: string;
+  successMessage?: string;
 };
 
 export function InvestmentProfileForm({
   onCreateLater,
+  initialValues,
+  onSubmitAction = createInvestorProfileAction,
+  submitLabel = "Save and continue",
+  pendingLabel = "Saving...",
+  successMessage = "Investment profile saved.",
 }: InvestmentProfileFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -57,15 +67,16 @@ export function InvestmentProfileForm({
       city: "",
       addressLine1: "",
       addressLine2: "",
+      ...initialValues,
     },
   });
 
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
       try {
-        await createInvestorProfileAction(values);
-        toast.success("Investment profile saved.");
-        router.push("/dashboard");
+        await onSubmitAction(values);
+        toast.success(successMessage);
+        router.push("/account/dashboard/user/profile");
         router.refresh();
       } catch (error) {
         const message =
@@ -352,29 +363,31 @@ export function InvestmentProfileForm({
       </FieldGroup>
 
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isPending}
-          onClick={() => {
-            startTransition(async () => {
-              try {
-                await onCreateLater();
-                toast.success("Onboarding skipped for now.");
-              } catch (error) {
-                const message =
-                  error instanceof Error
-                    ? error.message
-                    : "We could not skip onboarding right now. Please try again.";
+        {onCreateLater ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={() => {
+              startTransition(async () => {
+                try {
+                  await onCreateLater();
+                  toast.success("Onboarding skipped for now.");
+                } catch (error) {
+                  const message =
+                    error instanceof Error
+                      ? error.message
+                      : "We could not skip onboarding right now. Please try again.";
 
-                toast.error(message);
-              }
-            });
-          }}
-          className="btn-secondary rounded-xl"
-        >
-          Create later
-        </Button>
+                  toast.error(message);
+                }
+              });
+            }}
+            className="btn-secondary rounded-xl"
+          >
+            Create later
+          </Button>
+        ) : null}
 
         <Button
           type="submit"
@@ -384,10 +397,10 @@ export function InvestmentProfileForm({
           {isPending ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
+              {pendingLabel}
             </span>
           ) : (
-            "Save and continue"
+            submitLabel
           )}
         </Button>
       </div>
