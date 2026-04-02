@@ -28,14 +28,15 @@ model User {
   profileAvatarFileAssetId String?
   profileAvatarFileAsset   FileAsset? @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id], onDelete: SetNull)
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  sessions        Session[]
-  accounts        Account[]
-  fileAssets      FileAsset[]      @relation("UploadedByUser")
-  staffProfile    StaffProfile?
-  investorProfile InvestorProfile?
-  auditLogs       AuditLog[]       @relation("ActorAuditLogs")
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  sessions             Session[]
+  accounts             Account[]
+  fileAssets           FileAsset[]           @relation("UploadedByUser")
+  staffProfile         StaffProfile?
+  investorProfile      InvestorProfile?
+  auditLogs            AuditLog[]            @relation("ActorAuditLogs")
+  cryptoFundingIntents CryptoFundingIntent[]
 
   @@unique([email])
   @@index([profileAvatarFileAssetId])
@@ -244,7 +245,7 @@ model InvestmentPlan {
 
   description String?
 
-  category InvestmentPlanCategory @default(PERSONAL_RETIREMENT)
+  category InvestmentPlanCategory @default(SAVINGS)
   period   InvestmentPeriod       @default(LONG_TERM)
 
   investmentOrders InvestmentOrder[]
@@ -378,7 +379,198 @@ model Testimony {
   @@map("testimony")
 }
 
+/// Crypto funding models
+model PlatformWallet {
+  id        String        @id @default(cuid())
+  label     String
+  asset     CryptoAsset
+  network   CryptoNetwork
+  address   String
+  isActive  Boolean       @default(true)
+  isDefault Boolean       @default(false)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  fundingIntents CryptoFundingIntent[]
+
+  @@unique([network, address])
+  @@index([asset, network, isActive])
+  @@index([isDefault, isActive])
+}
+
+model CryptoFundingIntent {
+  id       String                @id @default(cuid())
+  userId   String
+  provider CryptoFundingProvider
+  asset    CryptoAsset
+  network  CryptoNetwork
+
+  fiatCurrency String  @default("USD")
+  fiatAmount   Decimal @db.Decimal(18, 2)
+
+  expectedCryptoAmount Decimal? @db.Decimal(36, 18)
+  receivedCryptoAmount Decimal? @db.Decimal(36, 18)
+
+  status CryptoFundingIntentStatus @default(PENDING)
+
+  platformWalletId         String?
+  destinationWalletAddress String
+  destinationWalletLabel   String?
+
+  providerSessionId  String?
+  providerExternalId String?
+  providerReference  String?
+
+  partnerCustomerId String?
+  redirectUrl       String?
+
+  expiresAt  DateTime?
+  fundedAt   DateTime?
+  failedAt   DateTime?
+  canceledAt DateTime?
+
+  failureCode    String?
+  failureMessage String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformWallet PlatformWallet? @relation(fields: [platformWalletId], references: [id], onDelete: SetNull)
+
+  bitpayInvoicePayment BitPayInvoicePayment?
+  webhookEvents        CryptoWebhookEvent[]
+
+  @@index([userId, status])
+  @@index([provider, status])
+  @@index([asset, network])
+  @@index([providerSessionId])
+  @@index([providerExternalId])
+  @@index([createdAt])
+}
+
+model BitPayInvoicePayment {
+  id              String @id @default(cuid())
+  fundingIntentId String @unique
+
+  bitpayInvoiceId String              @unique
+  bitpayOrderId   String?
+  bitpayToken     String?
+  status          BitPayInvoiceStatus @default(NEW)
+
+  price    Decimal @db.Decimal(18, 2)
+  currency String  @default("USD")
+
+  cryptoAsset   CryptoAsset?
+  cryptoNetwork CryptoNetwork?
+  amountPaid    Decimal?       @db.Decimal(36, 18)
+  amountDue     Decimal?       @db.Decimal(36, 18)
+  exchangeRate  Decimal?       @db.Decimal(36, 18)
+
+  invoiceUrl String?
+  posData    String?
+
+  paidAt      DateTime?
+  confirmedAt DateTime?
+  completedAt DateTime?
+  expiredAt   DateTime?
+  invalidAt   DateTime?
+
+  rawInvoiceSnapshot Json?
+  rawStatusPayload   Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fundingIntent CryptoFundingIntent @relation(fields: [fundingIntentId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model CryptoWebhookEvent {
+  id               String                        @id @default(cuid())
+  source           CryptoWebhookSource
+  eventType        String
+  processingStatus CryptoWebhookProcessingStatus @default(RECEIVED)
+
+  fundingIntentId  String?
+  providerEventId  String?
+  providerObjectId String?
+
+  idempotencyKey String? @unique
+  signature      String?
+
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  failedAt    DateTime?
+
+  errorMessage String?
+  payload      Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fundingIntent CryptoFundingIntent? @relation(fields: [fundingIntentId], references: [id], onDelete: SetNull)
+
+  @@index([source, eventType])
+  @@index([processingStatus])
+  @@index([providerEventId])
+  @@index([providerObjectId])
+  @@index([receivedAt])
+}
+
 /// enums and constants
+enum CryptoAsset {
+  BTC
+  ETH
+}
+
+enum CryptoNetwork {
+  BITCOIN
+  ETHEREUM
+}
+
+enum CryptoFundingProvider {
+  BITPAY
+  TRANSAK
+}
+
+enum CryptoFundingIntentStatus {
+  PENDING
+  REQUIRES_ACTION
+  PROCESSING
+  AWAITING_PROVIDER_CONFIRMATION
+  FUNDED
+  FAILED
+  EXPIRED
+  CANCELED
+}
+
+enum BitPayInvoiceStatus {
+  NEW
+  PAID
+  CONFIRMED
+  COMPLETE
+  EXPIRED
+  INVALID
+}
+
+enum CryptoWebhookSource {
+  BITPAY
+  TRANSAK
+}
+
+enum CryptoWebhookProcessingStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+
 enum UserRole {
   USER
   MODERATOR
@@ -394,6 +586,7 @@ enum AccountStatus {
 }
 
 enum InvestmentPlanCategory {
+  SAVINGS
   PERSONAL_RETIREMENT
   CHILD_EDUCATION
   HOME_OWNERSHIP

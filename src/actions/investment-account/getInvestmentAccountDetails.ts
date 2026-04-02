@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  Prisma,
   type AccountStatus,
   type InvestmentCatalogStatus,
   type InvestmentPeriod,
@@ -16,9 +17,56 @@ type Decimalish = {
   toNumber(): number;
 };
 
-type InvestmentAccountDetailsRecord = Awaited<
-  ReturnType<typeof prisma.investmentAccount.findFirst>
->;
+const investmentAccountDetailsSelect = Prisma.validator<Prisma.InvestmentAccountSelect>()(
+  {
+    id: true,
+    status: true,
+    balance: true,
+    openedAt: true,
+    closedAt: true,
+    currency: true,
+    createdAt: true,
+    updatedAt: true,
+    investorProfileId: true,
+    investmentPlan: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        category: true,
+        period: true,
+        minAmount: true,
+        maxAmount: true,
+        currency: true,
+        isActive: true,
+        investment: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            type: true,
+            period: true,
+            status: true,
+            riskLevel: true,
+            isActive: true,
+            sortOrder: true,
+            iconFileAsset: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+);
+
+type InvestmentAccountDetailsRecord = Prisma.InvestmentAccountGetPayload<{
+  select: typeof investmentAccountDetailsSelect;
+}>;
 
 export type InvestmentAccountDetailsViewModel = {
   id: string;
@@ -208,50 +256,7 @@ export async function getInvestmentAccountDetails(
         userId: user.id,
       },
     },
-    select: {
-      id: true,
-      status: true,
-      balance: true,
-      openedAt: true,
-      closedAt: true,
-      currency: true,
-      createdAt: true,
-      updatedAt: true,
-      investorProfileId: true,
-      investmentPlan: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          category: true,
-          period: true,
-          minAmount: true,
-          maxAmount: true,
-          currency: true,
-          isActive: true,
-          investment: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              description: true,
-              type: true,
-              period: true,
-              status: true,
-              riskLevel: true,
-              isActive: true,
-              sortOrder: true,
-              iconFileAsset: {
-                select: {
-                  url: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    select: investmentAccountDetailsSelect,
   });
 
   if (!account) {
