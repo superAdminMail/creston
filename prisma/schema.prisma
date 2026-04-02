@@ -164,6 +164,8 @@ model InvestorProfile {
 
   investmentAccounts InvestmentAccount[]
 
+  investmentOrders InvestmentOrder[]
+
   kycDocuments KycDocument[]
 
   createdAt DateTime @default(now())
@@ -183,9 +185,11 @@ model InvestmentAccount {
   investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
   investmentPlan  InvestmentPlan  @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
 
-  status   AccountStatus @default(PENDING)
-  openedAt DateTime?
-  closedAt DateTime?
+  investmentOrders InvestmentOrder[]
+  status           AccountStatus     @default(PENDING)
+  balance          Decimal           @default(0) @db.Decimal(18, 2)
+  openedAt         DateTime?
+  closedAt         DateTime?
 
   currency String @default("USD")
 
@@ -243,6 +247,8 @@ model InvestmentPlan {
   category InvestmentPlanCategory @default(PERSONAL_RETIREMENT)
   period   InvestmentPeriod       @default(LONG_TERM)
 
+  investmentOrders InvestmentOrder[]
+
   minAmount Decimal @db.Decimal(18, 2)
   maxAmount Decimal @db.Decimal(18, 2)
 
@@ -261,6 +267,42 @@ model InvestmentPlan {
   @@index([period])
   @@index([isActive])
   @@map("investment_plan")
+}
+
+model InvestmentOrder {
+  id                  String  @id @default(cuid())
+  investorProfileId   String
+  investmentPlanId    String
+  investmentAccountId String?
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("USD")
+
+  status InvestmentOrderStatus @default(PENDING_PAYMENT)
+
+  paymentReference String?
+  paidAt           DateTime?
+  confirmedAt      DateTime?
+  cancelledAt      DateTime?
+
+  cancellationReason String?
+  adminNotes         String?
+
+  investorProfile   InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentPlan    InvestmentPlan     @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
+  investmentAccount InvestmentAccount? @relation(fields: [investmentAccountId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([investorProfileId])
+  @@index([investmentPlanId])
+  @@index([investmentAccountId])
+  @@index([status])
+  @@index([paidAt])
+  @@index([confirmedAt])
+  @@index([cancelledAt])
+  @@map("investment_order")
 }
 
 /// KYC document records point to FileAsset
@@ -363,7 +405,7 @@ enum InvestmentPlanCategory {
   OTHER
 }
 
-enum InvestmentStatus {
+enum InvestmentOrderStatus {
   PENDING_CONFIRMATION
   CONFIRMED
   REJECTED

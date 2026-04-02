@@ -58,7 +58,7 @@ export const DASHBOARD_MENU = {
         },
         {
           name: "Investment Accounts",
-          href: "/account/dashboard/user/accounts",
+          href: "/account/dashboard/user/investment-accounts",
           icon: Wallet,
         },
         {

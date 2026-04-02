@@ -76,5 +76,6 @@ export async function upsertCurrentUserInvestorProfile(
 export async function updateCurrentUserInvestorProfileAction(
   input: OnboardingSchemaType,
 ) {
-  return upsertCurrentUserInvestorProfile(input);
+  await upsertCurrentUserInvestorProfile(input);
+  return { success: true } as const;
 }
