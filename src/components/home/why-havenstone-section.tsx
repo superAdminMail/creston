@@ -8,25 +8,25 @@ const pillars = [
     icon: ShieldCheck,
     title: "Built around trust",
     description:
-      "A steady platform experience with secure access, transparent records, and a product language designed to reduce uncertainty.",
+      "Havenstone is designed to feel secure and dependable, with clear information and a modern experience that prioritizes confidence at every stage of growth.",
   },
   {
     icon: Landmark,
-    title: "Structured for institutions",
+    title: "Structured for clarity",
     description:
-      "Havenstone supports employer-backed retirement and investment programs with clear operational structure and dependable visibility.",
+      "Investment programs are designed to be straightforward and transparent, with clear contribution visibility and no hidden fees or complex jargon.",
   },
   {
     icon: WalletCards,
-    title: "Clear account ownership",
+    title: "Financial growth, simplified",
     description:
-      "Members can understand contributions, balances, and long-term value without digging through fragmented systems or jargon.",
+      "Havenstone delivers structured retirement and investment experiences that make it easy for potential investors to achieve their financial goals without feeling overwhelmed or uncertain.",
   },
   {
     icon: Sparkles,
-    title: "Premium, calm experience",
+    title: "A modern experience",
     description:
-      "Every surface is designed to feel professional, modern, and composed rather than noisy or overly transactional.",
+      "Havenstone offers a modern, user-friendly experience that combines the best of technology and financial expertise to help potential investors feel confident and empowered in their financial growth journey.",
   },
 ];
 
@@ -36,8 +36,8 @@ export function WhyHavenstoneSection() {
       <div className="grid gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
         <SectionHeading
           eyebrow="Why Havenstone"
-          title="A retirement platform designed to feel dependable at every touchpoint."
-          description="Havenstone combines disciplined product structure, premium presentation, and long-term account clarity so organizations can offer financial support with confidence."
+          title="A better way to offer financial support"
+          description="Havenstone is a financial growth platform built to help potential investors achieve their financial goals with investment programs that feel secure, transparent, and dependable at every stage of growth."
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

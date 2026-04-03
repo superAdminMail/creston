@@ -61,15 +61,16 @@ export function Footer() {
                   Havenstone
                 </span>
                 <span className="text-xs tracking-[0.12em] text-slate-400 uppercase">
-                  Retirement and Investment
+                  Financial Growth Platform
                 </span>
               </span>
             </Link>
 
             <p className="mt-5 max-w-sm text-sm leading-7 text-slate-300">
-              Havenstone delivers structured retirement and investment
-              experiences designed to feel secure, transparent, and dependable
-              at every stage of growth.
+              Havenstone is a financial growth platform built to help potential
+              investors achieve their financial goals with investment programs
+              that feel secure, transparent, and dependable at every stage of
+              growth.
             </p>
 
             <div className="card-premium mt-6 rounded-3xl p-5">

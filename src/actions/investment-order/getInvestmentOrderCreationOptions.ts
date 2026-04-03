@@ -29,7 +29,6 @@ export type InvestmentOrderCreationPlanOption = {
   maxAmount: number;
   currency: string;
   isActive: boolean;
-  riskLevelLabel: string;
 };
 
 export type InvestmentOrderCreationInvestmentOption = {
@@ -41,7 +40,6 @@ export type InvestmentOrderCreationInvestmentOption = {
   typeLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
-  riskLevelLabel: string;
   isActive: boolean;
   sortOrder: number;
   icon: {
@@ -106,7 +104,6 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       description: true,
       type: true,
       period: true,
-      riskLevel: true,
       isActive: true,
       sortOrder: true,
       iconFileAsset: {
@@ -149,8 +146,6 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       typeLabel: formatEnumLabel(investment.type),
       period: investment.period,
       periodLabel: formatEnumLabel(investment.period),
-      riskLevel: investment.riskLevel,
-      riskLevelLabel: formatEnumLabel(investment.riskLevel),
       isActive: investment.isActive,
       sortOrder: investment.sortOrder,
       icon: investment.iconFileAsset?.url
@@ -176,8 +171,6 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         maxAmount: toNumber(plan.maxAmount),
         currency: plan.currency,
         isActive: plan.isActive,
-        riskLevel: investment.riskLevel,
-        riskLevelLabel: formatEnumLabel(investment.riskLevel),
       })),
     }))
     .filter((investment) => investment.plans.length > 0);

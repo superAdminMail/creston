@@ -12,10 +12,10 @@ const handleAuth = async () => {
 };
 
 export const ourFileRouter = {
-  profilePhotos: f({
+  profileAvatar: f({
     image: {
       maxFileSize: "4MB",
-      maxFileCount: 6,
+      maxFileCount: 1,
     },
   })
     .middleware(() => handleAuth())

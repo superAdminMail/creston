@@ -32,8 +32,8 @@ export function FaqSection() {
       <div className="grid gap-10 lg:grid-cols-[0.84fr_1.16fr] lg:items-start">
         <SectionHeading
           eyebrow="FAQ"
-          title="Questions teams often ask before choosing a retirement platform."
-          description="The platform is designed to feel clear from first review to ongoing use, but these answers cover the core themes most organizations want to understand upfront."
+          title="Frequently asked questions"
+          description="Havenstone is designed to feel secure, transparent, and dependable at every stage of growth. Here are answers to some common questions about the platform and experience."
         />
 
         <div className="grid gap-4">

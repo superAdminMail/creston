@@ -31,7 +31,6 @@ type UserInvestmentOrderListItem = {
     id: string;
     name: string;
     typeLabel: string;
-    riskLevelLabel: string;
     icon: {
       url: string;
       alt: string;
@@ -133,7 +132,6 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
                   id: true,
                   name: true,
                   type: true,
-                  riskLevel: true,
                   iconFileAsset: {
                     select: {
                       url: true,
@@ -190,9 +188,6 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
         id: order.investmentPlan.investment.id,
         name: order.investmentPlan.investment.name,
         typeLabel: formatEnumLabel(order.investmentPlan.investment.type),
-        riskLevelLabel: formatEnumLabel(
-          order.investmentPlan.investment.riskLevel,
-        ),
         icon: order.investmentPlan.investment.iconFileAsset?.url
           ? {
               url: order.investmentPlan.investment.iconFileAsset.url,

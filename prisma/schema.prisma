@@ -125,6 +125,7 @@ model FileAsset {
 
   kycDocuments KycDocument[]
   testimonies  Testimony[]
+  management   Management[]
 
   @@index([uploadedById])
   @@index([type])
@@ -254,17 +255,14 @@ model InvestmentPlan {
   category InvestmentPlanCategory @default(SAVINGS)
   period   InvestmentPeriod       @default(LONG_TERM)
 
-  investmentOrders InvestmentOrder[]
-
-  minAmount Decimal @db.Decimal(18, 2)
-  maxAmount Decimal @db.Decimal(18, 2)
-
   currency String  @default("USD")
   isActive Boolean @default(true)
 
   investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
 
   investmentAccounts InvestmentAccount[]
+  investmentOrders   InvestmentOrder[]
+  tiers              InvestmentPlanTier[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -276,11 +274,36 @@ model InvestmentPlan {
   @@map("investment_plan")
 }
 
+model InvestmentPlanTier {
+  id               String @id @default(cuid())
+  investmentPlanId String
+
+  level InvestmentTierLevel
+
+  minAmount Decimal @db.Decimal(18, 2)
+  maxAmount Decimal @db.Decimal(18, 2)
+
+  roiPercent Decimal @db.Decimal(5, 2)
+
+  isActive Boolean @default(true)
+
+  investmentPlan InvestmentPlan @relation(fields: [investmentPlanId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  investmentOrders InvestmentOrder[]
+
+  @@index([investmentPlanId])
+  @@index([level])
+  @@map("investment_plan_tier")
+}
+
 model InvestmentOrder {
-  id                  String  @id @default(cuid())
-  investorProfileId   String
-  investmentPlanId    String
-  investmentAccountId String?
+  id                   String  @id @default(cuid())
+  investorProfileId    String
+  investmentPlanId     String
+  investmentAccountId  String?
+  investmentPlanTierId String
 
   amount   Decimal @db.Decimal(18, 2)
   currency String  @default("USD")
@@ -295,9 +318,10 @@ model InvestmentOrder {
   cancellationReason String?
   adminNotes         String?
 
-  investorProfile   InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentPlan    InvestmentPlan     @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
-  investmentAccount InvestmentAccount? @relation(fields: [investmentAccountId], references: [id], onDelete: SetNull)
+  investmentPlanTier InvestmentPlanTier @relation(fields: [investmentPlanTierId], references: [id])
+  investorProfile    InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentPlan     InvestmentPlan     @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
+  investmentAccount  InvestmentAccount? @relation(fields: [investmentAccountId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -382,6 +406,29 @@ model Testimony {
   @@index([sortOrder])
   @@index([avatarFileId])
   @@map("testimony")
+}
+
+/// managements
+model Management {
+  id          String     @id @default(cuid())
+  name        String
+  title       String?
+  email       String?
+  phone       String?
+  bio         String?
+  photoFileId String?
+  photoFile   FileAsset? @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@index([photoFileId])
+  @@map("management")
 }
 
 /// Crypto funding models
@@ -696,4 +743,10 @@ enum TestimonyStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum InvestmentTierLevel {
+  STARTER
+  GROWTH
+  PREMIUM
 }

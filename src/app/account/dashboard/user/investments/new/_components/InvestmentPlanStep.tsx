@@ -84,7 +84,7 @@ export function InvestmentPlanStep({
                         {plan.categoryLabel}
                       </span>
                       <span className="inline-flex items-center rounded-full border border-blue-400/15 bg-blue-400/8 px-3 py-1 text-xs text-blue-200">
-                        {plan.riskLevelLabel} risk
+                        {plan.periodLabel}
                       </span>
                     </div>
 
@@ -104,10 +104,10 @@ export function InvestmentPlanStep({
 
                       <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                          Period
+                          Currency
                         </p>
                         <p className="mt-2 text-sm font-medium text-white">
-                          {plan.periodLabel}
+                          {plan.currency}
                         </p>
                       </div>
 

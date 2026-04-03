@@ -180,7 +180,6 @@ function mapInvestmentAccountDetails(
       periodLabel: formatEnumLabel(account.investmentPlan.investment.period),
       status: account.investmentPlan.investment.status,
       statusLabel: formatEnumLabel(account.investmentPlan.investment.status),
-
       isActive: account.investmentPlan.investment.isActive,
       sortOrder: account.investmentPlan.investment.sortOrder,
       icon: account.investmentPlan.investment.iconFileAsset?.url

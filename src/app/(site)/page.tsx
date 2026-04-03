@@ -21,7 +21,6 @@ export async function generateMetadata() {
 const page = () => {
   return (
     <div>
-      {" "}
       <HomeContent />
     </div>
   );

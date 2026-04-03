@@ -14,7 +14,7 @@ type InvestmentTypeOption = {
   label: string;
   investmentCount: number;
   planCount: number;
-  riskLabel: string;
+  periodLabel: string;
 };
 
 type InvestmentTypeStepProps = {
@@ -95,7 +95,7 @@ export function InvestmentTypeStep({
                       : "border-white/8 bg-white/[0.04] text-slate-300",
                   )}
                 >
-                  {option.riskLabel} risk
+                  {option.periodLabel}
                 </div>
               </div>
             </button>
@@ -118,8 +118,7 @@ export function InvestmentTypeStep({
               </p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-xs text-slate-300">
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-300" />
-                {featuredInvestment.riskLevelLabel} risk •{" "}
-                {featuredInvestment.periodLabel}
+                {featuredInvestment.periodLabel} | {featuredInvestment.typeLabel}
               </div>
             </div>
           </div>

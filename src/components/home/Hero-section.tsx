@@ -4,21 +4,21 @@ import { ArrowRight, Landmark, ShieldCheck, TrendingUp } from "lucide-react";
 const trustPoints = [
   {
     icon: ShieldCheck,
-    title: "Secure account access",
+    title: "Built for trust",
     description:
       "Built for trust, protection, and long-term financial confidence.",
   },
   {
     icon: Landmark,
-    title: "Structured retirement support",
+    title: "Focused on clarity",
     description:
       "A calm, transparent platform centered on sustainable financial progress.",
   },
   {
     icon: TrendingUp,
-    title: "Long-term growth focus",
+    title: "Periodic growth",
     description:
-      "A calm, transparent platform centered on sustainable financial progress.",
+      "Clear progress tracking designed to help members feel confident about their financial growth journey.",
   },
 ];
 
@@ -35,17 +35,21 @@ export function HeroSection() {
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium tracking-[0.12em] text-blue-100 uppercase shadow-[0_8px_24px_rgba(0,0,0,0.18)]">
             <span className="h-2 w-2 rounded-full bg-blue-400 shadow-[0_0_14px_rgba(96,165,250,0.75)]" />
-            Personal Retirement & Investment Platform
+            Financial Growth Platform
           </div>
 
           <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl">
-            Structured retirement planning for a more secure financial future.
+            Investment programs built for trust, clarity, and long-term
+            confidence
           </h1>
 
           <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-            Havenstone helps individuals and organizations support their
-            workforce with a premium personal retirement and investment
-            experience built for trust, clarity, and long-term confidence.
+            Havenstone delivers structured retirement and investment experiences
+            designed to feel secure, transparent, and dependable at every stage
+            of growth. With clear contribution visibility, a modern experience,
+            and a focus on long-term financial confidence, Havenstone helps
+            teams offer financial support with the level of trust and polish
+            members expect from a modern financial platform.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -98,10 +102,10 @@ export function HeroSection() {
             <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
-                  Personal Retirement Overview
+                  Projected Investment Overview
                 </p>
                 <p className="mt-1 text-sm font-medium text-slate-200">
-                  Long-term value at a glance
+                  Based Investemnt orders over time
                 </p>
               </div>
 

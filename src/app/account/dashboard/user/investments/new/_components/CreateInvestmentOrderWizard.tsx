@@ -85,7 +85,7 @@ export function CreateInvestmentOrderWizard({
         label: string;
         investmentCount: number;
         planCount: number;
-        riskLabel: string;
+        periodLabel: string;
       }
     >();
 
@@ -103,7 +103,7 @@ export function CreateInvestmentOrderWizard({
         label: investment.typeLabel,
         investmentCount: 1,
         planCount: investment.plans.length,
-        riskLabel: investment.riskLevelLabel,
+        periodLabel: investment.periodLabel,
       });
     }
 
@@ -183,21 +183,10 @@ export function CreateInvestmentOrderWizard({
       return currentStep;
     }
 
-    if (actionState.fieldErrors?.investmentType) {
-      return 0;
-    }
-
-    if (actionState.fieldErrors?.planCategory) {
-      return 1;
-    }
-
-    if (actionState.fieldErrors?.investmentPlanId) {
-      return 2;
-    }
-
-    if (actionState.fieldErrors?.amount) {
-      return 3;
-    }
+    if (actionState.fieldErrors?.investmentType) return 0;
+    if (actionState.fieldErrors?.planCategory) return 1;
+    if (actionState.fieldErrors?.investmentPlanId) return 2;
+    if (actionState.fieldErrors?.amount) return 3;
 
     return currentStep;
   }, [actionState, currentStep]);

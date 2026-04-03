@@ -19,8 +19,7 @@ export function renderDefaultSocialImage(
   const eyebrow = options.eyebrow ?? "Secure wealth growth";
   const title = options.title ?? "Havenstone";
   const description =
-    options.description ??
-    "Long-term investing, retirement security, and financial confidence.";
+    options.description ?? "Long-term investing, and financial confidence.";
 
   return new ImageResponse(
     <div

@@ -15,15 +15,16 @@ export function FinalCtaSection() {
         <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-medium tracking-[0.18em] text-blue-200 uppercase">
-              Final CTA
+              Ready to get started?
             </p>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-              Bring a more credible retirement experience to your organization.
+              Get started with Havenstone
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300 sm:text-lg">
-              Havenstone helps teams present retirement and investment programs
-              with the level of trust, structure, and polish members expect from
-              a modern financial platform.
+              Havenstone delivers structured investment plans designed to feel
+              secure, transparent, and dependable at every stage of growth. Get
+              in touch to learn how we can help you and/or your organization
+              offer financial support with confidence.
             </p>
           </div>
 

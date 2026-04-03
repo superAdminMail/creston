@@ -10,7 +10,6 @@ import {
   Bell,
   Settings,
   BadgeCheck,
-  FolderCheck,
   Users,
   SearchCheck,
   ClipboardList,
@@ -24,6 +23,7 @@ import {
   Layers,
   TrendingUp,
   Banknote,
+  LifeBuoy,
 } from "lucide-react";
 
 export type DashboardRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
@@ -100,9 +100,24 @@ export const DASHBOARD_MENU = {
           icon: Bell,
         },
         {
+          name: "Profile",
+          href: "/account/dashboard/user/profile",
+          icon: User,
+        },
+        {
           name: "Settings",
           href: "/account/dashboard/user/settings",
           icon: Settings,
+        },
+      ],
+    },
+    {
+      title: "Communication",
+      links: [
+        {
+          name: "Support Center",
+          href: "/account/dashboard/user/support",
+          icon: LifeBuoy,
         },
       ],
     },
@@ -158,9 +173,24 @@ export const DASHBOARD_MENU = {
       title: "Account",
       links: [
         {
+          name: "Profile",
+          href: "/account/dashboard/moderator/profile",
+          icon: User,
+        },
+        {
           name: "Settings",
           href: "/account/dashboard/moderator/settings",
           icon: Settings,
+        },
+      ],
+    },
+    {
+      title: "Communication",
+      links: [
+        {
+          name: "Support Center",
+          href: "/account/dashboard/moderator/support",
+          icon: LifeBuoy,
         },
       ],
     },
@@ -266,9 +296,24 @@ export const DASHBOARD_MENU = {
           icon: Bell,
         },
         {
+          name: "Profile",
+          href: "/account/dashboard/admin/profile",
+          icon: User,
+        },
+        {
           name: "Settings",
           href: "/account/dashboard/admin/settings",
           icon: Settings,
+        },
+      ],
+    },
+    {
+      title: "Communication",
+      links: [
+        {
+          name: "Support Center",
+          href: "/account/dashboard/admin/support",
+          icon: LifeBuoy,
         },
       ],
     },
@@ -376,12 +421,27 @@ export const DASHBOARD_MENU = {
       ],
     },
     {
+      title: "Communication",
+      links: [
+        {
+          name: "Support Center",
+          href: "/account/dashboard/super-admin/support",
+          icon: LifeBuoy,
+        },
+      ],
+    },
+    {
       title: "System",
       links: [
         {
           name: "Platform Settings",
           href: "/account/dashboard/super-admin/settings",
           icon: Building2,
+        },
+        {
+          name: "Profile",
+          href: "/account/dashboard/super-admin/profile",
+          icon: User,
         },
       ],
     },

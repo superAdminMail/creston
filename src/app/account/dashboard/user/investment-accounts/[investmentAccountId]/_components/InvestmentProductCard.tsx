@@ -2,18 +2,6 @@ import Image from "next/image";
 import { Layers3 } from "lucide-react";
 
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
-import { cn } from "@/lib/utils";
-
-function getRiskClasses(riskLevel: InvestmentAccountDetailsViewModel["investment"]["riskLevel"]) {
-  switch (riskLevel) {
-    case "LOW":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
-    case "HIGH":
-      return "border-amber-400/20 bg-amber-400/10 text-amber-300";
-    default:
-      return "border-blue-400/20 bg-blue-400/10 text-blue-300";
-  }
-}
 
 export function InvestmentProductCard({
   account,
@@ -48,13 +36,8 @@ export function InvestmentProductCard({
           </div>
         </div>
 
-        <span
-          className={cn(
-            "inline-flex rounded-full border px-3 py-1 text-xs font-medium",
-            getRiskClasses(account.investment.riskLevel),
-          )}
-        >
-          {account.investment.riskLevelLabel} risk
+        <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-200">
+          {account.investment.periodLabel}
         </span>
       </div>
 

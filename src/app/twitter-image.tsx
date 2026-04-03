@@ -10,6 +10,6 @@ export const contentType = socialImageContentType;
 
 export default function Image() {
   return renderDefaultSocialImage({
-    eyebrow: "Retirement-focused wealth platform",
+    eyebrow: "Investment-focused wealth platform",
   });
 }
