@@ -3,17 +3,15 @@
 import { useActionState, useMemo, useState } from "react";
 import { CheckCircle2, Landmark, ShieldCheck, Wallet } from "lucide-react";
 
-import {
-  createInvestmentOrder,
-} from "@/actions/investment-order/createInvestmentOrder";
+import { createInvestmentOrder } from "@/actions/investment-order/createInvestmentOrder";
 import { initialCreateInvestmentOrderActionState } from "@/actions/investment-order/createInvestmentOrder.state";
 import type {
   InvestmentOrderCreationOptionsData,
   InvestmentOrderCreationPlanOption,
 } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
-import { parseInvestmentOrderAmount } from "@/lib/zod/investment-order";
+import { formatCurrency } from "@/lib/formatters/formatters";
+import { parseInvestmentOrderAmount } from "@/lib/zodValidations/investment-order";
 import { cn } from "@/lib/utils";
 import { CreateInvestmentOrderEmptyState } from "./CreateInvestmentOrderEmptyState";
 import { InvestmentAmountStep } from "./InvestmentAmountStep";
@@ -42,7 +40,10 @@ type InvestmentPlanCardOption = InvestmentOrderCreationPlanOption & {
   } | null;
 };
 
-function getAmountError(plan: InvestmentOrderCreationPlanOption | null, amount: string) {
+function getAmountError(
+  plan: InvestmentOrderCreationPlanOption | null,
+  amount: string,
+) {
   if (!plan) return "Select an investment plan first.";
   if (!amount.trim()) return "Enter an investment amount.";
 
@@ -112,13 +113,18 @@ export function CreateInvestmentOrderWizard({
   const selectedInvestments = useMemo(
     () =>
       selectedType
-        ? options.investments.filter((investment) => investment.type === selectedType)
+        ? options.investments.filter(
+            (investment) => investment.type === selectedType,
+          )
         : [],
     [options.investments, selectedType],
   );
 
   const categoryOptions = useMemo(() => {
-    const grouped = new Map<string, { category: string; label: string; planCount: number }>();
+    const grouped = new Map<
+      string,
+      { category: string; label: string; planCount: number }
+    >();
 
     for (const investment of selectedInvestments) {
       for (const plan of investment.plans) {
@@ -230,7 +236,10 @@ export function CreateInvestmentOrderWizard({
                   Investment order created successfully
                 </p>
                 <p className="mt-1 text-sm leading-6 text-emerald-100/85">
-                  Order reference <span className="font-medium text-white">{createdOrderId}</span>{" "}
+                  Order reference{" "}
+                  <span className="font-medium text-white">
+                    {createdOrderId}
+                  </span>{" "}
                   is now pending payment. You can start another order below if
                   needed.
                 </p>
@@ -260,7 +269,9 @@ export function CreateInvestmentOrderWizard({
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                     Step {index + 1}
                   </p>
-                  <p className="mt-3 text-sm font-medium text-white">{stepTitle}</p>
+                  <p className="mt-3 text-sm font-medium text-white">
+                    {stepTitle}
+                  </p>
                 </div>
               );
             })}
@@ -366,7 +377,9 @@ export function CreateInvestmentOrderWizard({
                   <div className="flex items-start gap-3">
                     <Icon className="mt-0.5 h-4 w-4 text-blue-300" />
                     <div>
-                      <p className="text-sm font-medium text-white">{item.title}</p>
+                      <p className="text-sm font-medium text-white">
+                        {item.title}
+                      </p>
                       <p className="mt-1 text-sm text-slate-300">{item.body}</p>
                     </div>
                   </div>
@@ -400,7 +413,10 @@ export function CreateInvestmentOrderWizard({
                     Minimum
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(selectedPlan.minAmount, selectedPlan.currency)}
+                    {formatCurrency(
+                      selectedPlan.minAmount,
+                      selectedPlan.currency,
+                    )}
                   </p>
                 </div>
 
@@ -409,7 +425,10 @@ export function CreateInvestmentOrderWizard({
                     Maximum
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(selectedPlan.maxAmount, selectedPlan.currency)}
+                    {formatCurrency(
+                      selectedPlan.maxAmount,
+                      selectedPlan.currency,
+                    )}
                   </p>
                 </div>
               </div>

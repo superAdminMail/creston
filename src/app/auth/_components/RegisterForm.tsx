@@ -23,7 +23,7 @@ import { signUp } from "@/lib/auth-client";
 import {
   registerUserSchema,
   type RegisterUserSchemaType,
-} from "@/lib/zodValidation";
+} from "@/lib/zodValidations/user";
 
 export default function RegisterForm() {
   const router = useRouter();

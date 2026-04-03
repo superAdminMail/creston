@@ -3,7 +3,7 @@
 import { format } from "date-fns";
 
 import { AccountStatus } from "@/generated/prisma";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
 export type UserInvestmentAccountListItem = {
@@ -50,7 +50,7 @@ function formatDate(value: Date | null | undefined) {
 }
 
 export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInvestmentAccountsPageData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

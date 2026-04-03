@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, BadgeCheck, ShieldCheck } from "lucide-react";
 
 import type { InvestmentOrderCreationPlanOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
 type InvestmentPlanCardOption = InvestmentOrderCreationPlanOption & {

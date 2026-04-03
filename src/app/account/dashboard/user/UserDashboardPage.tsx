@@ -7,7 +7,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { formatUsd } from "@/lib/formatters";
+import { formatUsd } from "@/lib/formatters/formatters";
 
 type UserDashboardPageProps = {
   userName: string;

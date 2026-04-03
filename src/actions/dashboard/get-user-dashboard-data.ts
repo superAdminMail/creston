@@ -1,7 +1,7 @@
 "use server";
 
 import { AccountStatus } from "@/generated/prisma";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import type { UserDashboardStats } from "@/app/account/dashboard/user/UserDashboardPage";
 
@@ -27,7 +27,7 @@ function toNumber(value: { toNumber(): number } | number | null | undefined) {
 }
 
 export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

@@ -8,7 +8,7 @@ import { format, parseISO } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { getAgeFromIsoDate } from "@/lib/age";
+import { getAgeFromIsoDate } from "@/lib/formatters/age";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ import {
   onboardingSchema,
   type OnboardingSchemaInput,
   type OnboardingSchemaType,
-} from "@/lib/zod/onboarding";
+} from "@/lib/zodValidations/onboarding";
 import { createInvestorProfileAction } from "@/actions/onboarding/create-investor-profile";
 
 type InvestmentProfileFormProps = {

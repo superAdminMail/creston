@@ -2,7 +2,7 @@ import type { UserRole } from "@/generated/prisma";
 
 import { ProfileDTO, SessionUser } from "./types";
 
-type NormalizedAvatarAsset = {
+export type NormalizedAvatarAsset = {
   storageKey: string;
   url: string | null;
 } | null;
@@ -11,7 +11,7 @@ type NormalizableUser =
   | (SessionUser & {
       role?: UserRole | string | null;
       emailVerified?: boolean;
-      password?: string | null;
+      hasPassword?: boolean | null;
       profileAvatarFileAsset?: NormalizedAvatarAsset;
     })
   | null
@@ -27,14 +27,19 @@ export function normalizeUser(user: NormalizableUser): ProfileDTO | null {
       }
     : null;
 
-  return {
+  const normalizedUser: ProfileDTO = {
     id: user.id ?? "",
     email: user.email,
     role: user.role as UserRole,
     isEmailVerified: user.emailVerified ?? false,
-    hasPassword: Boolean(user.password),
     name: user.name ?? null,
     image: profileAvatar?.url || user.image || null,
     profileAvatar,
   };
+
+  if (typeof user.hasPassword === "boolean") {
+    normalizedUser.hasPassword = user.hasPassword;
+  }
+
+  return normalizedUser;
 }

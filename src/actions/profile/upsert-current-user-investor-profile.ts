@@ -1,13 +1,13 @@
 "use server";
 
-import { getAgeFromIsoDate } from "@/lib/age";
-import { getCurrentUser } from "@/lib/getCurrentUser";
-import { normalizePhoneToE164 } from "@/lib/phone";
+import { getAgeFromIsoDate } from "@/lib/formatters/age";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { normalizePhoneToE164 } from "@/lib/formatters/phone";
 import { prisma } from "@/lib/prisma";
 import {
   onboardingSchema,
   type OnboardingSchemaType,
-} from "@/lib/zod/onboarding";
+} from "@/lib/zodValidations/onboarding";
 
 type UpsertCurrentUserInvestorProfileOptions = {
   markOnboardingComplete?: boolean;
@@ -17,7 +17,7 @@ export async function upsertCurrentUserInvestorProfile(
   input: unknown,
   options: UpsertCurrentUserInvestorProfileOptions = {},
 ) {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

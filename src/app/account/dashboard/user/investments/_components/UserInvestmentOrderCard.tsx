@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 import type { UserInvestmentOrdersData } from "@/actions/investment-order/getUserInvestmentOrders";
 

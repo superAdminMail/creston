@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { getDashboardRedirectForRole } from "@/lib/auth/roleRedirect";
 
 type RoleHomeLinkProps = {
@@ -15,8 +15,8 @@ export default async function RoleHomeLink({
   className,
   variant = "default",
 }: RoleHomeLinkProps) {
-  const user = await getCurrentUser();
-  const href = getDashboardRedirectForRole(user?.role) ?? "/";
+  const role = await getCurrentUserRole();
+  const href = getDashboardRedirectForRole(role) ?? "/";
 
   return (
     <Button asChild variant={variant} className={className}>

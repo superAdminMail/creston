@@ -1,7 +1,7 @@
 import { BriefcaseBusiness, Coins, Landmark, Wallet } from "lucide-react";
 
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 
 export function InvestmentAccountSummaryCards({
   account,

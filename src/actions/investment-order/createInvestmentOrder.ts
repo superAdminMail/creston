@@ -7,13 +7,13 @@ import {
   InvestmentCatalogStatus,
   InvestmentOrderStatus,
 } from "@/generated/prisma";
-import { formatCurrency, formatEnumLabel } from "@/lib/formatters";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import {
   createInvestmentOrderSchema,
   parseInvestmentOrderAmount,
-} from "@/lib/zod/investment-order";
+} from "@/lib/zodValidations/investment-order";
 import type {
   CreateInvestmentOrderActionState,
   OrderFieldName,
@@ -48,7 +48,7 @@ export async function createInvestmentOrder(
   _previousState: CreateInvestmentOrderActionState,
   formData: FormData,
 ): Promise<CreateInvestmentOrderActionState> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     return createErrorState("Please sign in to continue.");
@@ -157,11 +157,14 @@ export async function createInvestmentOrder(
   }
 
   if (parsedValues.data.planCategory !== selectedPlan.category) {
-    return createErrorState("Select a plan that matches your chosen category.", {
-      planCategory: `Choose a ${formatEnumLabel(
-        selectedPlan.category,
-      )} plan category to continue.`,
-    });
+    return createErrorState(
+      "Select a plan that matches your chosen category.",
+      {
+        planCategory: `Choose a ${formatEnumLabel(
+          selectedPlan.category,
+        )} plan category to continue.`,
+      },
+    );
   }
 
   const minAmount = toNumber(selectedPlan.minAmount);

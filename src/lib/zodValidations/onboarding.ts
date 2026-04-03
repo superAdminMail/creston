@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { getAgeFromIsoDate } from "@/lib/age";
-import { isValidPhoneInput } from "@/lib/phone";
+import { getAgeFromIsoDate } from "@/lib/formatters/age";
+import { isValidPhoneInput } from "@/lib/formatters/phone";
 
 export const onboardingSchema = z
   .object({

@@ -1,25 +1,17 @@
 import { prisma } from "./prisma";
-import { auth } from "./auth";
-import { headers } from "next/headers";
+import { getCurrentSessionUser } from "./getCurrentSessionUser";
 import { normalizeUser } from "./normalizeUser";
 
 export const getCurrentUser = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const sessionUser = await getCurrentSessionUser();
 
-  if (!session?.user?.id) return null;
+  if (!sessionUser?.id) return null;
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: sessionUser.id },
     select: {
-      id: true,
-      email: true,
       role: true,
-      name: true,
-      image: true,
       emailVerified: true,
-      password: true,
       profileAvatarFileAsset: {
         select: {
           storageKey: true,
@@ -31,15 +23,35 @@ export const getCurrentUser = async () => {
 
   if (!user) return null;
 
-  return normalizeUser(user);
+  return normalizeUser({
+    id: sessionUser.id,
+    email: sessionUser.email,
+    name: sessionUser.name,
+    image: sessionUser.image,
+    role: user.role,
+    emailVerified: user.emailVerified,
+    profileAvatarFileAsset: user.profileAvatarFileAsset,
+  });
 };
 
 export const getCurrentUserId = async () => {
-  const user = await getCurrentUser();
-  return user?.id ?? null;
+  const sessionUser = await getCurrentSessionUser();
+  return sessionUser?.id ?? null;
 };
 
 export const getCurrentUserRole = async () => {
-  const user = await getCurrentUser();
+  const sessionUser = await getCurrentSessionUser();
+
+  if (!sessionUser?.id) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: {
+      role: true,
+    },
+  });
+
   return user?.role ?? null;
 };

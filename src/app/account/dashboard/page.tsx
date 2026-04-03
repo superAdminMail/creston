@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 
 export default async function AccountDashboardPage() {
-  const user = await getCurrentUser();
+  const role = await getCurrentUserRole();
 
-  if (!user) {
+  if (!role) {
     redirect("/auth/login");
   }
 
-  redirect(getDashboardHomeByRole(user.role));
+  redirect(getDashboardHomeByRole(role));
 }

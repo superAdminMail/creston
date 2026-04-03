@@ -1,8 +1,8 @@
 "use server";
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
-import { formatDateLabel, formatEnumLabel } from "@/lib/formatters";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
 type Decimalish = {
@@ -56,7 +56,10 @@ function toNumber(value: Decimalish | number) {
 }
 
 function getPrimaryAction(
-  order: Pick<UserInvestmentOrderListItem, "id" | "status" | "linkedInvestmentAccountId">,
+  order: Pick<
+    UserInvestmentOrderListItem,
+    "id" | "status" | "linkedInvestmentAccountId"
+  >,
 ) {
   switch (order.status) {
     case InvestmentOrderStatus.PENDING_PAYMENT:
@@ -92,7 +95,7 @@ function getPrimaryAction(
 }
 
 export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");
@@ -187,7 +190,9 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
         id: order.investmentPlan.investment.id,
         name: order.investmentPlan.investment.name,
         typeLabel: formatEnumLabel(order.investmentPlan.investment.type),
-        riskLevelLabel: formatEnumLabel(order.investmentPlan.investment.riskLevel),
+        riskLevelLabel: formatEnumLabel(
+          order.investmentPlan.investment.riskLevel,
+        ),
         icon: order.investmentPlan.investment.iconFileAsset?.url
           ? {
               url: order.investmentPlan.investment.iconFileAsset.url,

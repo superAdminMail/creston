@@ -1,4 +1,22 @@
-﻿import RoleHomeLink from "@/components/layout/RoleHomeLink";
+import RoleHomeLink from "@/components/layout/RoleHomeLink";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+
+export async function generateMetadata() {
+  const site = await getSiteSeoConfig();
+  const seo = resolveGenericPageSeo(site, {
+    title: "Access restricted",
+    description: "The requested Havenstone page is not available to your account.",
+  });
+
+  return buildSeoMetadata({
+    site,
+    ...seo,
+    noIndex: true,
+    noFollow: true,
+  });
+}
 
 export default function ForbiddenPage() {
   return (

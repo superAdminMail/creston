@@ -1,7 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
 export function InvestmentPlanOverviewCard({

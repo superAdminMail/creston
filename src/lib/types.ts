@@ -29,3 +29,10 @@ export type SessionUser = {
   image?: string | null;
   role?: string | null;
 };
+
+export type CurrentSessionUser = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  image: string | null;
+};

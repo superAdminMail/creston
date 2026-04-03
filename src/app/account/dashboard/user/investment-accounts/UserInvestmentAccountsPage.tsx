@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import type { UserInvestmentAccountsPageData } from "@/actions/accounts/get-current-user-investment-accounts";
-import { formatUsd } from "@/lib/formatters";
+import { formatUsd } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
 type UserInvestmentAccountsPageProps = {
@@ -293,7 +293,10 @@ export function UserInvestmentAccountsPage({
                 const Icon = item.icon;
 
                 return (
-                  <div key={item.title} className={cn("rounded-2xl p-4", item.tone)}>
+                  <div
+                    key={item.title}
+                    className={cn("rounded-2xl p-4", item.tone)}
+                  >
                     <div className="flex items-start gap-3">
                       <Icon className={cn("mt-0.5 h-4 w-4", item.iconColor)} />
                       <div>

@@ -3,12 +3,11 @@
 import type {
   InvestmentPeriod,
   InvestmentPlanCategory,
-  InvestmentRiskLevel,
   InvestmentType,
 } from "@/generated/prisma";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
-import { formatEnumLabel } from "@/lib/formatters";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
 type Decimalish = {
@@ -30,7 +29,6 @@ export type InvestmentOrderCreationPlanOption = {
   maxAmount: number;
   currency: string;
   isActive: boolean;
-  riskLevel: InvestmentRiskLevel;
   riskLevelLabel: string;
 };
 
@@ -43,7 +41,6 @@ export type InvestmentOrderCreationInvestmentOption = {
   typeLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
-  riskLevel: InvestmentRiskLevel;
   riskLevelLabel: string;
   isActive: boolean;
   sortOrder: number;
@@ -67,7 +64,7 @@ function toNumber(value: Decimalish | number) {
 }
 
 export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrderCreationOptionsData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

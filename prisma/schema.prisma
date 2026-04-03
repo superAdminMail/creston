@@ -120,6 +120,9 @@ model FileAsset {
   usersAsProfileAvatar     User[]            @relation("UserProfileAvatarAsset")
   investorProfilesAsAvatar InvestorProfile[] @relation("InvestorAvatar")
 
+  siteConfigurationDefaultOgImages SiteConfiguration[] @relation("SiteConfigurationDefaultOgImage")
+  investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
+
   kycDocuments KycDocument[]
   testimonies  Testimony[]
 
@@ -210,10 +213,9 @@ model Investment {
 
   description String?
 
-  type      InvestmentType          @default(CRYPTO)
-  period    InvestmentPeriod        @default(LONG_TERM)
-  status    InvestmentCatalogStatus @default(ACTIVE)
-  riskLevel InvestmentRiskLevel     @default(MODERATE)
+  type   InvestmentType          @default(CRYPTO)
+  period InvestmentPeriod        @default(LONG_TERM)
+  status InvestmentCatalogStatus @default(ACTIVE)
 
   iconFileAssetId String?
   iconFileAsset   FileAsset? @relation("InvestmentIconAsset", fields: [iconFileAssetId], references: [id], onDelete: SetNull)
@@ -229,7 +231,6 @@ model Investment {
   @@index([type])
   @@index([period])
   @@index([status])
-  @@index([riskLevel])
   @@index([isActive])
   @@index([sortOrder])
   @@index([iconFileAssetId])
@@ -244,6 +245,11 @@ model InvestmentPlan {
   slug String @unique
 
   description String?
+
+  seoTitle       String?
+  seoDescription String?
+  seoImageFileId String?
+  seoImageFile   FileAsset? @relation("InvestmentPlanSeoImage", fields: [seoImageFileId], references: [id], onDelete: SetNull)
 
   category InvestmentPlanCategory @default(SAVINGS)
   period   InvestmentPeriod       @default(LONG_TERM)
@@ -357,8 +363,7 @@ model AuditLog {
 model Testimony {
   id          String          @id @default(cuid())
   fullName    String
-  roleOrTitle String?
-  company     String?
+  roleOrTitle String?         @default("CLIENT")
   message     String
   rating      Int?
   isFeatured  Boolean         @default(false)
@@ -523,6 +528,32 @@ model CryptoWebhookEvent {
   @@index([receivedAt])
 }
 
+/// site configuration
+model SiteConfiguration {
+  id              String   @id @default(cuid())
+  siteName        String
+  siteUrl         String?
+  siteDescription String?
+  siteTagline     String?
+  supportEmail    String?
+  companyName     String?
+  locale          String?  @default("en_US")
+  keywords        String[] @default([])
+
+  defaultTwitterHandle String?
+  facebookUrl          String?
+  instagramUrl         String?
+
+  defaultOgImageFileAssetId String?
+  defaultOgImageFileAsset   FileAsset? @relation("SiteConfigurationDefaultOgImage", fields: [defaultOgImageFileAssetId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([defaultOgImageFileAssetId])
+  @@map("site_configuration")
+}
+
 /// enums and constants
 enum CryptoAsset {
   BTC
@@ -630,12 +661,6 @@ enum InvestmentCatalogStatus {
   ACTIVE
   INACTIVE
   ARCHIVED
-}
-
-enum InvestmentRiskLevel {
-  LOW
-  MODERATE
-  HIGH
 }
 
 enum KycStatus {

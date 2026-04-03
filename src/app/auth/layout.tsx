@@ -1,4 +1,23 @@
 import { Navbar } from "@/components/layout/navbar";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+
+export async function generateMetadata() {
+  const site = await getSiteSeoConfig();
+  const seo = resolveGenericPageSeo(site, {
+    title: "Secure account access",
+    description:
+      "Access your Havenstone account to manage your investments, view your portfolio, and utilize our secure personal retirement planning tools. Log in to experience a modern wealth platform designed for long-term financial confidence and stability.",
+  });
+
+  return buildSeoMetadata({
+    site,
+    ...seo,
+    noIndex: true,
+    noFollow: true,
+  });
+}
 
 export default function AuthLayout({
   children,

@@ -20,7 +20,10 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/lib/auth-client";
-import { loginUserSchema, loginUserSchemaType } from "@/lib/zodValidation";
+import {
+  loginUserSchema,
+  loginUserSchemaType,
+} from "@/lib/zodValidations/user";
 
 export default function LoginForm() {
   const router = useRouter();

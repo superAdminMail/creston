@@ -2,10 +2,10 @@
 
 import { format } from "date-fns";
 import { KycStatus } from "@/generated/prisma";
-import { getCurrentUser } from "@/lib/getCurrentUser";
-import { splitE164PhoneNumber } from "@/lib/phone";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { splitE164PhoneNumber } from "@/lib/formatters/phone";
 import { prisma } from "@/lib/prisma";
-import type { OnboardingSchemaInput } from "@/lib/zod/onboarding";
+import type { OnboardingSchemaInput } from "@/lib/zodValidations/onboarding";
 
 export type CurrentUserInvestmentProfileData = {
   userName: string;
@@ -60,7 +60,9 @@ function formatDisplayDate(value: Date | null | undefined) {
   return value ? format(value, "MMMM d, yyyy") : "";
 }
 
-function getCompletionSnapshot(details: CurrentUserInvestmentProfileData["details"]) {
+function getCompletionSnapshot(
+  details: CurrentUserInvestmentProfileData["details"],
+) {
   const completedFieldCount = PROFILE_COMPLETION_FIELDS.filter((field) =>
     Boolean(details[field]?.trim()),
   ).length;
@@ -78,7 +80,7 @@ function getCompletionSnapshot(details: CurrentUserInvestmentProfileData["detail
 }
 
 export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUserInvestmentProfileData> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

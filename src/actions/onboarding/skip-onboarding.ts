@@ -1,10 +1,10 @@
 "use server";
 
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
 export async function skipOnboardingAction() {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     throw new Error("Unauthorized");

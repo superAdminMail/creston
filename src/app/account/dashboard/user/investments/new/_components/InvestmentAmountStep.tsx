@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Landmark } from "lucide-react";
 import type { InvestmentOrderCreationPlanOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 
 type InvestmentAmountStepProps = {
   plan: InvestmentOrderCreationPlanOption;
@@ -54,7 +54,9 @@ export function InvestmentAmountStep({
             <p className="mt-1 text-sm text-slate-400">
               {plan.categoryLabel} • {plan.periodLabel} • {plan.investmentName}
             </p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">{helperText}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              {helperText}
+            </p>
           </div>
         </div>
 

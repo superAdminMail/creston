@@ -6,19 +6,18 @@ import {
   type InvestmentCatalogStatus,
   type InvestmentPeriod,
   type InvestmentPlanCategory,
-  type InvestmentRiskLevel,
   type InvestmentType,
 } from "@/generated/prisma";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { formatDateLabel, formatEnumLabel } from "@/lib/formatters";
+import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 
 type Decimalish = {
   toNumber(): number;
 };
 
-const investmentAccountDetailsSelect = Prisma.validator<Prisma.InvestmentAccountSelect>()(
-  {
+const investmentAccountDetailsSelect =
+  Prisma.validator<Prisma.InvestmentAccountSelect>()({
     id: true,
     status: true,
     balance: true,
@@ -49,7 +48,6 @@ const investmentAccountDetailsSelect = Prisma.validator<Prisma.InvestmentAccount
             type: true,
             period: true,
             status: true,
-            riskLevel: true,
             isActive: true,
             sortOrder: true,
             iconFileAsset: {
@@ -61,8 +59,7 @@ const investmentAccountDetailsSelect = Prisma.validator<Prisma.InvestmentAccount
         },
       },
     },
-  },
-);
+  });
 
 type InvestmentAccountDetailsRecord = Prisma.InvestmentAccountGetPayload<{
   select: typeof investmentAccountDetailsSelect;
@@ -105,8 +102,6 @@ export type InvestmentAccountDetailsViewModel = {
     periodLabel: string;
     status: InvestmentCatalogStatus;
     statusLabel: string;
-    riskLevel: InvestmentRiskLevel;
-    riskLevelLabel: string;
     isActive: boolean;
     sortOrder: number;
     icon: {
@@ -185,8 +180,7 @@ function mapInvestmentAccountDetails(
       periodLabel: formatEnumLabel(account.investmentPlan.investment.period),
       status: account.investmentPlan.investment.status,
       statusLabel: formatEnumLabel(account.investmentPlan.investment.status),
-      riskLevel: account.investmentPlan.investment.riskLevel,
-      riskLevelLabel: formatEnumLabel(account.investmentPlan.investment.riskLevel),
+
       isActive: account.investmentPlan.investment.isActive,
       sortOrder: account.investmentPlan.investment.sortOrder,
       icon: account.investmentPlan.investment.iconFileAsset?.url
@@ -243,7 +237,7 @@ function mapInvestmentAccountDetails(
 export async function getInvestmentAccountDetails(
   investmentAccountId: string,
 ): Promise<InvestmentAccountDetailsViewModel | null> {
-  const user = await getCurrentUser();
+  const user = await getCurrentSessionUser();
 
   if (!user?.id) {
     return null;

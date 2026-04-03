@@ -11,7 +11,7 @@ import {
   getDashboardMenu,
   type DashboardRole,
 } from "@/constants/dashboard-menu";
-import { getUserInitials } from "@/lib/user";
+import { getUserInitials } from "@/lib/User-Initials/user";
 import { cn } from "@/lib/utils";
 import { type ProfileDTO, type UserDTO } from "@/lib/types";
 import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";

@@ -158,11 +158,11 @@ export function DashboardNavbar({
             <Bell className="h-5 w-5" />
           </Button>
 
-          <Menubar className="h-auto rounded-[1.35rem] border border-slate-200/80 bg-white/82 p-1 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+          <Menubar className="h-auto border-0 bg-transparent p-0 shadow-none">
             <MenubarMenu>
               <MenubarTrigger
                 className={cn(
-                  "group rounded-[1.1rem] px-2.5 py-2 text-slate-700 transition-all duration-200 hover:bg-slate-100 hover:text-slate-950 data-[state=open]:bg-slate-100 data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-white/[0.05] dark:hover:text-white dark:data-[state=open]:bg-white/[0.06] dark:data-[state=open]:text-white",
+                  "rounded-2xl bg-transparent p-0 text-slate-700 transition-all duration-200 hover:bg-transparent hover:text-slate-950 data-[state=open]:bg-transparent data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white dark:data-[state=open]:bg-transparent dark:data-[state=open]:text-white",
                 )}
                 aria-label="Open account menu"
               >
@@ -180,23 +180,12 @@ export function DashboardNavbar({
                       {avatarFallback}
                     </span>
                   )}
-
-                  <div className="hidden min-w-0 text-left md:block">
-                    <p className="max-w-[140px] truncate text-sm font-medium leading-tight text-slate-950 dark:text-white">
-                      {firstName}
-                    </p>
-                    <p className="mt-0.5 max-w-[176px] truncate text-[11px] leading-tight text-slate-500 transition-colors duration-200 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-300">
-                      {user.email ?? "No email"}
-                    </p>
-                  </div>
-
-                  <ChevronDown className="hidden h-3.5 w-3.5 text-slate-400 md:block dark:text-slate-500" />
                 </div>
               </MenubarTrigger>
 
               <MenubarContent
                 align="end"
-                sideOffset={8}
+                sideOffset={14}
                 className="w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 bg-white/96 p-2 text-slate-950 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1728]/96 dark:text-white dark:shadow-[0_22px_54px_rgba(0,0,0,0.32)] sm:w-[18rem]"
               >
                 <motion.div
