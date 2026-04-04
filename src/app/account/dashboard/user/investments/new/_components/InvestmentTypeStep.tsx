@@ -1,25 +1,18 @@
 import {
   ArrowRight,
-  BriefcaseBusiness,
+  Image as ImageIcon,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import Image from "next/image";
 
 import type { InvestmentOrderCreationInvestmentOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type InvestmentTypeOption = {
-  type: string;
-  label: string;
-  investmentCount: number;
-  planCount: number;
-  periodLabel: string;
-};
-
 type InvestmentTypeStepProps = {
-  options: InvestmentTypeOption[];
-  selectedType: string | null;
+  options: InvestmentOrderCreationInvestmentOption[];
+  selectedInvestmentId: string | null;
   onSelect: (value: string) => void;
   onContinue: () => void;
   canContinue: boolean;
@@ -28,7 +21,7 @@ type InvestmentTypeStepProps = {
 
 export function InvestmentTypeStep({
   options,
-  selectedType,
+  selectedInvestmentId,
   onSelect,
   onContinue,
   canContinue,
@@ -38,23 +31,24 @@ export function InvestmentTypeStep({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-semibold tracking-[-0.03em] text-white">
-          Choose an investment type
+          Choose an investment
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Start with the asset family that best fits the investment direction
-          you want Havenstone to structure for this order.
+          Start with the specific Havenstone investment product you want to
+          use, then continue into the available plans and tier options for that
+          product.
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {options.map((option) => {
-          const isSelected = selectedType === option.type;
+          const isSelected = selectedInvestmentId === option.id;
 
           return (
             <button
-              key={option.type}
+              key={option.id}
               type="button"
-              onClick={() => onSelect(option.type)}
+              onClick={() => onSelect(option.id)}
               className={cn(
                 "rounded-[1.75rem] border p-5 text-left transition-all duration-200",
                 "hover:border-white/12 hover:bg-white/[0.04]",
@@ -67,23 +61,32 @@ export function InvestmentTypeStep({
                 <div>
                   <div
                     className={cn(
-                      "inline-flex h-11 w-11 items-center justify-center rounded-2xl border",
+                      "inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border",
                       isSelected
                         ? "border-blue-400/20 bg-blue-400/12 text-blue-200"
                         : "border-white/8 bg-white/[0.04] text-slate-300",
                     )}
                   >
-                    <BriefcaseBusiness className="h-5 w-5" />
+                    {option.icon ? (
+                      <Image
+                        src={option.icon.url}
+                        alt={option.icon.alt}
+                        width={44}
+                        height={44}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="h-5 w-5" />
+                    )}
                   </div>
 
                   <h3 className="mt-4 text-lg font-semibold text-white">
-                    {option.label}
+                    {option.name}
                   </h3>
                   <p className="mt-2 text-sm text-slate-400">
-                    {option.investmentCount} curated investment family
-                    {option.investmentCount === 1 ? "" : "ies"} and{" "}
-                    {option.planCount} active plan
-                    {option.planCount === 1 ? "" : "s"} available.
+                    {option.plans.length} active plan
+                    {option.plans.length === 1 ? "" : "s"} available under this
+                    investment.
                   </p>
                 </div>
 
@@ -95,7 +98,7 @@ export function InvestmentTypeStep({
                       : "border-white/8 bg-white/[0.04] text-slate-300",
                   )}
                 >
-                  {option.periodLabel}
+                  {option.typeLabel}
                 </div>
               </div>
             </button>
@@ -118,7 +121,7 @@ export function InvestmentTypeStep({
               </p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-xs text-slate-300">
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-300" />
-                {featuredInvestment.periodLabel} | {featuredInvestment.typeLabel}
+                {featuredInvestment.typeLabel} | {featuredInvestment.periodLabel}
               </div>
             </div>
           </div>

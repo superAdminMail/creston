@@ -45,3 +45,10 @@ export function formatEnumLabel(
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+export function formatTierLevel(
+  value: string | null | undefined,
+  fallback = "Not available",
+) {
+  return formatEnumLabel(value, fallback);
+}

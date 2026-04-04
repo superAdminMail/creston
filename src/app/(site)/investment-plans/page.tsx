@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { getPublicInvestmentPlans } from "@/actions/investment-plan/getPublicInvestmentPlans";
-import { formatCurrency } from "@/lib/formatters/formatters";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
@@ -92,18 +91,18 @@ export default async function InvestmentPlansPage() {
               <dl className="mt-6 grid gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
                 <div>
                   <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                    Minimum
+                    Tier options
                   </dt>
                   <dd className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(plan.minAmount, plan.currency)}
+                    {plan.tiersCountLabel}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                    Maximum
+                    Available range
                   </dt>
                   <dd className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(plan.maxAmount, plan.currency)}
+                    {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
                   </dd>
                 </div>
                 <div>

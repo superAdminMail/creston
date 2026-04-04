@@ -7,7 +7,7 @@ import {
   InvestmentCatalogStatus,
   InvestmentOrderStatus,
 } from "@/generated/prisma";
-import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import {
@@ -70,9 +70,9 @@ export async function createInvestmentOrder(
   }
 
   const rawValues = {
-    investmentType: getFormValue(formData, "investmentType"),
-    planCategory: getFormValue(formData, "planCategory"),
+    investmentId: getFormValue(formData, "investmentId"),
     investmentPlanId: getFormValue(formData, "investmentPlanId"),
+    investmentPlanTierId: getFormValue(formData, "investmentPlanTierId"),
     amount: getFormValue(formData, "amount"),
   };
 
@@ -84,9 +84,9 @@ export async function createInvestmentOrder(
     return createErrorState(
       "Please review the highlighted fields before continuing.",
       getFieldErrors({
-        investmentType: flattened.investmentType?.[0],
-        planCategory: flattened.planCategory?.[0],
+        investmentId: flattened.investmentId?.[0],
         investmentPlanId: flattened.investmentPlanId?.[0],
+        investmentPlanTierId: flattened.investmentPlanTierId?.[0],
         amount: flattened.amount?.[0],
       }),
     );
@@ -107,17 +107,27 @@ export async function createInvestmentOrder(
     select: {
       id: true,
       category: true,
-      minAmount: true,
-      maxAmount: true,
       currency: true,
       isActive: true,
       investment: {
         select: {
           id: true,
           name: true,
-          type: true,
           isActive: true,
           status: true,
+        },
+      },
+      tiers: {
+        where: {
+          id: parsedValues.data.investmentPlanTierId,
+        },
+        select: {
+          id: true,
+          level: true,
+          minAmount: true,
+          maxAmount: true,
+          roiPercent: true,
+          isActive: true,
         },
       },
     },
@@ -128,6 +138,17 @@ export async function createInvestmentOrder(
       "The selected investment plan is no longer available. Choose another plan to continue.",
       {
         investmentPlanId: "The selected plan is no longer available.",
+      },
+    );
+  }
+
+  const selectedTier = selectedPlan.tiers[0];
+
+  if (!selectedTier?.isActive) {
+    return createErrorState(
+      "The selected investment tier is no longer available. Choose another tier to continue.",
+      {
+        investmentPlanTierId: "The selected tier is no longer available.",
       },
     );
   }
@@ -145,30 +166,17 @@ export async function createInvestmentOrder(
     );
   }
 
-  if (parsedValues.data.investmentType !== selectedPlan.investment.type) {
+  if (parsedValues.data.investmentId !== selectedPlan.investment.id) {
     return createErrorState(
-      "Select a plan that matches your chosen investment type.",
+      "Select a plan that belongs to the chosen investment.",
       {
-        investmentType: `Choose a ${formatEnumLabel(
-          selectedPlan.investment.type,
-        )} plan to continue.`,
+        investmentId: `Choose a plan from ${selectedPlan.investment.name} to continue.`,
       },
     );
   }
 
-  if (parsedValues.data.planCategory !== selectedPlan.category) {
-    return createErrorState(
-      "Select a plan that matches your chosen category.",
-      {
-        planCategory: `Choose a ${formatEnumLabel(
-          selectedPlan.category,
-        )} plan category to continue.`,
-      },
-    );
-  }
-
-  const minAmount = toNumber(selectedPlan.minAmount);
-  const maxAmount = toNumber(selectedPlan.maxAmount);
+  const minAmount = toNumber(selectedTier.minAmount);
+  const maxAmount = toNumber(selectedTier.maxAmount);
 
   if (amount < minAmount || amount > maxAmount) {
     return createErrorState(
@@ -189,6 +197,7 @@ export async function createInvestmentOrder(
     data: {
       investorProfileId: investorProfile.id,
       investmentPlanId: selectedPlan.id,
+      investmentPlanTierId: selectedTier.id,
       amount: new Prisma.Decimal(amount.toFixed(2)),
       currency: selectedPlan.currency,
       status: InvestmentOrderStatus.PENDING_PAYMENT,

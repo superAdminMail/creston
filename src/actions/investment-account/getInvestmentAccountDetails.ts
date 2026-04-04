@@ -10,7 +10,11 @@ import {
 } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
 
 type Decimalish = {
   toNumber(): number;
@@ -35,10 +39,24 @@ const investmentAccountDetailsSelect =
         description: true,
         category: true,
         period: true,
-        minAmount: true,
-        maxAmount: true,
         currency: true,
         isActive: true,
+        tiers: {
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            level: "asc",
+          },
+          select: {
+            id: true,
+            level: true,
+            minAmount: true,
+            maxAmount: true,
+            roiPercent: true,
+            isActive: true,
+          },
+        },
         investment: {
           select: {
             id: true,
@@ -86,10 +104,18 @@ export type InvestmentAccountDetailsViewModel = {
     categoryLabel: string;
     period: InvestmentPeriod;
     periodLabel: string;
-    minAmount: number;
-    maxAmount: number;
     currency: string;
     isActive: boolean;
+    tiersCountLabel: string;
+    tierRangeLabel: string | null;
+    tiers: Array<{
+      id: string;
+      levelLabel: string;
+      minAmount: number;
+      maxAmount: number;
+      roiPercent: number;
+      isActive: boolean;
+    }>;
   };
   investment: {
     id: string;
@@ -138,6 +164,24 @@ function mapInvestmentAccountDetails(
   const closedAt = formatDateLabel(account.closedAt, "Still active");
   const createdAt = formatDateLabel(account.createdAt);
   const updatedAt = formatDateLabel(account.updatedAt);
+  const tiers = account.investmentPlan.tiers.map((tier) => ({
+    id: tier.id,
+    levelLabel: formatEnumLabel(tier.level),
+    minAmount: toNumber(tier.minAmount),
+    maxAmount: toNumber(tier.maxAmount),
+    roiPercent: toNumber(tier.roiPercent),
+    isActive: tier.isActive,
+  }));
+  const tierRangeLabel =
+    tiers.length > 0
+      ? `${formatCurrency(
+          Math.min(...tiers.map((tier) => tier.minAmount)),
+          account.investmentPlan.currency,
+        )} - ${formatCurrency(
+          Math.max(...tiers.map((tier) => tier.maxAmount)),
+          account.investmentPlan.currency,
+        )}`
+      : null;
 
   return {
     id: account.id,
@@ -162,10 +206,12 @@ function mapInvestmentAccountDetails(
       categoryLabel: formatEnumLabel(account.investmentPlan.category),
       period: account.investmentPlan.period,
       periodLabel: formatEnumLabel(account.investmentPlan.period),
-      minAmount: toNumber(account.investmentPlan.minAmount),
-      maxAmount: toNumber(account.investmentPlan.maxAmount),
       currency: account.investmentPlan.currency,
       isActive: account.investmentPlan.isActive,
+      tiersCountLabel:
+        tiers.length === 1 ? "1 tier option available" : `${tiers.length} tier options available`,
+      tierRangeLabel,
+      tiers,
     },
     investment: {
       id: account.investmentPlan.investment.id,

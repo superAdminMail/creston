@@ -5,9 +5,8 @@ export type InvestmentPlanFieldName =
   | "description"
   | "category"
   | "period"
-  | "minAmount"
-  | "maxAmount"
   | "currency"
+  | "tiers"
   | "isActive";
 
 export type InvestmentPlanFormActionState = {

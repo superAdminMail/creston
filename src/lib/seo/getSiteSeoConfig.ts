@@ -41,10 +41,8 @@ export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
   const config = await prisma.siteConfiguration.findFirst({
     select: {
       siteName: true,
-      siteUrl: true,
       siteDescription: true,
       siteTagline: true,
-      companyName: true,
       locale: true,
       keywords: true,
       defaultTwitterHandle: true,
@@ -58,8 +56,7 @@ export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
 
   const siteUrl = normalizeAbsoluteUrl(
     resolveFallbackSiteUrl(),
-    firstNonEmpty(config?.siteUrl, resolveFallbackSiteUrl()) ??
-      resolveFallbackSiteUrl(),
+    resolveFallbackSiteUrl(),
   );
 
   const defaultOgImageUrl = normalizeAbsoluteUrl(
@@ -88,7 +85,6 @@ export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
     locale: firstNonEmpty(config?.locale, "en_US") ?? "en_US",
     keywords: keywords.length > 0 ? keywords : DEFAULT_KEYWORDS,
     companyName:
-      firstNonEmpty(config?.companyName, config?.siteName, DEFAULT_SITE_NAME) ??
-      DEFAULT_SITE_NAME,
+      firstNonEmpty(config?.siteName, DEFAULT_SITE_NAME) ?? DEFAULT_SITE_NAME,
   };
 });

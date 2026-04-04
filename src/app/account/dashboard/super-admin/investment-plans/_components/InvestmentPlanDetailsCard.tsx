@@ -59,18 +59,18 @@ export function InvestmentPlanDetailsCard({
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Minimum amount
+              Tier options
             </dt>
             <dd className="mt-2 text-sm font-medium text-white">
-              {plan.minAmountLabel}
+              {plan.tiersCountLabel}
             </dd>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Maximum amount
+              Tier range
             </dt>
             <dd className="mt-2 text-sm font-medium text-white">
-              {plan.maxAmountLabel}
+              {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
             </dd>
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
@@ -98,6 +98,33 @@ export function InvestmentPlanDetailsCard({
             </dd>
           </div>
         </dl>
+
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold text-white">Plan tiers</h2>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {plan.tiers.map((tier) => (
+              <div
+                key={tier.id}
+                className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-white">
+                    {tier.levelLabel}
+                  </p>
+                  <span className="text-xs text-slate-400">
+                    {tier.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <p className="mt-3 text-base font-semibold text-white">
+                  {tier.roiPercent.toFixed(2)}% ROI
+                </p>
+                <p className="mt-2 text-sm text-slate-300">
+                  {tier.minAmountLabel} - {tier.maxAmountLabel}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <aside className="space-y-6">

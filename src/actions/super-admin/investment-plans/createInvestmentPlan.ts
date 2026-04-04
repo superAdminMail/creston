@@ -24,6 +24,17 @@ function createErrorState(
   };
 }
 
+function getParsedTiers(formData: FormData) {
+  const value = String(formData.get("tiers") ?? "[]");
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function getFormData(formData: FormData) {
   return {
     investmentId: String(formData.get("investmentId") ?? ""),
@@ -32,9 +43,8 @@ function getFormData(formData: FormData) {
     description: String(formData.get("description") ?? ""),
     category: String(formData.get("category") ?? ""),
     period: String(formData.get("period") ?? ""),
-    minAmount: String(formData.get("minAmount") ?? ""),
-    maxAmount: String(formData.get("maxAmount") ?? ""),
     currency: String(formData.get("currency") ?? ""),
+    tiers: getParsedTiers(formData),
     isActive: String(formData.get("isActive") ?? "false"),
   };
 }
@@ -49,26 +59,31 @@ export async function createInvestmentPlan(
   if (!parsed.success) {
     const flattened = parsed.error.flatten().fieldErrors;
 
-    return createErrorState("Please review the highlighted investment plan fields.", {
-      investmentId: flattened.investmentId?.[0],
-      name: flattened.name?.[0],
-      slug: flattened.slug?.[0],
-      description: flattened.description?.[0],
-      category: flattened.category?.[0],
-      period: flattened.period?.[0],
-      minAmount: flattened.minAmount?.[0],
-      maxAmount: flattened.maxAmount?.[0],
-      currency: flattened.currency?.[0],
-      isActive: flattened.isActive?.[0],
-    });
+    return createErrorState(
+      "Please review the highlighted investment plan fields.",
+      {
+        investmentId: flattened.investmentId?.[0],
+        name: flattened.name?.[0],
+        slug: flattened.slug?.[0],
+        description: flattened.description?.[0],
+        category: flattened.category?.[0],
+        period: flattened.period?.[0],
+        currency: flattened.currency?.[0],
+        tiers: flattened.tiers?.[0],
+        isActive: flattened.isActive?.[0],
+      },
+    );
   }
 
   const values = normalizeInvestmentPlanFormValues(parsed.data);
 
   if (!values.normalizedSlug) {
-    return createErrorState("Enter a valid name or slug for this investment plan.", {
-      slug: "Enter a valid slug or plan name.",
-    });
+    return createErrorState(
+      "Enter a valid name or slug for this investment plan.",
+      {
+        slug: "Enter a valid slug or plan name.",
+      },
+    );
   }
 
   const investment = await prisma.investment.findUnique({
@@ -95,10 +110,17 @@ export async function createInvestmentPlan(
       description: values.description,
       category: values.category,
       period: values.period,
-      minAmount: new Prisma.Decimal(values.minAmount.toFixed(2)),
-      maxAmount: new Prisma.Decimal(values.maxAmount.toFixed(2)),
       currency: values.currency,
       isActive: values.isActive,
+      tiers: {
+        create: values.tiers.map((tier) => ({
+          level: tier.level,
+          minAmount: new Prisma.Decimal(tier.minAmount.toFixed(2)),
+          maxAmount: new Prisma.Decimal(tier.maxAmount.toFixed(2)),
+          roiPercent: new Prisma.Decimal(tier.roiPercent.toFixed(2)),
+          isActive: tier.isActive,
+        })),
+      },
     },
     select: {
       id: true,
@@ -118,9 +140,8 @@ export async function createInvestmentPlan(
       slug,
       category: values.category,
       period: values.period,
-      minAmount: values.minAmount,
-      maxAmount: values.maxAmount,
       currency: values.currency,
+      tiers: values.tiers,
       isActive: values.isActive,
     },
   });

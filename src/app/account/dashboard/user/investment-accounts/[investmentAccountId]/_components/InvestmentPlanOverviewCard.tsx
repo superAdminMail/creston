@@ -64,13 +64,35 @@ export function InvestmentPlanOverviewCard({
 
         <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Investable range
+            Tier coverage
           </p>
           <p className="mt-3 text-base font-semibold text-white">
-            {formatCurrency(account.plan.minAmount, account.plan.currency)} -{" "}
-            {formatCurrency(account.plan.maxAmount, account.plan.currency)}
+            {account.plan.tierRangeLabel ?? `Quoted in ${account.plan.currency}`}
           </p>
         </div>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+        {account.plan.tiers.map((tier) => (
+          <div
+            key={tier.id}
+            className="rounded-3xl border border-white/8 bg-white/[0.03] p-5"
+          >
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              {tier.levelLabel}
+            </p>
+            <p className="mt-3 text-base font-semibold text-white">
+              {tier.roiPercent.toFixed(2)}% ROI
+            </p>
+            <p className="mt-2 text-sm text-slate-300">
+              {account.plan.currency} tier option
+            </p>
+            <p className="mt-2 text-sm text-slate-400">
+              {formatCurrency(tier.minAmount, account.plan.currency)} -{" "}
+              {formatCurrency(tier.maxAmount, account.plan.currency)}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );

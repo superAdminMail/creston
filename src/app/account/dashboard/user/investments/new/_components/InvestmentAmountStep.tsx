@@ -1,12 +1,16 @@
 import { ArrowLeft, ArrowRight, Landmark } from "lucide-react";
 
-import type { InvestmentOrderCreationPlanOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
+import type {
+  InvestmentOrderCreationPlanOption,
+  InvestmentOrderCreationTierOption,
+} from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters/formatters";
 
 type InvestmentAmountStepProps = {
   plan: InvestmentOrderCreationPlanOption;
+  tier: InvestmentOrderCreationTierOption;
   amount: string;
   amountError: string | null;
   serverAmountError?: string;
@@ -18,6 +22,7 @@ type InvestmentAmountStepProps = {
 
 export function InvestmentAmountStep({
   plan,
+  tier,
   amount,
   amountError,
   serverAmountError,
@@ -27,9 +32,9 @@ export function InvestmentAmountStep({
   canContinue,
 }: InvestmentAmountStepProps) {
   const helperText = `Allowed range: ${formatCurrency(
-    plan.minAmount,
+    tier.minAmount,
     plan.currency,
-  )} to ${formatCurrency(plan.maxAmount, plan.currency)}.`;
+  )} to ${formatCurrency(tier.maxAmount, plan.currency)}.`;
 
   return (
     <div className="space-y-6">
@@ -39,7 +44,7 @@ export function InvestmentAmountStep({
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
           Set the amount you want Havenstone to apply to this plan. Your amount
-          must stay within the approved range for the selected structure.
+          must stay within the approved range for the selected tier.
         </p>
       </div>
 
@@ -52,7 +57,8 @@ export function InvestmentAmountStep({
           <div className="min-w-0">
             <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
             <p className="mt-1 text-sm text-slate-400">
-              {plan.categoryLabel} • {plan.periodLabel} • {plan.investmentName}
+              {plan.categoryLabel} | {plan.periodLabel} | {plan.investmentName} |{" "}
+              {tier.levelLabel}
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-300">
               {helperText}

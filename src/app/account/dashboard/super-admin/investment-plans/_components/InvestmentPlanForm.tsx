@@ -1,22 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import type {
-  SuperAdminInvestmentOption,
-} from "@/actions/super-admin/investment-plans/getSuperAdminInvestmentPlans";
+import type { InvestmentTierLevel } from "@/generated/prisma";
+import type { SuperAdminInvestmentOption } from "@/actions/super-admin/investment-plans/getSuperAdminInvestmentPlans";
 import type { InvestmentPlanFormActionState } from "@/actions/super-admin/investment-plans/investmentPlanForm.state";
 import { initialInvestmentPlanFormActionState } from "@/actions/super-admin/investment-plans/investmentPlanForm.state";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { slugify } from "@/lib/slugs/slugify";
+import { formatTierLevel } from "@/lib/formatters/formatters";
 import { SuperAdminFormSelect } from "../../_components/SuperAdminFormSelect";
+
+type InvestmentPlanTierFormValue = {
+  level: InvestmentTierLevel;
+  minAmount: string;
+  maxAmount: string;
+  roiPercent: string;
+  isActive: boolean;
+};
 
 type InvestmentPlanFormValues = {
   investmentId: string;
@@ -25,9 +40,8 @@ type InvestmentPlanFormValues = {
   description: string;
   category: string;
   period: string;
-  minAmount: string;
-  maxAmount: string;
   currency: string;
+  tiers: InvestmentPlanTierFormValue[];
   isActive: boolean;
 };
 
@@ -72,7 +86,11 @@ export function InvestmentPlanForm({
   const [category, setCategory] = useState(defaultValues.category);
   const [period, setPeriod] = useState(defaultValues.period);
   const [isActive, setIsActive] = useState(String(defaultValues.isActive));
+  const [tiers, setTiers] = useState<InvestmentPlanTierFormValue[]>(
+    defaultValues.tiers,
+  );
   const derivedSlug = slugify(name);
+  const serializedTiers = useMemo(() => JSON.stringify(tiers), [tiers]);
 
   useEffect(() => {
     if (state.status !== "error" || !state.message) {
@@ -104,10 +122,14 @@ export function InvestmentPlanForm({
         ) : null}
 
         <form action={action} className="space-y-6">
+          <input type="hidden" name="tiers" value={serializedTiers} />
+
           <FieldGroup className="gap-5">
             <div className="grid gap-5 lg:grid-cols-2">
               <Field>
-                <FieldLabel className="text-slate-100">Parent investment</FieldLabel>
+                <FieldLabel className="text-slate-100">
+                  Parent investment
+                </FieldLabel>
                 <FieldContent>
                   <SuperAdminFormSelect
                     name="investmentId"
@@ -187,7 +209,7 @@ export function InvestmentPlanForm({
               </FieldContent>
             </Field>
 
-            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
               <Field>
                 <FieldLabel className="text-slate-100">Category</FieldLabel>
                 <FieldContent>
@@ -238,48 +260,141 @@ export function InvestmentPlanForm({
                 </FieldContent>
               </Field>
               <Field>
-                <FieldLabel className="text-slate-100">Minimum amount</FieldLabel>
+                <FieldLabel className="text-slate-100">Active state</FieldLabel>
                 <FieldContent>
-                  <Input
-                    name="minAmount"
-                    defaultValue={defaultValues.minAmount}
-                    className="input-premium h-11 rounded-xl"
+                  <SuperAdminFormSelect
+                    name="isActive"
+                    value={isActive}
+                    onValueChange={setIsActive}
+                    placeholder="Select state"
+                    options={[
+                      { value: "true", label: "Active" },
+                      { value: "false", label: "Inactive" },
+                    ]}
                   />
                   <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.minAmount}
-                  </FieldDescription>
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel className="text-slate-100">Maximum amount</FieldLabel>
-                <FieldContent>
-                  <Input
-                    name="maxAmount"
-                    defaultValue={defaultValues.maxAmount}
-                    className="input-premium h-11 rounded-xl"
-                  />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.maxAmount}
+                    {state.fieldErrors?.isActive}
                   </FieldDescription>
                 </FieldContent>
               </Field>
             </div>
 
             <Field>
-              <FieldLabel className="text-slate-100">Active state</FieldLabel>
+              <FieldLabel className="text-slate-100">Tier management</FieldLabel>
               <FieldContent>
-                <SuperAdminFormSelect
-                  name="isActive"
-                  value={isActive}
-                  onValueChange={setIsActive}
-                  placeholder="Select state"
-                  options={[
-                    { value: "true", label: "Active" },
-                    { value: "false", label: "Inactive" },
-                  ]}
-                />
+                <div className="space-y-4">
+                  {tiers.map((tier, index) => (
+                    <div
+                      key={tier.level}
+                      className="rounded-[1.5rem] border border-white/8 bg-white/[0.03] p-5"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-base font-semibold text-white">
+                            {formatTierLevel(tier.level)}
+                          </h3>
+                          <p className="mt-1 text-sm text-slate-400">
+                            Configure the active range and ROI for this tier.
+                          </p>
+                        </div>
+                        <label className="inline-flex items-center gap-3 rounded-full border border-white/10 px-3 py-2 text-sm text-slate-200">
+                          <Checkbox
+                            checked={tier.isActive}
+                            onCheckedChange={(checked) =>
+                              setTiers((current) =>
+                                current.map((currentTier, currentIndex) =>
+                                  currentIndex === index
+                                    ? {
+                                        ...currentTier,
+                                        isActive: checked === true,
+                                      }
+                                    : currentTier,
+                                ),
+                              )
+                            }
+                          />
+                          Active tier
+                        </label>
+                      </div>
+
+                      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                        <Field>
+                          <FieldLabel className="text-slate-100">
+                            Minimum amount
+                          </FieldLabel>
+                          <FieldContent>
+                            <Input
+                              value={tier.minAmount}
+                              onChange={(event) =>
+                                setTiers((current) =>
+                                  current.map((currentTier, currentIndex) =>
+                                    currentIndex === index
+                                      ? {
+                                          ...currentTier,
+                                          minAmount: event.target.value,
+                                        }
+                                      : currentTier,
+                                  ),
+                                )
+                              }
+                              className="input-premium h-11 rounded-xl"
+                            />
+                          </FieldContent>
+                        </Field>
+
+                        <Field>
+                          <FieldLabel className="text-slate-100">
+                            Maximum amount
+                          </FieldLabel>
+                          <FieldContent>
+                            <Input
+                              value={tier.maxAmount}
+                              onChange={(event) =>
+                                setTiers((current) =>
+                                  current.map((currentTier, currentIndex) =>
+                                    currentIndex === index
+                                      ? {
+                                          ...currentTier,
+                                          maxAmount: event.target.value,
+                                        }
+                                      : currentTier,
+                                  ),
+                                )
+                              }
+                              className="input-premium h-11 rounded-xl"
+                            />
+                          </FieldContent>
+                        </Field>
+
+                        <Field>
+                          <FieldLabel className="text-slate-100">ROI %</FieldLabel>
+                          <FieldContent>
+                            <Input
+                              value={tier.roiPercent}
+                              onChange={(event) =>
+                                setTiers((current) =>
+                                  current.map((currentTier, currentIndex) =>
+                                    currentIndex === index
+                                      ? {
+                                          ...currentTier,
+                                          roiPercent: event.target.value,
+                                        }
+                                      : currentTier,
+                                  ),
+                                )
+                              }
+                              className="input-premium h-11 rounded-xl"
+                            />
+                          </FieldContent>
+                        </Field>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
                 <FieldDescription className="text-slate-400">
-                  {state.fieldErrors?.isActive}
+                  {state.fieldErrors?.tiers ||
+                    "Configure active tier ranges in ascending order from Starter to Premium."}
                 </FieldDescription>
               </FieldContent>
             </Field>

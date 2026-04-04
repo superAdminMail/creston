@@ -8,6 +8,7 @@ import { initialCreateInvestmentOrderActionState } from "@/actions/investment-or
 import type {
   InvestmentOrderCreationOptionsData,
   InvestmentOrderCreationPlanOption,
+  InvestmentOrderCreationTierOption,
 } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -17,13 +18,13 @@ import { CreateInvestmentOrderEmptyState } from "./CreateInvestmentOrderEmptySta
 import { InvestmentAmountStep } from "./InvestmentAmountStep";
 import { InvestmentPlanStep } from "./InvestmentPlanStep";
 import { InvestmentReviewStep } from "./InvestmentReviewStep";
+import { InvestmentTierStep } from "./InvestmentTierStep";
 import { InvestmentTypeStep } from "./InvestmentTypeStep";
-import { PlanCategoryStep } from "./PlanCategoryStep";
 
 const stepTitles = [
-  "Investment Type",
-  "Plan Category",
-  "Investment Plan",
+  "Investment",
+  "Plan",
+  "Tier",
   "Amount",
   "Review",
 ] as const;
@@ -42,9 +43,11 @@ type InvestmentPlanCardOption = InvestmentOrderCreationPlanOption & {
 
 function getAmountError(
   plan: InvestmentOrderCreationPlanOption | null,
+  tier: InvestmentOrderCreationTierOption | null,
   amount: string,
 ) {
   if (!plan) return "Select an investment plan first.";
+  if (!tier) return "Select an investment tier first.";
   if (!amount.trim()) return "Enter an investment amount.";
 
   const parsedAmount = parseInvestmentOrderAmount(amount);
@@ -53,11 +56,11 @@ function getAmountError(
     return "Enter a valid amount with up to 2 decimal places.";
   }
 
-  if (parsedAmount < plan.minAmount || parsedAmount > plan.maxAmount) {
+  if (parsedAmount < tier.minAmount || parsedAmount > tier.maxAmount) {
     return `Allowed range: ${formatCurrency(
-      plan.minAmount,
+      tier.minAmount,
       plan.currency,
-    )} to ${formatCurrency(plan.maxAmount, plan.currency)}.`;
+    )} to ${formatCurrency(tier.maxAmount, plan.currency)}.`;
   }
 
   return null;
@@ -72,93 +75,30 @@ export function CreateInvestmentOrderWizard({
     initialCreateInvestmentOrderActionState,
   );
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedInvestmentId, setSelectedInvestmentId] = useState<string | null>(
+    null,
+  );
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
 
-  const typeOptions = useMemo(() => {
-    const grouped = new Map<
-      string,
-      {
-        type: string;
-        label: string;
-        investmentCount: number;
-        planCount: number;
-        periodLabel: string;
-      }
-    >();
-
-    for (const investment of options.investments) {
-      const existing = grouped.get(investment.type);
-
-      if (existing) {
-        existing.investmentCount += 1;
-        existing.planCount += investment.plans.length;
-        continue;
-      }
-
-      grouped.set(investment.type, {
-        type: investment.type,
-        label: investment.typeLabel,
-        investmentCount: 1,
-        planCount: investment.plans.length,
-        periodLabel: investment.periodLabel,
-      });
-    }
-
-    return Array.from(grouped.values());
-  }, [options.investments]);
-
-  const selectedInvestments = useMemo(
+  const selectedInvestment = useMemo(
     () =>
-      selectedType
-        ? options.investments.filter(
-            (investment) => investment.type === selectedType,
-          )
-        : [],
-    [options.investments, selectedType],
+      options.investments.find(
+        (investment) => investment.id === selectedInvestmentId,
+      ) ?? null,
+    [options.investments, selectedInvestmentId],
   );
-
-  const categoryOptions = useMemo(() => {
-    const grouped = new Map<
-      string,
-      { category: string; label: string; planCount: number }
-    >();
-
-    for (const investment of selectedInvestments) {
-      for (const plan of investment.plans) {
-        const existing = grouped.get(plan.category);
-
-        if (existing) {
-          existing.planCount += 1;
-          continue;
-        }
-
-        grouped.set(plan.category, {
-          category: plan.category,
-          label: plan.categoryLabel,
-          planCount: 1,
-        });
-      }
-    }
-
-    return Array.from(grouped.values());
-  }, [selectedInvestments]);
 
   const matchingPlans = useMemo<InvestmentPlanCardOption[]>(
     () =>
-      selectedCategory
-        ? selectedInvestments.flatMap((investment) =>
-            investment.plans
-              .filter((plan) => plan.category === selectedCategory)
-              .map((plan) => ({
-                ...plan,
-                icon: investment.icon,
-              })),
-          )
+      selectedInvestment
+        ? selectedInvestment.plans.map((plan) => ({
+            ...plan,
+            icon: selectedInvestment.icon,
+          }))
         : [],
-    [selectedCategory, selectedInvestments],
+    [selectedInvestment],
   );
 
   const selectedPlan = useMemo(
@@ -166,26 +106,23 @@ export function CreateInvestmentOrderWizard({
     [matchingPlans, selectedPlanId],
   );
 
-  const selectedTypeOption = useMemo(
-    () => typeOptions.find((option) => option.type === selectedType) ?? null,
-    [selectedType, typeOptions],
+  const selectedTier = useMemo(
+    () => selectedPlan?.tiers.find((tier) => tier.id === selectedTierId) ?? null,
+    [selectedPlan, selectedTierId],
   );
 
-  const featuredInvestment = useMemo(
-    () => selectedInvestments[0] ?? null,
-    [selectedInvestments],
-  );
+  const featuredInvestment = selectedInvestment;
 
-  const amountError = getAmountError(selectedPlan, amount);
+  const amountError = getAmountError(selectedPlan, selectedTier, amount);
 
   const effectiveStep = useMemo(() => {
     if (actionState.status !== "error" || currentStep !== 4) {
       return currentStep;
     }
 
-    if (actionState.fieldErrors?.investmentType) return 0;
-    if (actionState.fieldErrors?.planCategory) return 1;
-    if (actionState.fieldErrors?.investmentPlanId) return 2;
+    if (actionState.fieldErrors?.investmentId) return 0;
+    if (actionState.fieldErrors?.investmentPlanId) return 1;
+    if (actionState.fieldErrors?.investmentPlanTierId) return 2;
     if (actionState.fieldErrors?.amount) return 3;
 
     return currentStep;
@@ -202,8 +139,8 @@ export function CreateInvestmentOrderWizard({
       icon: ShieldCheck,
     },
     {
-      title: "Plan-led order creation",
-      body: "Havenstone validates each plan server-side before your order enters payment review.",
+      title: "Tier-led order creation",
+      body: "Havenstone validates the selected plan tier server-side before your order enters payment review.",
       icon: Landmark,
     },
     {
@@ -270,55 +207,54 @@ export function CreateInvestmentOrderWizard({
         <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
           {effectiveStep === 0 ? (
             <InvestmentTypeStep
-              options={typeOptions}
-              selectedType={selectedType}
+              options={options.investments}
+              selectedInvestmentId={selectedInvestmentId}
               onSelect={(value) => {
-                setSelectedType(value);
-                setSelectedCategory(null);
+                setSelectedInvestmentId(value);
                 setSelectedPlanId(null);
+                setSelectedTierId(null);
                 setAmount("");
               }}
               onContinue={() => setCurrentStep(1)}
-              canContinue={Boolean(selectedType)}
+              canContinue={Boolean(selectedInvestmentId)}
               featuredInvestment={featuredInvestment}
             />
           ) : null}
 
           {effectiveStep === 1 ? (
-            <PlanCategoryStep
-              selectedInvestmentTypeLabel={
-                selectedTypeOption?.label ?? "Selected investment"
-              }
-              options={categoryOptions}
-              selectedCategory={selectedCategory}
-              onSelect={(value) => {
-                setSelectedCategory(value);
-                setSelectedPlanId(null);
-                setAmount("");
-              }}
-              onBack={() => setCurrentStep(0)}
-              onContinue={() => setCurrentStep(2)}
-              canContinue={Boolean(selectedCategory)}
-            />
-          ) : null}
-
-          {effectiveStep === 2 ? (
             <InvestmentPlanStep
               plans={matchingPlans}
               selectedPlanId={selectedPlanId}
               onSelect={(value) => {
                 setSelectedPlanId(value);
+                setSelectedTierId(null);
                 setAmount("");
               }}
-              onBack={() => setCurrentStep(1)}
-              onContinue={() => setCurrentStep(3)}
+              onBack={() => setCurrentStep(0)}
+              onContinue={() => setCurrentStep(2)}
               canContinue={Boolean(selectedPlanId)}
             />
           ) : null}
 
-          {effectiveStep === 3 && selectedPlan ? (
+          {effectiveStep === 2 && selectedPlan ? (
+            <InvestmentTierStep
+              plan={selectedPlan}
+              tiers={selectedPlan.tiers}
+              selectedTierId={selectedTierId}
+              onSelect={(value) => {
+                setSelectedTierId(value);
+                setAmount("");
+              }}
+              onBack={() => setCurrentStep(1)}
+              onContinue={() => setCurrentStep(3)}
+              canContinue={Boolean(selectedTierId)}
+            />
+          ) : null}
+
+          {effectiveStep === 3 && selectedPlan && selectedTier ? (
             <InvestmentAmountStep
               plan={selectedPlan}
+              tier={selectedTier}
               amount={amount}
               amountError={amountError}
               serverAmountError={actionState.fieldErrors?.amount}
@@ -331,12 +267,14 @@ export function CreateInvestmentOrderWizard({
 
           {effectiveStep === 4 &&
           selectedPlan &&
-          selectedType &&
-          selectedTypeOption ? (
+          selectedInvestment &&
+          selectedTier ? (
             <InvestmentReviewStep
+              investmentId={selectedInvestment.id}
+              investmentName={selectedInvestment.name}
               plan={selectedPlan}
-              investmentTypeValue={selectedType}
-              investmentTypeLabel={selectedTypeOption.label}
+              tier={selectedTier}
+              investmentTypeLabel={selectedInvestment.typeLabel}
               amount={amount}
               formAction={formAction}
               actionState={actionState}
@@ -382,8 +320,8 @@ export function CreateInvestmentOrderWizard({
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Selected plan</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Review the range and product profile for the plan currently in
-              focus.
+              Review the tier structure and product profile for the plan
+              currently in focus.
             </p>
 
             <div className="mt-5 space-y-4">
@@ -399,41 +337,47 @@ export function CreateInvestmentOrderWizard({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Minimum
+                    Tier options
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(
-                      selectedPlan.minAmount,
-                      selectedPlan.currency,
-                    )}
+                    {selectedPlan.tiersCountLabel}
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Maximum
+                    Available range
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
-                    {formatCurrency(
-                      selectedPlan.maxAmount,
-                      selectedPlan.currency,
-                    )}
+                    {selectedPlan.tierRangeLabel ??
+                      `Quoted in ${selectedPlan.currency}`}
                   </p>
                 </div>
               </div>
+
+              {selectedTier ? (
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                    Selected tier
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {selectedTier.levelLabel} |{" "}
+                    {selectedTier.roiPercent.toFixed(2)}% ROI
+                  </p>
+                </div>
+              ) : null}
             </div>
           </section>
         ) : (
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Plan summary</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Once you select a plan, Havenstone will surface its investable
-              range and product profile here for a calmer review flow.
+              Once you select a plan, Havenstone will surface its tier
+              structure and product profile here for a calmer review flow.
             </p>
 
             <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-slate-400">
-              Select an investment type, plan category, and plan to populate
-              this summary.
+              Select an investment and plan to populate this summary.
             </div>
           </section>
         )}
@@ -444,9 +388,9 @@ export function CreateInvestmentOrderWizard({
               type="button"
               variant="outline"
               onClick={() => {
-                setSelectedType(null);
-                setSelectedCategory(null);
+                setSelectedInvestmentId(null);
                 setSelectedPlanId(null);
+                setSelectedTierId(null);
                 setAmount("");
                 setCurrentStep(0);
               }}

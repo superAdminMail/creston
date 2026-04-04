@@ -89,10 +89,13 @@ function InvestmentPlanMobileCard({
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Range
+            Tier options
           </p>
           <p className="mt-2 text-sm font-medium text-white">
-            {plan.minAmountLabel} - {plan.maxAmountLabel}
+            {plan.tiersCountLabel}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
           </p>
         </div>
         <div>
@@ -206,12 +209,15 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             ),
           },
           {
-            key: "range",
-            header: "Range",
+            key: "tiers",
+            header: "Tiers",
             render: (plan) => (
-              <span className="text-sm text-slate-200">
-                {plan.minAmountLabel} - {plan.maxAmountLabel}
-              </span>
+              <div className="space-y-1">
+                <span className="text-sm text-slate-200">{plan.tiersCountLabel}</span>
+                <p className="text-xs text-slate-400">
+                  {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
+                </p>
+              </div>
             ),
           },
           {

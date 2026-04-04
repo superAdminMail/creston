@@ -1,8 +1,6 @@
 import { BriefcaseBusiness, Coins, Landmark, Wallet } from "lucide-react";
 
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
-import { formatCurrency } from "@/lib/formatters/formatters";
-
 export function InvestmentAccountSummaryCards({
   account,
 }: {
@@ -20,8 +18,8 @@ export function InvestmentAccountSummaryCards({
       icon: Landmark,
     },
     {
-      label: "Investable range",
-      value: `${formatCurrency(account.plan.minAmount, account.plan.currency)} - ${formatCurrency(account.plan.maxAmount, account.plan.currency)}`,
+      label: "Tier options",
+      value: account.plan.tiersCountLabel,
       icon: Coins,
     },
     {

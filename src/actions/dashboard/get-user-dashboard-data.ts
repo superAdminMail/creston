@@ -43,13 +43,23 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           createdAt: "desc",
         },
         select: {
+          balance: true,
           status: true,
           investmentPlan: {
             select: {
               name: true,
-              minAmount: true,
-              maxAmount: true,
               currency: true,
+              tiers: {
+                where: {
+                  isActive: true,
+                },
+                orderBy: {
+                  minAmount: "asc",
+                },
+                select: {
+                  minAmount: true,
+                },
+              },
               investment: {
                 select: {
                   name: true,
@@ -68,13 +78,20 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     investmentAccounts.find(
       (account) => account.status === AccountStatus.ACTIVE,
     ) ?? investmentAccounts[0];
-  const totalInvestment = investmentAccounts.reduce(
-    (sum, account) => sum + toNumber(account.investmentPlan.minAmount),
+  const totalAccountBalance = investmentAccounts.reduce(
+    (sum, account) => sum + toNumber(account.balance),
     0,
   );
-  const currentInvestment = activeAccount
-    ? toNumber(activeAccount.investmentPlan.minAmount)
+  const currentAccountBalance = activeAccount
+    ? toNumber(activeAccount.balance)
     : 0;
+  const activeAccountTierFloor =
+    activeAccount?.investmentPlan.tiers[0]?.minAmount ?? null;
+  const totalInvestmentCommitment = investmentAccounts.reduce(
+    (sum, account) =>
+      sum + toNumber(account.investmentPlan.tiers[0]?.minAmount ?? 0),
+    0,
+  );
   const investmentType =
     activeAccount?.investmentPlan.investment.name ??
     formatLabel(activeAccount?.investmentPlan.investment.type) ??
@@ -84,9 +101,10 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     userName: user.name?.trim() || "Investor",
     stats: {
       investmentsCount: investmentAccounts.length,
-      currentInvestment,
-      accountBalance: 0,
-      totalInvestment,
+      currentInvestment:
+        toNumber(activeAccountTierFloor) || currentAccountBalance,
+      accountBalance: totalAccountBalance,
+      totalInvestment: totalInvestmentCommitment || totalAccountBalance,
       investmentType: investmentType || "Not selected",
     },
   };

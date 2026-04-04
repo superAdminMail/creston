@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { Prisma } from "@/generated/prisma";
 
-import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatCurrency, formatEnumLabel, formatTierLevel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 
 const publicInvestmentPlanSelect =
@@ -19,11 +19,25 @@ const publicInvestmentPlanSelect =
     },
     category: true,
     period: true,
-    minAmount: true,
-    maxAmount: true,
     currency: true,
     isActive: true,
     updatedAt: true,
+    tiers: {
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        level: "asc",
+      },
+      select: {
+        id: true,
+        level: true,
+        minAmount: true,
+        maxAmount: true,
+        roiPercent: true,
+        isActive: true,
+      },
+    },
     investment: {
       select: {
         id: true,
@@ -60,9 +74,17 @@ export type PublicInvestmentPlanViewModel = {
   categoryLabel: string;
   period: string;
   periodLabel: string;
-  minAmount: number;
-  maxAmount: number;
   currency: string;
+  tiersCountLabel: string;
+  tierRangeLabel: string | null;
+  tiers: Array<{
+    id: string;
+    level: string;
+    levelLabel: string;
+    minAmount: number;
+    maxAmount: number;
+    roiPercent: number;
+  }>;
   updatedAt: Date;
   investment: {
     id: string;
@@ -84,6 +106,15 @@ export type PublicInvestmentPlanViewModel = {
 function mapPublicInvestmentPlan(
   plan: PublicInvestmentPlanRecord,
 ): PublicInvestmentPlanViewModel {
+  const tiers = plan.tiers.map((tier) => ({
+    id: tier.id,
+    level: tier.level,
+    levelLabel: formatTierLevel(tier.level),
+    minAmount: Number(tier.minAmount),
+    maxAmount: Number(tier.maxAmount),
+    roiPercent: Number(tier.roiPercent),
+  }));
+
   return {
     id: plan.id,
     name: plan.name,
@@ -96,9 +127,20 @@ function mapPublicInvestmentPlan(
     categoryLabel: formatEnumLabel(plan.category),
     period: plan.period,
     periodLabel: formatEnumLabel(plan.period),
-    minAmount: Number(plan.minAmount),
-    maxAmount: Number(plan.maxAmount),
     currency: plan.currency,
+    tiersCountLabel:
+      tiers.length === 1 ? "1 tier option available" : `${tiers.length} tier options available`,
+    tierRangeLabel:
+      tiers.length > 0
+        ? `${formatCurrency(
+            Math.min(...tiers.map((tier) => tier.minAmount)),
+            plan.currency,
+          )} - ${formatCurrency(
+            Math.max(...tiers.map((tier) => tier.maxAmount)),
+            plan.currency,
+          )}`
+        : null,
+    tiers,
     updatedAt: plan.updatedAt,
     investment: {
       id: plan.investment.id,
@@ -123,6 +165,11 @@ export const getPublicInvestmentPlans = cache(
     const plans = await prisma.investmentPlan.findMany({
       where: {
         isActive: true,
+        tiers: {
+          some: {
+            isActive: true,
+          },
+        },
         investment: {
           isActive: true,
         },
@@ -161,6 +208,11 @@ export const getPublicInvestmentPlanBySlug = cache(
       where: {
         slug: normalizedSlug,
         isActive: true,
+        tiers: {
+          some: {
+            isActive: true,
+          },
+        },
         investment: {
           isActive: true,
         },

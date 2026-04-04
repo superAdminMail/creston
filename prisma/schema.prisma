@@ -121,6 +121,7 @@ model FileAsset {
   investorProfilesAsAvatar InvestorProfile[] @relation("InvestorAvatar")
 
   siteConfigurationDefaultOgImages SiteConfiguration[] @relation("SiteConfigurationDefaultOgImage")
+  siteLogo                         SiteConfiguration?  @relation("SiteConfigurationLogo")
   investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
 
   kycDocuments KycDocument[]
@@ -577,15 +578,20 @@ model CryptoWebhookEvent {
 
 /// site configuration
 model SiteConfiguration {
-  id              String   @id @default(cuid())
-  siteName        String
-  siteUrl         String?
+  id       String @id @default(cuid())
+  siteName String
+
   siteDescription String?
   siteTagline     String?
-  supportEmail    String?
-  companyName     String?
-  locale          String?  @default("en_US")
-  keywords        String[] @default([])
+
+  siteLogoFileAssetId String?    @unique
+  siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)
+
+  supportEmail String?
+  supportPhone String?
+
+  locale   String?  @default("en_US")
+  keywords String[] @default([])
 
   defaultTwitterHandle String?
   facebookUrl          String?

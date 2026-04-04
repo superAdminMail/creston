@@ -1,7 +1,7 @@
 export type OrderFieldName =
-  | "investmentType"
-  | "planCategory"
+  | "investmentId"
   | "investmentPlanId"
+  | "investmentPlanTierId"
   | "amount";
 
 export type CreateInvestmentOrderActionState = {

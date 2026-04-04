@@ -4,11 +4,12 @@ import { InvestmentPlanForm } from "../_components/InvestmentPlanForm";
 
 export default async function NewInvestmentPlanPage() {
   const data = await getSuperAdminInvestmentPlans();
+  const defaultLevels = ["STARTER", "GROWTH", "PREMIUM"] as const;
 
   return (
     <InvestmentPlanForm
       title="Create investment plan"
-      description="Define the contribution range, category, and parent investment relationship for a live Havenstone investment plan."
+      description="Define the tier structure, category, and parent investment relationship for a live Havenstone investment plan."
       submitLabel="Create investment plan"
       cancelHref="/account/dashboard/super-admin/investment-plans"
       defaultValues={{
@@ -18,10 +19,15 @@ export default async function NewInvestmentPlanPage() {
         description: "",
         category: data.filterOptions.categories[0]?.value ?? "SAVINGS",
         period: data.filterOptions.periods[0]?.value ?? "LONG_TERM",
-        minAmount: "",
-        maxAmount: "",
         currency: "USD",
         isActive: true,
+        tiers: defaultLevels.map((level) => ({
+          level,
+          minAmount: "",
+          maxAmount: "",
+          roiPercent: "",
+          isActive: true,
+        })),
       }}
       investmentOptions={data.investmentOptions}
       formAction={createInvestmentPlan}

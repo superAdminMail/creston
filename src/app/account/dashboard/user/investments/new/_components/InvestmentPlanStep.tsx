@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowRight, BadgeCheck, ShieldCheck } from "lucide-react";
 
 import type { InvestmentOrderCreationPlanOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
 type InvestmentPlanCardOption = InvestmentOrderCreationPlanOption & {
@@ -37,8 +36,9 @@ export function InvestmentPlanStep({
           Choose an investment plan
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400">
-          Review the active plans available for your chosen investment type and
-          category, then select the structure that fits your intended order.
+          Review the active plans available for your chosen investment type,
+          then select the plan that contains the tier structure you want to use
+          for this order.
         </p>
       </div>
 
@@ -113,19 +113,19 @@ export function InvestmentPlanStep({
 
                       <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                          Minimum
+                          Tier options
                         </p>
                         <p className="mt-2 text-sm font-medium text-white">
-                          {formatCurrency(plan.minAmount, plan.currency)}
+                          {plan.tiersCountLabel}
                         </p>
                       </div>
 
                       <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                          Maximum
+                          Available range
                         </p>
                         <p className="mt-2 text-sm font-medium text-white">
-                          {formatCurrency(plan.maxAmount, plan.currency)}
+                          {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
                         </p>
                       </div>
                     </div>

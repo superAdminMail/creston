@@ -92,11 +92,10 @@ export default async function InvestmentPlanDetailsPage(
 
           <div className="rounded-[1.5rem] border border-white/10 bg-[#0b1120]/90 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] lg:w-[22rem]">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              Investable range
+              Tier coverage
             </p>
             <div className="mt-3 text-2xl font-semibold text-white">
-              {formatCurrency(plan.minAmount, plan.currency)} -{" "}
-              {formatCurrency(plan.maxAmount, plan.currency)}
+              {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
             </div>
             <p className="mt-4 text-sm leading-7 text-slate-300">
               Structured under {plan.investment.name} with a{" "}
@@ -143,24 +142,51 @@ export default async function InvestmentPlanDetailsPage(
 
             <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
               <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                Minimum amount
+                Tier options
               </dt>
               <dd className="mt-2 text-sm font-medium text-white">
-                {formatCurrency(plan.minAmount, plan.currency)}
+                {plan.tiersCountLabel}
               </dd>
             </div>
             <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
               <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                Maximum amount
+                Available range
               </dt>
               <dd className="mt-2 text-sm font-medium text-white">
-                {formatCurrency(plan.maxAmount, plan.currency)}
+                {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
               </dd>
             </div>
           </dl>
         </article>
 
         <aside className="space-y-6">
+          <article className="rounded-[1.75rem] border border-white/10 bg-[#0b1120]/90 p-6 shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
+            <h2 className="text-xl font-semibold text-white">Tier options</h2>
+            <div className="mt-5 space-y-3">
+              {plan.tiers.map((tier) => (
+                <div
+                  key={tier.id}
+                  className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {tier.levelLabel}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-400">
+                        {tier.roiPercent.toFixed(2)}% ROI target
+                      </p>
+                    </div>
+                    <p className="text-sm font-medium text-slate-200">
+                      {formatCurrency(tier.minAmount, plan.currency)} -{" "}
+                      {formatCurrency(tier.maxAmount, plan.currency)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
           <article className="rounded-[1.75rem] border border-white/10 bg-[#0b1120]/90 p-6 shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
             <h2 className="text-xl font-semibold text-white">
               Product details

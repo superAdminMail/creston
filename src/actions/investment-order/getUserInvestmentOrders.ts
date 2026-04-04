@@ -27,6 +27,11 @@ type UserInvestmentOrderListItem = {
     categoryLabel: string;
     periodLabel: string;
   };
+  tier: {
+    id: string;
+    levelLabel: string;
+    roiPercent: number;
+  };
   investment: {
     id: string;
     name: string;
@@ -141,6 +146,13 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
               },
             },
           },
+          investmentPlanTier: {
+            select: {
+              id: true,
+              level: true,
+              roiPercent: true,
+            },
+          },
         },
       },
     },
@@ -183,6 +195,11 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
         slug: order.investmentPlan.slug,
         categoryLabel: formatEnumLabel(order.investmentPlan.category),
         periodLabel: formatEnumLabel(order.investmentPlan.period),
+      },
+      tier: {
+        id: order.investmentPlanTier.id,
+        levelLabel: formatEnumLabel(order.investmentPlanTier.level),
+        roiPercent: toNumber(order.investmentPlanTier.roiPercent),
       },
       investment: {
         id: order.investmentPlan.investment.id,

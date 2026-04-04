@@ -2,7 +2,12 @@ import type { InvestmentPeriod, InvestmentPlanCategory } from "@/generated/prism
 
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
-import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+  formatTierLevel,
+} from "@/lib/formatters/formatters";
 
 export type SuperAdminInvestmentPlanFilters = {
   investmentId?: string;
@@ -10,6 +15,16 @@ export type SuperAdminInvestmentPlanFilters = {
   period?: string;
   currency?: string;
   isActive?: string;
+};
+
+export type SuperAdminInvestmentPlanTierSummary = {
+  id: string;
+  level: string;
+  levelLabel: string;
+  minAmount: number;
+  maxAmount: number;
+  roiPercent: number;
+  isActive: boolean;
 };
 
 export type SuperAdminInvestmentPlanListItem = {
@@ -22,13 +37,13 @@ export type SuperAdminInvestmentPlanListItem = {
   categoryLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
-  minAmount: number;
-  maxAmount: number;
-  minAmountLabel: string;
-  maxAmountLabel: string;
   currency: string;
   isActive: boolean;
   updatedAt: string;
+  tiersCount: number;
+  tiersCountLabel: string;
+  tierRangeLabel: string | null;
+  tiers: SuperAdminInvestmentPlanTierSummary[];
 };
 
 export type SuperAdminInvestmentOption = {
@@ -81,8 +96,6 @@ export async function getSuperAdminInvestmentPlans(
         slug: true,
         category: true,
         period: true,
-        minAmount: true,
-        maxAmount: true,
         currency: true,
         isActive: true,
         updatedAt: true,
@@ -90,6 +103,19 @@ export async function getSuperAdminInvestmentPlans(
           select: {
             id: true,
             name: true,
+          },
+        },
+        tiers: {
+          orderBy: {
+            level: "asc",
+          },
+          select: {
+            id: true,
+            level: true,
+            minAmount: true,
+            maxAmount: true,
+            roiPercent: true,
+            isActive: true,
           },
         },
       },
@@ -134,24 +160,49 @@ export async function getSuperAdminInvestmentPlans(
         label: formatEnumLabel(value),
       })),
     },
-    plans: plans.map((plan) => ({
-      id: plan.id,
-      name: plan.name,
-      slug: plan.slug,
-      investmentId: plan.investment.id,
-      investmentName: plan.investment.name,
-      category: plan.category,
-      categoryLabel: formatEnumLabel(plan.category),
-      period: plan.period,
-      periodLabel: formatEnumLabel(plan.period),
-      minAmount: Number(plan.minAmount),
-      maxAmount: Number(plan.maxAmount),
-      minAmountLabel: formatCurrency(Number(plan.minAmount), plan.currency),
-      maxAmountLabel: formatCurrency(Number(plan.maxAmount), plan.currency),
-      currency: plan.currency,
-      isActive: plan.isActive,
-      updatedAt: formatDateLabel(plan.updatedAt),
-    })),
+    plans: plans.map((plan) => {
+      const tiers = plan.tiers.map((tier) => ({
+        id: tier.id,
+        level: tier.level,
+        levelLabel: formatTierLevel(tier.level),
+        minAmount: Number(tier.minAmount),
+        maxAmount: Number(tier.maxAmount),
+        roiPercent: Number(tier.roiPercent),
+        isActive: tier.isActive,
+      }));
+      const activeTiers = tiers.filter((tier) => tier.isActive);
+
+      return {
+        id: plan.id,
+        name: plan.name,
+        slug: plan.slug,
+        investmentId: plan.investment.id,
+        investmentName: plan.investment.name,
+        category: plan.category,
+        categoryLabel: formatEnumLabel(plan.category),
+        period: plan.period,
+        periodLabel: formatEnumLabel(plan.period),
+        currency: plan.currency,
+        isActive: plan.isActive,
+        updatedAt: formatDateLabel(plan.updatedAt),
+        tiersCount: activeTiers.length,
+        tiersCountLabel:
+          activeTiers.length === 1
+            ? "1 tier option available"
+            : `${activeTiers.length} tier options available`,
+        tierRangeLabel:
+          activeTiers.length > 0
+            ? `${formatCurrency(
+                Math.min(...activeTiers.map((tier) => tier.minAmount)),
+                plan.currency,
+              )} - ${formatCurrency(
+                Math.max(...activeTiers.map((tier) => tier.maxAmount)),
+                plan.currency,
+              )}`
+            : null,
+        tiers,
+      };
+    }),
     investmentOptions,
   };
 }

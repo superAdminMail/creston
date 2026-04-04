@@ -1,17 +1,28 @@
 "use server";
 
 import type {
+  InvestmentTierLevel,
   InvestmentPeriod,
   InvestmentPlanCategory,
   InvestmentType,
 } from "@/generated/prisma";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
-import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatCurrency, formatEnumLabel, formatTierLevel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
 type Decimalish = {
   toNumber(): number;
+};
+
+export type InvestmentOrderCreationTierOption = {
+  id: string;
+  level: InvestmentTierLevel;
+  levelLabel: string;
+  minAmount: number;
+  maxAmount: number;
+  roiPercent: number;
+  isActive: boolean;
 };
 
 export type InvestmentOrderCreationPlanOption = {
@@ -25,10 +36,11 @@ export type InvestmentOrderCreationPlanOption = {
   categoryLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
-  minAmount: number;
-  maxAmount: number;
   currency: string;
   isActive: boolean;
+  tiers: InvestmentOrderCreationTierOption[];
+  tiersCountLabel: string;
+  tierRangeLabel: string | null;
 };
 
 export type InvestmentOrderCreationInvestmentOption = {
@@ -53,6 +65,7 @@ export type InvestmentOrderCreationOptionsData = {
   hasInvestorProfile: boolean;
   totalActiveInvestments: number;
   totalActivePlans: number;
+  totalActiveTiers: number;
   investments: InvestmentOrderCreationInvestmentOption[];
 };
 
@@ -82,6 +95,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       hasInvestorProfile: false,
       totalActiveInvestments: 0,
       totalActivePlans: 0,
+      totalActiveTiers: 0,
       investments: [],
     };
   }
@@ -93,6 +107,11 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       investmentPlans: {
         some: {
           isActive: true,
+          tiers: {
+            some: {
+              isActive: true,
+            },
+          },
         },
       },
     },
@@ -114,6 +133,11 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       investmentPlans: {
         where: {
           isActive: true,
+          tiers: {
+            some: {
+              isActive: true,
+            },
+          },
         },
         orderBy: {
           name: "asc",
@@ -125,10 +149,24 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           description: true,
           category: true,
           period: true,
-          minAmount: true,
-          maxAmount: true,
           currency: true,
           isActive: true,
+          tiers: {
+            where: {
+              isActive: true,
+            },
+            orderBy: {
+              level: "asc",
+            },
+            select: {
+              id: true,
+              level: true,
+              minAmount: true,
+              maxAmount: true,
+              roiPercent: true,
+              isActive: true,
+            },
+          },
         },
       },
     },
@@ -167,10 +205,31 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         categoryLabel: formatEnumLabel(plan.category),
         period: plan.period,
         periodLabel: formatEnumLabel(plan.period),
-        minAmount: toNumber(plan.minAmount),
-        maxAmount: toNumber(plan.maxAmount),
         currency: plan.currency,
         isActive: plan.isActive,
+        tiers: plan.tiers.map((tier) => ({
+          id: tier.id,
+          level: tier.level,
+          levelLabel: formatTierLevel(tier.level),
+          minAmount: toNumber(tier.minAmount),
+          maxAmount: toNumber(tier.maxAmount),
+          roiPercent: toNumber(tier.roiPercent),
+          isActive: tier.isActive,
+        })),
+        tiersCountLabel:
+          plan.tiers.length === 1
+            ? "1 tier option available"
+            : `${plan.tiers.length} tier options available`,
+        tierRangeLabel:
+          plan.tiers.length > 0
+            ? `${formatCurrency(
+                Math.min(...plan.tiers.map((tier) => toNumber(tier.minAmount))),
+                plan.currency,
+              )} - ${formatCurrency(
+                Math.max(...plan.tiers.map((tier) => toNumber(tier.maxAmount))),
+                plan.currency,
+              )}`
+            : null,
       })),
     }))
     .filter((investment) => investment.plans.length > 0);
@@ -180,6 +239,12 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
       (total, investment) => total + investment.plans.length,
+      0,
+    ),
+    totalActiveTiers: normalizedInvestments.reduce(
+      (total, investment) =>
+        total +
+        investment.plans.reduce((planTotal, plan) => planTotal + plan.tiers.length, 0),
       0,
     ),
     investments: normalizedInvestments,

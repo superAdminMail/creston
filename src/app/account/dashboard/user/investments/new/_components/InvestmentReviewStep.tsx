@@ -1,14 +1,19 @@
 import { useFormStatus } from "react-dom";
 import { ArrowLeft, BadgeCheck, Loader2, ShieldCheck } from "lucide-react";
 
-import type { InvestmentOrderCreationPlanOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
+import type {
+  InvestmentOrderCreationPlanOption,
+  InvestmentOrderCreationTierOption,
+} from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import type { CreateInvestmentOrderActionState } from "@/actions/investment-order/createInvestmentOrder.state";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/formatters";
 
 type InvestmentReviewStepProps = {
+  investmentId: string;
+  investmentName: string;
   plan: InvestmentOrderCreationPlanOption;
-  investmentTypeValue: string;
+  tier: InvestmentOrderCreationTierOption;
   investmentTypeLabel: string;
   amount: string;
   formAction: (formData: FormData) => void;
@@ -38,8 +43,10 @@ function SubmitButton() {
 }
 
 export function InvestmentReviewStep({
+  investmentId,
+  investmentName,
   plan,
-  investmentTypeValue,
+  tier,
   investmentTypeLabel,
   amount,
   formAction,
@@ -48,9 +55,9 @@ export function InvestmentReviewStep({
 }: InvestmentReviewStepProps) {
   return (
     <form action={formAction} className="space-y-6">
-      <input type="hidden" name="investmentType" value={investmentTypeValue} />
-      <input type="hidden" name="planCategory" value={plan.category} />
+      <input type="hidden" name="investmentId" value={investmentId} />
       <input type="hidden" name="investmentPlanId" value={plan.id} />
+      <input type="hidden" name="investmentPlanTierId" value={tier.id} />
       <input type="hidden" name="amount" value={amount} />
 
       <div>
@@ -58,7 +65,7 @@ export function InvestmentReviewStep({
           Review your investment order
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Confirm the selected plan, amount, and product profile before
+          Confirm the selected plan, tier, amount, and product profile before
           Havenstone creates your order for payment processing.
         </p>
       </div>
@@ -81,7 +88,7 @@ export function InvestmentReviewStep({
               Investment type
             </p>
             <p className="mt-2 text-sm font-medium text-white">
-              {plan.investmentName}
+              {investmentName}
             </p>
           </div>
 
@@ -108,6 +115,24 @@ export function InvestmentReviewStep({
               Selected plan
             </p>
             <p className="mt-2 text-sm font-medium text-white">{plan.name}</p>
+          </div>
+
+          <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              Tier
+            </p>
+            <p className="mt-2 text-sm font-medium text-white">
+              {tier.levelLabel}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              Tier ROI
+            </p>
+            <p className="mt-2 text-sm font-medium text-white">
+              {tier.roiPercent.toFixed(2)}%
+            </p>
           </div>
 
           <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">

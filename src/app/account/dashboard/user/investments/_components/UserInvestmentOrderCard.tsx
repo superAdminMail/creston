@@ -96,7 +96,7 @@ export function UserInvestmentOrderCard({
             {order.plan.categoryLabel}
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                 Amount
@@ -108,19 +108,28 @@ export function UserInvestmentOrderCard({
 
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                Plan period
+                Plan tier
               </p>
               <p className="mt-2 text-sm font-medium text-white">
-                {order.plan.periodLabel}
+                {order.tier.levelLabel}
               </p>
             </div>
 
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                Investment type
+                Target ROI
               </p>
               <p className="mt-2 text-sm font-medium text-white">
-                {order.investment.typeLabel}
+                {order.tier.roiPercent.toFixed(2)}%
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                Plan period
+              </p>
+              <p className="mt-2 text-sm font-medium text-white">
+                {order.plan.periodLabel}
               </p>
             </div>
 

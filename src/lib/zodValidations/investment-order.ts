@@ -3,9 +3,9 @@ import { z } from "zod";
 const decimalAmountPattern = /^\d+(?:\.\d{1,2})?$/;
 
 export const createInvestmentOrderSchema = z.object({
-  investmentType: z.string().trim().min(1, "Select an investment type."),
-  planCategory: z.string().trim().min(1, "Select a plan category."),
+  investmentId: z.string().trim().min(1, "Select an investment."),
   investmentPlanId: z.string().trim().min(1, "Select an investment plan."),
+  investmentPlanTierId: z.string().trim().min(1, "Select an investment tier."),
   amount: z
     .string()
     .trim()
