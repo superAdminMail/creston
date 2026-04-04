@@ -225,8 +225,8 @@ model Investment {
   description String?
 
   type   InvestmentType          @default(CRYPTO)
-  period InvestmentPeriod        @default(LONG_TERM)
   status InvestmentCatalogStatus @default(ACTIVE)
+  period InvestmentPeriod?       @default(LONG_TERM) //remove this later, its not useful anymore
 
   iconFileAssetId String?
   iconFileAsset   FileAsset? @relation("InvestmentIconAsset", fields: [iconFileAssetId], references: [id], onDelete: SetNull)
@@ -240,7 +240,6 @@ model Investment {
   updatedAt DateTime @updatedAt
 
   @@index([type])
-  @@index([period])
   @@index([status])
   @@index([isActive])
   @@index([sortOrder])
@@ -262,8 +261,9 @@ model InvestmentPlan {
   seoImageFileId String?
   seoImageFile   FileAsset? @relation("InvestmentPlanSeoImage", fields: [seoImageFileId], references: [id], onDelete: SetNull)
 
-  sortOrder Int              @default(0)
-  period    InvestmentPeriod @default(LONG_TERM)
+  sortOrder    Int              @default(0)
+  durationDays Int              @default(7)
+  period       InvestmentPeriod @default(LONG_TERM)
 
   currency String  @default("USD")
   isActive Boolean @default(true)

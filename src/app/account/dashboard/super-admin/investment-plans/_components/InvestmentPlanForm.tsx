@@ -249,7 +249,9 @@ export function InvestmentPlanForm({
             </div>
 
             <Field>
-              <FieldLabel className="text-slate-100">Tier management</FieldLabel>
+              <FieldLabel className="text-slate-100">
+                Tier management
+              </FieldLabel>
               <FieldContent>
                 <div className="space-y-4">
                   {tiers.map((tier, index) => (
@@ -336,7 +338,9 @@ export function InvestmentPlanForm({
                         </Field>
 
                         <Field>
-                          <FieldLabel className="text-slate-100">ROI %</FieldLabel>
+                          <FieldLabel className="text-slate-100">
+                            ROI %
+                          </FieldLabel>
                           <FieldContent>
                             <Input
                               value={tier.roiPercent}
@@ -370,7 +374,12 @@ export function InvestmentPlanForm({
           </FieldGroup>
 
           <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-            <Button asChild type="button" variant="outline" className="rounded-xl">
+            <Button
+              asChild
+              type="button"
+              variant="destructive"
+              className="rounded-xl"
+            >
               <Link href={cancelHref}>Cancel</Link>
             </Button>
             <SubmitButton label={submitLabel} />

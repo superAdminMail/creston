@@ -19,7 +19,7 @@ export default async function CreateManagementPage() {
       </div>
 
       {/* Form */}
-      <ManagementForm formAction={createManagement} />
+      <ManagementForm />
     </div>
   );
 }
