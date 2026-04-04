@@ -18,7 +18,6 @@ export type SiteSettingsFormActionState = {
   fieldErrors?: Partial<Record<SiteSettingsFieldName, string>>;
 };
 
-export const initialSiteSettingsFormActionState: SiteSettingsFormActionState =
-  {
-    status: "idle",
-  };
+export const initialSiteSettingsFormActionState: SiteSettingsFormActionState = {
+  status: "idle",
+};

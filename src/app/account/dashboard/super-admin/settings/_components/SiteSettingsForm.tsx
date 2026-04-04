@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { useFormStatus } from "react-dom";
 import { Building2, Tag, X } from "lucide-react";
 import { toast } from "sonner";
@@ -14,14 +20,9 @@ import type {
 import { upsertSiteConfiguration } from "@/actions/super-admin/site-settings/upsertSiteConfiguration";
 import type { SiteSettingsFormActionState } from "@/actions/super-admin/site-settings/siteSettingsForm.state";
 import { initialSiteSettingsFormActionState } from "@/actions/super-admin/site-settings/siteSettingsForm.state";
+
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
   FieldContent,
@@ -32,16 +33,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { SuperAdminFormSelect } from "../../_components/SuperAdminFormSelect";
 
+import {
+  normalizePhoneToE164,
+  splitNormalizedPhone,
+} from "@/lib/format-phone/phone";
+
+import { UploadButton } from "@/utils/uploadthing";
+import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
+import { deleteFileAction } from "@/actions/files/file";
+
 type SiteSettingsFormProps = {
   defaultValues: SiteSettingsFormValues;
   fileAssetOptions: SiteSettingsAssetOption[];
 };
 
+type PhoneFieldKey = "supportPhone";
+
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="btn-primary rounded-xl px-5" disabled={pending}>
+    <Button
+      type="submit"
+      className="btn-primary rounded-xl px-5"
+      disabled={pending}
+    >
       {pending ? "Saving..." : "Save site settings"}
     </Button>
   );
@@ -95,436 +111,311 @@ export function SiteSettingsForm({
   fileAssetOptions,
 }: SiteSettingsFormProps) {
   const router = useRouter();
-  const [state, formAction] = useActionState<SiteSettingsFormActionState, FormData>(
-    upsertSiteConfiguration,
-    initialSiteSettingsFormActionState,
-  );
+  const [state, formAction] = useActionState<
+    SiteSettingsFormActionState,
+    FormData
+  >(upsertSiteConfiguration, initialSiteSettingsFormActionState);
+  const [isPending, startTransition] = useTransition();
+
   const [siteName, setSiteName] = useState(defaultValues.siteName);
   const [siteTagline, setSiteTagline] = useState(defaultValues.siteTagline);
   const [siteDescription, setSiteDescription] = useState(
     defaultValues.siteDescription,
   );
   const [supportEmail, setSupportEmail] = useState(defaultValues.supportEmail);
-  const [supportPhone, setSupportPhone] = useState(defaultValues.supportPhone);
+
+  const [phoneFields, setPhoneFields] = useState<
+    Record<PhoneFieldKey, { countryCode: string; localNumber: string }>
+  >({
+    supportPhone: splitNormalizedPhone(defaultValues.supportPhone),
+  });
+
   const [locale, setLocale] = useState(defaultValues.locale);
   const [defaultTwitterHandle, setDefaultTwitterHandle] = useState(
     defaultValues.defaultTwitterHandle,
   );
   const [facebookUrl, setFacebookUrl] = useState(defaultValues.facebookUrl);
   const [instagramUrl, setInstagramUrl] = useState(defaultValues.instagramUrl);
+
   const [siteLogoFileAssetId, setSiteLogoFileAssetId] = useState(
     defaultValues.siteLogoFileAssetId,
   );
+
   const [defaultOgImageFileAssetId, setDefaultOgImageFileAssetId] = useState(
     defaultValues.defaultOgImageFileAssetId,
   );
+
+  const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
+  const [uploadPreviewKey, setUploadPreviewKey] = useState<string | null>(null);
+
   const [keywords, setKeywords] = useState<string[]>(defaultValues.keywords);
   const [keywordInput, setKeywordInput] = useState("");
 
-  const serializedKeywords = useMemo(() => JSON.stringify(keywords), [keywords]);
+  const serializedKeywords = useMemo(
+    () => JSON.stringify(keywords),
+    [keywords],
+  );
 
   const siteLogoAsset = useMemo(
     () =>
-      fileAssetOptions.find((asset) => asset.id === siteLogoFileAssetId) ?? null,
+      fileAssetOptions.find((asset) => asset.id === siteLogoFileAssetId) ??
+      null,
     [fileAssetOptions, siteLogoFileAssetId],
   );
+
   const defaultOgImageAsset = useMemo(
     () =>
-      fileAssetOptions.find((asset) => asset.id === defaultOgImageFileAssetId) ??
-      null,
+      fileAssetOptions.find(
+        (asset) => asset.id === defaultOgImageFileAssetId,
+      ) ?? null,
     [defaultOgImageFileAssetId, fileAssetOptions],
   );
 
   useEffect(() => {
     if (state.status === "success" && state.message) {
-      toast.success(state.message, { id: "site-settings-success" });
+      toast.success(state.message);
       router.refresh();
     }
 
     if (state.status === "error" && state.message) {
-      toast.error(state.message, { id: "site-settings-error" });
+      toast.error(state.message);
     }
-  }, [router, state.message, state.status]);
+  }, [router, state]);
 
   const addKeywords = (value: string) => {
-    const nextKeywords = normalizeKeywordInput(value);
+    const next = normalizeKeywordInput(value);
+    if (!next.length) return;
 
-    if (nextKeywords.length === 0) {
-      return;
-    }
-
-    setKeywords((current) =>
-      Array.from(
-        new Set(
-          [...current, ...nextKeywords].map((keyword) => keyword.toLowerCase()),
-        ),
-      ),
+    setKeywords((prev) =>
+      Array.from(new Set([...prev, ...next.map((k) => k.toLowerCase())])),
     );
     setKeywordInput("");
   };
 
   const removeKeyword = (keyword: string) => {
-    setKeywords((current) => current.filter((item) => item !== keyword));
+    setKeywords((prev) => prev.filter((k) => k !== keyword));
   };
+
+  const syncPhoneValue = (
+    field: PhoneFieldKey,
+    nextValue: { countryCode: string; localNumber: string },
+  ) => {
+    setPhoneFields((current) => ({
+      ...current,
+      [field]: nextValue,
+    }));
+  };
+
+  const renderPhoneField = ({
+    field,
+    label,
+    error,
+  }: {
+    field: PhoneFieldKey;
+    label: string;
+    error?: string;
+  }) => (
+    <div className="space-y-2">
+      <p className="text-sm text-white">{label}</p>
+
+      <div className="grid gap-2 sm:grid-cols-3">
+        <div className="flex items-center border px-3 rounded-md">
+          <span>+</span>
+          <Input
+            value={phoneFields[field].countryCode}
+            onChange={(e) =>
+              syncPhoneValue(field, {
+                countryCode: e.target.value.replace(/\D/g, ""),
+                localNumber: phoneFields[field].localNumber,
+              })
+            }
+          />
+        </div>
+
+        <Input
+          className="sm:col-span-2"
+          value={phoneFields[field].localNumber}
+          onChange={(e) =>
+            syncPhoneValue(field, {
+              countryCode: phoneFields[field].countryCode,
+              localNumber: e.target.value.replace(/\D/g, ""),
+            })
+          }
+        />
+      </div>
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
 
   return (
     <form action={formAction} className="space-y-6">
+      {/* HIDDEN */}
       <input type="hidden" name="keywords" value={serializedKeywords} />
+      <input
+        type="hidden"
+        name="siteLogoFileAssetId"
+        value={siteLogoFileAssetId}
+      />
+      <input
+        type="hidden"
+        name="supportPhone"
+        value={(() => {
+          try {
+            return normalizePhoneToE164(phoneFields.supportPhone);
+          } catch {
+            return "";
+          }
+        })()}
+      />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+      {/* CONTENT */}
+      <div className="grid gap-6 xl:grid-cols-2">
         <div className="space-y-6">
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
+          {/* GENERAL */}
+          <Card>
             <CardHeader>
               <CardTitle>General</CardTitle>
-              <CardDescription>
-                Core copy used throughout the Havenstone public experience.
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              <FieldGroup className="gap-5">
+              <FieldGroup>
                 <Field>
-                  <FieldLabel className="text-slate-100">Site name</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="siteName"
-                      value={siteName}
-                      onChange={(event) => setSiteName(event.target.value)}
-                      className="input-premium h-11 rounded-xl"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.siteName}
-                    </FieldDescription>
-                  </FieldContent>
+                  <FieldLabel>Site name</FieldLabel>
+                  <Input
+                    name="siteName"
+                    value={siteName}
+                    onChange={(e) => setSiteName(e.target.value)}
+                  />
                 </Field>
 
                 <Field>
-                  <FieldLabel className="text-slate-100">Site tagline</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="siteTagline"
-                      value={siteTagline}
-                      onChange={(event) => setSiteTagline(event.target.value)}
-                      className="input-premium h-11 rounded-xl"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.siteTagline}
-                    </FieldDescription>
-                  </FieldContent>
+                  <FieldLabel>Tagline</FieldLabel>
+                  <Input
+                    name="siteTagline"
+                    value={siteTagline}
+                    onChange={(e) => setSiteTagline(e.target.value)}
+                  />
                 </Field>
 
                 <Field>
-                  <FieldLabel className="text-slate-100">
-                    Site description
-                  </FieldLabel>
-                  <FieldContent>
-                    <textarea
-                      name="siteDescription"
-                      value={siteDescription}
-                      onChange={(event) => setSiteDescription(event.target.value)}
-                      rows={5}
-                      className="input-premium min-h-32 w-full rounded-xl px-3 py-3"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.siteDescription}
-                    </FieldDescription>
-                  </FieldContent>
+                  <FieldLabel>Description</FieldLabel>
+                  <textarea
+                    name="siteDescription"
+                    value={siteDescription}
+                    onChange={(e) => setSiteDescription(e.target.value)}
+                  />
                 </Field>
               </FieldGroup>
             </CardContent>
           </Card>
 
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
+          {/* BRANDING */}
+          <Card>
             <CardHeader>
               <CardTitle>Branding</CardTitle>
-              <CardDescription>
-                Select FileAsset-backed brand images for the public site.
-              </CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-5">
-              <div className="grid gap-5 lg:grid-cols-2">
-                <Field>
-                  <FieldLabel className="text-slate-100">Site logo</FieldLabel>
-                  <FieldContent>
-                    <SuperAdminFormSelect
-                      name="siteLogoFileAssetId"
-                      value={siteLogoFileAssetId}
-                      onValueChange={setSiteLogoFileAssetId}
-                      placeholder="Select site logo"
-                      emptyOptionLabel="No site logo"
-                      options={fileAssetOptions.map((option) => ({
-                        value: option.id,
-                        label: option.label,
-                      }))}
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.siteLogoFileAssetId}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
+              {/* Upload */}
+              <UploadButton
+                endpoint="siteLogo"
+                onClientUploadComplete={async (res) => {
+                  const file = res?.[0];
+                  if (!file) return;
 
-                <Field>
-                  <FieldLabel className="text-slate-100">
-                    Default OG image
-                  </FieldLabel>
-                  <FieldContent>
-                    <SuperAdminFormSelect
-                      name="defaultOgImageFileAssetId"
-                      value={defaultOgImageFileAssetId}
-                      onValueChange={setDefaultOgImageFileAssetId}
-                      placeholder="Select default OG image"
-                      emptyOptionLabel="No OG image"
-                      options={fileAssetOptions.map((option) => ({
-                        value: option.id,
-                        label: option.label,
-                      }))}
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.defaultOgImageFileAssetId}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
-              </div>
+                  const asset = await createFileAssetFromUpload({
+                    url: file.url,
+                    key: file.key,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                  });
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <FileAssetPreview title="Site logo" asset={siteLogoAsset} />
-                <FileAssetPreview
-                  title="Default OG image"
-                  asset={defaultOgImageAsset}
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  setSiteLogoFileAssetId(asset.id);
+                  setUploadPreviewUrl(file.url);
+                  setUploadPreviewKey(file.key);
 
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
-            <CardHeader>
-              <CardTitle>Contact</CardTitle>
-              <CardDescription>
-                Public support information used across the Havenstone site.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-5 lg:grid-cols-2">
-                <Field>
-                  <FieldLabel className="text-slate-100">
-                    Support email
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="supportEmail"
-                      value={supportEmail}
-                      onChange={(event) => setSupportEmail(event.target.value)}
-                      className="input-premium h-11 rounded-xl"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.supportEmail}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
+                  toast.success("Logo uploaded");
+                }}
+                className="
+    ut-button:bg-white/[0.08]
+    ut-button:text-blue-600
+    ut-button:border
+    ut-button:border-blue-500/30
+    ut-button:rounded-full
+    ut-button:px-5
+    ut-button:py-2
+    ut-button:text-sm
+    hover:ut-button:bg-blue-500/20
+  "
+              />
 
-                <Field>
-                  <FieldLabel className="text-slate-100">
-                    Support phone
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="supportPhone"
-                      value={supportPhone}
-                      onChange={(event) => setSupportPhone(event.target.value)}
-                      className="input-premium h-11 rounded-xl"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.supportPhone}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
-              </div>
-            </CardContent>
-          </Card>
+              {uploadPreviewUrl && (
+                <div className="flex gap-4 items-center">
+                  <Image
+                    src={uploadPreviewUrl}
+                    alt="preview"
+                    width={64}
+                    height={64}
+                  />
 
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
-            <CardHeader>
-              <CardTitle>Social</CardTitle>
-              <CardDescription>
-                Official public handles and destination links.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldGroup className="gap-5">
-                <Field>
-                  <FieldLabel className="text-slate-100">
-                    Twitter handle
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="defaultTwitterHandle"
-                      value={defaultTwitterHandle}
-                      onChange={(event) =>
-                        setDefaultTwitterHandle(event.target.value)
-                      }
-                      className="input-premium h-11 rounded-xl"
-                      placeholder="@havenstone"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.defaultTwitterHandle}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      if (!uploadPreviewKey) return;
 
-                <div className="grid gap-5 lg:grid-cols-2">
-                  <Field>
-                    <FieldLabel className="text-slate-100">Facebook URL</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        name="facebookUrl"
-                        value={facebookUrl}
-                        onChange={(event) => setFacebookUrl(event.target.value)}
-                        className="input-premium h-11 rounded-xl"
-                      />
-                      <FieldDescription className="text-slate-400">
-                        {state.fieldErrors?.facebookUrl}
-                      </FieldDescription>
-                    </FieldContent>
-                  </Field>
+                      await deleteFileAction(uploadPreviewKey);
 
-                  <Field>
-                    <FieldLabel className="text-slate-100">Instagram URL</FieldLabel>
-                    <FieldContent>
-                      <Input
-                        name="instagramUrl"
-                        value={instagramUrl}
-                        onChange={(event) => setInstagramUrl(event.target.value)}
-                        className="input-premium h-11 rounded-xl"
-                      />
-                      <FieldDescription className="text-slate-400">
-                        {state.fieldErrors?.instagramUrl}
-                      </FieldDescription>
-                    </FieldContent>
-                  </Field>
+                      setUploadPreviewUrl(null);
+                      setUploadPreviewKey(null);
+                      setSiteLogoFileAssetId("");
+                    }}
+                  >
+                    Delete
+                  </Button>
                 </div>
-              </FieldGroup>
+              )}
+
+              {/* Existing select */}
+              <SuperAdminFormSelect
+                name="siteLogoFileAssetId"
+                value={siteLogoFileAssetId}
+                placeholder="Select a logo"
+                onValueChange={setSiteLogoFileAssetId}
+                options={fileAssetOptions.map((o) => ({
+                  value: o.id,
+                  label: o.label,
+                }))}
+              />
+
+              <FileAssetPreview title="Site logo" asset={siteLogoAsset} />
             </CardContent>
           </Card>
         </div>
 
+        {/* RIGHT */}
         <div className="space-y-6">
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
+          <Card>
             <CardHeader>
-              <CardTitle>Localization</CardTitle>
-              <CardDescription>
-                Locale and keyword defaults used in metadata and discovery.
-              </CardDescription>
+              <CardTitle>Contact</CardTitle>
             </CardHeader>
+
             <CardContent>
-              <FieldGroup className="gap-5">
-                <Field>
-                  <FieldLabel className="text-slate-100">Locale</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      name="locale"
-                      value={locale}
-                      onChange={(event) => setLocale(event.target.value)}
-                      className="input-premium h-11 rounded-xl"
-                      placeholder="en_US"
-                    />
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.locale}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
+              <Input
+                name="supportEmail"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+              />
 
-                <Field>
-                  <FieldLabel className="text-slate-100">Keywords</FieldLabel>
-                  <FieldContent>
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                      <div className="flex flex-wrap gap-2">
-                        {keywords.map((keyword) => (
-                          <span
-                            key={keyword}
-                            className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-100"
-                          >
-                            <Tag className="h-3.5 w-3.5" />
-                            {keyword}
-                            <button
-                              type="button"
-                              onClick={() => removeKeyword(keyword)}
-                              className="rounded-full text-blue-100/75 transition hover:text-white"
-                              aria-label={`Remove ${keyword}`}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                      <div className="mt-3 flex gap-2">
-                        <Input
-                          value={keywordInput}
-                          onChange={(event) => setKeywordInput(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === ",") {
-                              event.preventDefault();
-                              addKeywords(keywordInput);
-                            }
-                          }}
-                          onBlur={() => addKeywords(keywordInput)}
-                          className="input-premium h-11 rounded-xl"
-                          placeholder="Add keyword and press Enter"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="rounded-xl"
-                          onClick={() => addKeywords(keywordInput)}
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                    <FieldDescription className="text-slate-400">
-                      {state.fieldErrors?.keywords ||
-                        "Use Enter or commas to add keywords."}
-                    </FieldDescription>
-                  </FieldContent>
-                </Field>
-              </FieldGroup>
+              {renderPhoneField({
+                field: "supportPhone",
+                label: "Phone",
+                error: state.fieldErrors?.supportPhone,
+              })}
             </CardContent>
           </Card>
 
-          <Card className="border-white/8 bg-[#08101d]/96 text-white shadow-[0_24px_70px_rgba(2,6,23,0.28)]">
-            <CardHeader>
-              <CardTitle>Publishing note</CardTitle>
-              <CardDescription>
-                Changes here affect the singleton configuration used by the
-                entire Havenstone public surface.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm leading-6 text-slate-300">
-                Save after branding or support updates so cached metadata and
-                public pages can revalidate with the latest configuration.
-              </div>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                    <Building2 className="h-4 w-4 text-blue-300" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      Singleton configuration
-                    </p>
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Havenstone keeps one site configuration record. This form
-                      will create it if missing and update it thereafter.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <Button type="button" variant="outline" className="rounded-xl" asChild>
-              <a href="/account/dashboard/super-admin">Cancel</a>
-            </Button>
+          <div className="flex justify-end">
             <SubmitButton />
           </div>
         </div>

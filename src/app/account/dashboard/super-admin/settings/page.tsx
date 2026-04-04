@@ -1,22 +1,8 @@
 import Link from "next/link";
-import {
-  LockKeyhole,
-  ShieldCheck,
-  Sparkles,
-  KeyRound,
-  BellRing,
-  Building2,
-} from "lucide-react";
+import { LockKeyhole, Building2 } from "lucide-react";
 
 import { getSiteConfiguration } from "@/actions/super-admin/site-settings/getSiteConfiguration";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SiteSettingsForm } from "./_components/SiteSettingsForm";
 import { SiteSettingsHeader } from "./_components/SiteSettingsHeader";

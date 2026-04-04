@@ -1,9 +1,11 @@
-import { cache } from "react";
+"use server";
 
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 export const getSiteConfigurationCached = cache(async () => {
-  return prisma.siteConfiguration.findFirst({
+  return prisma.siteConfiguration.findUnique({
+    where: { id: "default" },
     select: {
       id: true,
       siteName: true,
@@ -16,18 +18,25 @@ export const getSiteConfigurationCached = cache(async () => {
       defaultTwitterHandle: true,
       facebookUrl: true,
       instagramUrl: true,
+
       siteLogoFileAssetId: true,
       defaultOgImageFileAssetId: true,
+
       siteLogoFileAsset: {
         select: {
           id: true,
           url: true,
+          storageKey: true,
+          fileName: true,
         },
       },
+
       defaultOgImageFileAsset: {
         select: {
           id: true,
           url: true,
+          storageKey: true,
+          fileName: true,
         },
       },
     },
