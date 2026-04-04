@@ -1,4 +1,4 @@
-import type { InvestmentPeriod, InvestmentPlanCategory } from "@/generated/prisma";
+import type { InvestmentPeriod } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
@@ -11,7 +11,6 @@ import {
 
 export type SuperAdminInvestmentPlanFilters = {
   investmentId?: string;
-  category?: string;
   period?: string;
   currency?: string;
   isActive?: string;
@@ -33,8 +32,6 @@ export type SuperAdminInvestmentPlanListItem = {
   slug: string;
   investmentId: string;
   investmentName: string;
-  category: InvestmentPlanCategory;
-  categoryLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
   currency: string;
@@ -56,7 +53,6 @@ export type SuperAdminInvestmentPlansData = {
   filters: SuperAdminInvestmentPlanFilters;
   filterOptions: {
     investments: SuperAdminInvestmentOption[];
-    categories: Array<{ value: InvestmentPlanCategory; label: string }>;
     periods: Array<{ value: InvestmentPeriod; label: string }>;
   };
   plans: SuperAdminInvestmentPlanListItem[];
@@ -78,9 +74,6 @@ export async function getSuperAdminInvestmentPlans(
     prisma.investmentPlan.findMany({
       where: {
         ...(filters.investmentId ? { investmentId: filters.investmentId } : {}),
-        ...(filters.category
-          ? { category: filters.category as InvestmentPlanCategory }
-          : {}),
         ...(filters.period ? { period: filters.period as InvestmentPeriod } : {}),
         ...(filters.currency
           ? { currency: filters.currency.trim().toUpperCase() }
@@ -94,7 +87,6 @@ export async function getSuperAdminInvestmentPlans(
         id: true,
         name: true,
         slug: true,
-        category: true,
         period: true,
         currency: true,
         isActive: true,
@@ -140,21 +132,6 @@ export async function getSuperAdminInvestmentPlans(
     filters,
     filterOptions: {
       investments: investmentOptions,
-      categories: [
-        "SAVINGS",
-        "PERSONAL_RETIREMENT",
-        "CHILD_EDUCATION",
-        "HOME_OWNERSHIP",
-        "VEHICLE",
-        "EMERGENCY_FUND",
-        "WEALTH_BUILDING",
-        "INCOME_GENERATION",
-        "CAPITAL_PRESERVATION",
-        "OTHER",
-      ].map((value) => ({
-        value: value as InvestmentPlanCategory,
-        label: formatEnumLabel(value),
-      })),
       periods: ["SHORT_TERM", "MEDIUM_TERM", "LONG_TERM"].map((value) => ({
         value: value as InvestmentPeriod,
         label: formatEnumLabel(value),
@@ -178,8 +155,6 @@ export async function getSuperAdminInvestmentPlans(
         slug: plan.slug,
         investmentId: plan.investment.id,
         investmentName: plan.investment.name,
-        category: plan.category,
-        categoryLabel: formatEnumLabel(plan.category),
         period: plan.period,
         periodLabel: formatEnumLabel(plan.period),
         currency: plan.currency,

@@ -57,8 +57,7 @@ export function InvestmentAmountStep({
           <div className="min-w-0">
             <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
             <p className="mt-1 text-sm text-slate-400">
-              {plan.categoryLabel} | {plan.periodLabel} | {plan.investmentName} |{" "}
-              {tier.levelLabel}
+              {plan.periodLabel} | {plan.investmentName} | {tier.levelLabel}
             </p>
             <p className="mt-3 text-sm leading-6 text-slate-300">
               {helperText}

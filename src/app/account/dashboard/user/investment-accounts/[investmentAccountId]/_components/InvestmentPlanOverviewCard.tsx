@@ -46,19 +46,19 @@ export function InvestmentPlanOverviewCard({
 
         <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Category
+            Period
           </p>
           <p className="mt-3 text-base font-semibold text-white">
-            {account.plan.categoryLabel}
+            {account.plan.periodLabel}
           </p>
         </div>
 
         <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Period
+            Tier options
           </p>
           <p className="mt-3 text-base font-semibold text-white">
-            {account.plan.periodLabel}
+            {account.plan.tiersCountLabel}
           </p>
         </div>
 

@@ -103,15 +103,6 @@ export function InvestmentReviewStep({
 
           <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
             <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Plan category
-            </p>
-            <p className="mt-2 text-sm font-medium text-white">
-              {plan.categoryLabel}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
-            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Selected plan
             </p>
             <p className="mt-2 text-sm font-medium text-white">{plan.name}</p>

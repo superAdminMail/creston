@@ -17,7 +17,6 @@ type InvestmentPlanSeoInput = {
   seoDescription?: string | null;
   seoImageUrl?: string | null;
   currency?: string | null;
-  category?: string | null;
   period?: string | null;
   riskLevel?: string | null;
 };
@@ -103,9 +102,6 @@ export function resolveInvestmentPlanSeo(
   site: SiteSeoConfig,
   plan: InvestmentPlanSeoInput,
 ): ResolvedSeoFields {
-  const categoryLabel = firstNonEmpty(plan.category)
-    ? formatEnumLabel(plan.category as string)
-    : undefined;
   const periodLabel = firstNonEmpty(plan.period)
     ? formatEnumLabel(plan.period as string)
     : undefined;
@@ -119,7 +115,6 @@ export function resolveInvestmentPlanSeo(
     plan.description,
     [
       `Explore the ${plan.name} investment plan on ${site.siteName}`,
-      categoryLabel ? `with a ${categoryLabel.toLowerCase()} strategy` : null,
       periodLabel ? `built for a ${periodLabel.toLowerCase()} horizon` : null,
       riskLevelLabel
         ? `and a ${riskLevelLabel.toLowerCase()} risk profile`
@@ -136,6 +131,6 @@ export function resolveInvestmentPlanSeo(
     title: firstNonEmpty(plan.seoTitle, generatedTitle),
     description: firstNonEmpty(plan.seoDescription, generatedDescription),
     imageUrl: plan.seoImageUrl,
-    keywords: [plan.name, categoryLabel, periodLabel, riskLevelLabel],
+    keywords: [plan.name, periodLabel, riskLevelLabel],
   });
 }

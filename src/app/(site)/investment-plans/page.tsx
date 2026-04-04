@@ -62,7 +62,7 @@ export default async function InvestmentPlansPage() {
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300">
                     <span className="rounded-full border border-white/10 px-2.5 py-1">
-                      {plan.categoryLabel}
+                      {plan.investment.typeLabel}
                     </span>
                   </div>
                   <h2 className="text-xl font-semibold text-white">

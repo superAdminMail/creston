@@ -5,7 +5,6 @@ import {
   type AccountStatus,
   type InvestmentCatalogStatus,
   type InvestmentPeriod,
-  type InvestmentPlanCategory,
   type InvestmentType,
 } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
@@ -37,7 +36,6 @@ const investmentAccountDetailsSelect =
         name: true,
         slug: true,
         description: true,
-        category: true,
         period: true,
         currency: true,
         isActive: true,
@@ -100,8 +98,6 @@ export type InvestmentAccountDetailsViewModel = {
     name: string;
     slug: string;
     description: string;
-    category: InvestmentPlanCategory;
-    categoryLabel: string;
     period: InvestmentPeriod;
     periodLabel: string;
     currency: string;
@@ -202,8 +198,6 @@ function mapInvestmentAccountDetails(
       description:
         account.investmentPlan.description?.trim() ||
         "Structured investment plan for long-term financial growth.",
-      category: account.investmentPlan.category,
-      categoryLabel: formatEnumLabel(account.investmentPlan.category),
       period: account.investmentPlan.period,
       periodLabel: formatEnumLabel(account.investmentPlan.period),
       currency: account.investmentPlan.currency,

@@ -38,7 +38,6 @@ type InvestmentPlanFormValues = {
   name: string;
   slug: string;
   description: string;
-  category: string;
   period: string;
   currency: string;
   tiers: InvestmentPlanTierFormValue[];
@@ -83,7 +82,6 @@ export function InvestmentPlanForm({
   );
   const [name, setName] = useState(defaultValues.name);
   const [investmentId, setInvestmentId] = useState(defaultValues.investmentId);
-  const [category, setCategory] = useState(defaultValues.category);
   const [period, setPeriod] = useState(defaultValues.period);
   const [isActive, setIsActive] = useState(String(defaultValues.isActive));
   const [tiers, setTiers] = useState<InvestmentPlanTierFormValue[]>(
@@ -209,36 +207,7 @@ export function InvestmentPlanForm({
               </FieldContent>
             </Field>
 
-            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              <Field>
-                <FieldLabel className="text-slate-100">Category</FieldLabel>
-                <FieldContent>
-                  <SuperAdminFormSelect
-                    name="category"
-                    value={category}
-                    onValueChange={setCategory}
-                    placeholder="Select category"
-                    options={[
-                      "SAVINGS",
-                      "PERSONAL_RETIREMENT",
-                      "CHILD_EDUCATION",
-                      "HOME_OWNERSHIP",
-                      "VEHICLE",
-                      "EMERGENCY_FUND",
-                      "WEALTH_BUILDING",
-                      "INCOME_GENERATION",
-                      "CAPITAL_PRESERVATION",
-                      "OTHER",
-                    ].map((option) => ({
-                      value: option,
-                      label: option.replaceAll("_", " "),
-                    }))}
-                  />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.category}
-                  </FieldDescription>
-                </FieldContent>
-              </Field>
+            <div className="grid gap-5 lg:grid-cols-2">
               <Field>
                 <FieldLabel className="text-slate-100">Period</FieldLabel>
                 <FieldContent>

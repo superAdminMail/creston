@@ -93,7 +93,7 @@ export function UserInvestmentOrderCard({
 
           <p className="text-sm leading-6 text-slate-400">
             {order.investment.name} | {order.investment.typeLabel} |{" "}
-            {order.plan.categoryLabel}
+            {order.plan.periodLabel}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">

@@ -73,14 +73,6 @@ function InvestmentPlanMobileCard({
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Category
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {plan.categoryLabel}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
             Period
           </p>
           <p className="mt-2 text-sm font-medium text-white">
@@ -135,13 +127,6 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
           },
           {
             kind: "select",
-            name: "category",
-            placeholder: "All categories",
-            value: data.filters.category,
-            options: data.filterOptions.categories,
-          },
-          {
-            kind: "select",
             name: "period",
             placeholder: "All periods",
             value: data.filters.period,
@@ -187,15 +172,6 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             render: (plan) => (
               <span className="text-sm text-slate-200">
                 {plan.investmentName}
-              </span>
-            ),
-          },
-          {
-            key: "category",
-            header: "Category",
-            render: (plan) => (
-              <span className="text-sm text-slate-200">
-                {plan.categoryLabel}
               </span>
             ),
           },

@@ -3,7 +3,6 @@
 import type {
   InvestmentTierLevel,
   InvestmentPeriod,
-  InvestmentPlanCategory,
   InvestmentType,
 } from "@/generated/prisma";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
@@ -32,8 +31,6 @@ export type InvestmentOrderCreationPlanOption = {
   name: string;
   slug: string;
   description: string;
-  category: InvestmentPlanCategory;
-  categoryLabel: string;
   period: InvestmentPeriod;
   periodLabel: string;
   currency: string;
@@ -147,7 +144,6 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           name: true,
           slug: true,
           description: true,
-          category: true,
           period: true,
           currency: true,
           isActive: true,
@@ -201,8 +197,6 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         description:
           plan.description?.trim() ||
           "Platform-managed investment plan with structured contribution boundaries.",
-        category: plan.category,
-        categoryLabel: formatEnumLabel(plan.category),
         period: plan.period,
         periodLabel: formatEnumLabel(plan.period),
         currency: plan.currency,

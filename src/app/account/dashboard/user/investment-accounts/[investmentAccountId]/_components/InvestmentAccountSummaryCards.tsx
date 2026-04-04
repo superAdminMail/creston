@@ -8,8 +8,8 @@ export function InvestmentAccountSummaryCards({
 }) {
   const cards = [
     {
-      label: "Plan category",
-      value: account.plan.categoryLabel,
+      label: "Plan period",
+      value: account.plan.periodLabel,
       icon: BriefcaseBusiness,
     },
     {

@@ -1,17 +1,13 @@
 import { z } from "zod";
 
-import {
-  InvestmentPeriod,
-  InvestmentPlanCategory,
-  InvestmentTierLevel,
-} from "@/generated/prisma";
+import { InvestmentPeriod, InvestmentTierLevel } from "@/generated/prisma";
 import { slugify } from "@/lib/slugs/slugify";
 
 const decimalPattern = /^\d+(?:\.\d{1,2})?$/;
 const tierLevelOrder: Record<InvestmentTierLevel, number> = {
-  STARTER: 0,
-  GROWTH: 1,
-  PREMIUM: 2,
+  CORE: 0,
+  ADVANCED: 1,
+  ELITE: 2,
 };
 
 const investmentPlanTierInputSchema = z.object({
@@ -42,9 +38,6 @@ export const investmentPlanFormSchema = z
     name: z.string().trim().min(2, "Plan name is required."),
     slug: z.string().trim().optional().or(z.literal("")),
     description: z.string().trim().optional().or(z.literal("")),
-    category: z.nativeEnum(InvestmentPlanCategory, {
-      message: "Select a valid plan category.",
-    }),
     period: z.nativeEnum(InvestmentPeriod, {
       message: "Select a valid investment period.",
     }),
@@ -58,7 +51,8 @@ export const investmentPlanFormSchema = z
     const activeTiers = values.tiers
       .filter((tier) => tier.isActive)
       .sort(
-        (left, right) => tierLevelOrder[left.level] - tierLevelOrder[right.level],
+        (left, right) =>
+          tierLevelOrder[left.level] - tierLevelOrder[right.level],
       );
 
     if (activeTiers.length === 0) {
@@ -148,7 +142,6 @@ export function normalizeInvestmentPlanFormValues(
     slugSource,
     normalizedSlug: slugify(slugSource),
     description: values.description?.trim() || null,
-    category: values.category,
     period: values.period,
     currency: values.currency.trim().toUpperCase(),
     tiers: values.tiers
@@ -161,7 +154,8 @@ export function normalizeInvestmentPlanFormValues(
         isActive: tier.isActive,
       }))
       .sort(
-        (left, right) => tierLevelOrder[left.level] - tierLevelOrder[right.level],
+        (left, right) =>
+          tierLevelOrder[left.level] - tierLevelOrder[right.level],
       ),
     isActive: values.isActive,
   };

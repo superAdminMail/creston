@@ -121,7 +121,7 @@ export function InvestmentDetailsCard({
                       {plan.name}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      {plan.categoryLabel} |{" "}
+                      {plan.periodLabel} |{" "}
                       {plan.isActive ? "Active" : "Inactive"}
                     </p>
                   </div>

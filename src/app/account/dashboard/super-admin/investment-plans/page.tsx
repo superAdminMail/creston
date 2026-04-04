@@ -6,7 +6,6 @@ import { InvestmentPlansTable } from "./_components/InvestmentPlansTable";
 type SuperAdminInvestmentPlansPageProps = {
   searchParams?: Promise<{
     investmentId?: string;
-    category?: string;
     period?: string;
     currency?: string;
     isActive?: string;
@@ -20,7 +19,6 @@ export default async function SuperAdminInvestmentPlansPage({
   const params = searchParams ? await searchParams : undefined;
   const data = await getSuperAdminInvestmentPlans({
     investmentId: params?.investmentId,
-    category: params?.category,
     period: params?.period,
     currency: params?.currency,
     isActive: params?.isActive,

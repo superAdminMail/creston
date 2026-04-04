@@ -29,7 +29,7 @@ export type SuperAdminInvestmentDetails = {
     id: string;
     name: string;
     slug: string;
-    categoryLabel: string;
+    periodLabel: string;
     isActive: boolean;
   }>;
   formDefaults: {
@@ -80,7 +80,7 @@ export async function getSuperAdminInvestmentById(
             id: true,
             name: true,
             slug: true,
-            category: true,
+            period: true,
             isActive: true,
           },
         },
@@ -114,7 +114,7 @@ export async function getSuperAdminInvestmentById(
       id: plan.id,
       name: plan.name,
       slug: plan.slug,
-      categoryLabel: formatEnumLabel(plan.category),
+      periodLabel: formatEnumLabel(plan.period),
       isActive: plan.isActive,
     })),
     formDefaults: {

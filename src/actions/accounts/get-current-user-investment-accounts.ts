@@ -83,7 +83,7 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
           investmentPlan: {
             select: {
               name: true,
-              category: true,
+              period: true,
             },
           },
         },
@@ -93,7 +93,7 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
 
   const accounts = (investorProfile?.investmentAccounts ?? []).map((account) => ({
     id: account.id,
-    accountType: formatLabel(account.investmentPlan.category),
+    accountType: formatLabel(account.investmentPlan.period),
     status: account.status,
     statusLabel: formatLabel(account.status),
     balance: toNumber(account.balance),

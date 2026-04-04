@@ -24,7 +24,6 @@ type UserInvestmentOrderListItem = {
     id: string;
     name: string;
     slug: string;
-    categoryLabel: string;
     periodLabel: string;
   };
   tier: {
@@ -130,7 +129,6 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
               id: true,
               name: true,
               slug: true,
-              category: true,
               period: true,
               investment: {
                 select: {
@@ -193,7 +191,6 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
         id: order.investmentPlan.id,
         name: order.investmentPlan.name,
         slug: order.investmentPlan.slug,
-        categoryLabel: formatEnumLabel(order.investmentPlan.category),
         periodLabel: formatEnumLabel(order.investmentPlan.period),
       },
       tier: {

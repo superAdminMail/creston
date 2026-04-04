@@ -91,20 +91,43 @@ model Verification {
   @@map("verification")
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model PasswordResetAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
+}
+
 /// Central file registry for all uploaded files.
 /// Store only metadata here; actual binary lives in S3, UploadThing, Cloudinary, etc.
 model FileAsset {
-  id              String  @id @default(cuid())
-  fileName        String
-  originalName    String?
-  mimeType        String?
-  extension       String?
-  sizeBytes       BigInt?
-  storageKey      String  @unique
+  id String @id @default(cuid())
+
+  fileName     String
+  originalName String?
+
+  mimeType       String?
+  extension      String?
+  sizeBytes      BigInt?
+  checksumSha256 String?
+
+  storageKey      String              @unique
   storageBucket   String?
-  storageProvider String?
+  storageProvider FileStorageProvider
   url             String?
-  checksumSha256  String?
 
   type       FileAssetType       @default(OTHER)
   visibility FileAssetVisibility @default(PRIVATE)
@@ -253,8 +276,8 @@ model InvestmentPlan {
   seoImageFileId String?
   seoImageFile   FileAsset? @relation("InvestmentPlanSeoImage", fields: [seoImageFileId], references: [id], onDelete: SetNull)
 
-  category InvestmentPlanCategory @default(SAVINGS)
-  period   InvestmentPeriod       @default(LONG_TERM)
+  sortOrder Int              @default(0)
+  period    InvestmentPeriod @default(LONG_TERM)
 
   currency String  @default("USD")
   isActive Boolean @default(true)
@@ -269,7 +292,6 @@ model InvestmentPlan {
   updatedAt DateTime @updatedAt
 
   @@index([investmentId])
-  @@index([category])
   @@index([period])
   @@index([isActive])
   @@map("investment_plan")
@@ -279,7 +301,7 @@ model InvestmentPlanTier {
   id               String @id @default(cuid())
   investmentPlanId String
 
-  level InvestmentTierLevel
+  level InvestmentTierLevel @default(CORE)
 
   minAmount Decimal @db.Decimal(18, 2)
   maxAmount Decimal @db.Decimal(18, 2)
@@ -578,8 +600,11 @@ model CryptoWebhookEvent {
 
 /// site configuration
 model SiteConfiguration {
-  id       String @id @default(cuid())
-  siteName String
+  id String @id @default("default")
+
+  siteName     String
+  supportEmail String?
+  supportPhone String?
 
   siteDescription String?
   siteTagline     String?
@@ -587,8 +612,8 @@ model SiteConfiguration {
   siteLogoFileAssetId String?    @unique
   siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)
 
-  supportEmail String?
-  supportPhone String?
+  seoTitle       String?
+  seoDescription String?
 
   locale   String?  @default("en_US")
   keywords String[] @default([])
@@ -669,19 +694,6 @@ enum AccountStatus {
   CLOSED
 }
 
-enum InvestmentPlanCategory {
-  SAVINGS
-  PERSONAL_RETIREMENT
-  CHILD_EDUCATION
-  HOME_OWNERSHIP
-  VEHICLE
-  EMERGENCY_FUND
-  WEALTH_BUILDING
-  INCOME_GENERATION
-  CAPITAL_PRESERVATION
-  OTHER
-}
-
 enum InvestmentOrderStatus {
   PENDING_CONFIRMATION
   CONFIRMED
@@ -752,7 +764,15 @@ enum TestimonyStatus {
 }
 
 enum InvestmentTierLevel {
-  STARTER
-  GROWTH
-  PREMIUM
+  CORE
+  ADVANCED
+  ELITE
+}
+
+enum FileStorageProvider {
+  UPLOADTHING
+  S3
+  CLOUDINARY
+  R2
+  LOCAL
 }

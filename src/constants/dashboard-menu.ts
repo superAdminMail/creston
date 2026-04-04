@@ -434,9 +434,9 @@ export const DASHBOARD_MENU = {
       title: "System",
       links: [
         {
-          name: "Platform Settings",
+          name: "Settings",
           href: "/account/dashboard/super-admin/settings",
-          icon: Building2,
+          icon: Settings,
         },
         {
           name: "Profile",

@@ -43,14 +43,6 @@ export function InvestmentPlanDetailsCard({
           </div>
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Category
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
-              {plan.categoryLabel}
-            </dd>
-          </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Period
             </dt>
             <dd className="mt-2 text-sm font-medium text-white">

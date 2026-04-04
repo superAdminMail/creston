@@ -41,7 +41,6 @@ export async function generateMetadata(
     seoDescription: plan.seoDescription,
     seoImageUrl: plan.seoImageUrl,
     currency: plan.currency,
-    category: plan.category,
     period: plan.period,
   });
 
@@ -75,7 +74,7 @@ export default async function InvestmentPlanDetailsPage(
             </Link>
             <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-300">
               <span className="rounded-full border border-white/10 px-2.5 py-1">
-                {plan.categoryLabel}
+                {plan.investment.typeLabel}
               </span>
               <span className="rounded-full border border-white/10 px-2.5 py-1">
                 {plan.periodLabel}
@@ -86,7 +85,7 @@ export default async function InvestmentPlanDetailsPage(
             </h1>
             <p className="text-sm leading-7 text-slate-300 sm:text-base">
               {plan.description ||
-                `${plan.name} is a structured ${plan.categoryLabel.toLowerCase()} plan available on Havenstone for investors seeking a disciplined ${plan.periodLabel.toLowerCase()} strategy.`}
+                `${plan.name} is a structured Havenstone plan available for investors seeking a disciplined ${plan.periodLabel.toLowerCase()} strategy.`}
             </p>
           </div>
 

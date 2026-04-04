@@ -80,9 +80,6 @@ export function InvestmentPlanStep({
                       <h3 className="text-lg font-semibold text-white">
                         {plan.name}
                       </h3>
-                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">
-                        {plan.categoryLabel}
-                      </span>
                       <span className="inline-flex items-center rounded-full border border-blue-400/15 bg-blue-400/8 px-3 py-1 text-xs text-blue-200">
                         {plan.periodLabel}
                       </span>

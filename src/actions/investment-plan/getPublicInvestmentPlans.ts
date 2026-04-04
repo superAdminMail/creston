@@ -17,7 +17,6 @@ const publicInvestmentPlanSelect =
         url: true,
       },
     },
-    category: true,
     period: true,
     currency: true,
     isActive: true,
@@ -70,8 +69,6 @@ export type PublicInvestmentPlanViewModel = {
   seoTitle: string | null;
   seoDescription: string | null;
   seoImageUrl: string | null;
-  category: string;
-  categoryLabel: string;
   period: string;
   periodLabel: string;
   currency: string;
@@ -123,8 +120,6 @@ function mapPublicInvestmentPlan(
     seoTitle: plan.seoTitle,
     seoDescription: plan.seoDescription,
     seoImageUrl: plan.seoImageFile?.url ?? null,
-    category: plan.category,
-    categoryLabel: formatEnumLabel(plan.category),
     period: plan.period,
     periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,

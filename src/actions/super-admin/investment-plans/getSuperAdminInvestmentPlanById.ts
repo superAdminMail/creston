@@ -21,8 +21,6 @@ export type SuperAdminInvestmentPlanDetails = {
   name: string;
   slug: string;
   description: string;
-  category: string;
-  categoryLabel: string;
   period: string;
   periodLabel: string;
   currency: string;
@@ -47,7 +45,6 @@ export type SuperAdminInvestmentPlanDetails = {
     name: string;
     slug: string;
     description: string;
-    category: string;
     period: string;
     currency: string;
     isActive: boolean;
@@ -76,7 +73,6 @@ export async function getSuperAdminInvestmentPlanById(
         name: true,
         slug: true,
         description: true,
-        category: true,
         period: true,
         currency: true,
         isActive: true,
@@ -129,8 +125,6 @@ export async function getSuperAdminInvestmentPlanById(
     name: plan.name,
     slug: plan.slug,
     description: plan.description?.trim() || "No description provided.",
-    category: plan.category,
-    categoryLabel: formatEnumLabel(plan.category),
     period: plan.period,
     periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,
@@ -157,11 +151,10 @@ export async function getSuperAdminInvestmentPlanById(
       name: plan.name,
       slug: plan.slug,
       description: plan.description ?? "",
-      category: plan.category,
       period: plan.period,
       currency: plan.currency,
       isActive: plan.isActive,
-      tiers: (["STARTER", "GROWTH", "PREMIUM"] as const).map((level) => {
+      tiers: (["CORE", "ADVANCED", "ELITE"] as const).map((level) => {
         const tier = plan.tiers.find((item) => item.level === level);
 
         return {

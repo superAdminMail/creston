@@ -106,7 +106,6 @@ export async function createInvestmentOrder(
     },
     select: {
       id: true,
-      category: true,
       currency: true,
       isActive: true,
       investment: {

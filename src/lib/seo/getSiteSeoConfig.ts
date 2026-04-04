@@ -1,6 +1,6 @@
 import { cache } from "react";
 
-import { prisma } from "@/lib/prisma";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import type { SiteSeoConfig } from "./types";
 import { firstNonEmpty } from "./resolveSeoFallbacks";
 
@@ -38,21 +38,7 @@ function resolveFallbackSiteUrl() {
 }
 
 export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
-  const config = await prisma.siteConfiguration.findFirst({
-    select: {
-      siteName: true,
-      siteDescription: true,
-      siteTagline: true,
-      locale: true,
-      keywords: true,
-      defaultTwitterHandle: true,
-      defaultOgImageFileAsset: {
-        select: {
-          url: true,
-        },
-      },
-    },
-  });
+  const config = await getSiteConfigurationCached();
 
   const siteUrl = normalizeAbsoluteUrl(
     resolveFallbackSiteUrl(),

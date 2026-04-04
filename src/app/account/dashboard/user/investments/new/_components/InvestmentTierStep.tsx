@@ -100,7 +100,7 @@ export function InvestmentTierStep({
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
                     <ShieldCheck className="h-4 w-4 text-blue-300" />
-                    {plan.categoryLabel} | {plan.periodLabel}
+                    {plan.investmentName} | {plan.periodLabel}
                   </p>
                 </div>
               </div>

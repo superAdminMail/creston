@@ -17,7 +17,6 @@ export default async function NewInvestmentPlanPage() {
         name: "",
         slug: "",
         description: "",
-        category: data.filterOptions.categories[0]?.value ?? "SAVINGS",
         period: data.filterOptions.periods[0]?.value ?? "LONG_TERM",
         currency: "USD",
         isActive: true,
