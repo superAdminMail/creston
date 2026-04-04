@@ -1,12 +1,23 @@
+import { notFound } from "next/navigation";
+
 import { getSuperAdminInvestmentPlanById } from "@/actions/super-admin/investment-plans/getSuperAdminInvestmentPlanById";
 import { updateInvestmentPlan } from "@/actions/super-admin/investment-plans/updateInvestmentPlan";
 import { InvestmentPlanForm } from "../../_components/InvestmentPlanForm";
 
-export default async function EditInvestmentPlanPage(
-  props: PageProps<"/account/dashboard/super-admin/investment-plans/[investmentPlanId]/edit">,
-) {
-  const { investmentPlanId } = await props.params;
+type PageProps = {
+  params: Promise<{
+    investmentPlanId: string;
+  }>;
+};
+
+export default async function EditInvestmentPlanPage({ params }: PageProps) {
+  const { investmentPlanId } = await params;
+
   const plan = await getSuperAdminInvestmentPlanById(investmentPlanId);
+
+  if (!plan) {
+    notFound();
+  }
 
   return (
     <InvestmentPlanForm

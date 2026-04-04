@@ -28,12 +28,12 @@ model User {
   profileAvatarFileAssetId String?
   profileAvatarFileAsset   FileAsset? @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id], onDelete: SetNull)
 
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  sessions             Session[]
-  accounts             Account[]
-  fileAssets           FileAsset[]           @relation("UploadedByUser")
-  staffProfile         StaffProfile?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  sessions   Session[]
+  accounts   Account[]
+  fileAssets FileAsset[] @relation("UploadedByUser")
+
   investorProfile      InvestorProfile?
   auditLogs            AuditLog[]            @relation("ActorAuditLogs")
   cryptoFundingIntents CryptoFundingIntent[]
@@ -155,20 +155,6 @@ model FileAsset {
   @@index([type])
   @@index([visibility])
   @@map("file_asset")
-}
-
-/// For admins, moderators, support or internal staff
-model StaffProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title      String?
-  department String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("staff_profile")
 }
 
 /// End-user / investor profile
@@ -433,12 +419,16 @@ model Testimony {
 
 /// managements
 model Management {
-  id          String     @id @default(cuid())
-  name        String
-  title       String?
-  email       String?
-  phone       String?
-  bio         String?
+  id String @id @default(cuid())
+
+  name  String
+  title String?
+  role  String?
+
+  email String?
+  phone String?
+  bio   String?
+
   photoFileId String?
   photoFile   FileAsset? @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
 

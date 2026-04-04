@@ -388,6 +388,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/super-admin/platform-wallets",
           icon: Banknote,
         },
+        {
+          name: "Management Team",
+          href: "/account/dashboard/super-admin/management",
+          icon: Building2,
+        },
       ],
     },
     {
