@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, ChevronDown, LogOut, Menu, Settings, User2 } from "lucide-react";
+import { LogOut, Menu, Settings, User2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { usePathname } from "next/navigation";
@@ -31,6 +31,7 @@ import {
 import type { ProfileImage } from "@/lib/types";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { cn } from "@/lib/utils";
+import NotificationMenu from "../notifications/NotificationMenu";
 
 type DashboardNavbarUser = {
   name?: string | null;
@@ -148,7 +149,7 @@ export function DashboardNavbar({
         </div>
 
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <Button
+          {/* <Button
             type="button"
             variant="ghost"
             size="icon"
@@ -156,7 +157,9 @@ export function DashboardNavbar({
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
-          </Button>
+          </Button> */}
+
+          <NotificationMenu />
 
           <Menubar className="h-auto border-0 bg-transparent p-0 shadow-none">
             <MenubarMenu>

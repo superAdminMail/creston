@@ -46,6 +46,7 @@ model User {
   agentConversations  Conversation[]       @relation("ConversationAgent")
   agentProfile        AgentProfile?
   conversationMembers ConversationMember[]
+  notifications       Notification[]
 
   @@unique([email])
   @@index([profileAvatarFileAssetId])
@@ -156,9 +157,8 @@ model FileAsset {
   siteLogo                         SiteConfiguration?  @relation("SiteConfigurationLogo")
   investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
 
-  kycDocuments KycDocument[]
-  testimonies  Testimony[]
-  management   Management[]
+  testimonies Testimony[]
+  management  Management[]
 
   @@index([uploadedById])
   @@index([type])
@@ -181,7 +181,8 @@ model InvestorProfile {
   addressLine1 String?
   addressLine2 String?
 
-  kycStatus KycStatus @default(NOT_STARTED)
+  kycStatus       KycStatus        @default(NOT_STARTED)
+  kycVerification KYCVerification?
 
   avatarFileId String?
   avatarFile   FileAsset? @relation("InvestorAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
@@ -189,8 +190,6 @@ model InvestorProfile {
   investmentAccounts InvestmentAccount[]
 
   investmentOrders InvestmentOrder[]
-
-  kycDocuments KycDocument[]
 
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -391,7 +390,10 @@ model InvestmentEarning {
   @@unique([investmentOrderId, date])
 }
 
-/// withdrals 
+/// *
+/// * ===========================
+/// *        Withdrawal Order
+/// * ===========================
 model WithdrawalOrder {
   id String @id @default(cuid())
 
@@ -433,31 +435,62 @@ model WithdrawalOrder {
   @@map("withdrawal_order")
 }
 
-/// KYC document records point to FileAsset
-model KycDocument {
-  id                String @id @default(cuid())
-  investorProfileId String
-  fileAssetId       String
+/// *
+/// * ===========================
+/// * 
+/// * ===========================
+model CronJob {
+  id String @id @default(cuid())
 
-  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  fileAsset       FileAsset       @relation(fields: [fileAssetId], references: [id], onDelete: Cascade)
+  key String @unique
 
-  documentType String
-  status       KycStatus @default(PENDING_REVIEW)
-  reviewedById String?
-  reviewedAt   DateTime?
-  notes        String?
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+  isRunning Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CronLock {
+  name     String   @id
+  lockedAt DateTime
+}
+
+/// *
+/// * ===========================
+/// *   KYC & DOCUMENT VERIFICATION
+/// * ===========================
+model KYCVerification {
+  id String @id @default(cuid())
+
+  investorProfileId String          @unique
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+
+  provider String @default("didit")
+
+  providerSessionId String?
+  vendorData        String?
+
+  status KycStatus @default(PENDING_REVIEW)
+
+  faceMatchScore Float?
+  livenessPassed Boolean?
+
+  failureReason String?
+
+  verifiedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([investorProfileId])
-  @@index([fileAssetId])
   @@index([status])
-  @@map("kyc_document")
 }
 
-/// Internal audit log for admin/moderator/sensitive actions
+/// *
+/// * ===========================
+/// *   AUDIT LOGS
+/// * ===========================
 model AuditLog {
   id          String  @id @default(cuid())
   actorUserId String?
@@ -480,7 +513,10 @@ model AuditLog {
   @@map("audit_log")
 }
 
-/// testimonials and reviews
+/// *
+/// * ===========================
+/// *    TESTIMONIES
+/// * ===========================
 model Testimony {
   id          String          @id @default(cuid())
   fullName    String
@@ -505,7 +541,10 @@ model Testimony {
   @@map("testimony")
 }
 
-/// managements
+/// *
+/// * ===========================
+/// *     MANAGEMENT
+/// * ===========================
 model Management {
   id String @id @default(cuid())
 
@@ -532,7 +571,10 @@ model Management {
   @@map("management")
 }
 
-/// Crypto funding models
+/// *
+/// * ===========================
+/// *     PLATFORM WALLETS & CRYPTO FUNDING
+/// * ===========================
 model PlatformWallet {
   id        String        @id @default(cuid())
   label     String
@@ -678,7 +720,7 @@ model CryptoWebhookEvent {
 
 /// *
 /// * ===========================
-/// * MESSAGE SYSTEM 
+/// * MESSAGE SYSTEM & NOTIFICATIONS
 /// * ===========================
 model Conversation {
   id                  String  @id @default(cuid())
@@ -751,7 +793,29 @@ model ConversationMember {
   @@index([userId])
 }
 
-/// site configuration
+model Notification {
+  id      String  @id @default(cuid())
+  userId  String
+  title   String
+  message String
+  read    Boolean @default(false)
+
+  link String?
+  type String?
+
+  key String? @unique
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// *
+/// * ===========================
+/// *   SITE CONFIGURATION
+/// * ===========================
 model SiteConfiguration {
   id String @id @default("default")
 
@@ -916,6 +980,7 @@ enum DocumentType {
   PROOF_OF_ADDRESS
   DRIVER_LICENSE
   PASSPORT
+  SELFIE
 }
 
 enum FileAssetType {

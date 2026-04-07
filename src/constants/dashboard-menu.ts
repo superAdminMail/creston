@@ -98,28 +98,22 @@ export const DASHBOARD_MENU = {
       ],
     },
     {
-      title: "Verification",
-      links: [
-        {
-          name: "KYC Verification",
-          href: "/account/dashboard/user/kyc",
-          icon: BadgeCheck,
-        },
-        {
-          name: "Documents",
-          href: "/account/dashboard/user/documents",
-          icon: FileText,
-        },
-      ],
-    },
-
-    {
       title: "Communication",
       links: [
         {
           name: "Support Center",
           href: "/account/dashboard/support",
           icon: LifeBuoy,
+        },
+      ],
+    },
+    {
+      title: "Verification",
+      links: [
+        {
+          name: "KYC Verification",
+          href: "/account/dashboard/user/kyc",
+          icon: BadgeCheck,
         },
       ],
     },

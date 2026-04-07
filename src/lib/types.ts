@@ -18,7 +18,11 @@ type BaseUserDTO = {
   image?: string | null;
 };
 
-export type ProfileDTO = BaseUserDTO;
+export type ProfileDTO = BaseUserDTO & {
+  investorProfile?: {
+    kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
+  } | null;
+};
 
 export type UserDTO = BaseUserDTO;
 

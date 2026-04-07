@@ -19,6 +19,11 @@ export const getCurrentUser = cache(async () => {
           url: true,
         },
       },
+      investorProfile: {
+        select: {
+          kycStatus: true,
+        },
+      },
     },
   });
 
@@ -32,6 +37,7 @@ export const getCurrentUser = cache(async () => {
     role: user.role,
     emailVerified: user.emailVerified,
     profileAvatarFileAsset: user.profileAvatarFileAsset,
+    investorProfile: user.investorProfile,
   });
 });
 

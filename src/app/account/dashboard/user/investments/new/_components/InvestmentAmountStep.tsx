@@ -43,8 +43,8 @@ export function InvestmentAmountStep({
           Enter your investment amount
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Set the amount you want Havenstone to apply to this plan. Your amount
-          must stay within the approved range for the selected tier.
+          Enter the amount you want to invest in this plan. The allowed range is
+          based on the tier requirements.
         </p>
       </div>
 

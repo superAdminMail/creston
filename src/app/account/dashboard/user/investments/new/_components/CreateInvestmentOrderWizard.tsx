@@ -21,13 +21,7 @@ import { InvestmentReviewStep } from "./InvestmentReviewStep";
 import { InvestmentTierStep } from "./InvestmentTierStep";
 import { InvestmentTypeStep } from "./InvestmentTypeStep";
 
-const stepTitles = [
-  "Investment",
-  "Plan",
-  "Tier",
-  "Amount",
-  "Review",
-] as const;
+const stepTitles = ["Investment", "Plan", "Tier", "Amount", "Review"] as const;
 
 type CreateInvestmentOrderWizardProps = {
   options: InvestmentOrderCreationOptionsData;
@@ -75,9 +69,9 @@ export function CreateInvestmentOrderWizard({
     initialCreateInvestmentOrderActionState,
   );
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedInvestmentId, setSelectedInvestmentId] = useState<string | null>(
-    null,
-  );
+  const [selectedInvestmentId, setSelectedInvestmentId] = useState<
+    string | null
+  >(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
@@ -107,7 +101,8 @@ export function CreateInvestmentOrderWizard({
   );
 
   const selectedTier = useMemo(
-    () => selectedPlan?.tiers.find((tier) => tier.id === selectedTierId) ?? null,
+    () =>
+      selectedPlan?.tiers.find((tier) => tier.id === selectedTierId) ?? null,
     [selectedPlan, selectedTierId],
   );
 
@@ -140,12 +135,12 @@ export function CreateInvestmentOrderWizard({
     },
     {
       title: "Tier-led order creation",
-      body: "Havenstone validates the selected plan tier server-side before your order enters payment review.",
+      body: "Each investment plan has different tiers with specific requirements. Follow the steps to find the best fit for you.",
       icon: Landmark,
     },
     {
-      title: "No live account yet",
-      body: "A live investment account is only created after payment and confirmation are completed.",
+      title: "Access your account after order confirmation",
+      body: "This process creates an investment order. Once confirmed, you can access your investment account and track its performance.",
       icon: Wallet,
     },
   ];
@@ -288,8 +283,7 @@ export function CreateInvestmentOrderWizard({
         <section className="glass-strong rounded-[2rem] p-6">
           <h2 className="text-lg font-semibold text-white">Order guidance</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            This flow creates an investment order only. Your live investment
-            account is opened later after payment and confirmation.
+            Here&apos;s a few things to keep in mind when creating an order.
           </p>
 
           <div className="mt-5 space-y-3">
@@ -318,10 +312,11 @@ export function CreateInvestmentOrderWizard({
 
         {selectedPlan ? (
           <section className="card-premium rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">Selected plan</h2>
+            <h2 className="text-lg font-semibold text-white">Order details</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Review the tier structure and product profile for the plan
-              currently in focus.
+              This summary updates as you make your selections. Review the plan
+              details and selected tier requirements before proceeding to
+              payment review.
             </p>
 
             <div className="mt-5 space-y-4">
@@ -372,8 +367,8 @@ export function CreateInvestmentOrderWizard({
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Plan summary</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Once you select a plan, Havenstone will surface its tier
-              structure and product profile here for a calmer review flow.
+              Once you select a plan, Havenstone will surface its tier structure
+              and product profile here for a calmer review flow.
             </p>
 
             <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-slate-400">

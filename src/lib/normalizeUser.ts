@@ -13,6 +13,9 @@ type NormalizableUser =
       emailVerified?: boolean;
       hasPassword?: boolean | null;
       profileAvatarFileAsset?: NormalizedAvatarAsset;
+      investorProfile?: {
+        kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
+      } | null;
     })
   | null
   | undefined;
@@ -35,6 +38,8 @@ export function normalizeUser(user: NormalizableUser): ProfileDTO | null {
     name: user.name ?? null,
     image: profileAvatar?.url || user.image || null,
     profileAvatar,
+
+    investorProfile: user.investorProfile ?? null,
   };
 
   if (typeof user.hasPassword === "boolean") {

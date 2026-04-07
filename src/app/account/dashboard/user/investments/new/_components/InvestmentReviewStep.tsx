@@ -65,8 +65,9 @@ export function InvestmentReviewStep({
           Review your investment order
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Confirm the selected plan, tier, amount, and product profile before
-          Havenstone creates your order for payment processing.
+          Review the details of your investment order before submission. Make
+          sure everything looks correct, as this information will be used for
+          order processing.
         </p>
       </div>
 
