@@ -29,7 +29,7 @@ export function UserInvestmentsHeader() {
       </div>
 
       <Link
-        href="/account/dashboard/user/investments/new"
+        href="/account/dashboard/user/investment-orders/new"
         className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
       >
         <Plus className="h-4 w-4" />

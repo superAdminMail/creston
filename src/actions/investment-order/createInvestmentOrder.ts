@@ -249,5 +249,5 @@ export async function createInvestmentOrder(
     },
   });
 
-  redirect(`/account/dashboard/user/investments?created=${order.id}`);
+  redirect(`/account/dashboard/user/investment-orders?created=${order.id}`);
 }

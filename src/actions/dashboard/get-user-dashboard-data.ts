@@ -1,6 +1,6 @@
 "use server";
 
-import { AccountStatus } from "@/generated/prisma";
+import { InvestmentOrderStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import type { UserDashboardStats } from "@/app/account/dashboard/user/_components/UserDashboardPage";
@@ -38,28 +38,17 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
       userId: user.id,
     },
     select: {
-      investmentAccounts: {
+      investmentOrders: {
         orderBy: {
           createdAt: "desc",
         },
         select: {
-          balance: true,
+          amount: true,
+          accruedProfit: true,
           status: true,
           investmentPlan: {
             select: {
               name: true,
-              currency: true,
-              tiers: {
-                where: {
-                  isActive: true,
-                },
-                orderBy: {
-                  minAmount: "asc",
-                },
-                select: {
-                  minAmount: true,
-                },
-              },
               investment: {
                 select: {
                   name: true,
@@ -70,57 +59,44 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           },
         },
       },
-      investmentOrders: {
-        select: {
-          accruedProfit: true,
-          amount: true,
-        },
-      },
     },
   });
 
-  const investmentAccounts = investorProfile?.investmentAccounts ?? [];
-  const activeAccount =
-    investmentAccounts.find(
-      (account) => account.status === AccountStatus.ACTIVE,
-    ) ?? investmentAccounts[0];
+  const orders = investorProfile?.investmentOrders ?? [];
 
-  const totalInvested =
-    investorProfile?.investmentOrders.reduce(
-      (sum, order) => sum + toNumber(order.amount),
-      0,
-    ) ?? 0;
+  const confirmedOrders = orders.filter(
+    (order) => order.status === InvestmentOrderStatus.CONFIRMED,
+  );
 
-  const totalEarnedProfits =
-    investorProfile?.investmentOrders.reduce(
-      (sum, order) => sum + toNumber(order.accruedProfit),
-      0,
-    ) ?? 0;
+  const totalInvested = confirmedOrders.reduce(
+    (sum, order) => sum + toNumber(order.amount),
+    0,
+  );
 
-  const totalAccountBalance = totalInvested + totalEarnedProfits;
+  const totalEarnedProfits = confirmedOrders.reduce(
+    (sum, order) => sum + toNumber(order.accruedProfit),
+    0,
+  );
 
-  const currentAccountBalance = toNumber(activeAccount?.balance) ?? 0;
+  const currentInvestment = totalInvested;
 
-  const activeAccountTierFloor =
-    activeAccount?.investmentPlan.tiers[0]?.minAmount ?? null;
+  const investmentsCount = confirmedOrders.length;
 
-  const investmentType =
-    activeAccount?.investmentPlan.investment.name ??
-    formatLabel(activeAccount?.investmentPlan.investment.type) ??
-    activeAccount?.investmentPlan.name;
+  const latestOrder = confirmedOrders[0];
+
+  const investmentPlan = latestOrder?.investmentPlan?.name ?? "Not selected";
+
+  const accountBalance = totalInvested + totalEarnedProfits;
 
   return {
     userName: user.name?.trim() || "Client",
     stats: {
-      investmentsCount: investmentAccounts.length,
-      currentInvestment:
-        toNumber(activeAccountTierFloor) || currentAccountBalance,
-
-      accountBalance: totalAccountBalance,
+      investmentsCount,
+      currentInvestment,
       totalInvestment: totalInvested,
-
-      investmentType: investmentType || "Not selected",
-      totalEarnedProfits: totalEarnedProfits,
+      totalEarnedProfits,
+      accountBalance,
+      investmentPlan,
     },
   };
 }

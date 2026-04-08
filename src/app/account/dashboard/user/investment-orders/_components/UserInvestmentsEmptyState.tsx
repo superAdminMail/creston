@@ -25,7 +25,7 @@ export function UserInvestmentsEmptyState({
     : "Your investor profile needs to be completed before you can create and manage investment orders from this workspace.";
 
   const href = hasInvestorProfile
-    ? "/account/dashboard/user/investments/new"
+    ? "/account/dashboard/user/investment-orders/new"
     : "/account/dashboard/user/investment-profile/edit";
 
   const ctaLabel = hasInvestorProfile

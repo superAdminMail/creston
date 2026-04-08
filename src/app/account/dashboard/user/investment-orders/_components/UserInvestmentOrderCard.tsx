@@ -157,9 +157,17 @@ export function UserInvestmentOrderCard({
             {order.primaryAction.label}
           </Link>
 
+          <Link
+            href={`/account/dashboard/user/investment-orders/${order.id}`}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-white/12 hover:bg-white/[0.04] hover:text-white"
+          >
+            Open Order
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+
           {order.status === InvestmentOrderStatus.PENDING_PAYMENT ? (
             <Link
-              href="/account/dashboard/user/investments/new"
+              href="/account/dashboard/user/investment-orders/new"
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-white/12 hover:bg-white/[0.04] hover:text-white"
             >
               Start another investment

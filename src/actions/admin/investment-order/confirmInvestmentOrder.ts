@@ -69,7 +69,7 @@ export async function confirmInvestmentOrder(
   const roiPercent = Number(order.investmentPlanTier.roiPercent);
 
   const startDate = now;
-  const maturityDate = addDays(startDate, durationDays);
+  const maturityDate = getMaturityDate(startDate, order.investmentPlan.period);
 
   const expectedReturn = amount + (amount * roiPercent) / 100;
 
@@ -108,4 +108,27 @@ export async function confirmInvestmentOrder(
     status: "success",
     message: "Investment confirmed successfully.",
   };
+}
+
+function getMaturityDate(startDate: Date, period: string) {
+  const date = new Date(startDate);
+
+  switch (period) {
+    case "SHORT_TERM":
+      date.setMinutes(date.getMinutes() + 30); // 🧪 test
+      break;
+
+    case "MEDIUM_TERM":
+      date.setHours(date.getHours() + 1); // 🧪 test
+      break;
+
+    case "LONG_TERM":
+      date.setHours(date.getHours() + 2); // 🧪 test
+      break;
+
+    default:
+      throw new Error("Invalid investment period");
+  }
+
+  return date;
 }

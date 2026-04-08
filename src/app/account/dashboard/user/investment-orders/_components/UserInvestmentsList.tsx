@@ -116,7 +116,7 @@ export function UserInvestmentsList({
 
       <div className="flex justify-end">
         <Link
-          href="/account/dashboard/user/investments/new"
+          href="/account/dashboard/user/investment-orders/new"
           className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
         >
           <Plus className="h-4 w-4" />

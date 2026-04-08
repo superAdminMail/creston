@@ -20,7 +20,7 @@ export type UserDashboardStats = {
   currentInvestment: number;
   accountBalance: number;
   totalInvestment: number;
-  investmentType: string;
+  investmentPlan: string;
   totalEarnedProfits: number;
 };
 
@@ -101,7 +101,7 @@ export default function UserDashboardPage({
           <DashboardStatCard
             title="Account Balance"
             value={formatUsd(stats.accountBalance)}
-            subtitle="Available wallet balance"
+            subtitle="Available balance for withdrawals"
             icon={Wallet}
           />
           <DashboardStatCard
@@ -113,7 +113,7 @@ export default function UserDashboardPage({
           <DashboardStatCard
             title="Current Investment"
             value={formatUsd(stats.currentInvestment)}
-            subtitle="Latest active investment position"
+            subtitle="Current active investment amount"
             icon={Layers3}
           />
           <DashboardStatCard
@@ -129,89 +129,11 @@ export default function UserDashboardPage({
             icon={ShoppingBagIcon}
           />
           <DashboardStatCard
-            title="Investment Type"
-            value={stats.investmentType || "-"}
-            subtitle="Primary selected plan"
+            title="Investment Plan"
+            value={stats.investmentPlan || "-"}
+            subtitle="Most recent or active investment plan"
             icon={BriefcaseBusiness}
           />
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-          <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.18)] sm:p-6">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Portfolio Summary
-                </h2>
-                <p className="mt-1 text-sm text-white/55">
-                  A simple overview of your current investment standing.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Current Position</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatUsd(stats.currentInvestment)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Total Portfolio Value</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatUsd(stats.totalInvestment)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Available Balance</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {formatUsd(stats.accountBalance)}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Investment Plan</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {stats.investmentType || "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.18)] sm:p-6">
-            <h2 className="text-lg font-semibold text-white">
-              Account Insight
-            </h2>
-            <p className="mt-1 text-sm text-white/55">
-              Your dashboard is structured to keep your key financial data
-              visible at a glance.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Status</p>
-                <p className="mt-1 font-medium text-white">
-                  Portfolio monitored
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Focus</p>
-                <p className="mt-1 font-medium text-white">
-                  Stable growth and account visibility
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <p className="text-sm text-white/60">Plan Type</p>
-                <p className="mt-1 font-medium text-white">
-                  {stats.investmentType || "Not selected"}
-                </p>
-              </div>
-            </div>
-          </div>
         </section>
       </div>
     </div>

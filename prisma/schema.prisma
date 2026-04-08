@@ -12,6 +12,10 @@ datasource db {
   provider = "postgresql"
 }
 
+/// *
+/// * ===========================
+/// *  AUTHENTICATION & USER MANAGEMENT
+/// * ===========================
 model User {
   id            String  @id
   name          String
@@ -121,8 +125,10 @@ model PasswordResetAttempt {
   @@index([createdAt])
 }
 
-/// Central file registry for all uploaded files.
-/// Store only metadata here; actual binary lives in S3, UploadThing, Cloudinary, etc.
+/// *
+/// * ===========================
+/// *  FILE ASSETS & MEDIA MANAGEMENT
+/// * ===========================
 model FileAsset {
   id String @id @default(cuid())
 
@@ -166,7 +172,10 @@ model FileAsset {
   @@map("file_asset")
 }
 
-/// End-user / investor profile
+/// *
+/// * ===========================
+/// *  INVESTOR PROFILES & INVESTMENTS
+/// * ===========================
 model InvestorProfile {
   id     String @id @default(cuid())
   userId String @unique
@@ -194,13 +203,13 @@ model InvestorProfile {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   withdrawalOrders WithdrawalOrder[]
+  savingsAccounts  SavingsAccount[]
 
   @@index([kycStatus])
   @@index([avatarFileId])
   @@map("investor_profile")
 }
 
-/// The customer’s actual investment account
 model InvestmentAccount {
   id                String @id @default(cuid())
   investorProfileId String
@@ -237,9 +246,10 @@ model Investment {
 
   description String?
 
+  symbol String? // e.g. BTC, AAPL, GLD
+
   type   InvestmentType          @default(CRYPTO)
   status InvestmentCatalogStatus @default(ACTIVE)
-  period InvestmentPeriod        @default(LONG_TERM) //remove this later, its not useful anymore
 
   iconFileAssetId String?
   iconFileAsset   FileAsset? @relation("InvestmentIconAsset", fields: [iconFileAssetId], references: [id], onDelete: SetNull)
@@ -260,6 +270,21 @@ model Investment {
   @@map("investment")
 }
 
+model InvestmentPrice {
+  id String @id @default(cuid())
+
+  symbol String
+
+  price Decimal @db.Decimal(18, 8)
+
+  source String? // optional: "coingecko", "binance"
+
+  recordedAt DateTime @default(now())
+
+  @@index([symbol, recordedAt])
+  @@map("investment_price")
+}
+
 model InvestmentPlan {
   id           String @id @default(cuid())
   investmentId String
@@ -268,6 +293,20 @@ model InvestmentPlan {
   slug String @unique
 
   description String?
+
+  penaltyFreePeriodDays Int @default(0)
+
+  penaltyType                 PenaltyType?
+  earlyWithdrawalPenaltyValue Decimal?     @db.Decimal(18, 2)
+  maxPenaltyAmount            Decimal?     @db.Decimal(18, 2)
+
+  investmentModel InvestmentModel
+
+  expectedReturnMin Decimal? @db.Decimal(5, 2)
+  expectedReturnMax Decimal? @db.Decimal(5, 2)
+
+  isLocked        Boolean @default(false)
+  allowWithdrawal Boolean @default(true)
 
   seoTitle       String?
   seoDescription String?
@@ -291,6 +330,7 @@ model InvestmentPlan {
   updatedAt DateTime @updatedAt
 
   @@index([investmentId])
+  @@index([investmentModel])
   @@index([period])
   @@index([isActive])
   @@map("investment_plan")
@@ -305,7 +345,7 @@ model InvestmentPlanTier {
   minAmount Decimal @db.Decimal(18, 2)
   maxAmount Decimal @db.Decimal(18, 2)
 
-  roiPercent Decimal @db.Decimal(5, 2)
+  roiPercent Decimal? @db.Decimal(5, 2)
 
   isActive Boolean @default(true)
 
@@ -327,25 +367,30 @@ model InvestmentOrder {
   investmentAccountId  String
   investmentPlanTierId String
 
+  investmentModel InvestmentModel
+
   startDate    DateTime?
   maturityDate DateTime?
 
   expectedReturn Decimal?  @db.Decimal(18, 2)
+  accruedProfit  Decimal   @default(0) @db.Decimal(18, 2)
+  lastAccruedAt  DateTime?
   completedAt    DateTime?
-  isMatured      Boolean   @default(false)
 
+  units           Decimal?  @db.Decimal(18, 8)
+  entryPrice      Decimal?  @db.Decimal(18, 8)
+  currentValue    Decimal?  @db.Decimal(18, 2)
+  lastValuationAt DateTime?
+
+  isMatured   Boolean @default(false)
   isWithdrawn Boolean @default(false)
-
-  commissionStatus  CommissionStatus @default(PENDING)
-  commissionPercent Decimal          @default(0) @db.Decimal(5, 2)
-
-  accruedProfit Decimal   @default(0) @db.Decimal(18, 2)
-  lastAccruedAt DateTime?
 
   amount   Decimal @db.Decimal(18, 2)
   currency String  @default("USD")
 
-  status InvestmentOrderStatus @default(PENDING_PAYMENT)
+  status            InvestmentOrderStatus @default(PENDING_PAYMENT)
+  commissionStatus  CommissionStatus      @default(PENDING)
+  commissionPercent Decimal               @default(0) @db.Decimal(5, 2)
 
   paymentReference String?
   paidAt           DateTime?
@@ -360,14 +405,16 @@ model InvestmentOrder {
   investmentPlan     InvestmentPlan     @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
   investmentAccount  InvestmentAccount  @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
 
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   withdrawalOrders   WithdrawalOrder[]
   investmentEarnings InvestmentEarning[]
 
   @@index([investorProfileId])
   @@index([investmentPlanId])
   @@index([investmentAccountId])
+  @@index([investmentModel])
   @@index([status])
   @@index([paidAt])
   @@index([confirmedAt])
@@ -392,7 +439,113 @@ model InvestmentEarning {
 
 /// *
 /// * ===========================
-/// *        Withdrawal Order
+/// * 
+/// * ===========================
+model SavingsProduct {
+  id String @id @default(cuid())
+
+  name        String
+  description String?
+
+  interestRatePercent     Decimal?                  @db.Decimal(5, 2)
+  interestPayoutFrequency SavingsInterestFrequency?
+  interestEnabled         Boolean                   @default(false)
+
+  isLockable      Boolean @default(false)
+  minimumLockDays Int?
+  maximumLockDays Int?
+
+  allowsWithdrawals Boolean @default(true)
+  allowsDeposits    Boolean @default(true)
+
+  minBalance Decimal? @db.Decimal(18, 2)
+  maxBalance Decimal? @db.Decimal(18, 2)
+
+  currency String @default("USD")
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  savingsAccounts SavingsAccount[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("savings_product")
+}
+
+model SavingsAccount {
+  id String @id @default(cuid())
+
+  investorProfileId String
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+
+  savingsProductId String
+  savingsProduct   SavingsProduct @relation(fields: [savingsProductId], references: [id], onDelete: Restrict)
+
+  name        String
+  description String?
+
+  balance      Decimal  @default(0) @db.Decimal(18, 2)
+  targetAmount Decimal? @db.Decimal(18, 2)
+  currency     String   @default("USD")
+
+  isLocked    Boolean   @default(false)
+  lockedUntil DateTime?
+
+  lastInterestAppliedAt DateTime?
+
+  status SavingsStatus @default(ACTIVE)
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions SavingsTransaction[]
+
+  @@index([investorProfileId])
+  @@index([savingsProductId])
+  @@index([status])
+  @@map("savings_account")
+}
+
+model SavingsTransaction {
+  id String @id @default(cuid())
+
+  savingsAccountId String
+  savingsAccount   SavingsAccount @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
+
+  type SavingsTransactionType
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("USD")
+
+  balanceBefore Decimal @db.Decimal(18, 2)
+  balanceAfter  Decimal @db.Decimal(18, 2)
+
+  feeAmount Decimal? @db.Decimal(18, 2)
+
+  reference String?
+  note      String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([savingsAccountId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("savings_transaction")
+}
+
+/// *
+/// * ===========================
+/// *  Withdrawal Order
 /// * ===========================
 model WithdrawalOrder {
   id String @id @default(cuid())
@@ -437,7 +590,7 @@ model WithdrawalOrder {
 
 /// *
 /// * ===========================
-/// * 
+/// *  CRON JOBS & BACKGROUND TASKS
 /// * ===========================
 model CronJob {
   id String @id @default(cuid())
@@ -515,7 +668,7 @@ model AuditLog {
 
 /// *
 /// * ===========================
-/// *    TESTIMONIES
+/// * TESTIMONIES & MANAGEMENT PROFILES
 /// * ===========================
 model Testimony {
   id          String          @id @default(cuid())
@@ -541,10 +694,6 @@ model Testimony {
   @@map("testimony")
 }
 
-/// *
-/// * ===========================
-/// *     MANAGEMENT
-/// * ===========================
 model Management {
   id String @id @default(cuid())
 
@@ -573,7 +722,7 @@ model Management {
 
 /// *
 /// * ===========================
-/// *     PLATFORM WALLETS & CRYPTO FUNDING
+/// * PLATFORM WALLETS & CRYPTO FUNDING
 /// * ===========================
 model PlatformWallet {
   id        String        @id @default(cuid())
@@ -849,7 +998,10 @@ model SiteConfiguration {
   @@map("site_configuration")
 }
 
-/// enums and constants
+/// *
+/// * ===========================
+/// * Enums & Constants
+/// * ===========================
 enum CryptoAsset {
   BTC
   ETH
@@ -911,6 +1063,16 @@ enum AccountStatus {
   CLOSED
 }
 
+enum PenaltyType {
+  FIXED
+  PERCENT
+}
+
+enum InvestmentModel {
+  FIXED
+  MARKET
+}
+
 enum InvestmentOrderStatus {
   PENDING_CONFIRMATION
   CONFIRMED
@@ -932,12 +1094,9 @@ enum CommissionStatus {
 enum InvestmentType {
   STOCKS
   BONDS
-  MUTUAL_FUNDS
   ETFS
   CRYPTO
-  REAL_ESTATE
   COMMODITIES
-  OTHER
 }
 
 enum InvestmentPeriod {
@@ -965,6 +1124,28 @@ enum WithdrawalStatus {
 enum WithdrawalMethod {
   BANK_TRANSFER
   CRYPTO_WALLET
+}
+
+enum SavingsInterestFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SavingsStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum SavingsTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INTEREST
+  FEE
+  ADJUSTMENT
+  LOCK
+  UNLOCK
 }
 
 enum KycStatus {

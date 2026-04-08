@@ -65,8 +65,8 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
-          name: "Manage Investments",
-          href: "/account/dashboard/user/investments",
+          name: "Manage Investment Orders",
+          href: "/account/dashboard/user/investment-orders",
           icon: Landmark,
         },
         {

@@ -218,10 +218,9 @@ export default function NotificationMenu() {
               <Link
                 href="/notifications"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-[#3c9ee0]/30 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-[#3c9ee0]/35 dark:hover:bg-zinc-900"
+                className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-[#3c9ee0]/30 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-[#3c9ee0]/35 dark:hover:bg-zinc-900"
               >
-                <span>Open notifications</span>
-                <ChevronRight className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                <span>Open notification center</span>
               </Link>
             </div>
           )}

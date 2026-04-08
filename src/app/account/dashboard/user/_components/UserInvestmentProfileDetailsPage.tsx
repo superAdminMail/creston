@@ -99,10 +99,6 @@ export function UserInvestmentProfileDetailsPage({
       label: "Update personal details",
     },
     {
-      href: "/account/dashboard/user/documents",
-      label: "Prepare verification documents",
-    },
-    {
       href: "/account/dashboard/user/settings",
       label: "Review account settings",
     },
@@ -321,8 +317,8 @@ export function UserInvestmentProfileDetailsPage({
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Next actions</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Keep your profile current to support a secure and fully prepared
-              Havenstone account.
+              Keep your profile up-to-date to ensure smooth account servicing
+              and investment readiness.
             </p>
 
             <div className="mt-5 space-y-3">
