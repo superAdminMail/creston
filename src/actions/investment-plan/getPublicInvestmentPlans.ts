@@ -1,7 +1,11 @@
 import { cache } from "react";
 import { Prisma } from "@/generated/prisma";
 
-import { formatCurrency, formatEnumLabel, formatTierLevel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatEnumLabel,
+  formatTierLevel,
+} from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 
 const publicInvestmentPlanSelect =
@@ -44,7 +48,7 @@ const publicInvestmentPlanSelect =
         slug: true,
         description: true,
         type: true,
-        period: true,
+
         status: true,
         isActive: true,
         sortOrder: true,
@@ -90,8 +94,7 @@ export type PublicInvestmentPlanViewModel = {
     description: string | null;
     type: string;
     typeLabel: string;
-    period: string;
-    periodLabel: string;
+
     status: string;
     statusLabel: string;
     sortOrder: number;
@@ -124,7 +127,9 @@ function mapPublicInvestmentPlan(
     periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,
     tiersCountLabel:
-      tiers.length === 1 ? "1 tier option available" : `${tiers.length} tier options available`,
+      tiers.length === 1
+        ? "1 tier option available"
+        : `${tiers.length} tier options available`,
     tierRangeLabel:
       tiers.length > 0
         ? `${formatCurrency(
@@ -144,8 +149,7 @@ function mapPublicInvestmentPlan(
       description: plan.investment.description,
       type: plan.investment.type,
       typeLabel: formatEnumLabel(plan.investment.type),
-      period: plan.investment.period,
-      periodLabel: formatEnumLabel(plan.investment.period),
+
       status: plan.investment.status,
       statusLabel: formatEnumLabel(plan.investment.status),
       sortOrder: plan.investment.sortOrder,

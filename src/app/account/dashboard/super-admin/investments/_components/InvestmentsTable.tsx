@@ -89,14 +89,7 @@ function InvestmentMobileCard({
             {investment.typeLabel}
           </p>
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Period
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investment.periodLabel}
-          </p>
-        </div>
+
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
             Sort order
@@ -137,13 +130,7 @@ export function InvestmentsTable({ data }: InvestmentsTableProps) {
             value: data.filters.type,
             options: data.filterOptions.types,
           },
-          {
-            kind: "select",
-            name: "period",
-            placeholder: "All periods",
-            value: data.filters.period,
-            options: data.filterOptions.periods,
-          },
+
           {
             kind: "select",
             name: "status",
@@ -207,15 +194,7 @@ export function InvestmentsTable({ data }: InvestmentsTableProps) {
               </span>
             ),
           },
-          {
-            key: "period",
-            header: "Period",
-            render: (investment) => (
-              <span className="text-sm text-slate-200">
-                {investment.periodLabel}
-              </span>
-            ),
-          },
+
           {
             key: "status",
             header: "Status",

@@ -28,6 +28,10 @@ function formatNotificationTime(value: string) {
   const diffMinutes = Math.round(diffMs / (1000 * 60));
   const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
+  if (Math.abs(diffMinutes) < 1) {
+    return "Just now";
+  }
+
   if (Math.abs(diffMinutes) < 60) {
     return rtf.format(diffMinutes, "minute");
   }
@@ -81,19 +85,25 @@ export default function NotificationMenu() {
             type="button"
             aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
             className={cn(
-              "relative transition",
+              "relative rounded-2xl bg-transparent p-0 text-slate-700 transition-all duration-200 hover:bg-transparent hover:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white",
+              open && "text-slate-950 dark:text-white",
               unread > 0 && "bell-buzz bell-pulse",
             )}
           >
             <IconCountBadge count={unread}>
-              <Bell
+              <span
                 className={cn(
-                  "h-5 w-5 rounded-2xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-white/15 dark:hover:bg-white/[0.08] dark:hover:text-white dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]",
+                  "inline-flex h-10 w-10 items-center justify-center rounded-2xl ring-1 ring-slate-200 transition-all duration-200 dark:ring-white/10",
+                  "bg-white shadow-sm hover:bg-slate-50 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:bg-white/[0.04] dark:hover:bg-white/[0.08] dark:hover:shadow-[0_10px_24px_rgba(0,0,0,0.18)]",
                   unread > 0
-                    ? "text-sky-600 dark:text-sky-400"
-                    : " text-slate-600 dark:text-slate-300",
+                    ? "ring-sky-200 text-sky-600 dark:ring-sky-400/20 dark:text-sky-300"
+                    : "text-slate-600 dark:text-slate-300",
+                  open &&
+                    "bg-slate-50 text-slate-950 ring-slate-300 dark:bg-white/[0.08] dark:text-white dark:ring-white/15",
                 )}
-              />
+              >
+                <Bell className="h-5 w-5" />
+              </span>
             </IconCountBadge>
           </button>
         </span>
@@ -110,7 +120,7 @@ export default function NotificationMenu() {
 
           <div className="relative flex items-start justify-between gap-3 pr-10">
             <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--brand-blue)] dark:text-sky-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-600/10 dark:text-sky-300">
                 Inbox
               </p>
               <SheetTitle className="text-base font-semibold tracking-tight text-slate-950 dark:text-white sm:text-lg">
@@ -216,7 +226,7 @@ export default function NotificationMenu() {
           {notifications.length > 0 && (
             <div className="border-t border-slate-200/80 p-4 dark:border-zinc-800">
               <Link
-                href="/notifications"
+                href="/account/dashboard/notifications"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-[#3c9ee0]/30 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-[#3c9ee0]/35 dark:hover:bg-zinc-900"
               >

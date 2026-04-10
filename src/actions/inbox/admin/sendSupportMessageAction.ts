@@ -1,11 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { CurrentRole, CurrentUserId } from "@/lib/currentUser";
-import {
-  createAndProcessConversationMessage,
-} from "@/lib/inbox/conversationService";
+import { createAndProcessConversationMessage } from "@/lib/inbox/conversationService";
 import { SenderType } from "@/generated/prisma/client";
+import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
 
 export async function sendSupportMessageAction({
   conversationId,
@@ -14,8 +12,8 @@ export async function sendSupportMessageAction({
   conversationId: string;
   content: string;
 }) {
-  const userId = await CurrentUserId();
-  const role = await CurrentRole();
+  const userId = await getCurrentUserId();
+  const role = await getCurrentUserRole();
   if (!userId || role !== "ADMIN") return { error: "Unauthorized" };
 
   const text = content.trim();
@@ -31,14 +29,17 @@ export async function sendSupportMessageAction({
     return { error: "Assigned to another agent" };
   }
 
-  await createAndProcessConversationMessage({
-    conversationId,
-    senderId: userId,
-    senderType: SenderType.SUPPORT,
-    content: text,
-  }, {
-    publish: true,
-  });
+  await createAndProcessConversationMessage(
+    {
+      conversationId,
+      senderId: userId,
+      senderType: SenderType.SUPPORT,
+      content: text,
+    },
+    {
+      publish: true,
+    },
+  );
 
   return { success: true };
 }

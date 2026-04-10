@@ -10,6 +10,10 @@ import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAcce
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
 import type { InvestmentPlanFormActionState } from "./investmentPlanForm.state";
 import {
+  createErrorFormState,
+  createValidationErrorState,
+} from "@/lib/forms/actionState";
+import {
   investmentPlanFormSchema,
   normalizeInvestmentPlanFormValues,
 } from "@/lib/zodValidations/investmentPlan";
@@ -18,11 +22,7 @@ function createErrorState(
   message: string,
   fieldErrors?: InvestmentPlanFormActionState["fieldErrors"],
 ): InvestmentPlanFormActionState {
-  return {
-    status: "error",
-    message,
-    fieldErrors,
-  };
+  return createErrorFormState(message, fieldErrors);
 }
 
 function getParsedTiers(formData: FormData) {
@@ -58,20 +58,9 @@ export async function updateInvestmentPlan(
   const parsed = investmentPlanFormSchema.safeParse(getFormData(formData));
 
   if (!parsed.success) {
-    const flattened = parsed.error.flatten().fieldErrors;
-
-    return createErrorState(
+    return createValidationErrorState(
+      parsed.error.flatten().fieldErrors,
       "Please review the highlighted investment plan fields.",
-      {
-        investmentId: flattened.investmentId?.[0],
-        name: flattened.name?.[0],
-        slug: flattened.slug?.[0],
-        description: flattened.description?.[0],
-        period: flattened.period?.[0],
-        currency: flattened.currency?.[0],
-        tiers: flattened.tiers?.[0],
-        isActive: flattened.isActive?.[0],
-      },
     );
   }
 
@@ -112,7 +101,7 @@ export async function updateInvestmentPlan(
     return createErrorState(
       "Enter a valid name or slug for this investment plan.",
       {
-        slug: "Enter a valid slug or plan name.",
+        slug: ["Enter a valid slug or plan name."],
       },
     );
   }
@@ -124,7 +113,7 @@ export async function updateInvestmentPlan(
 
   if (!investment) {
     return createErrorState("Select a valid investment for this plan.", {
-      investmentId: "Select a valid parent investment.",
+      investmentId: ["Select a valid parent investment."],
     });
   }
 

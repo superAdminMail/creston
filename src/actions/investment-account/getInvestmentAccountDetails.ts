@@ -4,16 +4,17 @@ import {
   Prisma,
   type AccountStatus,
   type InvestmentCatalogStatus,
+  type InvestmentModel,
   type InvestmentPeriod,
   type InvestmentType,
 } from "@/generated/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { prisma } from "@/lib/prisma";
 import {
   formatCurrency,
   formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { prisma } from "@/lib/prisma";
 
 type Decimalish = {
   toNumber(): number;
@@ -36,6 +37,7 @@ const investmentAccountDetailsSelect =
         name: true,
         slug: true,
         description: true,
+        investmentModel: true,
         period: true,
         currency: true,
         isActive: true,
@@ -62,7 +64,6 @@ const investmentAccountDetailsSelect =
             slug: true,
             description: true,
             type: true,
-            period: true,
             status: true,
             isActive: true,
             sortOrder: true,
@@ -98,6 +99,8 @@ export type InvestmentAccountDetailsViewModel = {
     name: string;
     slug: string;
     description: string;
+    investmentModel: InvestmentModel;
+    investmentModelLabel: string;
     period: InvestmentPeriod;
     periodLabel: string;
     currency: string;
@@ -120,8 +123,6 @@ export type InvestmentAccountDetailsViewModel = {
     description: string;
     type: InvestmentType;
     typeLabel: string;
-    period: InvestmentPeriod;
-    periodLabel: string;
     status: InvestmentCatalogStatus;
     statusLabel: string;
     isActive: boolean;
@@ -198,12 +199,16 @@ function mapInvestmentAccountDetails(
       description:
         account.investmentPlan.description?.trim() ||
         "Structured investment plan for long-term financial growth.",
+      investmentModel: account.investmentPlan.investmentModel,
+      investmentModelLabel: formatEnumLabel(account.investmentPlan.investmentModel),
       period: account.investmentPlan.period,
       periodLabel: formatEnumLabel(account.investmentPlan.period),
       currency: account.investmentPlan.currency,
       isActive: account.investmentPlan.isActive,
       tiersCountLabel:
-        tiers.length === 1 ? "1 tier option available" : `${tiers.length} tier options available`,
+        tiers.length === 1
+          ? "1 tier option available"
+          : `${tiers.length} tier options available`,
       tierRangeLabel,
       tiers,
     },
@@ -216,8 +221,6 @@ function mapInvestmentAccountDetails(
         "Curated investment product aligned to your Havenstone account strategy.",
       type: account.investmentPlan.investment.type,
       typeLabel: formatEnumLabel(account.investmentPlan.investment.type),
-      period: account.investmentPlan.investment.period,
-      periodLabel: formatEnumLabel(account.investmentPlan.investment.period),
       status: account.investmentPlan.investment.status,
       statusLabel: formatEnumLabel(account.investmentPlan.investment.status),
       isActive: account.investmentPlan.investment.isActive,

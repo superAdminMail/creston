@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import type { FormFieldErrors } from "@/lib/forms/actionState";
+import { getFriendlyServerError } from "@/lib/forms/actionState";
 
 import { revalidatePath } from "next/cache";
 import { UTApi } from "uploadthing/server";
@@ -14,6 +16,14 @@ import {
 } from "@/lib/zodValidations/user";
 
 const utapi = new UTApi();
+
+type UpdateUserProfileFieldName = "name" | "username" | "email" | "profileAvatar";
+
+export type UpdateUserProfileResult = {
+  success?: true;
+  error?: string;
+  fieldErrors?: FormFieldErrors<UpdateUserProfileFieldName>;
+};
 
 export const deleteProfileAvatarAction = async () => {
   const user = await getCurrentSessionUser();
@@ -68,10 +78,15 @@ export const deleteProfileAvatarAction = async () => {
 };
 
 //update user profile action
-export async function updateUserProfile(values: updateUserSchemaType) {
+export async function updateUserProfile(
+  values: updateUserSchemaType,
+): Promise<UpdateUserProfileResult> {
   const parsed = updateUserSchema.safeParse(values);
   if (!parsed.success) {
-    return { error: "Invalid profile data" };
+    return {
+      error: "Please review the highlighted profile fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
   }
 
   const { name, username, profileAvatar } = parsed.data;
@@ -88,55 +103,69 @@ export async function updateUserProfile(values: updateUserSchemaType) {
     });
 
     if (existing) {
-      return { error: "Username already taken" };
+      return {
+        error: "Please choose a different username.",
+        fieldErrors: {
+          username: ["Username already taken."],
+        },
+      };
     }
   }
 
-  await prisma.$transaction(async (tx) => {
-    const currentUser = await tx.user.findUnique({
-      where: { id: user.id },
-      //  include: userProfileAvatarInclude,
-    });
+  try {
+    await prisma.$transaction(async (tx) => {
+      const currentUser = await tx.user.findUnique({
+        where: { id: user.id },
+        //  include: userProfileAvatarInclude,
+      });
 
-    let nextProfileAvatarFileAssetId: string | null | undefined = undefined;
-    let previousProfileAvatarFileAssetId: string | null = null;
+      let nextProfileAvatarFileAssetId: string | null | undefined = undefined;
+      let previousProfileAvatarFileAssetId: string | null = null;
 
-    if (profileAvatar !== undefined) {
-      previousProfileAvatarFileAssetId =
-        currentUser?.profileAvatarFileAssetId ?? null;
+      if (profileAvatar !== undefined) {
+        previousProfileAvatarFileAssetId =
+          currentUser?.profileAvatarFileAssetId ?? null;
 
-      if (profileAvatar === null) {
-        nextProfileAvatarFileAssetId = null;
-      } else {
-        // const asset = await ensureFileAsset(tx, {
-        //   uploadedById: user.id,
-        //   file: profileAvatar,
-        //   category: "PROFILE_IMAGE",
-        //   kind: "IMAGE",
-        //   isPublic: true,
-        // });
-        // nextProfileAvatarFileAssetId = asset.id;
+        if (profileAvatar === null) {
+          nextProfileAvatarFileAssetId = null;
+        } else {
+          // const asset = await ensureFileAsset(tx, {
+          //   uploadedById: user.id,
+          //   file: profileAvatar,
+          //   category: "PROFILE_IMAGE",
+          //   kind: "IMAGE",
+          //   isPublic: true,
+          // });
+          // nextProfileAvatarFileAssetId = asset.id;
+        }
       }
-    }
 
-    await tx.user.update({
-      where: { id: user.id },
-      data: {
-        name,
-        username,
-        profileAvatarFileAssetId: nextProfileAvatarFileAssetId,
-      },
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          name,
+          username,
+          profileAvatarFileAssetId: nextProfileAvatarFileAssetId,
+        },
+      });
+
+      // if (
+      //   previousProfileAvatarFileAssetId &&
+      //   previousProfileAvatarFileAssetId !== nextProfileAvatarFileAssetId
+      // ) {
+      //   await touchOrMarkFileAssetOrphaned(tx, previousProfileAvatarFileAssetId);
+      // }
     });
 
-    // if (
-    //   previousProfileAvatarFileAssetId &&
-    //   previousProfileAvatarFileAssetId !== nextProfileAvatarFileAssetId
-    // ) {
-    //   await touchOrMarkFileAssetOrphaned(tx, previousProfileAvatarFileAssetId);
-    // }
-  });
+    revalidatePath("/account/dashboard/profile/update");
 
-  revalidatePath("/account/dashboard/profile/update");
-
-  return { success: true };
+    return { success: true };
+  } catch (error) {
+    return {
+      error: getFriendlyServerError(
+        error,
+        "We could not update your profile right now.",
+      ),
+    };
+  }
 }

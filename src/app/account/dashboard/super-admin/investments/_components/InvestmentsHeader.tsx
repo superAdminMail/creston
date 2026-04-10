@@ -13,7 +13,7 @@ export function InvestmentsHeader() {
           Back to dashboard
         </Link>
         <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-          Investments
+          Investment Products
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
           Manage Havenstone investment products, control catalog visibility, and

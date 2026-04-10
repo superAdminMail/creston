@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { prisma } from "@/lib/prisma";
 
 import { CreateInvestmentAccountForm } from "../../_components/CreateInvestmentAccountForm";
 
@@ -33,8 +34,16 @@ export default async function Page() {
     select: {
       id: true,
       name: true,
-      durationDays: true,
+      description: true,
+      investmentModel: true,
+      period: true,
       currency: true,
+      investment: {
+        select: {
+          name: true,
+          type: true,
+        },
+      },
       tiers: {
         where: { isActive: true },
         orderBy: { level: "asc" },
@@ -50,8 +59,14 @@ export default async function Page() {
   const plans = rawPlans.map((plan) => ({
     id: plan.id,
     name: plan.name,
-    durationDays: plan.durationDays,
+    description:
+      plan.description?.trim() ||
+      "Structured investment plan aligned to your portfolio.",
+    investmentModelLabel: formatEnumLabel(plan.investmentModel),
+    periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,
+    investmentName: plan.investment.name,
+    investmentTypeLabel: formatEnumLabel(plan.investment.type),
     tiers: plan.tiers.map((tier) => ({
       roiPercent: tier.roiPercent.toNumber(),
       minAmount: tier.minAmount.toNumber(),
@@ -66,7 +81,7 @@ export default async function Page() {
           Create investment account
         </h1>
         <p className="text-sm text-muted-foreground">
-          Set up a dedicated account for a selected investment plan.
+          Choose a live plan, review its model, and create an account that matches the current schema.
         </p>
       </div>
 

@@ -3,22 +3,22 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { InvestmentOrderStatus } from "@/generated/prisma";
-import { ConfirmInvestmentOrderForm } from "@/app/account/_components/ConfirmInvestmentOrderForm";
+import { getCurrentUserId } from "@/lib/getCurrentUser";
 
 function toNumber(value: any) {
   return typeof value === "number" ? value : (value?.toNumber() ?? 0);
 }
 
 export default async function Page({ params }: { params: { id: string } }) {
-  const user = await getCurrentSessionUser();
+  const userId = await getCurrentUserId();
 
-  if (!user?.id) notFound();
+  if (!userId) notFound();
 
   const order = await prisma.investmentOrder.findFirst({
     where: {
       id: params.id,
       investorProfile: {
-        userId: user.id,
+        userId: userId,
       },
     },
     include: {
@@ -108,11 +108,6 @@ export default async function Page({ params }: { params: { id: string } }) {
           </p>
         </div>
       </div>
-
-      {/* Action */}
-      {order.status === InvestmentOrderStatus.PENDING_PAYMENT && (
-        <ConfirmInvestmentOrderForm orderId={order.id} />
-      )}
     </div>
   );
 }

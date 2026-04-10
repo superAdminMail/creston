@@ -1,21 +1,45 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { AccountStatus } from "@/generated/prisma";
+import {
+  createErrorFormState,
+  createInitialFormState,
+  createSuccessFormState,
+  createValidationErrorState,
+  type FormActionState,
+} from "@/lib/forms/actionState";
+import { prisma } from "@/lib/prisma";
+import { updateInvestmentAccountSchema } from "@/lib/zodValidations/investment-account";
 
-export async function updateInvestmentAccount(formData: FormData) {
+export type UpdateInvestmentAccountState = FormActionState<"status">;
+
+export const initialInvestmentAccountFormState: UpdateInvestmentAccountState =
+  createInitialFormState();
+
+export async function updateInvestmentAccount(
+  _prevState: UpdateInvestmentAccountState,
+  formData: FormData,
+): Promise<UpdateInvestmentAccountState> {
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    return createErrorFormState("Unauthorized");
   }
 
-  const accountId = formData.get("accountId") as string;
-  const status = formData.get("status") as AccountStatus;
+  const accountId = formData.get("accountId");
+  const parsed = updateInvestmentAccountSchema.safeParse({
+    status: formData.get("status"),
+  });
 
-  if (!accountId || !status) {
-    throw new Error("Invalid request");
+  if (!parsed.success) {
+    return createValidationErrorState(
+      parsed.error.flatten().fieldErrors,
+      "Please choose a valid account status.",
+    );
+  }
+
+  if (!accountId || typeof accountId !== "string") {
+    return createErrorFormState("Invalid request");
   }
 
   const account = await prisma.investmentAccount.findFirst({
@@ -25,20 +49,27 @@ export async function updateInvestmentAccount(formData: FormData) {
         userId: user.id,
       },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      openedAt: true,
+    },
   });
 
   if (!account) {
-    throw new Error("Account not found");
+    return createErrorFormState("Account not found");
   }
+
+  const { status } = parsed.data;
 
   await prisma.investmentAccount.update({
     where: { id: accountId },
     data: {
       status,
+      openedAt:
+        status === "ACTIVE" ? account.openedAt ?? new Date() : account.openedAt,
       closedAt: status === "CLOSED" ? new Date() : null,
     },
   });
 
-  return { success: true };
+  return createSuccessFormState("Account updated.");
 }

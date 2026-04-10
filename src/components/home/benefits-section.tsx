@@ -43,7 +43,7 @@ const benefitGroups = [
         icon: BriefcaseBusiness,
         title: "Organized contribution structure",
         description:
-          "Provide a clear framework for group participation in savings and investment plans.",
+          "Define and manage contributions for multiple plans and accounts, ensuring transparency and reliability.",
       },
       {
         icon: Users,

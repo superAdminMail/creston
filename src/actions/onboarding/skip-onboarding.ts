@@ -13,7 +13,7 @@ export async function skipOnboardingAction() {
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      hasCompletedOnboarding: true,
+      hasCompletedOnboarding: false,
       skippedOnboardingAt: new Date(),
     },
   });

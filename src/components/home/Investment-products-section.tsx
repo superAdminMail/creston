@@ -77,9 +77,9 @@ export function InvestmentProductsSection() {
   return (
     <SectionShell id="investment-products" className="py-20 sm:py-24">
       <SectionHeading
-        eyebrow="Investment Products"
-        title="Explore investment and savings options"
-        description="Choose from structured products designed for different goals, timelines, and participation levels."
+        eyebrow="Investment Products Catalog"
+        title="Explore our wide range of investment products"
+        description="Discover a diverse array of investment and saving options to suit your needs, from commodities to stocks, ETFs to bonds, and crypto for long-term growth."
       />
 
       {/* CAROUSEL */}

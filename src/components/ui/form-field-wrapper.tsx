@@ -36,7 +36,9 @@ export function FormFieldWrapper<T extends FieldValues>({
           <FieldContent>
             {children(field)}
 
-            {description && <FieldDescription>{description}</FieldDescription>}
+            {description && !fieldState.error ? (
+              <FieldDescription>{description}</FieldDescription>
+            ) : null}
 
             {fieldState.error && <FieldError errors={[fieldState.error]} />}
           </FieldContent>

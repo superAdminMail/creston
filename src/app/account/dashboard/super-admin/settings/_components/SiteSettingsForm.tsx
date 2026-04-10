@@ -301,8 +301,10 @@ export function SiteSettingsForm({
                   <FieldLabel>Description</FieldLabel>
                   <textarea
                     name="siteDescription"
+                    rows={4}
                     value={siteDescription}
                     onChange={(e) => setSiteDescription(e.target.value)}
+                    className="w-full rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-slate-400 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                   />
                 </Field>
               </FieldGroup>
@@ -338,15 +340,15 @@ export function SiteSettingsForm({
                   toast.success("Logo uploaded");
                 }}
                 className="
-    ut-button:bg-white/[0.08]
-    ut-button:text-blue-600
+    ut-button:bg-blue-600
+    ut-button:text-white
     ut-button:border
-    ut-button:border-blue-500/30
+    ut-button:border-blue-500/20
     ut-button:rounded-full
     ut-button:px-5
     ut-button:py-2
     ut-button:text-sm
-    hover:ut-button:bg-blue-500/20
+    hover:ut-button:bg-blue-500
   "
               />
 
@@ -401,12 +403,12 @@ export function SiteSettingsForm({
             </CardHeader>
 
             <CardContent>
+              Support email
               <Input
                 name="supportEmail"
                 value={supportEmail}
                 onChange={(e) => setSupportEmail(e.target.value)}
               />
-
               {renderPhoneField({
                 field: "supportPhone",
                 label: "Phone",

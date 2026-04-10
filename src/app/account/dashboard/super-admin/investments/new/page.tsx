@@ -7,16 +7,15 @@ export default async function NewInvestmentPage() {
 
   return (
     <InvestmentForm
-      title="Create investment"
+      title="New investment product"
       description="Add a new Havenstone investment product with a clean catalog identity, activation state, and icon mapping."
-      submitLabel="Create investment"
+      submitLabel="Create"
       cancelHref="/account/dashboard/super-admin/investments"
       defaultValues={{
         name: "",
         slug: "",
         description: "",
         type: data.filterOptions.types[0]?.value ?? "CRYPTO",
-        period: data.filterOptions.periods[0]?.value ?? "LONG_TERM",
         status: data.filterOptions.statuses[0]?.value ?? "DRAFT",
         iconFileAssetId: "",
         sortOrder: "0",

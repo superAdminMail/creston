@@ -19,14 +19,14 @@ export function ComplianceStrip() {
           {/* KYC */}
           <div className="flex items-center gap-2">
             <BadgeCheck className="h-4 w-4 text-blue-300" />
-            <span>KYC compliant</span>
+            <span>KYC and AML compliant</span>
           </div>
 
           {/* SECURITY */}
           <div className="flex flex-wrap gap-4 text-xs">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-blue-300" />
-              <span>Secure infrastructure</span>
+              <span>Secure and encrypted</span>
             </div>
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4 text-blue-300" />

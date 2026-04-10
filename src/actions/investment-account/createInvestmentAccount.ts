@@ -1,21 +1,21 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import {
+  createErrorFormState,
+  createValidationErrorState,
+  type FormActionState,
+} from "@/lib/forms/actionState";
+import { prisma } from "@/lib/prisma";
+import { createInvestmentAccountSchema } from "@/lib/zodValidations/investment-account";
 
-type CreateInvestmentAccountState = {
-  status: "idle" | "success" | "error";
-  message?: string;
+type CreateInvestmentAccountState = FormActionState<"investmentPlanId"> & {
   accountId?: string;
 };
 
 function createErrorState(message: string): CreateInvestmentAccountState {
-  return {
-    status: "error",
-    message,
-  };
+  return createErrorFormState(message);
 }
 
 export async function createInvestmentAccount(
@@ -43,11 +43,18 @@ export async function createInvestmentAccount(
     );
   }
 
-  const investmentPlanId = formData.get("investmentPlanId");
+  const parsed = createInvestmentAccountSchema.safeParse({
+    investmentPlanId: formData.get("investmentPlanId"),
+  });
 
-  if (!investmentPlanId || typeof investmentPlanId !== "string") {
-    return createErrorState("Invalid investment plan selected.");
+  if (!parsed.success) {
+    return createValidationErrorState(
+      parsed.error.flatten().fieldErrors,
+      "Please select a valid investment plan.",
+    );
   }
+
+  const { investmentPlanId } = parsed.data;
 
   const selectedPlan = await prisma.investmentPlan.findUnique({
     where: {
@@ -59,8 +66,6 @@ export async function createInvestmentAccount(
       isActive: true,
       investment: {
         select: {
-          id: true,
-          name: true,
           isActive: true,
           status: true,
         },
@@ -78,9 +83,7 @@ export async function createInvestmentAccount(
     !selectedPlan.investment.isActive ||
     selectedPlan.investment.status !== InvestmentCatalogStatus.ACTIVE
   ) {
-    return createErrorState(
-      "This investment product is currently unavailable.",
-    );
+    return createErrorState("This investment product is currently unavailable.");
   }
 
   const existingAccount = await prisma.investmentAccount.findFirst({
@@ -103,15 +106,14 @@ export async function createInvestmentAccount(
     data: {
       investorProfileId: investorProfile.id,
       investmentPlanId: selectedPlan.id,
-      status: "ACTIVE",
       balance: 0,
-      openedAt: new Date(),
       currency: selectedPlan.currency,
     },
     select: {
       id: true,
     },
   });
+
   return {
     status: "success",
     message: "Account created",

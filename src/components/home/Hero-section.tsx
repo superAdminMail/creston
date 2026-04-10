@@ -10,7 +10,7 @@ const trustPoints = [
   {
     icon: Landmark,
     title: "Clear structure",
-    description: "Plans, accounts, and contributions fully visible.",
+    description: "Plans, accounts, and savings are clear and transparent.",
   },
   {
     icon: TrendingUp,
@@ -44,21 +44,22 @@ export function HeroSection() {
       </div>
 
       {/* CONTENT */}
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-28">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:py-22 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-24">
         {/* LEFT */}
         <div className="max-w-2xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase text-blue-100">
-            Investment & Savings Platform
+            <span className="h-2 w-2 rounded-full bg-[#3c9ee0]" /> Investment &
+            Savings Platform
           </div>
 
-          <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
+          <h1 className="text-3xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
             The future of investing, simplified.
           </h1>
 
           <p className="text-base text-slate-300 sm:text-lg">
-            Havenstone allows individuals and organizations to invest across
-            multiple products, with clear tracking and estimated growth over
-            time.
+            Creston Capital provides structured investment plans, clear
+            contribution tracking, and a stable environment for long-term
+            growth.
           </p>
 
           {/* CTA */}
@@ -106,35 +107,31 @@ export function HeroSection() {
           <div className="relative rounded-[2rem] border border-white/10 bg-[rgba(15,23,42,0.9)] p-5 sm:p-6 shadow-xl backdrop-blur-xl">
             <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
               <div>
-                <p className="text-xs text-slate-400">Platform Snapshot</p>
-                <p className="text-sm text-white">Live overview</p>
+                <p className="text-xs text-slate-400">Snapshot</p>
+                <p className="text-sm text-white/80">Live overview</p>
               </div>
               <span className="text-xs text-blue-300">Active</span>
             </div>
 
             <div className="mt-5">
               <p className="text-sm text-slate-400">Total Value</p>
-              <p className="text-3xl font-semibold text-white">$42.8M</p>
+              <p className="text-3xl font-semibold text-white/80">$42.8M</p>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-white">
-                Top: Real Estate
+              <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
+                Top: Stocks
               </div>
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-white">
+              <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
                 Plan: Core Growth
               </div>
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-white">
+              <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
                 Duration: Medium
               </div>
-              <div className="rounded-xl bg-white/5 p-3 text-xs text-white">
+              <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
                 18k+ Users
               </div>
             </div>
-
-            <p className="mt-4 text-xs text-slate-400">
-              Returns are estimates and not guaranteed.
-            </p>
           </div>
         </div>
       </div>

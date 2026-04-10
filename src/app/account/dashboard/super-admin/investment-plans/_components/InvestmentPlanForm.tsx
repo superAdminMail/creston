@@ -17,6 +17,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -140,9 +141,7 @@ export function InvestmentPlanForm({
                       label: option.name,
                     }))}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.investmentId}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.investmentId?.[0]}</FieldError>
                 </FieldContent>
               </Field>
               <Field>
@@ -154,9 +153,7 @@ export function InvestmentPlanForm({
                     onChange={(event) => setName(event.target.value)}
                     className="input-premium h-11 rounded-xl"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.name}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.name?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>
@@ -171,10 +168,13 @@ export function InvestmentPlanForm({
                     readOnly
                     className="input-premium h-11 rounded-xl text-slate-300"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.slug ||
-                      "Generated automatically from the plan name."}
-                  </FieldDescription>
+                  {state.fieldErrors?.slug?.length ? (
+                    <FieldError>{state.fieldErrors.slug[0]}</FieldError>
+                  ) : (
+                    <FieldDescription className="text-slate-400">
+                      Generated automatically from the plan name.
+                    </FieldDescription>
+                  )}
                 </FieldContent>
               </Field>
               <Field>
@@ -185,9 +185,7 @@ export function InvestmentPlanForm({
                     defaultValue={defaultValues.currency}
                     className="input-premium h-11 rounded-xl"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.currency}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.currency?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>
@@ -201,9 +199,7 @@ export function InvestmentPlanForm({
                   rows={5}
                   className="input-premium min-h-32 w-full rounded-xl px-3 py-3"
                 />
-                <FieldDescription className="text-slate-400">
-                  {state.fieldErrors?.description}
-                </FieldDescription>
+                <FieldError>{state.fieldErrors?.description?.[0]}</FieldError>
               </FieldContent>
             </Field>
 
@@ -223,9 +219,7 @@ export function InvestmentPlanForm({
                       }),
                     )}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.period}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.period?.[0]}</FieldError>
                 </FieldContent>
               </Field>
               <Field>
@@ -241,9 +235,7 @@ export function InvestmentPlanForm({
                       { value: "false", label: "Inactive" },
                     ]}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.isActive}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.isActive?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>
@@ -365,10 +357,13 @@ export function InvestmentPlanForm({
                   ))}
                 </div>
 
-                <FieldDescription className="text-slate-400">
-                  {state.fieldErrors?.tiers ||
-                    "Configure active tier ranges in ascending order from Starter to Premium."}
-                </FieldDescription>
+                {state.fieldErrors?.tiers?.length ? (
+                  <FieldError>{state.fieldErrors.tiers[0]}</FieldError>
+                ) : (
+                  <FieldDescription className="text-slate-400">
+                    Configure active tier ranges in ascending order from Starter to Premium.
+                  </FieldDescription>
+                )}
               </FieldContent>
             </Field>
           </FieldGroup>

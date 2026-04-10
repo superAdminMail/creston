@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   Field,
   FieldContent,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -86,6 +87,7 @@ export function ManagementForm() {
                   <FieldLabel>Full name</FieldLabel>
                   <FieldContent>
                     <Input name="name" placeholder="John Doe" required />
+                    <FieldError>{state.fieldErrors?.name?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -93,6 +95,7 @@ export function ManagementForm() {
                   <FieldLabel>Title</FieldLabel>
                   <FieldContent>
                     <Input name="title" placeholder="CEO" />
+                    <FieldError>{state.fieldErrors?.title?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -100,6 +103,7 @@ export function ManagementForm() {
                   <FieldLabel>Role</FieldLabel>
                   <FieldContent>
                     <Input name="role" placeholder="Executive" />
+                    <FieldError>{state.fieldErrors?.role?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -107,6 +111,7 @@ export function ManagementForm() {
                   <FieldLabel>Email</FieldLabel>
                   <FieldContent>
                     <Input name="email" placeholder="email@example.com" />
+                    <FieldError>{state.fieldErrors?.email?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -114,6 +119,7 @@ export function ManagementForm() {
                   <FieldLabel>Phone</FieldLabel>
                   <FieldContent>
                     <Input name="phone" placeholder="+1234567890" />
+                    <FieldError>{state.fieldErrors?.phone?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -121,6 +127,7 @@ export function ManagementForm() {
                   <FieldLabel>Sort Order</FieldLabel>
                   <FieldContent>
                     <Input name="sortOrder" placeholder="1" />
+                    <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 
@@ -132,6 +139,7 @@ export function ManagementForm() {
                       className="input-premium min-h-[120px] w-full rounded-xl px-3 py-3"
                       placeholder="Short professional bio..."
                     />
+                    <FieldError>{state.fieldErrors?.bio?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
               </FieldGroup>

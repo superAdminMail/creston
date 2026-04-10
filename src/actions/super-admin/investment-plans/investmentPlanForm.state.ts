@@ -1,21 +1,18 @@
+import type { FormActionState } from "@/lib/forms/actionState";
+import { createInitialFormState } from "@/lib/forms/actionState";
+
 export type InvestmentPlanFieldName =
   | "investmentId"
   | "name"
   | "slug"
   | "description"
-  | "category"
   | "period"
   | "currency"
   | "tiers"
   | "isActive";
 
-export type InvestmentPlanFormActionState = {
-  status: "idle" | "error";
-  message?: string;
-  fieldErrors?: Partial<Record<InvestmentPlanFieldName, string>>;
-};
+export type InvestmentPlanFormActionState =
+  FormActionState<InvestmentPlanFieldName>;
 
 export const initialInvestmentPlanFormActionState: InvestmentPlanFormActionState =
-  {
-    status: "idle",
-  };
+  createInitialFormState();

@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { pusherServer } from "../pusher";
+import { getPrices } from "@/lib/price/getPrices";
+import { getLatestPrices } from "../price/getLatestPrices";
 
-const ACCRUAL_INTERVAL_MINUTES = 10; // 🔥 test mode
+const ACCRUAL_INTERVAL_MINUTES = 10;
 
 function hasIntervalPassed(last: Date | null, now: Date) {
   if (!last) return true;
@@ -22,9 +24,7 @@ export async function runDailyAccrual() {
     },
     include: {
       investorProfile: {
-        include: {
-          user: true,
-        },
+        include: { user: true },
       },
       investmentPlan: {
         include: {
@@ -35,74 +35,131 @@ export async function runDailyAccrual() {
     },
   });
 
+  // 🔥 Separate MARKET symbols (batch fetch)
+  const marketSymbols = orders
+    .filter((o) => o.investmentModel === "MARKET")
+    .map((o) => o.investmentPlan.investment.symbol)
+    .filter(Boolean) as string[];
+
+  const priceMap =
+    marketSymbols.length > 0 ? await getPrices(marketSymbols) : {};
+
   for (const order of orders) {
     if (!order.startDate || !order.maturityDate) continue;
 
-    // ⛔ skip if interval not passed
-    if (!hasIntervalPassed(order.lastAccruedAt, now)) {
+    const userId = order.investorProfile.user.id;
+
+    if (order.investmentModel === "FIXED") {
+      if (!hasIntervalPassed(order.lastAccruedAt, now)) continue;
+
+      const amount = Number(order.amount);
+      const roiPercent = Number(order.investmentPlanTier.roiPercent);
+      const durationDays = order.investmentPlan.durationDays;
+
+      const dailyProfit = (amount * roiPercent) / 100 / durationDays;
+      const intervalProfit = dailyProfit / (1440 / ACCRUAL_INTERVAL_MINUTES);
+
+      const newAccrued = Number(order.accruedProfit ?? 0) + intervalProfit;
+
+      const expectedReturn = Number(order.expectedReturn ?? 0);
+
+      const cappedAccrued = Math.min(newAccrued, expectedReturn);
+
+      const isMatured = now >= order.maturityDate;
+
+      await prisma.$transaction([
+        prisma.investmentOrder.update({
+          where: { id: order.id },
+          data: {
+            accruedProfit: cappedAccrued,
+            lastAccruedAt: now,
+            isMatured,
+            ...(isMatured && { completedAt: now }),
+          },
+        }),
+
+        prisma.investmentEarning.create({
+          data: {
+            investmentOrderId: order.id,
+            date: now,
+            amount: intervalProfit,
+          },
+        }),
+
+        prisma.notification.create({
+          data: {
+            userId,
+            title: "Profit credited",
+            message: `You earned $${intervalProfit.toFixed(2)} from your ${
+              order.investmentPlan.investment.name
+            } plan.`,
+            type: "INVESTMENT_EARNING",
+          },
+        }),
+      ]);
+
+      await pusherServer.trigger(`user-${userId}`, "notification", {
+        title: "Profit credited",
+        message: `+$${intervalProfit.toFixed(2)} added`,
+      });
+
       continue;
     }
 
-    const amount = Number(order.amount);
-    const roiPercent = Number(order.investmentPlanTier.roiPercent);
-    const durationDays = order.investmentPlan.durationDays;
+    // 🔥 before loop
+    const marketSymbols = orders
+      .filter((o) => o.investmentModel === "MARKET")
+      .map((o) => o.investmentPlan.investment.symbol)
+      .filter(Boolean) as string[];
 
-    const dailyProfit = (amount * roiPercent) / 100 / durationDays;
+    const livePrices = await getPrices(marketSymbols);
+    const lastPrices = await getLatestPrices(marketSymbols);
 
-    const intervalProfit = dailyProfit / (1440 / ACCRUAL_INTERVAL_MINUTES);
+    // =========================
+    // 📈 MARKET MODEL
+    // =========================
+    if (order.investmentModel === "MARKET") {
+      const symbol = order.investmentPlan.investment.symbol;
+      const units = Number(order.units ?? 0);
 
-    const newAccrued = Number(order.accruedProfit) + intervalProfit;
+      if (!symbol || !units) continue;
 
-    const expectedReturn = Number(order.expectedReturn);
+      const price = priceMap[symbol];
+      if (!price) continue;
 
-    const cappedAccrued = Math.min(newAccrued, expectedReturn);
+      const newValue = units * price;
+      const previousValue = Number(order.currentValue ?? order.amount);
 
-    const isMatured = now >= order.maturityDate;
+      const delta = newValue - previousValue;
 
-    const userId = order.investorProfile.user.id;
+      // 🔥 ONLY positive movement
+      const positiveDelta = delta > 0 ? delta : 0;
 
-    await prisma.$transaction([
-      // ✅ update order
-      prisma.investmentOrder.update({
+      // ❗ skip if no meaningful gain
+      if (positiveDelta < 0.01) {
+        // still update value, but no accumulation
+        await prisma.investmentOrder.update({
+          where: { id: order.id },
+          data: {
+            currentValue: newValue,
+          },
+        });
+
+        continue;
+      }
+
+      await prisma.investmentOrder.update({
         where: { id: order.id },
         data: {
-          accruedProfit: cappedAccrued,
-          lastAccruedAt: now,
-          isMatured,
-          ...(isMatured && { completedAt: now }),
+          currentValue: newValue,
+
+          dailyProfitAccumulated: {
+            increment: positiveDelta,
+          },
         },
-      }),
+      });
 
-      // ✅ insert earning ledger
-      prisma.investmentEarning.create({
-        data: {
-          investmentOrderId: order.id,
-          date: now,
-          amount: intervalProfit,
-        },
-      }),
-
-      // 🔔 insert notification
-      prisma.notification.create({
-        data: {
-          userId,
-          title: "Daily profit added",
-          message: `You earned $${intervalProfit.toFixed(
-            2,
-          )} from your ${order.investmentPlan.investment.name} investment.`,
-          type: "INVESTMENT_EARNING",
-        },
-      }),
-    ]);
-
-    // 🔔 notify user
-    await pusherServer.trigger(`user-${userId}`, "notification", {
-      title: "Daily profit added",
-      message: `You earned $${intervalProfit.toFixed(2)}`,
-    });
-
-    console.log(
-      `Accrued $${intervalProfit.toFixed(4)} + notified user ${userId}`,
-    );
+      continue;
+    }
   }
 }

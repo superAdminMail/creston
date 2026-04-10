@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Building2, MapPin, X, Phone } from "lucide-react";
+import { Mail, Building2, MapPin, X, Phone, PhoneIcon } from "lucide-react";
 
 const footerLinkGroups = [
   {
@@ -39,11 +39,20 @@ const footerLinkGroups = [
 
 function HavenstoneMark() {
   return (
-    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.20),rgba(59,130,246,0.05))] shadow-[0_12px_34px_rgba(37,99,235,0.16)]">
-      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
-        H
-      </span>
-    </span>
+    // <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.20),rgba(59,130,246,0.05))] shadow-[0_12px_34px_rgba(37,99,235,0.16)]">
+    //   <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
+    //     C
+    //   </span>
+    // </span>
+    <>
+      <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+        <img
+          src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
+          alt="Site Logo"
+          className="h-9 w-9 rounded-2xl object-cover "
+        />
+      </div>
+    </>
   );
 }
 
@@ -62,15 +71,17 @@ export function Footer() {
             <Link href="/" className="inline-flex items-center gap-3">
               <HavenstoneMark />
               <div>
-                <p className="text-lg font-semibold text-white">Havenstone</p>
+                <p className="text-lg font-semibold text-white">
+                  Creston Capital
+                </p>
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
-                  Financial Growth Platform
+                  Positioned for the Peak
                 </p>
               </div>
             </Link>
 
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              Havenstone enables individuals and organizations to save and
+              Creston Capital enables individuals and organizations to save and
               invest through structured financial products designed for clarity,
               accessibility, and long-term growth.
             </p>
@@ -82,7 +93,7 @@ export function Footer() {
                 <div>
                   <p className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-blue-300" />
-                    support@havenstone.com
+                    support@crestoncapital.com
                   </p>
                   <p className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-blue-300" />
@@ -122,7 +133,7 @@ export function Footer() {
                   href="#"
                   className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition"
                 >
-                  <X className="h-4 w-4 text-white" />
+                  <PhoneIcon className="h-4 w-4 text-white" />
                 </Link>
               </div>
             </div>
@@ -154,12 +165,17 @@ export function Footer() {
         {/* LEGAL / DISCLAIMER */}
         <div className="mt-14 rounded-2xl border border-white/8 bg-white/[0.03] p-6">
           <p className="text-xs leading-6 text-slate-400">
-            Havenstone provides access to structured savings and investment
-            products. All returns displayed on the platform are estimates and
-            are not guaranteed. Investments involve risk, and the value of
-            investments may fluctuate over time. Havenstone does not provide
-            financial advice, and users are encouraged to make independent
-            financial decisions based on their individual circumstances.
+            <span className="font-semibold text-slate-200">Disclaimer:</span>{" "}
+            Returns and performance are based on historical data, actual results
+            may differ. Please read our{" "}
+            <Link href="/terms" className="underline hover:text-white">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline hover:text-white">
+              Privacy Policy
+            </Link>{" "}
+            for more information.
           </p>
         </div>
 
@@ -168,7 +184,7 @@ export function Footer() {
           <div className="divider-premium" />
 
           <div className="flex flex-col gap-3 pt-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-            <p>© {year} Havenstone. All rights reserved.</p>
+            <p>© {year} Creston Capital. All rights reserved.</p>
 
             <div className="flex gap-4">
               <Link href="/privacy" className="hover:text-white">

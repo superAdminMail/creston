@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Mail } from "lucide-react";
@@ -56,13 +58,16 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
   const initials = getInitials(user);
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border bg-white dark:bg-neutral-900 p-6 shadow-sm space-y-6">
-      {/* subtle brand accent */}
-      <div className="absolute top-0 left-0 h-1 w-full bg-[#3c9ee0]" />
+    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl space-y-6">
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#3c9ee0]/10 via-transparent to-blue-400/5" />
+
+      {/* Glow */}
+      <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-[#3c9ee0]/20 blur-3xl" />
 
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Avatar className="h-16 w-16 border border-[#3c9ee0]/20">
+      <div className="relative z-10 flex items-center gap-4">
+        <Avatar className="h-16 w-16 border border-[#3c9ee0]/30 shadow-md">
           <AvatarImage src={user.image ?? ""} alt={fullName} />
           <AvatarFallback className="bg-[#3c9ee0]/10 text-[#3c9ee0] font-semibold">
             {initials}
@@ -70,50 +75,46 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
         </Avatar>
 
         <div className="min-w-0 space-y-1">
-          <h2 className="truncate text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="truncate text-xl font-semibold text-white">
             {fullName}
           </h2>
 
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
             <Mail size={14} />
             <span className="truncate">{user.email}</span>
           </div>
 
-          <Badge
-            variant="secondary"
-            className="w-fit text-xs bg-[#3c9ee0]/10 text-[#3c9ee0]"
-          >
+          <Badge className="w-fit text-xs bg-[#3c9ee0]/10 text-[#3c9ee0] border border-[#3c9ee0]/20">
             {ROLE_LABELS[user.role] ?? user.role}
           </Badge>
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/10" />
 
       {/* Info Grid */}
-      <div className="grid grid-cols-2 gap-4 pt-4 text-sm">
+      <div className="relative z-10 grid grid-cols-2 gap-4 text-sm">
         <div className="space-y-1">
-          <p className="text-gray-500">Role</p>
-          <p className="font-medium text-gray-800 dark:text-gray-200">
-            {ROLE_LABELS[user.role]}
-          </p>
+          <p className="text-slate-500 text-xs uppercase tracking-wide">Role</p>
+          <p className="font-medium text-white">{ROLE_LABELS[user.role]}</p>
         </div>
 
         <div className="space-y-1 flex items-start gap-2">
-          <CalendarDays size={16} className="text-gray-400 mt-[2px]" />
+          <CalendarDays size={16} className="text-slate-500 mt-[2px]" />
           <div>
-            <p className="text-gray-500">Joined</p>
-            <p className="font-medium text-gray-800 dark:text-gray-200">
-              {joinedDate}
+            <p className="text-slate-500 text-xs uppercase tracking-wide">
+              Joined
             </p>
+            <p className="font-medium text-white">{joinedDate}</p>
           </div>
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-white/10" />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button className="w-full bg-[#3c9ee0] text-white  sm:w-auto">
+      {/* Actions */}
+      <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Button className="w-full sm:w-auto rounded-xl bg-[#3c9ee0] hover:bg-[#2f8bd0] text-white shadow-md">
           <Link href="/account/dashboard/profile/update">Update Profile</Link>
         </Button>
 

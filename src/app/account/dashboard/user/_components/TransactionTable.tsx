@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
+import type { TransactionItem } from "@/lib/service/getUserTransactions";
 import { cn } from "@/lib/utils";
 
 import {
@@ -13,18 +19,6 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 
-type TransactionItem = {
-  id: string;
-  type: "INVESTMENT" | "WITHDRAWAL" | "EARNING";
-  amount: number;
-  status: string;
-  createdAt: Date;
-  reference: string;
-  planName?: string;
-  description?: string;
-  direction: "CREDIT" | "DEBIT";
-};
-
 export function TransactionTable({
   transactions,
 }: {
@@ -32,14 +26,12 @@ export function TransactionTable({
 }) {
   return (
     <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
-      {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">
           Transaction History
         </h2>
       </div>
 
-      {/* ================= DESKTOP TABLE ================= */}
       <div className="hidden lg:block">
         <Table>
           <TableHeader>
@@ -66,7 +58,7 @@ export function TransactionTable({
                 <TableCell className="text-slate-300">{tx.reference}</TableCell>
 
                 <TableCell className="text-slate-400">
-                  {tx.planName ?? "—"}
+                  {tx.planName ?? "-"}
                 </TableCell>
 
                 <TableCell
@@ -77,8 +69,8 @@ export function TransactionTable({
                       : "text-red-400",
                   )}
                 >
-                  {tx.direction === "CREDIT" ? "+" : "-"}$
-                  {tx.amount.toLocaleString()}
+                  {tx.direction === "CREDIT" ? "+" : "-"}
+                  {formatCurrency(tx.amount, tx.currency)}
                 </TableCell>
 
                 <TableCell>
@@ -86,7 +78,7 @@ export function TransactionTable({
                 </TableCell>
 
                 <TableCell className="text-slate-500">
-                  {new Date(tx.createdAt).toLocaleDateString()}
+                  {formatDateLabel(tx.createdAt)}
                 </TableCell>
               </TableRow>
             ))}
@@ -100,7 +92,6 @@ export function TransactionTable({
         )}
       </div>
 
-      {/* ================= MOBILE CARDS ================= */}
       <div className="space-y-4 lg:hidden">
         {transactions.map((tx) => (
           <Card
@@ -108,13 +99,11 @@ export function TransactionTable({
             className="border-white/8 bg-white/[0.04] backdrop-blur-xl"
           >
             <CardContent className="p-4 space-y-3">
-              {/* TOP */}
               <div className="flex items-center justify-between">
                 <TypeBadge type={tx.type} />
                 <StatusBadge status={tx.status} />
               </div>
 
-              {/* AMOUNT */}
               <div
                 className={cn(
                   "text-lg font-semibold",
@@ -123,15 +112,14 @@ export function TransactionTable({
                     : "text-red-400",
                 )}
               >
-                {tx.direction === "CREDIT" ? "+" : "-"}$
-                {tx.amount.toLocaleString()}
+                {tx.direction === "CREDIT" ? "+" : "-"}
+                {formatCurrency(tx.amount, tx.currency)}
               </div>
 
-              {/* META */}
               <div className="text-xs text-slate-400 space-y-1">
                 <p>Ref: {tx.reference}</p>
-                <p>Plan: {tx.planName ?? "—"}</p>
-                <p>{new Date(tx.createdAt).toLocaleDateString()}</p>
+                <p>Plan: {tx.planName ?? "-"}</p>
+                <p>{formatDateLabel(tx.createdAt)}</p>
               </div>
             </CardContent>
           </Card>
@@ -147,23 +135,22 @@ export function TransactionTable({
   );
 }
 
-/* ================= BADGES ================= */
-
 function TypeBadge({ type }: { type: string }) {
   const styles = {
     INVESTMENT: "bg-blue-500/10 text-blue-300",
     WITHDRAWAL: "bg-red-500/10 text-red-300",
     EARNING: "bg-emerald-500/10 text-emerald-300",
+    SAVINGS: "bg-amber-500/10 text-amber-300",
   };
 
   return (
     <span
       className={cn(
         "rounded-full px-3 py-1 text-xs font-medium",
-        styles[type as keyof typeof styles],
+        styles[type as keyof typeof styles] ?? "bg-white/10 text-slate-300",
       )}
     >
-      {type}
+      {formatEnumLabel(type)}
     </span>
   );
 }
@@ -187,7 +174,7 @@ function StatusBadge({ status }: { status: string }) {
         map[status] ?? "bg-white/10 text-slate-300",
       )}
     >
-      {status}
+      {formatEnumLabel(status)}
     </span>
   );
 }

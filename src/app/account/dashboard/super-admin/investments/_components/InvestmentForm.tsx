@@ -18,6 +18,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -30,7 +31,6 @@ type InvestmentFormValues = {
   slug: string;
   description: string;
   type: string;
-  period: string;
   status: string;
   iconFileAssetId: string;
   sortOrder: string;
@@ -77,7 +77,6 @@ export function InvestmentForm({
   );
   const [name, setName] = useState(defaultValues.name);
   const [type, setType] = useState(defaultValues.type);
-  const [period, setPeriod] = useState(defaultValues.period);
   const [status, setStatus] = useState(defaultValues.status);
   const [iconFileAssetId, setIconFileAssetId] = useState(
     defaultValues.iconFileAssetId,
@@ -126,9 +125,7 @@ export function InvestmentForm({
                     onChange={(event) => setName(event.target.value)}
                     className="input-premium h-11 rounded-xl"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.name}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.name?.[0]}</FieldError>
                 </FieldContent>
               </Field>
               <Field>
@@ -140,10 +137,13 @@ export function InvestmentForm({
                     readOnly
                     className="input-premium h-11 rounded-xl text-slate-300"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.slug ||
-                      "Generated automatically from the investment name."}
-                  </FieldDescription>
+                  {state.fieldErrors?.slug?.length ? (
+                    <FieldError>{state.fieldErrors.slug[0]}</FieldError>
+                  ) : (
+                    <FieldDescription className="text-slate-400">
+                      Generated automatically from the investment name.
+                    </FieldDescription>
+                  )}
                 </FieldContent>
               </Field>
             </div>
@@ -157,9 +157,7 @@ export function InvestmentForm({
                   rows={5}
                   className="input-premium min-h-32 w-full rounded-xl px-3 py-3"
                 />
-                <FieldDescription className="text-slate-400">
-                  {state.fieldErrors?.description}
-                </FieldDescription>
+                <FieldError>{state.fieldErrors?.description?.[0]}</FieldError>
               </FieldContent>
             </Field>
 
@@ -174,26 +172,10 @@ export function InvestmentForm({
                     placeholder="Select type"
                     options={filterOptions.types}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.type}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.type?.[0]}</FieldError>
                 </FieldContent>
               </Field>
-              <Field>
-                <FieldLabel className="text-slate-100">Period</FieldLabel>
-                <FieldContent>
-                  <SuperAdminFormSelect
-                    name="period"
-                    value={period}
-                    onValueChange={setPeriod}
-                    placeholder="Select period"
-                    options={filterOptions.periods}
-                  />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.period}
-                  </FieldDescription>
-                </FieldContent>
-              </Field>
+
               <Field>
                 <FieldLabel className="text-slate-100">Status</FieldLabel>
                 <FieldContent>
@@ -204,9 +186,7 @@ export function InvestmentForm({
                     placeholder="Select status"
                     options={filterOptions.statuses}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.status}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.status?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>
@@ -228,9 +208,7 @@ export function InvestmentForm({
                       label: option.label,
                     }))}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.iconFileAssetId}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.iconFileAssetId?.[0]}</FieldError>
                 </FieldContent>
               </Field>
               <Field>
@@ -241,9 +219,7 @@ export function InvestmentForm({
                     defaultValue={defaultValues.sortOrder}
                     className="input-premium h-11 rounded-xl"
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.sortOrder}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
                 </FieldContent>
               </Field>
               <Field>
@@ -259,9 +235,7 @@ export function InvestmentForm({
                       { value: "false", label: "Inactive" },
                     ]}
                   />
-                  <FieldDescription className="text-slate-400">
-                    {state.fieldErrors?.isActive}
-                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.isActive?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>

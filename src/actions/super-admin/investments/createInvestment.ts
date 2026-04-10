@@ -10,17 +10,17 @@ import {
 } from "@/lib/zodValidations/investment";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
+import {
+  createErrorFormState,
+  createValidationErrorState,
+} from "@/lib/forms/actionState";
 import type { InvestmentFormActionState } from "./investmentForm.state";
 
 function createErrorState(
   message: string,
   fieldErrors?: InvestmentFormActionState["fieldErrors"],
 ): InvestmentFormActionState {
-  return {
-    status: "error",
-    message,
-    fieldErrors,
-  };
+  return createErrorFormState(message, fieldErrors);
 }
 
 function getFormData(formData: FormData) {
@@ -45,26 +45,17 @@ export async function createInvestment(
   const parsed = investmentFormSchema.safeParse(getFormData(formData));
 
   if (!parsed.success) {
-    const flattened = parsed.error.flatten().fieldErrors;
-
-    return createErrorState("Please review the highlighted investment fields.", {
-      name: flattened.name?.[0],
-      slug: flattened.slug?.[0],
-      description: flattened.description?.[0],
-      type: flattened.type?.[0],
-      period: flattened.period?.[0],
-      status: flattened.status?.[0],
-      iconFileAssetId: flattened.iconFileAssetId?.[0],
-      sortOrder: flattened.sortOrder?.[0],
-      isActive: flattened.isActive?.[0],
-    });
+    return createValidationErrorState(
+      parsed.error.flatten().fieldErrors,
+      "Please review the highlighted investment fields.",
+    );
   }
 
   const values = normalizeInvestmentFormValues(parsed.data);
 
   if (!values.normalizedSlug) {
     return createErrorState("Enter a valid name or slug for this investment.", {
-      slug: "Enter a valid slug or investment name.",
+      slug: ["Enter a valid slug or investment name."],
     });
   }
 
@@ -76,7 +67,7 @@ export async function createInvestment(
 
     if (!asset) {
       return createErrorState("The selected icon file could not be found.", {
-        iconFileAssetId: "Select a valid file asset.",
+        iconFileAssetId: ["Select a valid file asset."],
       });
     }
   }

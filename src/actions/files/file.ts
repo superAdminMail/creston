@@ -39,7 +39,7 @@ async function getFileAssetReferenceSummary(fileAssetId: string) {
     siteLogo,
     siteConfigurationDefaultOgImages,
     investmentPlanSeoImages,
-    kycDocuments,
+
     testimonies,
     management,
   ] = await Promise.all([
@@ -61,9 +61,7 @@ async function getFileAssetReferenceSummary(fileAssetId: string) {
     prisma.investmentPlan.count({
       where: { seoImageFileId: fileAssetId },
     }),
-    prisma.kycDocument.count({
-      where: { fileAssetId },
-    }),
+
     prisma.testimony.count({
       where: { avatarFileId: fileAssetId },
     }),
@@ -79,7 +77,6 @@ async function getFileAssetReferenceSummary(fileAssetId: string) {
     siteLogo +
     siteConfigurationDefaultOgImages +
     investmentPlanSeoImages +
-    kycDocuments +
     testimonies +
     management;
 
@@ -90,7 +87,7 @@ async function getFileAssetReferenceSummary(fileAssetId: string) {
     siteLogo,
     siteConfigurationDefaultOgImages,
     investmentPlanSeoImages,
-    kycDocuments,
+
     testimonies,
     management,
     total,
@@ -254,9 +251,7 @@ export async function deleteFileAssetAction(
 }
 
 // Inspect whether a file asset is still attached anywhere before allowing destructive cleanup.
-export async function getFileAssetUsageAction(
-  fileAssetId: string,
-): Promise<
+export async function getFileAssetUsageAction(fileAssetId: string): Promise<
   FileActionResult & {
     references?: Awaited<ReturnType<typeof getFileAssetReferenceSummary>>;
   }

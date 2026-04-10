@@ -55,14 +55,7 @@ export function InvestmentDetailsCard({
               {investment.typeLabel}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Period
-            </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
-              {investment.periodLabel}
-            </dd>
-          </div>
+
           <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Sort order
@@ -142,8 +135,8 @@ export function InvestmentDetailsCard({
         <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
           <h2 className="text-lg font-semibold text-white">Catalog controls</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Use the controls below to modify this investment&apos;s status, or update
-            its details to keep your catalog up to date.
+            Use the controls below to modify this investment&apos;s status, or
+            update its details to keep your catalog up to date.
           </p>
 
           <div className="mt-5 space-y-3">

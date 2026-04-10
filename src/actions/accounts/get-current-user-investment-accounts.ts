@@ -1,26 +1,42 @@
 "use server";
 
-import { format } from "date-fns";
-
-import { AccountStatus } from "@/generated/prisma";
+import { type AccountStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import {
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
+
+type Decimalish = {
+  toNumber(): number;
+};
 
 export type UserInvestmentAccountListItem = {
   id: string;
-  accountType: string;
   status: AccountStatus;
   statusLabel: string;
   balance: number;
   currency: string;
   planName: string;
+  planDescription: string;
+  planPeriodLabel: string;
+  investmentModelLabel: string;
+  investmentName: string;
+  investmentTypeLabel: string;
+  orderCount: number;
   openedDate: string;
+  createdDate: string;
+  updatedDate: string;
 };
 
 export type UserInvestmentAccountsPageData = {
   totalAccountsCount: number;
   activeAccountsCount: number;
   pendingAccountsCount: number;
+  totalBalance: number;
+  marketAccountsCount: number;
+  fixedAccountsCount: number;
   accounts: UserInvestmentAccountListItem[];
   readiness: {
     profileReady: boolean;
@@ -29,24 +45,10 @@ export type UserInvestmentAccountsPageData = {
   };
 };
 
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
+function toNumber(value: Decimalish | number | null | undefined) {
   if (typeof value === "number") return value;
   if (!value) return 0;
   return value.toNumber();
-}
-
-function formatLabel(value: string | null | undefined) {
-  if (!value) return "Not available";
-
-  return value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function formatDate(value: Date | null | undefined) {
-  return value ? format(value, "MMM d, yyyy") : "Not opened yet";
 }
 
 export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInvestmentAccountsPageData> {
@@ -79,11 +81,26 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
           status: true,
           balance: true,
           openedAt: true,
+          createdAt: true,
+          updatedAt: true,
           currency: true,
+          investmentOrders: {
+            select: {
+              id: true,
+            },
+          },
           investmentPlan: {
             select: {
               name: true,
+              description: true,
               period: true,
+              investmentModel: true,
+              investment: {
+                select: {
+                  name: true,
+                  type: true,
+                },
+              },
             },
           },
         },
@@ -91,25 +108,39 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
     },
   });
 
-  const accounts = (investorProfile?.investmentAccounts ?? []).map(
-    (account) => ({
-      id: account.id,
-      accountType: formatLabel(account.investmentPlan.period),
-      status: account.status,
-      statusLabel: formatLabel(account.status),
-      balance: toNumber(account.balance),
-      currency: account.currency || "USD",
-      planName: account.investmentPlan.name,
-      openedDate: formatDate(account.openedAt),
-    }),
-  );
+  const accounts = (investorProfile?.investmentAccounts ?? []).map((account) => ({
+    id: account.id,
+    status: account.status,
+    statusLabel: formatEnumLabel(account.status),
+    balance: toNumber(account.balance),
+    currency: account.currency || "USD",
+    planName: account.investmentPlan.name,
+    planDescription:
+      account.investmentPlan.description?.trim() ||
+      "Structured investment plan aligned to your portfolio.",
+    planPeriodLabel: formatEnumLabel(account.investmentPlan.period),
+    investmentModelLabel: formatEnumLabel(account.investmentPlan.investmentModel),
+    investmentName: account.investmentPlan.investment.name,
+    investmentTypeLabel: formatEnumLabel(account.investmentPlan.investment.type),
+    orderCount: account.investmentOrders.length,
+    openedDate: formatDateLabel(account.openedAt, "Not opened yet"),
+    createdDate: formatDateLabel(account.createdAt),
+    updatedDate: formatDateLabel(account.updatedAt),
+  }));
 
   const totalAccountsCount = accounts.length;
   const activeAccountsCount = accounts.filter(
-    (account) => account.status === AccountStatus.ACTIVE,
+    (account) => account.status === "ACTIVE",
   ).length;
   const pendingAccountsCount = accounts.filter(
-    (account) => account.status === AccountStatus.PENDING,
+    (account) => account.status === "PENDING",
+  ).length;
+  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const marketAccountsCount = accounts.filter(
+    (account) => account.investmentModelLabel === "Market",
+  ).length;
+  const fixedAccountsCount = accounts.filter(
+    (account) => account.investmentModelLabel === "Fixed",
   ).length;
 
   const requiredProfileFields = [
@@ -128,6 +159,9 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
     totalAccountsCount,
     activeAccountsCount,
     pendingAccountsCount,
+    totalBalance,
+    marketAccountsCount,
+    fixedAccountsCount,
     accounts,
     readiness: {
       profileReady: requiredProfileFields.every(Boolean),

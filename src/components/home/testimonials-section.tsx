@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 import {
   Carousel,
+  CarouselApi,
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
@@ -37,13 +38,13 @@ const testimonials = [
 ];
 
 export function TestimonialsSection() {
-  const [api, setApi] = React.useState<any>();
+  const [api, setApi] = React.useState<CarouselApi>();
 
   return (
     <SectionShell id="testimonials" className="py-20 sm:py-24">
       <SectionHeading
         eyebrow="Testimonials"
-        title="Used by individuals and teams seeking clarity"
+        title="Hear from our clients and investors"
         description="Havenstone is designed to provide a structured and transparent investment experience."
         align="center"
       />

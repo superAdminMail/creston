@@ -21,29 +21,28 @@ export function FinalCtaSection() {
             </p>
 
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl">
-              Start building long-term financial confidence
+              Get started with Havenstone
             </h2>
 
             <p className="mt-6 text-base leading-8 text-slate-300 sm:text-lg">
-              Havenstone provides structured investment plans, clear
-              contribution tracking, and a stable environment for long-term
-              growth — designed for both organizations and individual
-              participants.
+              Havenstone provides structured investment plans, clear progress
+              tracking, and a stable environment for long-term growth — designed
+              for both organizations and individual investors.
             </p>
 
             {/* TRUST STRIP */}
             <div className="mt-6 flex flex-wrap gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
                 <ShieldCheck className="h-4 w-4 text-blue-300" />
-                Secure platform
+                Secure
               </span>
 
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
-                Structured investment plans
+                Easy to use
               </span>
 
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
-                Transparent contributions
+                24/7 support
               </span>
             </div>
           </div>

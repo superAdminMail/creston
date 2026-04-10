@@ -80,6 +80,14 @@ export default function PasswordForm({
     startTransition(async () => {
       const result = await changePassword(parsed.data);
 
+      if (result?.fieldErrors) {
+        setFieldErrors({
+          currentPassword: result.fieldErrors.currentPassword?.[0],
+          newPassword: result.fieldErrors.newPassword?.[0],
+          confirmPassword: result.fieldErrors.confirmPassword?.[0],
+        });
+      }
+
       if (result?.error) {
         toast.error(result.error, { id: "password-change-error" });
         return;
@@ -88,6 +96,7 @@ export default function PasswordForm({
       toast.success("Password updated successfully.", {
         id: "password-change-success",
       });
+      setFieldErrors({});
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");

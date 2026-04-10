@@ -13,10 +13,17 @@ type AuthShellProps = {
 
 function HavenstoneMark() {
   return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
-        H
-      </span>
+    // <div className="flex h-14 w-14 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+    //   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
+    //     C
+    //   </span>
+    // </div>
+    <div className="flex h-12 w-12 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+      <img
+        src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
+        alt="Site Logo"
+        className="h-10 w-10 rounded-2xl object-cover "
+      />
     </div>
   );
 }

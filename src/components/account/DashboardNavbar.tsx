@@ -17,12 +17,7 @@ import {
   MenubarSeparator,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu";
+
 import {
   getDashboardMenu,
   type DashboardNavLink,
@@ -48,7 +43,7 @@ type DashboardNavbarProps = {
   isSigningOut?: boolean;
 };
 
-function getRoleLabel(role: DashboardRole) {
+export function getRoleLabel(role: DashboardRole) {
   switch (role) {
     case "SUPER_ADMIN":
       return "Super Admin";
@@ -125,15 +120,22 @@ export function DashboardNavbar({
             href={dashboardHome}
             className="flex min-w-0 items-center gap-3 rounded-[1.35rem] px-1.5 py-1 transition-colors hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
           >
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(96,165,250,0.08))] text-sky-700 shadow-[0_12px_28px_rgba(14,165,233,0.12)] dark:border-sky-400/20 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(96,165,250,0.08))] dark:text-sky-200 dark:shadow-[0_14px_28px_rgba(14,165,233,0.16)]">
+            {/* <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-200 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(96,165,250,0.08))] text-sky-700 shadow-[0_12px_28px_rgba(14,165,233,0.12)] dark:border-sky-400/20 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.18),rgba(96,165,250,0.08))] dark:text-sky-200 dark:shadow-[0_14px_28px_rgba(14,165,233,0.16)]">
               <span className="text-sm font-semibold tracking-[0.18em]">
-                HS
+             C
               </span>
-            </span>
+            </span> */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+              <img
+                src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
+                alt="Site Logo"
+                className="h-9 w-9 rounded-2xl object-cover "
+              />
+            </div>
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold tracking-wide text-slate-950 dark:text-white">
-                Havenstone
+                Creston Capital
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <p className="truncate text-xs text-slate-500 dark:text-slate-400">
@@ -214,7 +216,7 @@ export function DashboardNavbar({
 
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                          {user.name || "Havenstone User"}
+                          {user.name || "Unnamed User"}
                         </p>
                         <p className="mt-1 break-all text-[11px] leading-5 text-slate-500 dark:text-slate-400">
                           {user.email}

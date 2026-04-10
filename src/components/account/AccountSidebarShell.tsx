@@ -26,6 +26,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import { getRoleLabel } from "./DashboardNavbar";
 
 type SidebarUser = UserDTO | ProfileDTO | null | undefined;
 
@@ -71,6 +72,8 @@ function getActiveSectionTitle(
 }
 
 function AccountIdentity({ user }: { user: SidebarUser }) {
+  if (!user) return null;
+  const roleLabel = getRoleLabel(user.role);
   const avatarUrl = user?.profileAvatar?.url || user?.image || null;
 
   return (
@@ -96,11 +99,9 @@ function AccountIdentity({ user }: { user: SidebarUser }) {
         <p className="truncate text-xs text-slate-500 dark:text-slate-400">
           {user?.email}
         </p>
-        {user?.role ? (
-          <span className="mt-1 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
-            {user.role.replace("_", " ")}
-          </span>
-        ) : null}
+        <div className="mt-2.5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+          {roleLabel}
+        </div>
       </div>
     </div>
   );

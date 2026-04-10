@@ -6,7 +6,6 @@ import { InvestmentsTable } from "./_components/InvestmentsTable";
 type SuperAdminInvestmentsPageProps = {
   searchParams?: Promise<{
     type?: string;
-    period?: string;
     status?: string;
     isActive?: string;
     toast?: string;
@@ -19,7 +18,6 @@ export default async function SuperAdminInvestmentsPage({
   const params = searchParams ? await searchParams : undefined;
   const data = await getSuperAdminInvestments({
     type: params?.type,
-    period: params?.period,
     status: params?.status,
     isActive: params?.isActive,
   });

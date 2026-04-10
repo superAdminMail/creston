@@ -41,7 +41,6 @@ export default function ProfileForm({ userData }: Props) {
   const { data: user } = useCurrentUserQuery(userData);
 
   const [isPending, startTransition] = useTransition();
-
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(new Set());
 
   const router = useRouter();
@@ -64,31 +63,50 @@ export default function ProfileForm({ userData }: Props) {
         profileAvatar: user.profileAvatar ?? undefined,
       });
     }
-  }, [user]);
+  }, [form, user]);
 
-  const { control, handleSubmit, setValue, getValues } = form;
+  const { control, handleSubmit, setValue, getValues, clearErrors, setError } =
+    form;
 
   const onSubmit = (values: updateUserSchemaType) => {
     startTransition(async () => {
-      await updateUserProfile(values).then((res) => {
-        if (res?.error) {
-          toast.error(res.error);
-          return;
-        }
-        toast.success("Profile updated");
-        router.refresh();
-        router.push("/account/dashboard/profile");
-      });
+      clearErrors();
+
+      const res = await updateUserProfile(values);
+
+      if (res?.fieldErrors) {
+        Object.entries(res.fieldErrors).forEach(([fieldName, messages]) => {
+          const message = messages?.[0];
+
+          if (!message) {
+            return;
+          }
+
+          setError(fieldName as keyof updateUserSchemaType, {
+            type: "server",
+            message,
+          });
+        });
+      }
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
+      toast.success("Profile updated");
+      router.refresh();
+      router.push("/account/dashboard/profile");
     });
   };
 
   const deleteProfileImage = async () => {
     const image = getValues("profileAvatar");
-    if (!image || !image?.key) return;
+    if (!image || !image.key) return;
 
     if (deletingKeys.has(image.key)) return;
 
-    setDeletingKeys((p) => new Set(p).add(image.key));
+    setDeletingKeys((previous) => new Set(previous).add(image.key));
 
     try {
       await deleteProfileAvatarAction();
@@ -100,8 +118,8 @@ export default function ProfileForm({ userData }: Props) {
     } catch {
       toast.error("Failed to remove image");
     } finally {
-      setDeletingKeys((p) => {
-        const next = new Set(p);
+      setDeletingKeys((previous) => {
+        const next = new Set(previous);
         next.delete(image.key);
         return next;
       });
@@ -114,13 +132,14 @@ export default function ProfileForm({ userData }: Props) {
 
   const avatar =
     form.watch("profileAvatar")?.url ??
-    user?.profileAvatar?.url ??
-    user?.image ??
+    user.profileAvatar?.url ??
+    user.image ??
     null;
+
   const initials = getUserInitials({
-    name: user?.name ?? null,
-    username: user?.username ?? null,
-    email: user?.email ?? null,
+    name: user.name ?? null,
+    username: user.username ?? null,
+    email: user.email ?? null,
   });
 
   return (
@@ -131,7 +150,7 @@ export default function ProfileForm({ userData }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href={"/profile"}
+              href="/profile"
               className="text-[var(--brand-blue)] hover:text-[var(--brand-blue-hover)]"
             >
               <Eye />
@@ -145,21 +164,19 @@ export default function ProfileForm({ userData }: Props) {
 
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* ================= PROFILE IMAGE ================= */}
           <section className="border-t pt-6">
             <div className="flex flex-col items-center gap-4">
-              {/* AVATAR */}
-              <div className="relative w-32 h-32">
+              <div className="relative h-32 w-32">
                 {avatar ? (
                   <Image
                     src={avatar}
                     alt="Profile image"
                     fill
-                    className="rounded-full object-cover border"
+                    className="rounded-full border object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-full border flex items-center justify-center text-sm text-muted-foreground">
-                    <div className="uppercase text-xl font-semibold">
+                  <div className="flex h-full w-full items-center justify-center rounded-full border text-sm text-muted-foreground">
+                    <div className="text-xl font-semibold uppercase">
                       {initials}
                     </div>
                   </div>
@@ -208,7 +225,7 @@ export default function ProfileForm({ userData }: Props) {
                   "
                 />
 
-                {avatar && (
+                {avatar ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -216,49 +233,50 @@ export default function ProfileForm({ userData }: Props) {
                       form.watch("profileAvatar")?.key ?? "",
                     )}
                     onClick={deleteProfileImage}
-                    className="text-red-600 text-sm"
+                    className="text-sm text-red-600"
                   >
                     Remove photo
                   </Button>
-                )}
+                ) : null}
               </span>
             </div>
           </section>
-
-          {/* ================= FIELDS ================= */}
 
           <FormFieldWrapper control={control} name="name" label="Full Name">
             {(field) => (
               <Input
                 {...field}
                 placeholder="John Doe"
-                className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                className="border-white/10 bg-white/[0.04] focus:border-blue-400"
               />
             )}
           </FormFieldWrapper>
 
-          <FormFieldWrapper control={control} name="username" label="Username">
+          <FormFieldWrapper
+            control={control}
+            name="username"
+            label="Username"
+            description="Pick a public username for your profile."
+          >
             {(field) => (
               <Input
                 {...field}
                 placeholder="Doe"
-                className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                className="border-white/10 bg-white/[0.04] focus:border-blue-400"
               />
             )}
           </FormFieldWrapper>
 
-          {/* ================= EMAIL ================= */}
           <div className="text-sm text-muted-foreground">
             Email: <span className="font-medium">{user.email}</span>
           </div>
 
-          {/* ================= ACTION ================= */}
           <Button
             type="submit"
             disabled={isPending}
-            className="bg-blue-600 hover:bg-blue-500 text-white"
+            className="bg-blue-600 text-white hover:bg-blue-500"
           >
-            {isPending ? "Saving…" : "Save Changes"}
+            {isPending ? "Saving..." : "Save Changes"}
           </Button>
         </form>
       </CardContent>

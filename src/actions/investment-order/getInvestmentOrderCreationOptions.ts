@@ -6,7 +6,11 @@ import type {
   InvestmentType,
 } from "@/generated/prisma";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
-import { formatCurrency, formatEnumLabel, formatTierLevel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatEnumLabel,
+  formatTierLevel,
+} from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
@@ -31,10 +35,15 @@ export type InvestmentOrderCreationPlanOption = {
   name: string;
   slug: string;
   description: string;
+
+  // ✅ CORRECT SOURCE OF PERIOD
   period: InvestmentPeriod;
   periodLabel: string;
+  durationDays: number;
+
   currency: string;
   isActive: boolean;
+
   tiers: InvestmentOrderCreationTierOption[];
   tiersCountLabel: string;
   tierRangeLabel: string | null;
@@ -47,14 +56,15 @@ export type InvestmentOrderCreationInvestmentOption = {
   description: string;
   type: InvestmentType;
   typeLabel: string;
-  period: InvestmentPeriod;
-  periodLabel: string;
+
   isActive: boolean;
   sortOrder: number;
+
   icon: {
     url: string;
     alt: string;
   } | null;
+
   plans: InvestmentOrderCreationPlanOption[];
 };
 
@@ -66,7 +76,8 @@ export type InvestmentOrderCreationOptionsData = {
   investments: InvestmentOrderCreationInvestmentOption[];
 };
 
-function toNumber(value: Decimalish | number) {
+function toNumber(value: Decimalish | number | null | undefined) {
+  if (!value) return 0;
   if (typeof value === "number") return value;
   return value.toNumber();
 }
@@ -79,12 +90,8 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
-    where: {
-      userId: user.id,
-    },
-    select: {
-      id: true,
-    },
+    where: { userId: user.id },
+    select: { id: true },
   });
 
   if (!investorProfile?.id) {
@@ -105,9 +112,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         some: {
           isActive: true,
           tiers: {
-            some: {
-              isActive: true,
-            },
+            some: { isActive: true },
           },
         },
       },
@@ -119,41 +124,34 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       slug: true,
       description: true,
       type: true,
-      period: true,
       isActive: true,
       sortOrder: true,
       iconFileAsset: {
-        select: {
-          url: true,
-        },
+        select: { url: true },
       },
+
+      // ✅ PLANS (correct place for period)
       investmentPlans: {
         where: {
           isActive: true,
           tiers: {
-            some: {
-              isActive: true,
-            },
+            some: { isActive: true },
           },
         },
-        orderBy: {
-          name: "asc",
-        },
+        orderBy: { name: "asc" },
         select: {
           id: true,
           name: true,
           slug: true,
           description: true,
           period: true,
+          durationDays: true,
           currency: true,
           isActive: true,
+
           tiers: {
-            where: {
-              isActive: true,
-            },
-            orderBy: {
-              level: "asc",
-            },
+            where: { isActive: true },
+            orderBy: { level: "asc" },
             select: {
               id: true,
               level: true,
@@ -175,32 +173,39 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       slug: investment.slug,
       description:
         investment.description?.trim() ||
-        "Structured Havenstone investment option tailored for long-term financial planning.",
+        "Structured Havenstone investment option tailored for long-term financial growth.",
+
       type: investment.type,
       typeLabel: formatEnumLabel(investment.type),
-      period: investment.period,
-      periodLabel: formatEnumLabel(investment.period),
+
       isActive: investment.isActive,
       sortOrder: investment.sortOrder,
+
       icon: investment.iconFileAsset?.url
         ? {
             url: investment.iconFileAsset.url,
             alt: `${investment.name} icon`,
           }
         : null,
+
       plans: investment.investmentPlans.map((plan) => ({
         id: plan.id,
         investmentId: investment.id,
         investmentName: investment.name,
+
         name: plan.name,
         slug: plan.slug,
         description:
           plan.description?.trim() ||
-          "Platform-managed investment plan with structured contribution boundaries.",
+          "Carefully structured investment plan with defined entry levels and expected performance.",
+
         period: plan.period,
         periodLabel: formatEnumLabel(plan.period),
+        durationDays: plan.durationDays,
+
         currency: plan.currency,
         isActive: plan.isActive,
+
         tiers: plan.tiers.map((tier) => ({
           id: tier.id,
           level: tier.level,
@@ -210,17 +215,19 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           roiPercent: toNumber(tier.roiPercent),
           isActive: tier.isActive,
         })),
+
         tiersCountLabel:
           plan.tiers.length === 1
-            ? "1 tier option available"
-            : `${plan.tiers.length} tier options available`,
+            ? "1 tier option"
+            : `${plan.tiers.length} tier options`,
+
         tierRangeLabel:
           plan.tiers.length > 0
             ? `${formatCurrency(
-                Math.min(...plan.tiers.map((tier) => toNumber(tier.minAmount))),
+                Math.min(...plan.tiers.map((t) => toNumber(t.minAmount))),
                 plan.currency,
               )} - ${formatCurrency(
-                Math.max(...plan.tiers.map((tier) => toNumber(tier.maxAmount))),
+                Math.max(...plan.tiers.map((t) => toNumber(t.maxAmount))),
                 plan.currency,
               )}`
             : null,
@@ -232,13 +239,12 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
     hasInvestorProfile: true,
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
-      (total, investment) => total + investment.plans.length,
+      (acc, inv) => acc + inv.plans.length,
       0,
     ),
     totalActiveTiers: normalizedInvestments.reduce(
-      (total, investment) =>
-        total +
-        investment.plans.reduce((planTotal, plan) => planTotal + plan.tiers.length, 0),
+      (acc, inv) =>
+        acc + inv.plans.reduce((pAcc, p) => pAcc + p.tiers.length, 0),
       0,
     ),
     investments: normalizedInvestments,

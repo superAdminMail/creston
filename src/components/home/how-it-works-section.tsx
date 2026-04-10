@@ -58,8 +58,8 @@ export function HowItWorksSection() {
       <div className="rounded-[2.2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(8,17,37,0.98))] px-6 py-10 shadow-[0_28px_70px_rgba(0,0,0,0.28)] sm:px-10">
         <SectionHeading
           eyebrow="How It Works"
-          title="A simple process from plan selection to growth tracking"
-          description="Select a plan, fund your investment, and track your progress over time through a clear and structured system."
+          title="Onboarding simplified."
+          description="Follow a simple process from funding to tracking without unnecessary complexity."
         />
 
         {/* DESKTOP TIMELINE */}

@@ -12,15 +12,15 @@ const pillars = [
   },
   {
     icon: Landmark,
-    title: "Structured for clarity",
+    title: "Clear structure",
     description:
-      "Investment plans, contributions, and account growth are presented with full transparency and consistency.",
+      "Plans, accounts, and savings are clear and transparent, ensuring members can make informed decisions with confidence.",
   },
   {
     icon: WalletCards,
     title: "Financial growth, simplified",
     description:
-      "A calm environment where members can follow structured progress without confusion or unnecessary complexity.",
+      "Track progress with consistent reporting, and enjoy the peace of mind that comes with a structured financial plan.",
   },
   {
     icon: Sparkles,
@@ -38,7 +38,7 @@ export function WhySection() {
         <SectionHeading
           eyebrow="Why Havenstone"
           title="Designed for a new era of investing"
-          description="Havenstone is built around the idea that investing should be both trustworthy and clear, with a calm, structured experience that supports long-term financial confidence."
+          description="Havenstone is a modern financial platform that empowers individuals and organizations to make informed investments with confidence and ease. Our platform provides a secure and reliable way to save and grow your wealth, whether you're a seasoned investor or a first-time investor."
         />
 
         {/* RIGHT - LAYERED */}
@@ -50,14 +50,14 @@ export function WhySection() {
                 <ShieldCheck className="h-5 w-5 text-blue-200 shrink-0" />
               </div>
 
-              <div>
+              <div className="flex-1">
                 <h3 className="text-lg font-semibold text-white">
-                  Built around trust and long-term stability
+                  Trust and security
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Havenstone provides a secure environment where investment
-                  accounts, structured plans, and contribution records are
-                  designed to support long-term financial confidence.
+                  Secure investment structures with clear account ownership and
+                  long-term reliability at every level. KYC and AML compliant.
+                  Multi-factor authentication.
                 </p>
               </div>
             </div>
@@ -100,9 +100,8 @@ export function WhySection() {
                   Designed for a modern financial experience
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-slate-400">
-                  Every interaction is designed to feel calm, structured, and
-                  reflective of a serious financial platform built for long-term
-                  use.
+                  Clean, premium interfaces designed to reflect the seriousness
+                  of long-term financial planning.
                 </p>
               </div>
             </div>

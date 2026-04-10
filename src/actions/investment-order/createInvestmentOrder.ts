@@ -18,6 +18,7 @@ import type {
   CreateInvestmentOrderActionState,
   OrderFieldName,
 } from "./createInvestmentOrder.state";
+import { getPrice } from "@/lib/price/priceService";
 
 function getFormValue(formData: FormData, key: OrderFieldName) {
   const value = formData.get(key);
@@ -108,12 +109,16 @@ export async function createInvestmentOrder(
       id: true,
       currency: true,
       isActive: true,
+
+      investmentModel: true,
+
       investment: {
         select: {
           id: true,
           name: true,
           isActive: true,
           status: true,
+          symbol: true,
         },
       },
       tiers: {
@@ -233,16 +238,56 @@ export async function createInvestmentOrder(
     );
   }
 
+  //market calculation logic
+  let units: Prisma.Decimal | null = null;
+  let entryPrice: Prisma.Decimal | null = null;
+  let currentValue: Prisma.Decimal | null = null;
+
+  if (selectedPlan.investmentModel === "MARKET") {
+    const symbol = selectedPlan.investment.symbol;
+
+    if (!symbol) {
+      return createErrorState(
+        "This investment is temporarily unavailable for market pricing.",
+      );
+    }
+
+    try {
+      const price = await getPrice(symbol);
+
+      const numericAmount = amount;
+
+      const calculatedUnits = numericAmount / price;
+
+      units = new Prisma.Decimal(calculatedUnits);
+      entryPrice = new Prisma.Decimal(price);
+      currentValue = new Prisma.Decimal(numericAmount);
+    } catch (error) {
+      console.error("Price fetch failed:", error);
+
+      return createErrorState(
+        "Unable to fetch market price. Please try again.",
+      );
+    }
+  }
+
   const order = await prisma.investmentOrder.create({
     data: {
       investorProfileId: investorProfile.id,
       investmentPlanId: selectedPlan.id,
       investmentPlanTierId: selectedTier.id,
       investmentAccountId: investmentAccount.id,
+
+      investmentModel: selectedPlan.investmentModel,
+
       amount: new Prisma.Decimal(amount.toFixed(2)),
       currency: selectedPlan.currency,
       status: InvestmentOrderStatus.PENDING_PAYMENT,
       commissionPercent: new Prisma.Decimal(0),
+
+      units,
+      entryPrice,
+      currentValue,
     },
     select: {
       id: true,

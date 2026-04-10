@@ -17,11 +17,12 @@ export function InvestmentsEmptyState() {
           <Layers className="h-6 w-6 text-blue-300" />
         </EmptyMedia>
         <EmptyTitle className="text-lg font-semibold text-white">
-          No investments created yet
+          No investment products created yet
         </EmptyTitle>
         <EmptyDescription className="text-sm leading-6 text-slate-400">
-          Add your first investment product to start building the Havenstone
-          catalog for plans, investor orders, and platform growth workflows.
+          Create your first investment product to start offering structured
+          savings and investment opportunities to your customers. You can always
+          add more products later.
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="max-w-none">
@@ -30,7 +31,7 @@ export function InvestmentsEmptyState() {
           className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
         >
           <Plus className="h-4 w-4" />
-          Create investment
+          Create investment product
         </Link>
       </EmptyContent>
     </Empty>

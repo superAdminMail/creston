@@ -1,8 +1,17 @@
-export type ManagementFormActionState = {
-  status: "idle" | "success" | "error";
-  message?: string;
-};
+import type { FormActionState } from "@/lib/forms/actionState";
+import { createInitialFormState } from "@/lib/forms/actionState";
 
-export const initialManagementFormState: ManagementFormActionState = {
-  status: "idle",
-};
+export type ManagementFieldName =
+  | "name"
+  | "title"
+  | "role"
+  | "email"
+  | "phone"
+  | "bio"
+  | "photoFileId"
+  | "sortOrder";
+
+export type ManagementFormActionState = FormActionState<ManagementFieldName>;
+
+export const initialManagementFormState: ManagementFormActionState =
+  createInitialFormState();

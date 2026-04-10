@@ -14,10 +14,8 @@ export type SuperAdminInvestmentDetails = {
   slug: string;
   description: string;
   typeLabel: string;
-  periodLabel: string;
   statusLabel: string;
   type: string;
-  period: string;
   status: string;
   sortOrder: number;
   isActive: boolean;
@@ -37,7 +35,6 @@ export type SuperAdminInvestmentDetails = {
     slug: string;
     description: string;
     type: string;
-    period: string;
     status: string;
     iconFileAssetId: string;
     sortOrder: string;
@@ -60,7 +57,6 @@ export async function getSuperAdminInvestmentById(
         slug: true,
         description: true,
         type: true,
-        period: true,
         status: true,
         sortOrder: true,
         isActive: true,
@@ -99,10 +95,8 @@ export async function getSuperAdminInvestmentById(
     slug: investment.slug,
     description: investment.description?.trim() || "No description provided.",
     typeLabel: formatEnumLabel(investment.type),
-    periodLabel: formatEnumLabel(investment.period),
     statusLabel: formatEnumLabel(investment.status),
     type: investment.type,
-    period: investment.period,
     status: investment.status,
     sortOrder: investment.sortOrder,
     isActive: investment.isActive,
@@ -122,7 +116,6 @@ export async function getSuperAdminInvestmentById(
       slug: investment.slug,
       description: investment.description ?? "",
       type: investment.type,
-      period: investment.period,
       status: investment.status,
       iconFileAssetId: investment.iconFileAssetId ?? "",
       sortOrder: String(investment.sortOrder),

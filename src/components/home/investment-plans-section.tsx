@@ -43,9 +43,9 @@ export function InvestmentPlansSection() {
   return (
     <SectionShell id="investment-plans" className="py-20 sm:py-24">
       <SectionHeading
-        eyebrow="Investment Plans"
+        eyebrow="Plans and Tier Catalog"
         title="Choose a plan that fits your timeline"
-        description="Each plan defines duration, structure, and estimated return ranges."
+        description="Select a plan based on your preferred duration, structure, and estimated return range."
       />
 
       <div className="relative mt-12 group">
@@ -121,8 +121,8 @@ export function InvestmentPlansSection() {
 
       {/* DISCLAIMER */}
       <p className="mt-6 text-xs text-slate-500 text-center">
-        Returns are estimates based on historical data and market analysis.
-        Actual returns may vary and are not guaranteed.
+        ROI estimates are subject to market conditions and can vary. Actual
+        returns may differ.
       </p>
     </SectionShell>
   );

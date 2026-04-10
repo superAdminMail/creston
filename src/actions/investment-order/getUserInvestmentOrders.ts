@@ -53,8 +53,9 @@ export type UserInvestmentOrdersData = {
   orders: UserInvestmentOrderListItem[];
 };
 
-function toNumber(value: Decimalish | number) {
+function safeToNumber(value: Decimalish | number | null | undefined): number {
   if (typeof value === "number") return value;
+  if (!value) return 0;
   return value.toNumber();
 }
 
@@ -68,12 +69,12 @@ function getPrimaryAction(
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return {
         label: "Make payment",
-        href: `/account/dashboard/user/investments#order-${order.id}`,
+        href: `/account/dashboard/user/investments-order-${order.id}`,
       };
     case InvestmentOrderStatus.PENDING_CONFIRMATION:
       return {
-        label: "View details",
-        href: `/account/dashboard/user/investments#order-${order.id}`,
+        label: "Open order details",
+        href: `/account/dashboard/user/investments-order-${order.id}`,
       };
     case InvestmentOrderStatus.CONFIRMED:
       return order.linkedInvestmentAccountId
@@ -82,8 +83,8 @@ function getPrimaryAction(
             href: `/account/dashboard/user/investment-accounts/${order.linkedInvestmentAccountId}`,
           }
         : {
-            label: "View details",
-            href: `/account/dashboard/user/investments#order-${order.id}`,
+            label: "Open order details",
+            href: `/account/dashboard/user/investments-order-${order.id}`,
           };
     case InvestmentOrderStatus.CANCELLED:
     case InvestmentOrderStatus.REJECTED:
@@ -178,7 +179,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
   const orders = investorProfile.investmentOrders.map((order) => {
     const normalizedOrder: UserInvestmentOrderListItem = {
       id: order.id,
-      amount: toNumber(order.amount),
+      amount: safeToNumber(order.amount),
       currency: order.currency,
       status: order.status,
       statusLabel: formatEnumLabel(order.status),
@@ -196,7 +197,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       tier: {
         id: order.investmentPlanTier.id,
         levelLabel: formatEnumLabel(order.investmentPlanTier.level),
-        roiPercent: toNumber(order.investmentPlanTier.roiPercent),
+        roiPercent: safeToNumber(order.investmentPlanTier.roiPercent),
       },
       investment: {
         id: order.investmentPlan.investment.id,

@@ -7,7 +7,6 @@ import {
   FileText,
   Landmark,
   LineChart,
-  Bell,
   Settings,
   BadgeCheck,
   Users,
@@ -67,10 +66,15 @@ export const DASHBOARD_MENU = {
         {
           name: "Manage Investment Orders",
           href: "/account/dashboard/user/investment-orders",
-          icon: Landmark,
+          icon: ClipboardList,
         },
         {
-          name: "Performance",
+          name: "Personal Savings",
+          href: "/account/dashboard/user/savings",
+          icon: Briefcase,
+        },
+        {
+          name: "Performance & Analytics",
           href: "/account/dashboard/user/performance",
           icon: LineChart,
         },
@@ -410,7 +414,7 @@ export const DASHBOARD_MENU = {
       title: "Investment Catalog",
       links: [
         {
-          name: "Investments",
+          name: "Investment Products",
           href: "/account/dashboard/super-admin/investments",
           icon: TrendingUp,
         },
@@ -418,6 +422,11 @@ export const DASHBOARD_MENU = {
           name: "Investment Plans",
           href: "/account/dashboard/super-admin/investment-plans",
           icon: Layers,
+        },
+        {
+          name: "Savings Products",
+          href: "/account/dashboard/super-admin/savings-products",
+          icon: CircleDollarSign,
         },
       ],
     },

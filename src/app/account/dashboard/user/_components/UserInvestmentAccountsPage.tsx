@@ -6,13 +6,14 @@ import {
   BriefcaseBusiness,
   CircleAlert,
   Landmark,
+  LineChart,
   Plus,
   ShieldCheck,
   Wallet,
 } from "lucide-react";
 
 import type { UserInvestmentAccountsPageData } from "@/actions/accounts/get-current-user-investment-accounts";
-import { formatUsd } from "@/lib/formatters/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
 type UserInvestmentAccountsPageProps = {
@@ -73,7 +74,7 @@ export function UserInvestmentAccountsPage({
           : "No investment accounts yet",
       body:
         data.totalAccountsCount > 0
-          ? "Your account list is active and available for review from this secure workspace."
+          ? "Your account list reflects the current investment model, linked product, and lifecycle status for each account."
           : "Open your first investment account once your profile and verification steps are in place.",
       icon: BriefcaseBusiness,
       tone: "border-white/8 bg-white/[0.03]",
@@ -91,8 +92,8 @@ export function UserInvestmentAccountsPage({
       label: "Track investment performance",
     },
     {
-      href: "/account/dashboard/user/documents",
-      label: "Prepare verification documents",
+      href: "/account/dashboard/user/investment-orders",
+      label: "Review investment orders",
     },
   ];
 
@@ -112,8 +113,8 @@ export function UserInvestmentAccountsPage({
             Investment Accounts
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-            Monitor the investment accounts linked to your Havenstone profile in
-            one secure and structured account workspace.
+            Review each investment account against the current plan model,
+            linked product, account status, and recent servicing activity.
           </p>
         </div>
 
@@ -134,16 +135,15 @@ export function UserInvestmentAccountsPage({
               Account overview
             </div>
             <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
-              Secure visibility into your investment accounts
+              Portfolio coverage
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-              Review each account, track status across active and pending
-              accounts, and monitor the health of your profile and verification
-              activity.
+              Monitor total balance, active servicing status, and how your
+              account mix is split across fixed and market investment models.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:w-[30rem]">
+          <div className="grid grid-cols-2 gap-3 xl:w-[42rem] xl:grid-cols-5">
             <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
               <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                 Total accounts
@@ -162,12 +162,30 @@ export function UserInvestmentAccountsPage({
               </p>
             </div>
 
-            <div className="rounded-3xl border border-amber-400/15 bg-amber-400/8 p-4">
-              <p className="text-xs uppercase tracking-[0.14em] text-amber-200/80">
-                Pending
+            <div className="rounded-3xl border border-sky-400/15 bg-sky-400/8 p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-sky-200/80">
+                Fixed
               </p>
               <p className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">
-                {data.pendingAccountsCount}
+                {data.fixedAccountsCount}
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-cyan-400/15 bg-cyan-400/8 p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-cyan-200/80">
+                Market
+              </p>
+              <p className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-white">
+                {data.marketAccountsCount}
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                Total balance
+              </p>
+              <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-white">
+                {formatCurrency(data.totalBalance)}
               </p>
             </div>
           </div>
@@ -182,8 +200,8 @@ export function UserInvestmentAccountsPage({
                 Account list
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                Each investment account reflects its current servicing status,
-                linked plan, and opening details.
+                Each account now shows the linked investment product, plan
+                period, model, balance, and order activity.
               </p>
             </div>
           </div>
@@ -197,9 +215,9 @@ export function UserInvestmentAccountsPage({
                 No investment accounts yet
               </h3>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-400">
-                Once your account is ready, Havenstone will list your active and
-                pending investment accounts here with their plan and servicing
-                status.
+                Once your account is ready, your active and pending investment
+                accounts will appear here with the current plan model and linked
+                product details.
               </p>
               <Link
                 href="/account/dashboard/user/investment-accounts/new"
@@ -220,8 +238,11 @@ export function UserInvestmentAccountsPage({
                     <div className="space-y-4">
                       <div className="flex flex-wrap items-center gap-3">
                         <h3 className="text-lg font-semibold text-white">
-                          {account.accountType}
+                          {account.investmentName}
                         </h3>
+                        <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200">
+                          {account.investmentModelLabel}
+                        </span>
                         <span
                           className={cn(
                             "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
@@ -232,13 +253,17 @@ export function UserInvestmentAccountsPage({
                         </span>
                       </div>
 
+                      <p className="max-w-2xl text-sm leading-6 text-slate-400">
+                        {account.planDescription}
+                      </p>
+
                       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         <div>
                           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                             Balance
                           </p>
                           <p className="mt-2 text-sm font-medium text-white">
-                            {formatUsd(account.balance)}
+                            {formatCurrency(account.balance, account.currency)}
                           </p>
                         </div>
 
@@ -253,12 +278,50 @@ export function UserInvestmentAccountsPage({
 
                         <div>
                           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                            Opened date
+                            Product type
                           </p>
                           <p className="mt-2 text-sm font-medium text-white">
-                            {account.openedDate}
+                            {account.investmentTypeLabel}
                           </p>
                         </div>
+
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                            Plan period
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-white">
+                            {account.planPeriodLabel}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                            Orders linked
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-white">
+                            {account.orderCount}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                            Last updated
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-white">
+                            {account.updatedDate}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                          <LineChart className="h-3.5 w-3.5 text-sky-300" />
+                          Created {account.createdDate}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
+                          <Wallet className="h-3.5 w-3.5 text-emerald-300" />
+                          Opened {account.openedDate}
+                        </span>
                       </div>
                     </div>
 
@@ -317,8 +380,8 @@ export function UserInvestmentAccountsPage({
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Next actions</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Keep the foundations of your Havenstone account current as you
-              open and manage investment accounts.
+              Keep your profile, orders, and portfolio views aligned as you open
+              and manage investment accounts.
             </p>
 
             <div className="mt-5 space-y-3">

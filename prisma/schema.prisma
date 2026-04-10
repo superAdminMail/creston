@@ -181,6 +181,8 @@ model InvestorProfile {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  isVerified Boolean @default(false)
+
   phoneNumber  String?
   dateOfBirth  DateTime?
   age          Int       @default(18)
@@ -204,6 +206,7 @@ model InvestorProfile {
   updatedAt        DateTime          @updatedAt
   withdrawalOrders WithdrawalOrder[]
   savingsAccounts  SavingsAccount[]
+  paymentMethods   PaymentMethod[]
 
   @@index([kycStatus])
   @@index([avatarFileId])
@@ -277,7 +280,9 @@ model InvestmentPrice {
 
   price Decimal @db.Decimal(18, 8)
 
-  source String? // optional: "coingecko", "binance"
+  source String?
+
+  isLatest Boolean @default(true)
 
   recordedAt DateTime @default(now())
 
@@ -355,6 +360,7 @@ model InvestmentPlanTier {
   updatedAt        DateTime          @updatedAt
   investmentOrders InvestmentOrder[]
 
+  @@unique([investmentPlanId, level])
   @@index([investmentPlanId])
   @@index([level])
   @@map("investment_plan_tier")
@@ -376,6 +382,9 @@ model InvestmentOrder {
   accruedProfit  Decimal   @default(0) @db.Decimal(18, 2)
   lastAccruedAt  DateTime?
   completedAt    DateTime?
+
+  dailyProfitAccumulated Decimal   @default(0)
+  lastProfitResetAt      DateTime?
 
   units           Decimal?  @db.Decimal(18, 8)
   entryPrice      Decimal?  @db.Decimal(18, 8)
@@ -545,7 +554,7 @@ model SavingsTransaction {
 
 /// *
 /// * ===========================
-/// *  Withdrawal Order
+/// *  Withdrawal Order & Payout
 /// * ===========================
 model WithdrawalOrder {
   id String @id @default(cuid())
@@ -553,7 +562,7 @@ model WithdrawalOrder {
   externalReference String? @unique
 
   investorProfileId   String
-  investmentAccountId String
+  investmentAccountId String?
   investmentOrderId   String?
 
   amount   Decimal @db.Decimal(18, 2)
@@ -561,8 +570,11 @@ model WithdrawalOrder {
 
   status WithdrawalStatus @default(PENDING)
 
-  payoutMethod  WithdrawalMethod
-  payoutAddress String?
+  payoutMethodId String?
+
+  payoutMethod PaymentMethod? @relation(fields: [payoutMethodId], references: [id], onDelete: SetNull)
+
+  payoutSnapshot Json?
 
   reference String?
 
@@ -574,18 +586,46 @@ model WithdrawalOrder {
   rejectionReason String?
   adminNotes      String?
 
-  investorProfile   InvestorProfile   @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentAccount InvestmentAccount @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
-  investmentOrder   InvestmentOrder?  @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
+  investorProfile   InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentAccount InvestmentAccount? @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentOrder   InvestmentOrder?   @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([payoutMethodId])
   @@index([investorProfileId])
   @@index([investmentAccountId])
   @@index([investmentOrderId])
   @@index([status])
   @@map("withdrawal_order")
+}
+
+model PaymentMethod {
+  id String @id @default(cuid())
+
+  investorProfileId String
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+
+  type PaymentMethodType
+
+  bankName      String?
+  accountName   String?
+  accountNumber String?
+
+  network String?
+  address String?
+
+  isVerified Boolean @default(false)
+
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  withdrawalOrders WithdrawalOrder[]
+
+  @@index([investorProfileId])
 }
 
 /// *
@@ -1121,9 +1161,9 @@ enum WithdrawalStatus {
   CANCELLED
 }
 
-enum WithdrawalMethod {
-  BANK_TRANSFER
-  CRYPTO_WALLET
+enum PaymentMethodType {
+  BANK
+  CRYPTO
 }
 
 enum SavingsInterestFrequency {

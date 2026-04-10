@@ -10,7 +10,6 @@ import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 
 export type SuperAdminInvestmentFilters = {
   type?: string;
-  period?: string;
   status?: string;
   isActive?: string;
 };
@@ -21,8 +20,6 @@ export type SuperAdminInvestmentListItem = {
   slug: string;
   type: InvestmentType;
   typeLabel: string;
-  period: InvestmentPeriod;
-  periodLabel: string;
   status: InvestmentCatalogStatus;
   statusLabel: string;
   isActive: boolean;
@@ -34,7 +31,6 @@ export type SuperAdminInvestmentListItem = {
 
 export type SuperAdminInvestmentFilterOptions = {
   types: Array<{ value: InvestmentType; label: string }>;
-  periods: Array<{ value: InvestmentPeriod; label: string }>;
   statuses: Array<{ value: InvestmentCatalogStatus; label: string }>;
 };
 
@@ -66,7 +62,6 @@ export async function getSuperAdminInvestments(
     prisma.investment.findMany({
       where: {
         ...(filters.type ? { type: filters.type as InvestmentType } : {}),
-        ...(filters.period ? { period: filters.period as InvestmentPeriod } : {}),
         ...(filters.status
           ? { status: filters.status as InvestmentCatalogStatus }
           : {}),
@@ -80,7 +75,6 @@ export async function getSuperAdminInvestments(
         name: true,
         slug: true,
         type: true,
-        period: true,
         status: true,
         isActive: true,
         sortOrder: true,
@@ -119,23 +113,12 @@ export async function getSuperAdminInvestments(
   return {
     filters,
     filterOptions: {
-      types: [
-        "STOCKS",
-        "BONDS",
-        "MUTUAL_FUNDS",
-        "ETFS",
-        "CRYPTO",
-        "REAL_ESTATE",
-        "COMMODITIES",
-        "OTHER",
-      ].map((value) => ({
-        value: value as InvestmentType,
-        label: formatEnumLabel(value),
-      })),
-      periods: ["SHORT_TERM", "MEDIUM_TERM", "LONG_TERM"].map((value) => ({
-        value: value as InvestmentPeriod,
-        label: formatEnumLabel(value),
-      })),
+      types: ["STOCKS", "BONDS", "ETFS", "CRYPTO", "COMMODITIES"].map(
+        (value) => ({
+          value: value as InvestmentType,
+          label: formatEnumLabel(value),
+        }),
+      ),
       statuses: ["DRAFT", "ACTIVE", "INACTIVE", "ARCHIVED"].map((value) => ({
         value: value as InvestmentCatalogStatus,
         label: formatEnumLabel(value),
@@ -147,8 +130,6 @@ export async function getSuperAdminInvestments(
       slug: investment.slug,
       type: investment.type,
       typeLabel: formatEnumLabel(investment.type),
-      period: investment.period,
-      periodLabel: formatEnumLabel(investment.period),
       status: investment.status,
       statusLabel: formatEnumLabel(investment.status),
       isActive: investment.isActive,
@@ -158,7 +139,9 @@ export async function getSuperAdminInvestments(
       plansCount: investment._count.investmentPlans,
     })),
     iconFileOptions: iconAssets
-      .filter((asset): asset is typeof asset & { url: string } => Boolean(asset.url))
+      .filter((asset): asset is typeof asset & { url: string } =>
+        Boolean(asset.url),
+      )
       .map((asset) => ({
         id: asset.id,
         label: asset.originalName?.trim() || asset.fileName,
