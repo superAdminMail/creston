@@ -17,7 +17,6 @@ export async function markConversationReadAction(conversationId: string) {
   await prisma.message.updateMany({
     where: {
       conversationId,
-      readAt: null,
       OR: [
         { senderId: { not: userId } },
         { senderId: null, senderType: { in: ["SUPPORT", "SYSTEM"] } },
