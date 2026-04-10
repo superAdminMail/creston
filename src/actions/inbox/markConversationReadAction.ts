@@ -23,7 +23,7 @@ export async function markConversationReadAction(conversationId: string) {
       ],
     },
     data: {
-      seen: true,
+      deliveredAt: new Date(),
     },
   });
 }
