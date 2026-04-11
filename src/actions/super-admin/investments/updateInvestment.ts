@@ -29,7 +29,6 @@ function getFormData(formData: FormData) {
     slug: String(formData.get("slug") ?? ""),
     description: String(formData.get("description") ?? ""),
     type: String(formData.get("type") ?? ""),
-    period: String(formData.get("period") ?? ""),
     status: String(formData.get("status") ?? ""),
     iconFileAssetId: String(formData.get("iconFileAssetId") ?? ""),
     sortOrder: String(formData.get("sortOrder") ?? ""),
