@@ -60,7 +60,6 @@ export async function updateInvestment(
       slug: true,
       description: true,
       type: true,
-      period: true,
       status: true,
       iconFileAssetId: true,
       sortOrder: true,
