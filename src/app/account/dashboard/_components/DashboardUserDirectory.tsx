@@ -25,10 +25,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  type DashboardDirectoryUser,
-  formatDirectoryCurrency,
-} from "@/lib/services/dashboard/dashboardUserDirectoryService";
+import { formatDirectoryCurrency } from "@/lib/formatters/directory";
+import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
 
 type VerificationStatus = DashboardDirectoryUser["verificationStatus"];
 type AccountStatus = DashboardDirectoryUser["accountStatus"];
