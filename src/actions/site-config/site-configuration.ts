@@ -9,7 +9,6 @@ import {
 } from "@/lib/zodValidations/site-configuration";
 import { revalidatePath } from "next/cache";
 
-// CREATE OR UPDATE (singleton pattern)
 export async function upsertSiteConfiguration(data: SiteConfigurationInput) {
   const parsed = siteConfigurationSchema.parse(data);
   await prisma.siteConfiguration.upsert({

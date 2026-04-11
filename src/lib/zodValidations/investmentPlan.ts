@@ -41,6 +41,9 @@ export const investmentPlanFormSchema = z
     period: z.nativeEnum(InvestmentPeriod, {
       message: "Select a valid investment period.",
     }),
+
+    investmentModel: z.enum(["FIXED", "MARKET"]),
+
     currency: z.string().trim().min(1, "Currency is required."),
     tiers: z.array(investmentPlanTierInputSchema),
     isActive: z
@@ -143,6 +146,7 @@ export function normalizeInvestmentPlanFormValues(
     normalizedSlug: slugify(slugSource),
     description: values.description?.trim() || null,
     period: values.period,
+    investmentModel: values.investmentModel,
     currency: values.currency.trim().toUpperCase(),
     tiers: values.tiers
       .filter((tier) => tier.isActive)

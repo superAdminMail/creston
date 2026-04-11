@@ -96,6 +96,7 @@ export async function createInvestmentPlan(
       slug,
       description: values.description,
       period: values.period,
+      investmentModel: values.investmentModel,
       currency: values.currency,
       isActive: values.isActive,
       tiers: {
@@ -125,6 +126,7 @@ export async function createInvestmentPlan(
       name: values.name,
       slug,
       period: values.period,
+      investmentModel: values.investmentModel,
       currency: values.currency,
       tiers: values.tiers,
       isActive: values.isActive,
