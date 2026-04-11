@@ -59,7 +59,7 @@ export function ManagementForm() {
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message);
-      router.refresh();
+      router.push("/account/dashboard/super-admin/management");
     }
 
     if (state.status === "error") {

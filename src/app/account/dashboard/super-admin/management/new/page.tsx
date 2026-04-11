@@ -1,5 +1,4 @@
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
-import { createManagement } from "@/actions/super-admin/management/createManagement";
 import { ManagementForm } from "../../_components/ManagementForm";
 
 export default async function CreateManagementPage() {

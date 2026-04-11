@@ -31,7 +31,10 @@ export async function createManagement(
       phone: formData.get("phone"),
       bio: formData.get("bio"),
       photoFileId: formData.get("photoFileId"),
-      isActive: formData.get("isActive") === "true",
+      isActive:
+        formData.get("isActive") === null
+          ? true
+          : formData.get("isActive") === "true",
       sortOrder: Number(formData.get("sortOrder") ?? 0),
     });
 
@@ -48,6 +51,7 @@ export async function createManagement(
       data: values,
     });
 
+    revalidatePath("/");
     revalidatePath("/account/dashboard/super-admin/management");
 
     return createSuccessFormState("Management profile created");
