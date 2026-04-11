@@ -8,8 +8,13 @@ export async function depositToSavings(accountId: string, amount: number) {
 
   if (!user?.id) throw new Error("Unauthorized");
 
-  const account = await prisma.savingsAccount.findUnique({
-    where: { id: accountId },
+  const account = await prisma.savingsAccount.findFirst({
+    where: {
+      id: accountId,
+      investorProfile: {
+        userId: user.id,
+      },
+    },
     include: { savingsProduct: true },
   });
 
@@ -19,11 +24,12 @@ export async function depositToSavings(accountId: string, amount: number) {
     throw new Error("Deposits not allowed");
   }
 
-  const newBalance = Number(account.balance) + amount;
+  const balanceBefore = Number(account.balance);
+  const balanceAfter = balanceBefore + amount;
 
   if (
     account.savingsProduct.maxBalance &&
-    newBalance > Number(account.savingsProduct.maxBalance)
+    balanceAfter > Number(account.savingsProduct.maxBalance)
   ) {
     throw new Error("Exceeds max balance");
   }
@@ -32,7 +38,7 @@ export async function depositToSavings(accountId: string, amount: number) {
     prisma.savingsAccount.update({
       where: { id: accountId },
       data: {
-        balance: newBalance,
+        balance: balanceAfter,
       },
     }),
 
@@ -41,6 +47,9 @@ export async function depositToSavings(accountId: string, amount: number) {
         savingsAccountId: accountId,
         type: "DEPOSIT",
         amount,
+        currency: account.currency,
+        balanceBefore,
+        balanceAfter,
       },
     }),
   ]);

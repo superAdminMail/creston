@@ -7,10 +7,8 @@ import {
   useEffect,
   useMemo,
   useState,
-  useTransition,
 } from "react";
 import { useFormStatus } from "react-dom";
-import { Building2, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 
 import type {
@@ -31,7 +29,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { SuperAdminFormSelect } from "../../_components/SuperAdminFormSelect";
 
 import {
   normalizePhoneToE164,
@@ -99,13 +96,6 @@ function FileAssetPreview({
   );
 }
 
-function normalizeKeywordInput(value: string) {
-  return value
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
 export function SiteSettingsForm({
   defaultValues,
   fileAssetOptions,
@@ -115,7 +105,6 @@ export function SiteSettingsForm({
     SiteSettingsFormActionState,
     FormData
   >(upsertSiteConfiguration, initialSiteSettingsFormActionState);
-  const [isPending, startTransition] = useTransition();
 
   const [siteName, setSiteName] = useState(defaultValues.siteName);
   const [siteTagline, setSiteTagline] = useState(defaultValues.siteTagline);
@@ -130,26 +119,17 @@ export function SiteSettingsForm({
     supportPhone: splitNormalizedPhone(defaultValues.supportPhone),
   });
 
-  const [locale, setLocale] = useState(defaultValues.locale);
-  const [defaultTwitterHandle, setDefaultTwitterHandle] = useState(
-    defaultValues.defaultTwitterHandle,
-  );
-  const [facebookUrl, setFacebookUrl] = useState(defaultValues.facebookUrl);
-  const [instagramUrl, setInstagramUrl] = useState(defaultValues.instagramUrl);
-
   const [siteLogoFileAssetId, setSiteLogoFileAssetId] = useState(
     defaultValues.siteLogoFileAssetId,
   );
-
-  const [defaultOgImageFileAssetId, setDefaultOgImageFileAssetId] = useState(
-    defaultValues.defaultOgImageFileAssetId,
-  );
-
-  const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
-  const [uploadPreviewKey, setUploadPreviewKey] = useState<string | null>(null);
+  const [uploadedSiteLogoPreview, setUploadedSiteLogoPreview] = useState<{
+    id: string;
+    label: string;
+    url: string;
+    storageKey: string;
+  } | null>(null);
 
   const [keywords, setKeywords] = useState<string[]>(defaultValues.keywords);
-  const [keywordInput, setKeywordInput] = useState("");
 
   const serializedKeywords = useMemo(
     () => JSON.stringify(keywords),
@@ -163,17 +143,15 @@ export function SiteSettingsForm({
     [fileAssetOptions, siteLogoFileAssetId],
   );
 
-  const defaultOgImageAsset = useMemo(
-    () =>
-      fileAssetOptions.find(
-        (asset) => asset.id === defaultOgImageFileAssetId,
-      ) ?? null,
-    [defaultOgImageFileAssetId, fileAssetOptions],
-  );
+  const siteLogoPreview =
+    uploadedSiteLogoPreview?.id === siteLogoFileAssetId
+      ? uploadedSiteLogoPreview
+      : siteLogoAsset;
 
   useEffect(() => {
     if (state.status === "success" && state.message) {
       toast.success(state.message);
+      setUploadedSiteLogoPreview(null);
       router.refresh();
     }
 
@@ -181,20 +159,6 @@ export function SiteSettingsForm({
       toast.error(state.message);
     }
   }, [router, state]);
-
-  const addKeywords = (value: string) => {
-    const next = normalizeKeywordInput(value);
-    if (!next.length) return;
-
-    setKeywords((prev) =>
-      Array.from(new Set([...prev, ...next.map((k) => k.toLowerCase())])),
-    );
-    setKeywordInput("");
-  };
-
-  const removeKeyword = (keyword: string) => {
-    setKeywords((prev) => prev.filter((k) => k !== keyword));
-  };
 
   const syncPhoneValue = (
     field: PhoneFieldKey,
@@ -252,11 +216,6 @@ export function SiteSettingsForm({
     <form action={formAction} className="space-y-6">
       {/* HIDDEN */}
       <input type="hidden" name="keywords" value={serializedKeywords} />
-      <input
-        type="hidden"
-        name="siteLogoFileAssetId"
-        value={siteLogoFileAssetId}
-      />
       <input
         type="hidden"
         name="supportPhone"
@@ -322,22 +281,33 @@ export function SiteSettingsForm({
               <UploadButton
                 endpoint="siteLogo"
                 onClientUploadComplete={async (res) => {
-                  const file = res?.[0];
-                  if (!file) return;
+                  try {
+                    const file = res?.[0];
+                    if (!file) return;
 
-                  const asset = await createFileAssetFromUpload({
-                    url: file.url,
-                    key: file.key,
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                  });
+                    const asset = await createFileAssetFromUpload({
+                      url: file.url,
+                      key: file.key,
+                      name: file.name,
+                      size: file.size,
+                      type: file.type,
+                    });
 
-                  setSiteLogoFileAssetId(asset.id);
-                  setUploadPreviewUrl(file.url);
-                  setUploadPreviewKey(file.key);
+                    setSiteLogoFileAssetId(asset.id);
+                    setUploadedSiteLogoPreview({
+                      id: asset.id,
+                      label: file.name,
+                      url: file.url,
+                      storageKey: file.key,
+                    });
 
-                  toast.success("Logo uploaded");
+                    toast.success("Logo uploaded");
+                  } catch {
+                    toast.error("Unable to attach the uploaded logo.");
+                  }
+                }}
+                onUploadError={() => {
+                  toast.error("Logo upload failed.");
                 }}
                 className="
     ut-button:bg-blue-600
@@ -352,10 +322,10 @@ export function SiteSettingsForm({
   "
               />
 
-              {uploadPreviewUrl && (
+              {uploadedSiteLogoPreview?.id === siteLogoFileAssetId && (
                 <div className="flex gap-4 items-center">
                   <Image
-                    src={uploadPreviewUrl}
+                    src={uploadedSiteLogoPreview.url}
                     alt="preview"
                     width={64}
                     height={64}
@@ -364,12 +334,11 @@ export function SiteSettingsForm({
                   <Button
                     type="button"
                     onClick={async () => {
-                      if (!uploadPreviewKey) return;
+                      if (!uploadedSiteLogoPreview?.storageKey) return;
 
-                      await deleteFileAction(uploadPreviewKey);
+                      await deleteFileAction(uploadedSiteLogoPreview.storageKey);
 
-                      setUploadPreviewUrl(null);
-                      setUploadPreviewKey(null);
+                      setUploadedSiteLogoPreview(null);
                       setSiteLogoFileAssetId("");
                     }}
                   >
@@ -378,19 +347,19 @@ export function SiteSettingsForm({
                 </div>
               )}
 
-              {/* Existing select */}
-              <SuperAdminFormSelect
+              <input
+                type="hidden"
                 name="siteLogoFileAssetId"
                 value={siteLogoFileAssetId}
-                placeholder="Select a logo"
-                onValueChange={setSiteLogoFileAssetId}
-                options={fileAssetOptions.map((o) => ({
-                  value: o.id,
-                  label: o.label,
-                }))}
               />
 
-              <FileAssetPreview title="Site logo" asset={siteLogoAsset} />
+              {state.fieldErrors?.siteLogoFileAssetId ? (
+                <p className="text-sm text-destructive">
+                  {state.fieldErrors.siteLogoFileAssetId}
+                </p>
+              ) : null}
+
+              <FileAssetPreview title="Site logo" asset={siteLogoPreview} />
             </CardContent>
           </Card>
         </div>

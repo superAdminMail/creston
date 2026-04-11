@@ -8,8 +8,13 @@ export async function withdrawFromSavings(accountId: string, amount: number) {
 
   if (!user?.id) throw new Error("Unauthorized");
 
-  const account = await prisma.savingsAccount.findUnique({
-    where: { id: accountId },
+  const account = await prisma.savingsAccount.findFirst({
+    where: {
+      id: accountId,
+      investorProfile: {
+        userId: user.id,
+      },
+    },
     include: { savingsProduct: true },
   });
 
@@ -23,15 +28,19 @@ export async function withdrawFromSavings(accountId: string, amount: number) {
     throw new Error("Funds are locked");
   }
 
-  if (Number(account.balance) < amount) {
+  const balanceBefore = Number(account.balance);
+
+  if (balanceBefore < amount) {
     throw new Error("Insufficient balance");
   }
+
+  const balanceAfter = balanceBefore - amount;
 
   await prisma.$transaction([
     prisma.savingsAccount.update({
       where: { id: accountId },
       data: {
-        balance: Number(account.balance) - amount,
+        balance: balanceAfter,
       },
     }),
 
@@ -40,6 +49,9 @@ export async function withdrawFromSavings(accountId: string, amount: number) {
         savingsAccountId: accountId,
         type: "WITHDRAWAL",
         amount,
+        currency: account.currency,
+        balanceBefore,
+        balanceAfter,
       },
     }),
   ]);
