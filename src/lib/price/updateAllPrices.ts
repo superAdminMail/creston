@@ -1,7 +1,5 @@
-// lib/price/updateAllPrices.ts
-
 import { prisma } from "@/lib/prisma";
-import { getPrice } from "./priceService";
+import { getPrices } from "@/lib/services/price/priceService";
 
 export async function updateAllPrices() {
   const investments = await prisma.investment.findMany({
@@ -14,18 +12,15 @@ export async function updateAllPrices() {
     },
   });
 
-  const uniqueSymbols = [
-    ...new Set(investments.map((i) => i.symbol).filter(Boolean)),
-  ] as string[];
+  const uniqueSymbols = Array.from(
+    new Set(investments.map((investment) => investment.symbol).filter(Boolean)),
+  ) as string[];
 
-  console.log("🔄 Updating prices for:", uniqueSymbols);
+  const prices = await getPrices(uniqueSymbols);
 
-  for (const symbol of uniqueSymbols) {
-    try {
-      const price = await getPrice(symbol);
-      console.log(`✅ ${symbol}: ${price}`);
-    } catch (error) {
-      console.error(`❌ Failed for ${symbol}`, error);
-    }
-  }
+  return {
+    totalSymbols: uniqueSymbols.length,
+    resolvedSymbols: Object.values(prices).filter(Boolean).length,
+    prices,
+  };
 }

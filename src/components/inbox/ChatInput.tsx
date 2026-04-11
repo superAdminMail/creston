@@ -10,20 +10,14 @@ import { SenderType } from "@/generated/prisma/client";
 
 type Props = {
   conversationId: string;
-  selfUserId?: string | null;
   onPreviewUpdate?: (payload: {
     content: string;
-    senderId?: string | null;
     senderType: SenderType;
     createdAt: string;
   }) => void;
 };
 
-export function ChatInput({
-  conversationId,
-  selfUserId,
-  onPreviewUpdate,
-}: Props) {
+export function ChatInput({ conversationId, onPreviewUpdate }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const lastTypingAtRef = useRef(0);
 
@@ -46,7 +40,6 @@ export function ChatInput({
       if (!res?.error) {
         onPreviewUpdate?.({
           content: value,
-          senderId: selfUserId ?? null,
           senderType: SenderType.USER,
           createdAt: new Date().toISOString(),
         });

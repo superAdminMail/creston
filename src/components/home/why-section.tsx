@@ -2,6 +2,7 @@ import { Landmark, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
 const pillars = [
   {
@@ -30,15 +31,17 @@ const pillars = [
   },
 ];
 
-export function WhySection() {
+export async function WhySection() {
+  const site = await getSiteSeoConfig();
+
   return (
     <SectionShell id="why-havenstone" className="py-20 sm:py-24">
       <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         {/* LEFT */}
         <SectionHeading
-          eyebrow="Why Havenstone"
+          eyebrow={`Why ${site.siteName}`}
           title="Designed for a new era of investing"
-          description="Havenstone is a modern financial platform that empowers individuals and organizations to make informed investments with confidence and ease. Our platform provides a secure and reliable way to save and grow your wealth, whether you're a seasoned investor or a first-time investor."
+          description={`${site.siteName} is a modern financial platform that empowers individuals and organizations to make informed investments with confidence and ease. Our platform provides a secure and reliable way to save and grow your wealth, whether you're a seasoned investor or a first-time investor.`}
         />
 
         {/* RIGHT - LAYERED */}

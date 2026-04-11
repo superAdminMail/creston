@@ -146,6 +146,29 @@ export function UserInvestmentOrderCard({
           <div className="rounded-2xl border border-white/8 bg-[#0b1229]/55 px-4 py-3 text-sm leading-6 text-slate-300">
             {getStatusNote(order)}
           </div>
+
+          {order.status === InvestmentOrderStatus.CANCELLED ||
+          order.status === InvestmentOrderStatus.REJECTED ? (
+            <div className="grid gap-3 xl:grid-cols-2">
+              <div className="rounded-2xl border border-rose-400/15 bg-rose-400/8 px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-rose-200/80">
+                  Cancellation note
+                </p>
+                <p className="mt-2 text-sm leading-6 text-rose-100">
+                  {order.cancellationReason || "No cancellation reason was recorded."}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                  Admin note
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  {order.adminNotes || "No admin note was recorded for this order."}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[14rem] lg:pl-6">
@@ -156,24 +179,6 @@ export function UserInvestmentOrderCard({
             <ActionIcon className="h-4 w-4" />
             {order.primaryAction.label}
           </Link>
-
-          <Link
-            href={`/account/dashboard/user/investment-orders/${order.id}`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-white/12 hover:bg-white/[0.04] hover:text-white"
-          >
-            Open Order
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          {order.status === InvestmentOrderStatus.PENDING_PAYMENT ? (
-            <Link
-              href="/account/dashboard/user/investment-orders/new"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-white/12 hover:bg-white/[0.04] hover:text-white"
-            >
-              Start another investment
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          ) : null}
         </div>
       </div>
     </article>

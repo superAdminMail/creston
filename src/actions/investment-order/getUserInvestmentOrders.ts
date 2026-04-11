@@ -3,6 +3,7 @@
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 
 type Decimalish = {
@@ -19,6 +20,8 @@ type UserInvestmentOrderListItem = {
   paidAt: string;
   confirmedAt: string;
   cancelledAt: string;
+  cancellationReason: string | null;
+  adminNotes: string | null;
   linkedInvestmentAccountId: string | null;
   plan: {
     id: string;
@@ -69,12 +72,12 @@ function getPrimaryAction(
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return {
         label: "Make payment",
-        href: `/account/dashboard/user/investments-order-${order.id}`,
+        href: `/account/dashboard/user/investment-order/${order.id}`,
       };
     case InvestmentOrderStatus.PENDING_CONFIRMATION:
       return {
         label: "Open order details",
-        href: `/account/dashboard/user/investments-order-${order.id}`,
+        href: `/account/dashboard/user/investment-order/${order.id}`,
       };
     case InvestmentOrderStatus.CONFIRMED:
       return order.linkedInvestmentAccountId
@@ -84,7 +87,7 @@ function getPrimaryAction(
           }
         : {
             label: "Open order details",
-            href: `/account/dashboard/user/investments-order-${order.id}`,
+            href: `/account/dashboard/user/investment-order/${order.id}`,
           };
     case InvestmentOrderStatus.CANCELLED:
     case InvestmentOrderStatus.REJECTED:
@@ -93,7 +96,7 @@ function getPrimaryAction(
     default:
       return {
         label: "View details",
-        href: `/account/dashboard/user/investments#order-${order.id}`,
+        href: `/account/dashboard/user/investments#order/${order.id}`,
       };
   }
 }
@@ -101,13 +104,19 @@ function getPrimaryAction(
 export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersData> {
   const user = await getCurrentSessionUser();
 
-  if (!user?.id) {
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
     throw new Error("Unauthorized");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
     where: {
-      userId: user.id,
+      userId: userId,
     },
     select: {
       id: true,
@@ -124,6 +133,8 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           paidAt: true,
           confirmedAt: true,
           cancelledAt: true,
+          cancellationReason: true,
+          adminNotes: true,
           investmentAccountId: true,
           investmentPlan: {
             select: {
@@ -187,6 +198,8 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       paidAt: formatDateLabel(order.paidAt, "Not paid yet"),
       confirmedAt: formatDateLabel(order.confirmedAt, "Awaiting confirmation"),
       cancelledAt: formatDateLabel(order.cancelledAt, "Active order"),
+      cancellationReason: order.cancellationReason?.trim() || null,
+      adminNotes: order.adminNotes?.trim() || null,
       linkedInvestmentAccountId: order.investmentAccountId,
       plan: {
         id: order.investmentPlan.id,

@@ -20,6 +20,10 @@ export async function POST(req: Request) {
   }
 
   const senderType: SenderType = targetSenderType ?? "SUPPORT";
+  const incomingSenderTypes =
+    role === "ADMIN" || role === "MODERATOR" || role === "SUPER_ADMIN"
+      ? [SenderType.USER]
+      : [SenderType.SUPPORT, SenderType.SYSTEM];
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: conversationId },
@@ -49,21 +53,23 @@ export async function POST(req: Request) {
   }
 
   const readAt = new Date();
-  await prisma.message.updateMany({
-    where: {
-      conversationId,
-      readAt: null,
-      ...(targetSenderType
-        ? { senderType }
-        : {
-            OR: [
-              { senderId: { not: userId } },
-              { senderId: null, senderType: { in: ["SUPPORT", "SYSTEM"] } },
-            ],
-          }),
-    },
-    data: { readAt },
-  });
+  await prisma.$transaction([
+    prisma.message.updateMany({
+      where: {
+        conversationId,
+        deliveredAt: null,
+        senderType: targetSenderType ? senderType : { in: incomingSenderTypes },
+      },
+      data: { deliveredAt: readAt },
+    }),
+    prisma.conversationMember.updateMany({
+      where: { conversationId, userId },
+      data: {
+        lastReadAt: readAt,
+        unreadCount: 0,
+      },
+    }),
+  ]);
 
   await pusherServer.trigger(`conversation-${conversationId}`, "seen", {
     readAt: readAt.toISOString(),

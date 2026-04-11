@@ -56,7 +56,7 @@ export default async function RootLayout({
         <QueryProvider>
           <TooltipProvider>
             {children}
-            <Toaster richColors closeButton />
+            <Toaster richColors closeButton position="top-right" />
           </TooltipProvider>
         </QueryProvider>
       </body>

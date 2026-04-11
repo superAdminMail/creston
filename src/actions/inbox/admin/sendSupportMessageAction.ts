@@ -32,7 +32,6 @@ export async function sendSupportMessageAction({
   await createAndProcessConversationMessage(
     {
       conversationId,
-      senderId: userId,
       senderType: SenderType.SUPPORT,
       content: text,
     },

@@ -1,6 +1,5 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import {
   createErrorFormState,
@@ -8,10 +7,13 @@ import {
   createValidationErrorState,
   type FormActionState,
 } from "@/lib/forms/actionState";
+import { prisma } from "@/lib/prisma";
+import { getWithdrawalSourceOptions } from "@/lib/service/getAvailableWithdrawalSource";
+import { toDecimal } from "@/lib/services/investment/decimal";
 import { createWithdrawalOrderSchema } from "@/lib/zodValidations/account-operations";
 
 export type CreateWithdrawalOrderState = FormActionState<
-  "amount" | "methodId"
+  "amount" | "methodId" | "sourceType" | "sourceId"
 >;
 
 export async function createWithdrawalOrder(
@@ -21,6 +23,8 @@ export async function createWithdrawalOrder(
   const parsed = createWithdrawalOrderSchema.safeParse({
     amount: formData.get("amount"),
     methodId: formData.get("methodId"),
+    sourceType: formData.get("sourceType"),
+    sourceId: formData.get("sourceId"),
   });
 
   if (!parsed.success) {
@@ -50,7 +54,8 @@ export async function createWithdrawalOrder(
     );
   }
 
-  const { amount, methodId } = parsed.data;
+  const { amount, methodId, sourceId, sourceType } = parsed.data;
+  const requestedAmount = toDecimal(amount);
 
   const method = profile.paymentMethods.find((m) => m.id === methodId);
 
@@ -58,6 +63,29 @@ export async function createWithdrawalOrder(
     return createErrorFormState("Please select a valid payment method.", {
       methodId: ["Please select a valid payment method."],
     });
+  }
+
+  const withdrawalSources = await getWithdrawalSourceOptions(profile.id);
+  const withdrawalSource = withdrawalSources.find(
+    (source) => source.type === sourceType && source.id === sourceId,
+  );
+
+  if (!withdrawalSource || withdrawalSource.amount <= 0) {
+    return createErrorFormState(
+      "There is no available balance eligible for withdrawal right now.",
+      {
+        sourceId: ["Select a valid withdrawal source."],
+      },
+    );
+  }
+
+  if (requestedAmount.greaterThan(withdrawalSource.amount)) {
+    return createErrorFormState(
+      "Withdrawal amount exceeds the available balance.",
+      {
+        amount: ["Withdrawal amount exceeds the available balance."],
+      },
+    );
   }
 
   const payoutSnapshot = {
@@ -72,11 +100,16 @@ export async function createWithdrawalOrder(
   await prisma.withdrawalOrder.create({
     data: {
       investorProfileId: profile.id,
-      amount,
-      currency: "USD",
+      amount: requestedAmount,
+      currency: withdrawalSource.currency,
       payoutMethodId: method.id,
       payoutSnapshot,
       status: "PENDING",
+      investmentAccountId: withdrawalSource.investmentAccountId,
+      investmentOrderId:
+        withdrawalSource.type === "INVESTMENT_ORDER"
+          ? withdrawalSource.id
+          : null,
     },
   });
 

@@ -1,12 +1,16 @@
-import { getUserSavingsAccounts } from "@/actions/savings/getUserSavingsAccounts";
+import { getSavingsPageData } from "@/actions/savings/getSavingsPageData";
 import SavingsDashboard from "../_components/SavingsDashboard";
 
 export default async function Page() {
-  const accounts = await getUserSavingsAccounts();
+  const data = await getSavingsPageData();
 
   return (
     <div>
-      <SavingsDashboard accounts={accounts} />
+      <SavingsDashboard
+        accounts={data.accounts}
+        kycStatus={data.kycStatus}
+        canCreateSavingsAccount={data.canCreateSavingsAccount}
+      />
     </div>
   );
 }

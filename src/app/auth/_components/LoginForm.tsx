@@ -25,7 +25,13 @@ import {
   loginUserSchemaType,
 } from "@/lib/zodValidations/user";
 
-export default function LoginForm() {
+export default function LoginForm({
+  siteName,
+  siteLogoUrl,
+}: {
+  siteName: string;
+  siteLogoUrl?: string | null;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
@@ -54,19 +60,22 @@ export default function LoginForm() {
         return;
       }
 
-      router.push("/auth/onboarding");
+      router.replace("/account/dashboard");
+      router.refresh();
     });
   };
 
   return (
     <AuthShell
       eyebrow="Secure Sign In"
-      title="Sign in to Havenstone"
+      title={`Sign in to ${siteName}`}
       description="Access your account and manage your investments with ease. Enter your credentials below to get started."
+      siteName={siteName}
+      siteLogoUrl={siteLogoUrl}
       footer={
         <div className="space-y-3 text-center">
           <p className="text-xs leading-relaxed text-slate-400">
-            By signing in, you agree to Havenstone&apos;s{" "}
+            By signing in, you agree to {siteName}&apos;s{" "}
             <Link href="/terms" className="text-blue-200 hover:text-white">
               Terms of Service
             </Link>{" "}
@@ -78,7 +87,7 @@ export default function LoginForm() {
           </p>
 
           <p className="text-sm text-slate-400">
-            New to Havenstone?{" "}
+            New to {siteName}?{" "}
             <Link
               href="/auth/get-started"
               className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"
@@ -128,7 +137,7 @@ export default function LoginForm() {
 
                     {!fieldState.error ? (
                       <FieldDescription className="text-xs text-slate-500">
-                        Enter the email associated with your Havenstone account.
+                        Enter the email associated with your {siteName} account.
                       </FieldDescription>
                     ) : null}
 

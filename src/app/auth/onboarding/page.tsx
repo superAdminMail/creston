@@ -3,12 +3,16 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { OnboardingDialog } from "@/components/onboarding/onboarding-dialog";
 
 export default async function OnboardingPage() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const [session, site] = await Promise.all([
+    auth.api.getSession({
+      headers: await headers(),
+    }),
+    getSiteSeoConfig(),
+  ]);
 
   if (!session?.user?.id) {
     redirect("/auth/login");
@@ -35,5 +39,5 @@ export default async function OnboardingPage() {
     redirect("/account/dashboard");
   }
 
-  return <OnboardingDialog userName={user.name} />;
+  return <OnboardingDialog userName={user.name} siteName={site.siteName} />;
 }

@@ -8,10 +8,10 @@ import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  initialInvestmentAccountFormState,
   updateInvestmentAccount,
   type UpdateInvestmentAccountState,
 } from "@/actions/investment-account/updateInvestmentAccount";
+import { createInitialFormState } from "@/lib/forms/actionState";
 import {
   updateInvestmentAccountSchema,
   type UpdateInvestmentAccountInput,
@@ -59,6 +59,9 @@ const statusOptions: Array<{
   },
 ];
 
+const initialInvestmentAccountFormState: UpdateInvestmentAccountState =
+  createInitialFormState<"status">();
+
 export function UpdateInvestmentAccountForm({
   accountId,
   currentStatus,
@@ -78,6 +81,7 @@ export function UpdateInvestmentAccountForm({
       status: currentStatus,
     },
   });
+  const selectedStatus = form.watch("status");
 
   useEffect(() => {
     if (state.status === "success") {
@@ -92,12 +96,9 @@ export function UpdateInvestmentAccountForm({
   }, [router, state]);
 
   return (
-    <form
-      action={formAction}
-      onSubmit={form.handleSubmit(() => {})}
-      className="space-y-6"
-    >
+    <form action={formAction} className="space-y-6">
       <input type="hidden" name="accountId" value={accountId} />
+      <input type="hidden" name="status" value={selectedStatus} />
 
       <FieldGroup>
         <Controller
@@ -114,9 +115,7 @@ export function UpdateInvestmentAccountForm({
                     return (
                       <button
                         key={option.value}
-                        type="submit"
-                        name="status"
-                        value={option.value}
+                        type="button"
                         onClick={() => field.onChange(option.value)}
                         disabled={isPending}
                         className={cn(

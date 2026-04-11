@@ -8,8 +8,14 @@ import { InvestmentAccountSummaryCards } from "./_components/InvestmentAccountSu
 import { InvestmentPlanOverviewCard } from "./_components/InvestmentPlanOverviewCard";
 import { InvestmentProductCard } from "./_components/InvestmentProductCard";
 
+type PageProps = {
+  params: Promise<{
+    investmentAccountId: string;
+  }>;
+};
+
 export default async function Page(
-  props: PageProps<"/account/dashboard/user/investment-accounts/[investmentAccountId]">,
+  props: PageProps,
 ) {
   const { investmentAccountId } = await props.params;
   const account = await getInvestmentAccountDetails(investmentAccountId);

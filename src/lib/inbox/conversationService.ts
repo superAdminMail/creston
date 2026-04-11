@@ -12,7 +12,6 @@ import { pusherServer } from "@/lib/pusher";
 export type RealtimeMessagePayload = {
   id: string;
   conversationId: string;
-  senderId: string | null;
   senderType: SenderType;
   content: string;
   createdAt: string;
@@ -22,7 +21,6 @@ type MessageWriter = Prisma.TransactionClient | PrismaClient;
 type PersistedConversationMessage = {
   id: string;
   conversationId: string;
-  senderId: string | null;
   senderType: SenderType;
   content: string;
   createdAt: Date;
@@ -32,7 +30,6 @@ export async function persistConversationMessage(
   db: MessageWriter,
   input: {
     conversationId: string;
-    senderId?: string | null;
     senderType: SenderType;
     content: string;
   },
@@ -40,7 +37,6 @@ export async function persistConversationMessage(
   const message = await db.message.create({
     data: {
       conversationId: input.conversationId,
-      senderId: input.senderId ?? null,
       senderType: input.senderType,
       content: input.content.trim(),
     },
@@ -83,7 +79,6 @@ export async function processConversationMessageAfterWrite(
 export async function createAndProcessConversationMessage(
   input: {
     conversationId: string;
-    senderId?: string | null;
     senderType: SenderType;
     content: string;
   },
@@ -98,7 +93,6 @@ export async function createAndProcessConversationMessage(
 function toRealtimeMessagePayload(message: {
   id: string;
   conversationId: string;
-  senderId: string | null;
   senderType: SenderType;
   content: string;
   createdAt: Date;
@@ -106,7 +100,6 @@ function toRealtimeMessagePayload(message: {
   return {
     id: message.id,
     conversationId: message.conversationId,
-    senderId: message.senderId,
     senderType: message.senderType,
     content: message.content,
     createdAt: message.createdAt.toISOString(),
@@ -116,7 +109,6 @@ function toRealtimeMessagePayload(message: {
 export async function publishConversationMessage(message: {
   id: string;
   conversationId: string;
-  senderId: string | null;
   senderType: SenderType;
   content: string;
   createdAt: Date;

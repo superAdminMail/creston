@@ -14,16 +14,26 @@ export async function markConversationReadAction(conversationId: string) {
 
   if (!isMember) return;
 
-  await prisma.message.updateMany({
-    where: {
-      conversationId,
-      OR: [
-        { senderId: { not: userId } },
-        { senderId: null, senderType: { in: ["SUPPORT", "SYSTEM"] } },
-      ],
-    },
-    data: {
-      deliveredAt: new Date(),
-    },
-  });
+  const now = new Date();
+
+  await prisma.$transaction([
+    prisma.message.updateMany({
+      where: {
+        conversationId,
+        senderType: {
+          in: ["SUPPORT", "SYSTEM"],
+        },
+      },
+      data: {
+        deliveredAt: now,
+      },
+    }),
+    prisma.conversationMember.updateMany({
+      where: { conversationId, userId },
+      data: {
+        lastReadAt: now,
+        unreadCount: 0,
+      },
+    }),
+  ]);
 }

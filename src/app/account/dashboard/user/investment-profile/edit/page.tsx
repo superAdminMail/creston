@@ -21,12 +21,10 @@ export default async function Page() {
           </Link>
 
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-            Update Investment Profile
+            Edit Investment Profile
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-            Update your investment profile information to ensure we have the
-            most accurate details about your investment preferences and risk
-            tolerance.
+            Review and update your Havenstone investment profile.
           </p>
         </div>
 
@@ -42,8 +40,7 @@ export default async function Page() {
             Personal information
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Review and update your core profile information. Your completion
-            status will update as soon as the required details are saved.
+            Review and update your personal information.
           </p>
         </div>
 

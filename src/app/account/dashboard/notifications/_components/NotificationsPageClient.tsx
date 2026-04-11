@@ -93,9 +93,7 @@ export default function NotificationsPageClient({
       syncNotificationsQuery();
     }
 
-    if (notification.link) {
-      router.push(notification.link);
-    }
+    router.push(`/account/dashboard/notifications/${notification.id}`);
   };
 
   const handleMarkAllAsRead = () => {

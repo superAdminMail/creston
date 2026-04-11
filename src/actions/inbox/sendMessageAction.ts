@@ -34,7 +34,6 @@ export async function sendMessageAction({
   await createAndProcessConversationMessage(
     {
       conversationId,
-      senderId: userId,
       senderType: SenderType.USER,
       content: text,
     },

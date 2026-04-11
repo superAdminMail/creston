@@ -2,32 +2,35 @@ import { ChevronRight, ShieldCheck } from "lucide-react";
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
-const faqs = [
-  {
-    question: "Who is Havenstone built for?",
-    answer:
-      "Havenstone is built for individuals and organizations looking to save and invest through structured plans with clear account visibility.",
-    featured: true,
-  },
-  {
-    question: "What returns can I expect?",
-    answer:
-      "Each plan provides estimated return ranges based on its structure and duration. Returns are not guaranteed and may vary.",
-  },
-  {
-    question: "Is Havenstone only for retirement?",
-    answer:
-      "No. Havenstone supports general savings and investment goals. A personal retirement plan is available as one of the options.",
-  },
-  {
-    question: "What can I track on the platform?",
-    answer:
-      "You can track your selected plans, contributions, account activity, and estimated growth over time.",
-  },
-];
+function buildFaqs(siteName: string) {
+  return [
+    {
+      question: `Who is ${siteName} built for?`,
+      answer: `${siteName} is built for anyone who wants to achieve their financial goals. Whether you're a student, working professional, or a retiree, we have a plan that's right for you.`,
+      featured: true,
+    },
+    {
+      question: "What returns can I expect?",
+      answer:
+        "Each plan offers a range of returns, from conservative to aggressive, to meet your individual needs.",
+    },
+    {
+      question: `Is ${siteName} only for investors/investing?`,
+      answer: `No, ${siteName} supports a wide range of financial goals, from long-term wealth planning to personal savings so you can pay your bills with confidence.`,
+    },
+    {
+      question: "When can i withdraw my money?",
+      answer:
+        "Withdrawals are typically available on the next business day after the end of the plan period.",
+    },
+  ];
+}
 
-export function FaqSection() {
+export async function FaqSection() {
+  const site = await getSiteSeoConfig();
+  const faqs = buildFaqs(site.siteName);
   const featured = faqs.find((f) => f.featured);
   const others = faqs.filter((f) => !f.featured);
 
@@ -38,7 +41,7 @@ export function FaqSection() {
         <SectionHeading
           eyebrow="FAQ"
           title="Clear answers to common questions"
-          description="Everything you need to understand how Havenstone works, from plan selection to tracking your investment progress."
+          description={`Everything you need to understand how ${site.siteName} works, from plan selection to tracking your investment progress.`}
         />
 
         {/* RIGHT */}

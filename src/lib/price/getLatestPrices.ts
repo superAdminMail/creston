@@ -1,14 +1,16 @@
-import { prisma } from "@/lib/prisma";
+import { getLatestPersistedPrice } from "@/lib/services/price/priceService";
 
 export async function getLatestPrices(symbols: string[]) {
-  const records = await prisma.investmentPrice.findMany({
-    where: {
-      symbol: { in: symbols },
-      isLatest: true,
-    },
-  });
+  const normalizedSymbols = Array.from(
+    new Set(symbols.map((symbol) => symbol.trim().toUpperCase()).filter(Boolean)),
+  );
 
-  return Object.fromEntries(
-    records.map((r) => [r.symbol, Number(r.price)]),
-  ) as Record<string, number>;
+  const latestPrices = await Promise.all(
+    normalizedSymbols.map(async (symbol) => {
+      const persisted = await getLatestPersistedPrice(symbol);
+      return [symbol, persisted ? persisted.price.toNumber() : null] as const;
+    }),
+  );
+
+  return Object.fromEntries(latestPrices) as Record<string, number | null>;
 }

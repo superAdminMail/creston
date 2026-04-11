@@ -20,6 +20,10 @@ export async function POST(req: Request) {
   }
 
   const senderType: SenderType = targetSenderType ?? "SUPPORT";
+  const incomingSenderTypes =
+    role === "ADMIN" || role === "MODERATOR" || role === "SUPER_ADMIN"
+      ? [SenderType.USER]
+      : [SenderType.SUPPORT, SenderType.SYSTEM];
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: conversationId },
@@ -53,14 +57,7 @@ export async function POST(req: Request) {
     where: {
       conversationId,
       deliveredAt: null,
-      ...(targetSenderType
-        ? { senderType }
-        : {
-            OR: [
-              { senderId: { not: userId } },
-              { senderId: null, senderType: { in: ["SUPPORT", "SYSTEM"] } },
-            ],
-          }),
+      senderType: targetSenderType ? senderType : { in: incomingSenderTypes },
     },
     data: { deliveredAt },
   });

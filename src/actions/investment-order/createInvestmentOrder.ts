@@ -18,7 +18,7 @@ import type {
   CreateInvestmentOrderActionState,
   OrderFieldName,
 } from "./createInvestmentOrder.state";
-import { getPrice } from "@/lib/price/priceService";
+import { getPrice } from "@/lib/services/price/priceService";
 
 function getFormValue(formData: FormData, key: OrderFieldName) {
   const value = formData.get(key);
@@ -205,10 +205,13 @@ export async function createInvestmentOrder(
     select: {
       id: true,
       status: true,
+      openedAt: true,
     },
   });
 
   if (!investmentAccount) {
+    const openedAt = new Date();
+
     investmentAccount = await prisma.investmentAccount.upsert({
       where: {
         investorProfileId_investmentPlanId: {
@@ -222,6 +225,23 @@ export async function createInvestmentOrder(
         investmentPlanId: selectedPlan.id,
         currency: selectedPlan.currency,
         status: "ACTIVE",
+        openedAt,
+      },
+    });
+  }
+
+  if (investmentAccount.status === "ACTIVE" && !investmentAccount.openedAt) {
+    investmentAccount = await prisma.investmentAccount.update({
+      where: {
+        id: investmentAccount.id,
+      },
+      data: {
+        openedAt: new Date(),
+      },
+      select: {
+        id: true,
+        status: true,
+        openedAt: true,
       },
     });
   }
@@ -229,12 +249,6 @@ export async function createInvestmentOrder(
   if (investmentAccount.status !== "ACTIVE") {
     return createErrorState(
       "Your investment account is not active. Please contact support.",
-    );
-  }
-
-  if (investmentAccount.status !== "ACTIVE") {
-    return createErrorState(
-      "Your investment account must be active to place an order. Please check your account status or contact support for assistance.",
     );
   }
 

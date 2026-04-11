@@ -1,16 +1,42 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { KycStatus, Prisma, SavingsStatus } from "@/generated/prisma";
 import { redirect } from "next/navigation";
+
 import {
   createErrorFormState,
   createValidationErrorState,
+  getFriendlyServerError,
   type FormActionState,
 } from "@/lib/forms/actionState";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { prisma } from "@/lib/prisma";
 import { createSavingsAccountSchema } from "@/lib/zodValidations/account-operations";
 
-export type CreateSavingsAccountState = FormActionState<"productId">;
+type CreateSavingsAccountFieldName =
+  | "productId"
+  | "name"
+  | "description"
+  | "targetAmount"
+  | "lockSavings";
+
+export type CreateSavingsAccountState =
+  FormActionState<CreateSavingsAccountFieldName>;
+
+function normalizeDescription(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function parseTargetAmount(value: string | undefined) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  return new Prisma.Decimal(trimmed);
+}
 
 export async function createSavingsAccount(
   _prevState: CreateSavingsAccountState,
@@ -18,12 +44,16 @@ export async function createSavingsAccount(
 ): Promise<CreateSavingsAccountState> {
   const parsed = createSavingsAccountSchema.safeParse({
     productId: formData.get("productId"),
+    name: formData.get("name"),
+    description: formData.get("description"),
+    targetAmount: formData.get("targetAmount"),
+    lockSavings: String(formData.get("lockSavings") ?? "false"),
   });
 
   if (!parsed.success) {
     return createValidationErrorState(
       parsed.error.flatten().fieldErrors,
-      "Please select a savings product to continue.",
+      "Please review the highlighted savings account fields.",
     );
   }
 
@@ -33,20 +63,39 @@ export async function createSavingsAccount(
     return createErrorFormState("Please sign in to continue.");
   }
 
-  const investorProfile = await prisma.investorProfile.findUnique({
+  const profile = await prisma.investorProfile.findUnique({
     where: { userId: user.id },
+    select: {
+      id: true,
+      kycStatus: true,
+    },
   });
 
-  if (!investorProfile) {
+  if (!profile) {
     return createErrorFormState(
       "Complete your profile before opening a savings account.",
     );
   }
 
-  const { productId } = parsed.data;
+  if (profile.kycStatus !== KycStatus.VERIFIED) {
+    return createErrorFormState(
+      "Verify your identity before opening a savings account.",
+      {
+        productId: ["KYC verification is required before you can open savings."],
+      },
+    );
+  }
 
   const product = await prisma.savingsProduct.findUnique({
-    where: { id: productId },
+    where: { id: parsed.data.productId },
+    select: {
+      id: true,
+      name: true,
+      isActive: true,
+      currency: true,
+      isLockable: true,
+      minimumLockDays: true,
+    },
   });
 
   if (!product || !product.isActive) {
@@ -55,26 +104,44 @@ export async function createSavingsAccount(
     );
   }
 
-  const existing = await prisma.savingsAccount.findFirst({
-    where: {
-      investorProfileId: investorProfile.id,
-      savingsProductId: productId,
-    },
-  });
-
-  if (existing) {
-    return createErrorFormState("You already have this savings account.");
+  if (parsed.data.lockSavings && !product.isLockable) {
+    return createErrorFormState(
+      "This savings product does not support locking.",
+      {
+        lockSavings: ["Choose a lockable product or disable account locking."],
+      },
+    );
   }
 
-  await prisma.savingsAccount.create({
-    data: {
-      investorProfileId: investorProfile.id,
-      savingsProductId: productId,
-      name: product.name,
-      currency: product.currency,
-      balance: 0,
-    },
-  });
+  const now = new Date();
+  const lockedUntil =
+    parsed.data.lockSavings && product.minimumLockDays
+      ? new Date(now.getTime() + product.minimumLockDays * 24 * 60 * 60 * 1000)
+      : null;
+
+  try {
+    await prisma.savingsAccount.create({
+      data: {
+        investorProfileId: profile.id,
+        savingsProductId: product.id,
+        name: parsed.data.name.trim(),
+        description: normalizeDescription(parsed.data.description),
+        targetAmount: parseTargetAmount(parsed.data.targetAmount),
+        currency: product.currency,
+        balance: new Prisma.Decimal(0),
+        isLocked: Boolean(parsed.data.lockSavings),
+        lockedUntil,
+        status: SavingsStatus.ACTIVE,
+      },
+    });
+  } catch (error) {
+    return createErrorFormState(
+      getFriendlyServerError(
+        error,
+        "We could not open your savings account right now.",
+      ),
+    );
+  }
 
   redirect("/account/dashboard/user/savings");
 }

@@ -25,7 +25,13 @@ import {
   type RegisterUserSchemaType,
 } from "@/lib/zodValidations/user";
 
-export default function RegisterForm() {
+export default function RegisterForm({
+  siteName,
+  siteLogoUrl,
+}: {
+  siteName: string;
+  siteLogoUrl?: string | null;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
@@ -54,7 +60,7 @@ export default function RegisterForm() {
         return;
       }
 
-      router.push("/auth/onboarding");
+      router.replace("/auth/onboarding");
       router.refresh();
     });
   };
@@ -62,12 +68,14 @@ export default function RegisterForm() {
   return (
     <AuthShell
       eyebrow="Secure Onboarding"
-      title="Create your Havenstone account"
+      title={`Create your ${siteName} account`}
       description="Get started with a secure account to manage your investment profile. Your information is protected with industry-leading security measures."
+      siteName={siteName}
+      siteLogoUrl={siteLogoUrl}
       footer={
         <div className="space-y-3 text-center">
           <p className="text-xs leading-relaxed text-slate-400">
-            By creating an account, you agree to Havenstone&apos;s{" "}
+            By creating an account, you agree to {siteName}&apos;s{" "}
             <Link href="/terms" className="text-blue-200 hover:text-white">
               Terms of Service
             </Link>{" "}
@@ -84,7 +92,7 @@ export default function RegisterForm() {
               href="/auth/login"
               className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"
             >
-              Sign in to Havenstone
+              Sign in to {siteName}
             </Link>
           </p>
         </div>
@@ -130,7 +138,7 @@ export default function RegisterForm() {
                     {!fieldState.error ? (
                       <FieldDescription className="text-xs text-slate-500">
                         Use the email address that will be linked to your secure
-                        Havenstone account.
+                        {" "}{siteName} account.
                       </FieldDescription>
                     ) : null}
 

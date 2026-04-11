@@ -10,18 +10,9 @@ type Props = {
   messages: ChatMessage[];
   typing?: boolean;
   viewerSenderType?: SenderType;
-  viewerUserId?: string | null;
 };
 
-function isOwnMessage(
-  message: ChatMessage,
-  viewerUserId?: string | null,
-  viewerSenderType?: SenderType,
-) {
-  if (viewerUserId && message.senderId) {
-    return message.senderId === viewerUserId;
-  }
-
+function isOwnMessage(message: ChatMessage, viewerSenderType?: SenderType) {
   return message.senderType === (viewerSenderType ?? "USER");
 }
 
@@ -29,7 +20,6 @@ export default function MessageList({
   messages,
   typing,
   viewerSenderType,
-  viewerUserId,
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -88,7 +78,7 @@ export default function MessageList({
       const knownIds = knownIdsRef.current;
       const incomingCount = messages.reduce((count, message) => {
         if (knownIds.has(message.id)) return count;
-        return isOwnMessage(message, viewerUserId, viewerSenderType)
+        return isOwnMessage(message, viewerSenderType)
           ? count
           : count + 1;
       }, 0);
@@ -99,7 +89,7 @@ export default function MessageList({
     }
 
     knownIdsRef.current = new Set(messages.map((message) => message.id));
-  }, [messages, viewerSenderType, viewerUserId]);
+  }, [messages, viewerSenderType]);
 
   useEffect(() => {
     const el = listRef.current;
@@ -130,7 +120,6 @@ export default function MessageList({
                 key={item.key}
                 message={item.message}
                 viewerSenderType={viewerSenderType}
-                viewerUserId={viewerUserId}
               />
             ),
           )}

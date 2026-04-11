@@ -8,27 +8,14 @@ import { MessageStatus } from "./MessageStatus";
 type Props = {
   message: ChatMessage;
   viewerSenderType?: SenderType;
-  viewerUserId?: string | null;
 };
 
-function isOwnMessage(
-  message: ChatMessage,
-  viewerUserId?: string | null,
-  viewerSenderType?: SenderType,
-) {
-  if (viewerUserId && message.senderId) {
-    return message.senderId === viewerUserId;
-  }
-
+function isOwnMessage(message: ChatMessage, viewerSenderType?: SenderType) {
   return message.senderType === (viewerSenderType ?? "USER");
 }
 
-export default function MessageBubble({
-  message,
-  viewerSenderType,
-  viewerUserId,
-}: Props) {
-  const isUser = isOwnMessage(message, viewerUserId, viewerSenderType);
+export default function MessageBubble({ message, viewerSenderType }: Props) {
+  const isUser = isOwnMessage(message, viewerSenderType);
 
   return (
     <div

@@ -9,7 +9,6 @@ type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 
 export default function ChatMessages({
   conversationId,
-  selfUserId,
   title,
   subtitle,
   forceOnline,
@@ -18,7 +17,6 @@ export default function ChatMessages({
   onPreviewUpdate,
 }: {
   conversationId: string;
-  selfUserId?: string | null;
   title: string;
   subtitle?: string;
   forceOnline?: boolean;
@@ -26,7 +24,6 @@ export default function ChatMessages({
   onOpenMenu?: () => void;
   onPreviewUpdate?: (payload: {
     content: string;
-    senderId?: string | null;
     senderType: ChatMessage["senderType"];
     createdAt: string;
   }) => void;
@@ -87,7 +84,6 @@ export default function ChatMessages({
       <ChatBox
         conversationId={conversationId}
         initialMessages={messages}
-        selfUserId={selfUserId}
         title={title}
         subtitle={subtitle}
         forceOnline={forceOnline}

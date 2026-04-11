@@ -3,7 +3,6 @@
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import {
   createErrorFormState,
-  createInitialFormState,
   createSuccessFormState,
   createValidationErrorState,
   type FormActionState,
@@ -12,9 +11,6 @@ import { prisma } from "@/lib/prisma";
 import { updateInvestmentAccountSchema } from "@/lib/zodValidations/investment-account";
 
 export type UpdateInvestmentAccountState = FormActionState<"status">;
-
-export const initialInvestmentAccountFormState: UpdateInvestmentAccountState =
-  createInitialFormState();
 
 export async function updateInvestmentAccount(
   _prevState: UpdateInvestmentAccountState,

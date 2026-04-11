@@ -1,9 +1,12 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { Prisma, InvestmentOrderStatus } from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
+
+import { canConfirmInvestmentOrderStatus } from "./adminInvestmentOrder.shared";
 
 type ConfirmInvestmentOrderState = {
   status: "idle" | "success" | "error";
@@ -25,8 +28,9 @@ export async function confirmInvestmentOrder(
   formData: FormData,
 ): Promise<ConfirmInvestmentOrderState> {
   const user = await getCurrentSessionUser();
+  const role = await getCurrentUserRole();
 
-  if (!user?.id) {
+  if (!user?.id || (role !== "ADMIN" && role !== "SUPER_ADMIN")) {
     return errorState("Unauthorized");
   }
 
@@ -39,13 +43,15 @@ export async function confirmInvestmentOrder(
   const order = await prisma.investmentOrder.findFirst({
     where: {
       id: orderId,
-      investorProfile: {
-        userId: user.id,
-      },
     },
     include: {
       investmentPlan: true,
       investmentPlanTier: true,
+      investorProfile: {
+        select: {
+          userId: true,
+        },
+      },
     },
   });
 
@@ -57,21 +63,28 @@ export async function confirmInvestmentOrder(
     return errorState("Order already confirmed.");
   }
 
-  if (order.status !== InvestmentOrderStatus.PENDING_PAYMENT) {
-    return errorState("Order cannot be confirmed.");
+  if (!canConfirmInvestmentOrderStatus(order.status)) {
+    return errorState(
+      "Order must be marked paid or pending confirmation before it can be confirmed.",
+    );
   }
 
   const now = new Date();
-
-  const durationDays = order.investmentPlan.durationDays;
-
-  const amount = Number(order.amount);
-  const roiPercent = Number(order.investmentPlanTier.roiPercent);
-
   const startDate = now;
-  const maturityDate = getMaturityDate(startDate, order.investmentPlan.period);
+  const maturityDate = addDays(startDate, order.investmentPlan.durationDays);
+  const amount = order.amount.toNumber();
+  const roiPercent = order.investmentPlanTier.roiPercent;
 
-  const expectedReturn = amount + (amount * roiPercent) / 100;
+  if (order.investmentModel === "FIXED" && !roiPercent) {
+    return errorState(
+      "This fixed investment tier is missing an ROI configuration.",
+    );
+  }
+
+  const expectedProfit =
+    order.investmentModel === "FIXED" && roiPercent
+      ? (amount * roiPercent.toNumber()) / 100
+      : 0;
 
   await prisma.investmentOrder.update({
     where: { id: order.id },
@@ -79,56 +92,43 @@ export async function confirmInvestmentOrder(
       status: InvestmentOrderStatus.CONFIRMED,
       startDate,
       maturityDate,
-      expectedReturn: new Prisma.Decimal(expectedReturn),
-
+      expectedReturn: new Prisma.Decimal(expectedProfit.toFixed(2)),
       confirmedAt: now,
       paidAt: now,
-
       accruedProfit: new Prisma.Decimal(0),
       lastAccruedAt: null,
+      lastValuationAt:
+        order.investmentModel === "MARKET" ? now : order.lastValuationAt,
+      currentValue:
+        order.investmentModel === "MARKET"
+          ? new Prisma.Decimal(amount.toFixed(2))
+          : order.currentValue,
       isMatured: false,
+      completedAt: null,
     },
   });
 
   await prisma.notification.create({
     data: {
-      userId: user.id,
+      userId: order.investorProfile.userId,
       type: "INVESTMENT_ORDER_CONFIRMED",
       title: "Investment Order Confirmed",
-      message: `Your investment order has been confirmed. You can now access your account.`,
+      message:
+        "Your investment order has been confirmed. You can now access your account.",
     },
   });
 
-  await pusherServer.trigger(`user-${user.id}`, "investment-order-confirmed", {
-    orderId: order.id,
-    message: "Your investment order has been confirmed.",
-  });
+  await pusherServer.trigger(
+    `user-${order.investorProfile.userId}`,
+    "investment-order-confirmed",
+    {
+      orderId: order.id,
+      message: "Your investment order has been confirmed.",
+    },
+  );
 
   return {
     status: "success",
     message: "Investment confirmed successfully.",
   };
-}
-
-function getMaturityDate(startDate: Date, period: string) {
-  const date = new Date(startDate);
-
-  switch (period) {
-    case "SHORT_TERM":
-      date.setMinutes(date.getMinutes() + 30); // 🧪 test
-      break;
-
-    case "MEDIUM_TERM":
-      date.setHours(date.getHours() + 1); // 🧪 test
-      break;
-
-    case "LONG_TERM":
-      date.setHours(date.getHours() + 2); // 🧪 test
-      break;
-
-    default:
-      throw new Error("Invalid investment period");
-  }
-
-  return date;
 }

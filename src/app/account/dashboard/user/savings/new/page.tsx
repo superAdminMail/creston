@@ -1,9 +1,15 @@
 import AddSavingsAccount from "../../_components/AddSavingsAccount";
 
-import { getSavingsProducts } from "@/actions/savings/getSavingsProducts";
+import { getSavingsPageData } from "@/actions/savings/getSavingsPageData";
 
 export default async function NewSavingsAccountPage() {
-  const products = await getSavingsProducts();
+  const data = await getSavingsPageData();
 
-  return <AddSavingsAccount initialProducts={products} />;
+  return (
+    <AddSavingsAccount
+      initialProducts={data.products}
+      kycStatus={data.kycStatus}
+      canCreateSavingsAccount={data.canCreateSavingsAccount}
+    />
+  );
 }

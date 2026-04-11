@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 
 type Ticket = {
   id: string;
+  conversationId: string;
   subject: string | null;
   status: string;
   lastReply: string;
@@ -167,7 +168,9 @@ export default function SupportTicketsPage({ tickets }: { tickets: Ticket[] }) {
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          router.push(`/messages?conversation=${ticket.id}`)
+                          router.push(
+                            `/messages?conversation=${ticket.conversationId}`,
+                          )
                         }
                       >
                         View

@@ -53,11 +53,10 @@ function getConversationTitle(conversation: InboxPreview) {
   }
 }
 
-function getPreviewPrefix(conversation: InboxPreview, currentUserId: string) {
+function getPreviewPrefix(conversation: InboxPreview) {
   const lastMessage = conversation.lastMessage;
   if (!lastMessage) return "";
-  if (lastMessage.senderId && lastMessage.senderId === currentUserId)
-    return "You: ";
+  if (lastMessage.senderType === "USER") return "You: ";
   if (lastMessage.senderType === "SUPPORT") return "Agent: ";
   if (lastMessage.senderType === "SYSTEM") return "System: ";
 
@@ -162,7 +161,7 @@ export default function InboxList({
                 {conversation.lastMessage && (
                   <p className="mt-1 truncate text-xs text-gray-500">
                     <span className="font-medium text-gray-700">
-                      {getPreviewPrefix(conversation, currentUserId)}
+                      {getPreviewPrefix(conversation)}
                     </span>
                     {conversation.lastMessage.content}
                   </p>

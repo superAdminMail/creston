@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
+import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
 import {
   normalizeSiteConfigurationValues,
   siteConfigurationSchema,
@@ -103,7 +104,8 @@ export async function upsertSiteConfiguration(
 
   const values = normalizeSiteConfigurationValues(parsed.data);
   const [existingConfig, logoValidation, ogValidation] = await Promise.all([
-    prisma.siteConfiguration.findFirst({
+    prisma.siteConfiguration.findUnique({
+      where: { id: SITE_CONFIGURATION_ID },
       select: {
         id: true,
       },
@@ -142,16 +144,15 @@ export async function upsertSiteConfiguration(
     defaultOgImageFileAssetId: values.defaultOgImageFileAssetId,
   };
 
-  const savedConfig = existingConfig
-    ? await prisma.siteConfiguration.update({
-        where: { id: existingConfig.id },
-        data,
-        select: { id: true },
-      })
-    : await prisma.siteConfiguration.create({
-        data,
-        select: { id: true },
-      });
+  const savedConfig = await prisma.siteConfiguration.upsert({
+    where: { id: SITE_CONFIGURATION_ID },
+    create: {
+      id: SITE_CONFIGURATION_ID,
+      ...data,
+    },
+    update: data,
+    select: { id: true },
+  });
 
   await logAuditEvent({
     actorUserId: userId,

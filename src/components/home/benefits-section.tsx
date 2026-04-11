@@ -9,6 +9,7 @@ import {
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
 const benefitGroups = [
   {
@@ -60,13 +61,15 @@ const benefitGroups = [
     ],
   },
 ];
-export function BenefitsSection() {
+export async function BenefitsSection() {
+  const site = await getSiteSeoConfig();
+
   return (
     <SectionShell id="benefits" className="py-20 sm:py-24">
       <SectionHeading
         eyebrow="Benefits"
         title="Designed for individuals and organizations"
-        description="Havenstone provides a structured and flexible way to save and invest, with clear visibility across all plans and accounts."
+        description={`${site.siteName} provides a structured and flexible way to save and invest, with clear visibility across all plans and accounts.`}
       />
 
       <div className="mt-12 grid gap-8 lg:grid-cols-2">

@@ -246,6 +246,11 @@ export const DASHBOARD_MENU = {
           icon: CircleDollarSign,
         },
         {
+          name: "Savings Accounts",
+          href: "/account/dashboard/admin/savings-accounts",
+          icon: Briefcase,
+        },
+        {
           name: "Investment Orders",
           href: "/account/dashboard/admin/investment-orders",
           icon: ClipboardList,
@@ -281,14 +286,19 @@ export const DASHBOARD_MENU = {
       title: "Investment Catalog",
       links: [
         {
-          name: "Investments",
-          href: "/account/dashboard/admin/investments",
+          name: "Investments Products",
+          href: "/account/dashboard/admin/investments-products",
           icon: TrendingUp,
         },
         {
           name: "Investment Plans",
           href: "/account/dashboard/admin/investment-plans",
           icon: Layers,
+        },
+        {
+          name: "Savings Products",
+          href: "/account/dashboard/admin/savings-products",
+          icon: TrendingUp,
         },
       ],
     },
@@ -389,24 +399,40 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
+          name: "Savings Accounts",
+          href: "/account/dashboard/super-admin/savings-accounts",
+          icon: Banknote,
+        },
+        {
           name: "Investment Orders",
           href: "/account/dashboard/super-admin/investment-orders",
           icon: ClipboardList,
         },
-        {
-          name: "Funding Intents",
-          href: "/account/dashboard/super-admin/funding-intents",
-          icon: Landmark,
-        },
-        {
-          name: "Platform Wallets",
-          href: "/account/dashboard/super-admin/platform-wallets",
-          icon: Banknote,
-        },
+
         {
           name: "Management Team",
           href: "/account/dashboard/super-admin/management",
           icon: Building2,
+        },
+      ],
+    },
+    {
+      title: "Financial",
+      links: [
+        {
+          name: "Funding Intents",
+          href: "/account/dashboard/super-admin/funding-intents",
+          icon: Wallet,
+        },
+        {
+          name: "Platform Wallets",
+          href: "/account/dashboard/super-admin/platform-wallets",
+          icon: Landmark,
+        },
+        {
+          name: "Transactions",
+          href: "/account/dashboard/super-admin/transactions",
+          icon: CircleDollarSign,
         },
       ],
     },

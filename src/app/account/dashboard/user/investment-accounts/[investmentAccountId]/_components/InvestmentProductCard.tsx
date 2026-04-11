@@ -35,10 +35,6 @@ export function InvestmentProductCard({
             </p>
           </div>
         </div>
-
-        <span className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-200">
-          {account.investment.periodLabel}
-        </span>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -71,16 +67,7 @@ export function InvestmentProductCard({
 
         <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Period
-          </p>
-          <p className="mt-3 text-base font-semibold text-white">
-            {account.investment.periodLabel}
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Active state
+            State
           </p>
           <p className="mt-3 text-base font-semibold text-white">
             {account.investment.isActive ? "Active" : "Inactive"}

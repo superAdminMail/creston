@@ -42,6 +42,7 @@ export function InvestmentTierStep({
       <div className="grid gap-4 xl:grid-cols-3">
         {tiers.map((tier) => {
           const isSelected = selectedTierId === tier.id;
+          const isRecommended = tier.level === "ADVANCED";
 
           return (
             <button
@@ -58,9 +59,16 @@ export function InvestmentTierStep({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-300">
-                    {tier.levelLabel}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-300">
+                      {tier.levelLabel}
+                    </span>
+                    {isRecommended ? (
+                      <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
+                        Recommended
+                      </span>
+                    ) : null}
+                  </div>
                   <h3 className="mt-4 text-lg font-semibold text-white">
                     {tier.levelLabel} tier
                   </h3>

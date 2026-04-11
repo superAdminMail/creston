@@ -3,12 +3,16 @@
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { getPrices } from "@/lib/price/getPrices";
+import { decimalToNumber, sumDecimals, toDecimal } from "@/lib/services/investment/decimal";
+import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
+import { getPrices } from "@/lib/services/price/priceService";
 
 export type UserDashboardAsset = {
+  orderId: string;
   name: string;
   symbol: string | null;
   type: string;
+  model: "FIXED" | "MARKET";
   value: number;
   profit: number;
   profitPercent: number;
@@ -24,20 +28,10 @@ export type UserDashboardStats = {
   assets: UserDashboardAsset[];
 };
 
-type Decimalish = {
-  toNumber(): number;
-};
-
 type UserDashboardData = {
   userName: string;
   stats: UserDashboardStats;
 };
-
-function safeToNumber(value: Decimalish | number | null | undefined): number {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
 
 export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   const user = await getCurrentSessionUser();
@@ -47,25 +41,29 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+    },
     select: {
       investmentOrders: {
-        orderBy: { createdAt: "desc" },
+        where: {
+          status: InvestmentOrderStatus.CONFIRMED,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
         select: {
           id: true,
           amount: true,
           accruedProfit: true,
-          status: true,
-          units: true,
           investmentModel: true,
-
-          // ✅ IMPORTANT: per-order earnings
+          units: true,
+          currentValue: true,
           investmentEarnings: {
             select: {
               amount: true,
             },
           },
-
           investmentPlan: {
             select: {
               name: true,
@@ -84,92 +82,73 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   });
 
   const orders = investorProfile?.investmentOrders ?? [];
-
-  const confirmedOrders = orders.filter(
-    (order) => order.status === InvestmentOrderStatus.CONFIRMED,
+  const symbols = Array.from(
+    new Set(
+      orders
+        .filter((order) => order.investmentModel === "MARKET")
+        .map((order) => order.investmentPlan.investment.symbol)
+        .filter((symbol): symbol is string => Boolean(symbol)),
+    ),
   );
 
-  // 🔥 Batch fetch prices
-  const symbols = confirmedOrders
-    .map((o) => o.investmentPlan?.investment?.symbol)
-    .filter(Boolean) as string[];
+  const priceSnapshots = symbols.length
+    ? await getPrices(symbols, { preferFreshDb: true })
+    : {};
 
-  const priceMap = await getPrices(symbols);
+  const assets: UserDashboardAsset[] = orders.map((order) => {
+    const investment = order.investmentPlan.investment;
+    const symbol = investment.symbol;
+    const price = symbol ? priceSnapshots[symbol]?.price ?? null : null;
+    const currentValue = computeInvestmentOrderCurrentValue(order, price);
+    const realizedProfit =
+      order.investmentModel === "FIXED"
+        ? toDecimal(order.accruedProfit)
+        : sumDecimals(order.investmentEarnings.map((earning) => earning.amount));
+    const principal = toDecimal(order.amount);
+    const profitPercent = principal.greaterThan(0)
+      ? realizedProfit.div(principal).mul(100).toNumber()
+      : 0;
 
-  let totalInvested = 0;
-  let totalProfit = 0;
-
-  const assets: UserDashboardAsset[] = [];
-
-  for (const order of confirmedOrders) {
-    const amount = safeToNumber(order.amount);
-    totalInvested += amount;
-
-    const investment = order.investmentPlan?.investment;
-    const name = investment?.name ?? "Unknown";
-    const symbol = investment?.symbol ?? null;
-    const type = investment?.type ?? "UNKNOWN";
-
-    let value = 0;
-    let profit = 0;
-
-    // 💰 FIXED MODEL
-    if (order.investmentModel === "FIXED") {
-      const accrued = safeToNumber(order.accruedProfit);
-      value = amount + accrued;
-      profit = accrued;
-    }
-
-    // 📈 MARKET MODEL
-    if (order.investmentModel === "MARKET") {
-      const units = Number(order.units ?? 0);
-      const price = symbol ? priceMap[symbol] : null;
-
-      value = price && units ? units * price : amount;
-
-      // ✅ REALIZED profit from DB (ledger)
-      const earnings = order.investmentEarnings ?? [];
-
-      const earned = earnings.reduce(
-        (sum, e) => sum + safeToNumber(e.amount),
-        0,
-      );
-
-      profit = earned;
-    }
-
-    totalProfit += profit;
-
-    const profitPercent = amount > 0 ? (profit / amount) * 100 : 0;
-
-    assets.push({
-      name,
+    return {
+      orderId: order.id,
+      name: investment.name,
       symbol,
-      type,
-      value,
-      profit,
+      type: investment.type,
+      model: order.investmentModel,
+      value: decimalToNumber(currentValue),
+      profit: decimalToNumber(realizedProfit),
       profitPercent,
-    });
-  }
+    };
+  });
 
-  const investmentsCount = confirmedOrders.length;
+  const totalInvestment = orders.reduce(
+    (sum, order) => sum + decimalToNumber(order.amount),
+    0,
+  );
+  const totalEarnedProfits = assets.reduce((sum, asset) => sum + asset.profit, 0);
+  const accountBalance = orders.reduce((sum, order) => {
+    const realizedProfit =
+      order.investmentModel === "FIXED"
+        ? toDecimal(order.accruedProfit)
+        : sumDecimals(order.investmentEarnings.map((earning) => earning.amount));
+    const principal = toDecimal(order.amount);
+    const orderBalance = realizedProfit.greaterThan(0)
+      ? principal.add(realizedProfit)
+      : principal;
 
-  const latestOrder = confirmedOrders[0];
-  const currentInvestment = latestOrder ? safeToNumber(latestOrder.amount) : 0;
-
-  const investmentPlan = latestOrder?.investmentPlan?.name ?? "Not selected";
-
-  const accountBalance = assets.reduce((sum, asset) => sum + asset.value, 0);
+    return sum + decimalToNumber(orderBalance);
+  }, 0);
+  const latestOrder = orders[0];
 
   return {
     userName: user.name?.trim() || "Client",
     stats: {
-      investmentsCount,
-      currentInvestment,
+      investmentsCount: orders.length,
+      currentInvestment: latestOrder ? decimalToNumber(latestOrder.amount) : 0,
       accountBalance,
-      totalInvestment: totalInvested,
-      totalEarnedProfits: totalProfit,
-      investmentPlan,
+      totalInvestment,
+      totalEarnedProfits,
+      investmentPlan: latestOrder?.investmentPlan?.name ?? "Not selected",
       assets,
     },
   };

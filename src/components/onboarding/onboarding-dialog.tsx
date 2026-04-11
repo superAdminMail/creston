@@ -13,9 +13,13 @@ import { InvestmentProfileForm } from "./investment-profile-form";
 
 type OnboardingDialogProps = {
   userName: string;
+  siteName: string;
 };
 
-export function OnboardingDialog({ userName }: OnboardingDialogProps) {
+export function OnboardingDialog({
+  userName,
+  siteName,
+}: OnboardingDialogProps) {
   const router = useRouter();
 
   const handleSkip = async () => {
@@ -36,9 +40,8 @@ export function OnboardingDialog({ userName }: OnboardingDialogProps) {
               Set up your investment profile
             </DialogTitle>
             <DialogDescription className="text-sm leading-6 text-slate-400">
-              Welcome to Havenstone, {userName}. Complete your profile now to
-              personalize your retirement and investment experience, or create
-              it later from your dashboard.
+              Welcome to {siteName}, {userName}. Please set up your investment
+              profile to get started.
             </DialogDescription>
           </DialogHeader>
 

@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 
 import { AccountLayoutShell } from "@/components/account/AccountLayoutShell";
+import NotificationListener from "@/components/notifications/NotificationListener";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { getCurrentUser } from "@/lib/getCurrentUser";
+import { prisma } from "@/lib/prisma";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+import { DEFAULT_ONBOARDING_REDIRECT } from "@/routes";
 
 export async function generateMetadata() {
   const site = await getSiteSeoConfig();
@@ -27,6 +31,37 @@ export default async function ProfileLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const sessionUser = await getCurrentSessionUser();
+
+  if (!sessionUser?.id) {
+    redirect("/auth/login");
+  }
+
+  const onboardingState = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: {
+      role: true,
+      hasCompletedOnboarding: true,
+      investorProfile: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!onboardingState) {
+    redirect("/auth/login");
+  }
+
+  if (
+    onboardingState.role === "USER" &&
+    !onboardingState.hasCompletedOnboarding &&
+    !onboardingState.investorProfile
+  ) {
+    redirect(DEFAULT_ONBOARDING_REDIRECT);
+  }
+
   let user = null;
   try {
     user = await getCurrentUser();
@@ -39,5 +74,10 @@ export default async function ProfileLayout({
     redirect("/auth/login");
   }
 
-  return <AccountLayoutShell user={user}>{children}</AccountLayoutShell>;
+  return (
+    <AccountLayoutShell user={user}>
+      <NotificationListener userId={sessionUser.id} />
+      {children}
+    </AccountLayoutShell>
+  );
 }

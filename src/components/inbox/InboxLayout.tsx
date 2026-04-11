@@ -21,12 +21,9 @@ type Props = {
 
 function isIncomingPreview(
   payload: {
-    senderId?: string | null;
     senderType: SenderType;
   },
-  currentUserId: string,
 ) {
-  if (payload.senderId) return payload.senderId !== currentUserId;
   return payload.senderType === "SUPPORT" || payload.senderType === "SYSTEM";
 }
 
@@ -109,7 +106,6 @@ export default function InboxLayout({
   const handlePreviewUpdate = (payload: {
     conversationId: string;
     content: string;
-    senderId?: string | null;
     senderType: SenderType;
     createdAt: string;
   }) => {
@@ -121,8 +117,7 @@ export default function InboxLayout({
 
       const current = prev[index];
       const nextUnread =
-        isIncomingPreview(payload, currentUserId) &&
-        activeId !== payload.conversationId
+        isIncomingPreview(payload) && activeId !== payload.conversationId
           ? current.unreadCount + 1
           : activeId === payload.conversationId
             ? 0
@@ -133,7 +128,6 @@ export default function InboxLayout({
         unreadCount: nextUnread,
         lastMessage: {
           content: payload.content,
-          senderId: payload.senderId ?? null,
           senderType: payload.senderType,
           createdAt: payload.createdAt,
         },
@@ -243,7 +237,6 @@ export default function InboxLayout({
           ) : (
             <ChatMessages
               conversationId={active.id}
-              selfUserId={currentUserId}
               title={getConversationTitle(active)}
               subtitle={getConversationSubtitle(active)}
               forceOnline={active.type === "SUPPORT" && !active.agentId}

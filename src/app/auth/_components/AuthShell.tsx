@@ -7,23 +7,32 @@ type AuthShellProps = {
   description: string;
   eyebrow: string;
   title: string;
+  siteName: string;
+  siteLogoUrl?: string | null;
   footer?: React.ReactNode;
   className?: string;
 };
 
-function HavenstoneMark() {
+function SiteMark({
+  siteName,
+  siteLogoUrl,
+}: {
+  siteName: string;
+  siteLogoUrl?: string | null;
+}) {
   return (
-    // <div className="flex h-14 w-14 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
-    //   <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
-    //     C
-    //   </span>
-    // </div>
     <div className="flex h-12 w-12 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
-      <img
-        src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
-        alt="Site Logo"
-        className="h-10 w-10 rounded-2xl object-cover "
-      />
+      {siteLogoUrl ? (
+        <img
+          src={siteLogoUrl}
+          alt={`${siteName} logo`}
+          className="h-10 w-10 rounded-2xl object-cover"
+        />
+      ) : (
+        <span className="text-base font-semibold text-white">
+          {siteName.slice(0, 1).toUpperCase()}
+        </span>
+      )}
     </div>
   );
 }
@@ -33,6 +42,8 @@ export function AuthShell({
   description,
   eyebrow,
   title,
+  siteName,
+  siteLogoUrl,
   footer,
   className,
 }: AuthShellProps) {
@@ -56,10 +67,10 @@ export function AuthShell({
           <div className="flex flex-col items-center text-center">
             <Link
               href="/"
-              aria-label="Havenstone home"
+              aria-label={`${siteName} home`}
               className="inline-flex rounded-[1.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
-              <HavenstoneMark />
+              <SiteMark siteName={siteName} siteLogoUrl={siteLogoUrl} />
             </Link>
 
             <p className="mt-5 text-xs font-medium tracking-[0.18em] text-blue-200 uppercase">

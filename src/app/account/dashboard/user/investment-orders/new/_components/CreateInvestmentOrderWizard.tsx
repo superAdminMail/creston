@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Landmark, ShieldCheck, Wallet } from "lucide-react";
 
 import { createInvestmentOrder } from "@/actions/investment-order/createInvestmentOrder";
@@ -11,6 +11,7 @@ import type {
   InvestmentOrderCreationTierOption,
 } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { parseInvestmentOrderAmount } from "@/lib/zodValidations/investment-order";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,17 @@ export function CreateInvestmentOrderWizard({
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
 
+  useEffect(() => {
+    const firstInvestmentId = options.investments[0]?.id ?? null;
+    const hasSelectedInvestment = options.investments.some(
+      (investment) => investment.id === selectedInvestmentId,
+    );
+
+    if (!selectedInvestmentId || !hasSelectedInvestment) {
+      setSelectedInvestmentId(firstInvestmentId);
+    }
+  }, [options.investments, selectedInvestmentId]);
+
   const selectedInvestment = useMemo(
     () =>
       options.investments.find(
@@ -95,6 +107,17 @@ export function CreateInvestmentOrderWizard({
     [selectedInvestment],
   );
 
+  useEffect(() => {
+    const firstPlanId = matchingPlans[0]?.id ?? null;
+    const hasSelectedPlan = matchingPlans.some(
+      (plan) => plan.id === selectedPlanId,
+    );
+
+    if (!selectedPlanId || !hasSelectedPlan) {
+      setSelectedPlanId(firstPlanId);
+    }
+  }, [matchingPlans, selectedPlanId]);
+
   const selectedPlan = useMemo(
     () => matchingPlans.find((plan) => plan.id === selectedPlanId) ?? null,
     [matchingPlans, selectedPlanId],
@@ -105,6 +128,17 @@ export function CreateInvestmentOrderWizard({
       selectedPlan?.tiers.find((tier) => tier.id === selectedTierId) ?? null,
     [selectedPlan, selectedTierId],
   );
+
+  useEffect(() => {
+    const firstTierId = selectedPlan?.tiers[0]?.id ?? null;
+    const hasSelectedTier = selectedPlan?.tiers.some(
+      (tier) => tier.id === selectedTierId,
+    );
+
+    if (!selectedTierId || !hasSelectedTier) {
+      setSelectedTierId(firstTierId);
+    }
+  }, [selectedPlan, selectedTierId]);
 
   const featuredInvestment = selectedInvestment;
 
@@ -144,6 +178,7 @@ export function CreateInvestmentOrderWizard({
       icon: Wallet,
     },
   ];
+  const progressValue = ((effectiveStep + 1) / stepTitles.length) * 100;
 
   return (
     <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
@@ -170,6 +205,29 @@ export function CreateInvestmentOrderWizard({
         ) : null}
 
         <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
+          <div className="mb-6 space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                  Order progress
+                </p>
+                <p className="mt-2 text-sm font-medium text-white">
+                  Step {effectiveStep + 1} of {stepTitles.length}:{" "}
+                  {stepTitles[effectiveStep]}
+                </p>
+              </div>
+
+              <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-100">
+                {Math.round(progressValue)}%
+              </span>
+            </div>
+
+            <Progress
+              value={progressValue}
+              className="h-2 rounded-full bg-white/10"
+            />
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {stepTitles.map((stepTitle, index) => {
               const isActive = index === effectiveStep;

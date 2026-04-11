@@ -12,7 +12,6 @@ export type ChatMessage = {
   createdAt: string;
   readAt?: string | null;
   deliveredAt?: string | null;
-  senderId?: string | null;
 };
 
 export type InboxPreview = {
@@ -29,7 +28,6 @@ export type InboxPreview = {
     content: string;
     createdAt: string;
     senderType: SenderType;
-    senderId?: string | null;
   };
   unreadCount: number;
 };

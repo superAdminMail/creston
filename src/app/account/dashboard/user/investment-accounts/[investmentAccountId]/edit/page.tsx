@@ -4,13 +4,14 @@ import { getInvestmentAccountDetails } from "@/actions/investment-account/getInv
 import { UpdateInvestmentAccountForm } from "../../../_components/UpdateInvestmentAccountForm";
 
 type PageProps = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
-export default async function Page({ params }: PageProps) {
-  const account = await getInvestmentAccountDetails(params.id);
+export default async function Page(props: PageProps) {
+  const { id } = await props.params;
+  const account = await getInvestmentAccountDetails(id);
 
   if (!account) {
     notFound();
@@ -21,7 +22,8 @@ export default async function Page({ params }: PageProps) {
       <div>
         <h1 className="text-xl font-semibold text-white">Manage account</h1>
         <p className="text-sm text-muted-foreground">
-          Update account status using the current investment plan model and lifecycle rules.
+          Update account status using the current investment plan model and
+          lifecycle rules.
         </p>
       </div>
 

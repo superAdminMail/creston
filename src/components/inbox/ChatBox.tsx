@@ -13,7 +13,6 @@ type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 type Props = {
   conversationId: string;
   initialMessages: ChatMessage[];
-  selfUserId?: string | null;
   title: string;
   subtitle?: string;
   forceOnline?: boolean;
@@ -21,30 +20,22 @@ type Props = {
   onOpenMenu?: () => void;
   onPreviewUpdate?: (payload: {
     content: string;
-    senderId?: string | null;
     senderType: ChatMessage["senderType"];
     createdAt: string;
   }) => void;
 };
 
-function isIncomingMessage(message: ChatMessage, selfUserId?: string | null) {
-  if (selfUserId && message.senderId) {
-    return message.senderId !== selfUserId;
-  }
-
+function isIncomingMessage(message: ChatMessage) {
   return message.senderType === "SUPPORT" || message.senderType === "SYSTEM";
 }
 
-function isOwnMessage(message: ChatMessage, selfUserId?: string | null) {
-  return Boolean(
-    selfUserId && message.senderId && message.senderId === selfUserId,
-  );
+function isOwnMessage(message: ChatMessage) {
+  return message.senderType === "USER";
 }
 
 export default function ChatBox({
   conversationId,
   initialMessages,
-  selfUserId,
   title,
   subtitle,
   forceOnline,
@@ -58,7 +49,7 @@ export default function ChatBox({
     conversationId,
     {
       targetRoles: presenceTargetRoles,
-      selfUserId,
+      selfUserId: null,
     },
   );
 
@@ -72,12 +63,11 @@ export default function ChatBox({
 
       onPreviewUpdate?.({
         content: message.content,
-        senderId: message.senderId ?? null,
         senderType: message.senderType,
         createdAt: message.createdAt,
       });
 
-      if (isIncomingMessage(message, selfUserId)) {
+      if (isIncomingMessage(message)) {
         await fetch("/api/messages/delivered", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -94,7 +84,7 @@ export default function ChatBox({
     onDelivered: ({ deliveredAt }) => {
       setMessages((prev) =>
         prev.map((message) =>
-          isOwnMessage(message, selfUserId) && !message.deliveredAt
+          isOwnMessage(message) && !message.deliveredAt
             ? { ...message, deliveredAt }
             : message,
         ),
@@ -103,7 +93,7 @@ export default function ChatBox({
     onSeen: ({ readAt }) => {
       setMessages((prev) =>
         prev.map((message) =>
-          isOwnMessage(message, selfUserId) && !message.readAt
+          isOwnMessage(message) && !message.readAt
             ? { ...message, readAt }
             : message,
         ),
@@ -130,13 +120,12 @@ export default function ChatBox({
       <MessageList
         messages={messages}
         typing={typing}
-        viewerUserId={selfUserId}
+        viewerSenderType="USER"
       />
 
       <div className="shrink-0">
         <ChatInput
           conversationId={conversationId}
-          selfUserId={selfUserId}
           onPreviewUpdate={onPreviewUpdate}
         />
       </div>

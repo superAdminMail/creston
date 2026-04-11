@@ -1,68 +1,83 @@
 import { prisma } from "@/lib/prisma";
-import { pusherServer } from "../pusher";
+import { getPrices } from "@/lib/services/price/priceService";
+import { settleMarketProfits } from "@/lib/services/settlement/settlementService";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { withCronLock } from "@/lib/services/cron/cronRuntime";
+
+const MARKET_SETTLEMENT_CRON_KEY = "investment-market-settlement";
 
 export async function runDailyProfitSettlement() {
-  const now = new Date();
+  return withCronLock(MARKET_SETTLEMENT_CRON_KEY, async () => {
+    const now = new Date();
 
-  const orders = await prisma.investmentOrder.findMany({
-    where: {
-      status: "CONFIRMED",
-      investmentModel: "MARKET",
-    },
-    include: {
-      investorProfile: {
-        include: { user: true },
+    const orders = await prisma.investmentOrder.findMany({
+      where: {
+        status: "CONFIRMED",
+        investmentModel: "MARKET",
       },
-      investmentPlan: {
-        include: { investment: true },
+      select: {
+        id: true,
+        investmentAccountId: true,
+        investmentModel: true,
+        amount: true,
+        currency: true,
+        units: true,
+        currentValue: true,
+        lastValuationAt: true,
+        status: true,
+        investorProfile: {
+          select: {
+            userId: true,
+          },
+        },
+        investmentPlanTier: {
+          select: {
+            level: true,
+          },
+        },
+        investmentPlan: {
+          select: {
+            investment: {
+              select: {
+                symbol: true,
+              },
+            },
+          },
+        },
       },
-    },
-  });
-
-  for (const order of orders) {
-    const dailyProfit = Number(order.dailyProfitAccumulated ?? 0);
-
-    if (Math.abs(dailyProfit) < 0.01) continue;
-
-    const userId = order.investorProfile.user.id;
-
-    await prisma.$transaction([
-      // ✅ store in earning ledger
-      prisma.investmentEarning.create({
-        data: {
-          investmentOrderId: order.id,
-          date: now,
-          amount: dailyProfit,
-        },
-      }),
-
-      // ✅ reset accumulator
-      prisma.investmentOrder.update({
-        where: { id: order.id },
-        data: {
-          dailyProfitAccumulated: 0,
-          lastProfitResetAt: now,
-        },
-      }),
-
-      // 🔔 single clean notification
-      prisma.notification.create({
-        data: {
-          userId,
-          title: "Investment update",
-          message: `You ${
-            dailyProfit >= 0 ? "earned" : "lost"
-          } $${Math.abs(dailyProfit).toFixed(2)} from ${order.investmentPlan.investment.name}.`,
-          type: "INVESTMENT_EARNING",
-        },
-      }),
-    ]);
-
-    await pusherServer.trigger(`user-${userId}`, "notification", {
-      title: "Investment update",
-      message: `${dailyProfit >= 0 ? "+" : "-"}$${Math.abs(dailyProfit).toFixed(
-        2,
-      )} from ${order.investmentPlan.investment.name} today`,
+      orderBy: {
+        createdAt: "asc",
+      },
     });
-  }
+
+    const symbols = Array.from(
+      new Set(
+        orders
+          .map((order) => order.investmentPlan.investment.symbol)
+          .filter((symbol): symbol is string => Boolean(symbol)),
+      ),
+    );
+    const priceSnapshots = await getPrices(symbols, {
+      preferFreshDb: false,
+    });
+    const priceBySymbol = Object.fromEntries(
+      Object.entries(priceSnapshots).map(([symbol, snapshot]) => [symbol, snapshot.price]),
+    ) as Record<string, number>;
+
+    const summary = await settleMarketProfits(orders, priceBySymbol, now);
+
+    console.log("runDailyProfitSettlement", {
+      processed: summary.processed,
+      settled: summary.settled,
+      skipped: summary.skipped,
+      realizedProfit: decimalToNumber(summary.realizedProfit),
+    });
+
+    return {
+      processed: summary.processed,
+      settled: summary.settled,
+      skipped: summary.skipped,
+      realizedProfit: decimalToNumber(summary.realizedProfit),
+    };
+  });
 }

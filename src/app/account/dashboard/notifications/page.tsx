@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import type { NotificationDTO } from "@/lib/types/notification";
+import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 
 import NotificationsPageClient from "./_components/NotificationsPageClient";
 
@@ -18,17 +19,8 @@ export default async function NotificationsPage() {
   });
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
-  const initialNotifications: NotificationDTO[] = notifications.map(
-    (notification) => ({
-      id: notification.id,
-      title: notification.title,
-      message: notification.message ?? undefined,
-      read: notification.read,
-      createdAt: notification.createdAt.toISOString(),
-      type: (notification.type as NotificationDTO["type"]) ?? "SYSTEM",
-      link: notification.link ?? undefined,
-    }),
-  );
+  const initialNotifications: NotificationDTO[] =
+    notifications.map(toNotificationDto);
 
   return (
     <NotificationsPageClient

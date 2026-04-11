@@ -72,9 +72,7 @@ export default function NotificationMenu() {
       queryKey: ["notifications"],
     });
     setOpen(false);
-    if (notification.link) {
-      router.push(notification.link);
-    }
+    router.push(`/account/dashboard/notifications/${notification.id}`);
   };
 
   return (

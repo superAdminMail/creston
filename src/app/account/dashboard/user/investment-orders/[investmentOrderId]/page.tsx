@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { InvestmentOrderStatus } from "@/generated/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 
 function toNumber(value: any) {

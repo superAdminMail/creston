@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Landmark, ShieldCheck, TrendingUp } from "lucide-react";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
 const trustPoints = [
   {
@@ -19,7 +20,9 @@ const trustPoints = [
   },
 ];
 
-export function HeroSection() {
+export async function HeroSection() {
+  const site = await getSiteSeoConfig();
+
   return (
     <section className="relative overflow-hidden">
       {/* BACKGROUND IMAGE */}
@@ -57,9 +60,7 @@ export function HeroSection() {
           </h1>
 
           <p className="text-base text-slate-300 sm:text-lg">
-            Creston Capital provides structured investment plans, clear
-            contribution tracking, and a stable environment for long-term
-            growth.
+            {site.siteDescription}
           </p>
 
           {/* CTA */}

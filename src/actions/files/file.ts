@@ -5,6 +5,7 @@ import { UTApi } from "uploadthing/server";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
 
 const utapi = new UTApi();
 
@@ -188,7 +189,8 @@ export async function deleteLogoAction(
       },
     });
 
-    const siteConfig = await prisma.siteConfiguration.findFirst({
+    const siteConfig = await prisma.siteConfiguration.findUnique({
+      where: { id: SITE_CONFIGURATION_ID },
       select: {
         id: true,
         siteLogoFileAssetId: true,

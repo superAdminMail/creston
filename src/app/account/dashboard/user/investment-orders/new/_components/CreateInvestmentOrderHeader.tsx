@@ -29,7 +29,7 @@ export function CreateInvestmentOrderHeader() {
 
       <div className="inline-flex items-center gap-3 rounded-3xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
         <Landmark className="h-4 w-4 text-blue-300" />
-        Premium order workflow
+        Order workflow
       </div>
     </div>
   );

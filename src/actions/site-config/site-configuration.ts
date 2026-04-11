@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getSiteConfiguration } from "@/lib/site/getSiteConfiguration";
+import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
 import {
   SiteConfigurationInput,
   siteConfigurationSchema,
@@ -10,40 +12,27 @@ import { revalidatePath } from "next/cache";
 // CREATE OR UPDATE (singleton pattern)
 export async function upsertSiteConfiguration(data: SiteConfigurationInput) {
   const parsed = siteConfigurationSchema.parse(data);
-
-  const existing = await prisma.siteConfiguration.findFirst();
-
-  if (existing) {
-    await prisma.siteConfiguration.update({
-      where: { id: existing.id },
-      data: parsed,
-    });
-  } else {
-    await prisma.siteConfiguration.create({
-      data: parsed,
-    });
-  }
+  await prisma.siteConfiguration.upsert({
+    where: { id: SITE_CONFIGURATION_ID },
+    create: {
+      id: SITE_CONFIGURATION_ID,
+      ...parsed,
+    },
+    update: parsed,
+  });
 
   revalidatePath("/account/dashboard/super-admin/site-config");
 }
 
 // GET
-export async function getSiteConfiguration() {
-  return prisma.siteConfiguration.findFirst({
-    include: {
-      defaultOgImageFileAsset: true,
-    },
-  });
+export async function getSiteConfigurationAction() {
+  return getSiteConfiguration();
 }
 
 // DELETE (rare but useful)
 export async function deleteSiteConfiguration() {
-  const existing = await prisma.siteConfiguration.findFirst();
-
-  if (!existing) return;
-
-  await prisma.siteConfiguration.delete({
-    where: { id: existing.id },
+  await prisma.siteConfiguration.deleteMany({
+    where: { id: SITE_CONFIGURATION_ID },
   });
 
   revalidatePath("/account/dashboard/super-admin/site-config");

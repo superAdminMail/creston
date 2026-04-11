@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { prisma } from "@/lib/prisma";
+import { getWithdrawalSourceOptions } from "@/lib/service/getAvailableWithdrawalSource";
 import WithdrawalsClient from "../_components/WithdrawalsClient";
 
 export default async function Page() {
@@ -8,20 +9,21 @@ export default async function Page() {
   if (!userId) return null;
 
   const profile = await prisma.investorProfile.findUnique({
-    where: { userId: userId },
+    where: { userId },
     include: {
       paymentMethods: true,
     },
   });
 
-  // 💰 TODO: replace with real wallet later
-  const balance = 2450.75;
+  const withdrawalSources = profile?.id
+    ? await getWithdrawalSourceOptions(profile.id)
+    : [];
 
   return (
     <WithdrawalsClient
       kycStatus={profile?.kycStatus ?? "NOT_STARTED"}
       paymentMethods={profile?.paymentMethods ?? []}
-      balance={balance}
+      withdrawalSources={withdrawalSources}
     />
   );
 }

@@ -3,6 +3,7 @@ import formatTicketId from "@/lib/support/formatTicketId";
 
 type Ticket = {
   id: string;
+  conversationId: string;
   subject: string | null;
   status: string;
   lastReply: string;

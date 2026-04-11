@@ -48,7 +48,6 @@ export async function createConversationAction({
 
     const createdUserMessage = await persistConversationMessage(tx, {
       conversationId: createdConversation.id,
-      senderId: userId,
       senderType: SenderType.USER,
       content: cleanMessage,
     });
@@ -75,7 +74,6 @@ export async function createConversationAction({
       messages: conversation.messages.map((m) => ({
         id: m.id,
         conversationId: conversation.id,
-        senderId: m.senderId ?? null,
         senderType: m.senderType,
         content: m.content,
         createdAt: m.createdAt.toISOString(),

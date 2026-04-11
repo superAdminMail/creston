@@ -19,6 +19,7 @@ export const authRoutes = [
 export const apiAuthPrefix = "/api/auth";
 
 export const DEFAULT_LOGIN_REDIRECT = "/account/dashboard";
+export const DEFAULT_ONBOARDING_REDIRECT = "/auth/onboarding";
 
 export const staffRoutePrefix = "/account";
 

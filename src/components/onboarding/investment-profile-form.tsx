@@ -34,11 +34,14 @@ import {
   type OnboardingSchemaType,
 } from "@/lib/zodValidations/onboarding";
 import { createInvestorProfileAction } from "@/actions/onboarding/create-investor-profile";
+import type { UpsertCurrentUserInvestorProfileResult } from "@/actions/profile/upsert-current-user-investor-profile";
 
 type InvestmentProfileFormProps = {
   onCreateLater?: () => Promise<void>;
   initialValues?: Partial<OnboardingSchemaInput>;
-  onSubmitAction?: (values: OnboardingSchemaType) => Promise<{ success: true }>;
+  onSubmitAction?: (
+    values: OnboardingSchemaType,
+  ) => Promise<UpsertCurrentUserInvestorProfileResult>;
   submitLabel?: string;
   pendingLabel?: string;
   successMessage?: string;
@@ -73,19 +76,32 @@ export function InvestmentProfileForm({
 
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
-      try {
-        await onSubmitAction(values);
-        toast.success(successMessage);
-        router.push("/account/dashboard/user/profile");
-        router.refresh();
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "We could not save your investment profile. Please try again.";
+      form.clearErrors();
+      const result = await onSubmitAction(values);
 
-        toast.error(message);
+      if (result.fieldErrors) {
+        Object.entries(result.fieldErrors).forEach(([fieldName, messages]) => {
+          const message = messages?.[0];
+
+          if (!message) {
+            return;
+          }
+
+          form.setError(fieldName as keyof OnboardingSchemaInput, {
+            type: "server",
+            message,
+          });
+        });
       }
+
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(successMessage);
+      router.push("/account/dashboard/user/profile");
+      router.refresh();
     });
   };
 
@@ -105,7 +121,7 @@ export function InvestmentProfileForm({
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
       <FieldGroup>
         <Field>
-          <FieldLabel>Phone number</FieldLabel>
+          <FieldLabel className="text-white/80">Phone number</FieldLabel>
           <FieldContent>
             <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
               <Controller
@@ -145,9 +161,9 @@ export function InvestmentProfileForm({
                 )}
               />
             </div>
-            <FieldDescription>
-              Enter a country code and local number. We will save it in E.164
-              format.
+            <FieldDescription className="pt-1">
+              We will use this number to send you important updates regarding
+              your account.
             </FieldDescription>
             <FieldError
               errors={[
@@ -163,7 +179,7 @@ export function InvestmentProfileForm({
           name="dateOfBirth"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>Date of birth</FieldLabel>
+              <FieldLabel className="text-white/80">Date of birth</FieldLabel>
               <FieldContent>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -261,7 +277,7 @@ export function InvestmentProfileForm({
           name="country"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>Country</FieldLabel>
+              <FieldLabel className="text-white/80">Country</FieldLabel>
               <FieldContent>
                 <Input
                   {...field}
@@ -282,7 +298,7 @@ export function InvestmentProfileForm({
           name="state"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>State</FieldLabel>
+              <FieldLabel className="text-white/80">State</FieldLabel>
               <FieldContent>
                 <Input
                   {...field}
@@ -303,7 +319,7 @@ export function InvestmentProfileForm({
           name="city"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>City</FieldLabel>
+              <FieldLabel className="text-white/80">City</FieldLabel>
               <FieldContent>
                 <Input
                   {...field}
@@ -324,7 +340,7 @@ export function InvestmentProfileForm({
           name="addressLine1"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>Address line 1</FieldLabel>
+              <FieldLabel className="text-white/80">Address line 1</FieldLabel>
               <FieldContent>
                 <Input
                   {...field}
@@ -345,7 +361,9 @@ export function InvestmentProfileForm({
           name="addressLine2"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel>Address line 2</FieldLabel>
+              <FieldLabel className="text-white/80">
+                Address line 2 (optional)
+              </FieldLabel>
               <FieldContent>
                 <Input
                   {...field}

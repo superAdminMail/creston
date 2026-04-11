@@ -1,113 +1,225 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, Lock, PiggyBank, Plus, ShieldAlert } from "lucide-react";
 
-type SavingsAccount = {
-  id: string;
-  name: string;
-  balance: number;
-  currency: string;
-  productName: string;
-  interestEnabled: boolean;
+import type { SavingsPageData } from "@/actions/savings/getSavingsPageData";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
+
+type SavingsDashboardProps = {
+  accounts: SavingsPageData["accounts"];
+  kycStatus: SavingsPageData["kycStatus"];
+  canCreateSavingsAccount: boolean;
 };
 
 export default function SavingsDashboard({
   accounts,
-}: {
-  accounts: SavingsAccount[];
-}) {
-  const router = useRouter();
-
+  kycStatus,
+  canCreateSavingsAccount,
+}: SavingsDashboardProps) {
   const hasAccounts = accounts.length > 0;
+  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-8 py-10 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold text-white">
-            Personal Savings Accounts
+            Personal savings accounts
           </h1>
-          <p className="text-slate-400 text-sm">
-            Manage and track your savings accounts.
+          <p className="text-sm text-slate-400">
+            Track balances, product rules, lock status, and account targets from
+            one place.
           </p>
         </div>
-        <Button
-          onClick={() => router.push("/account/dashboard/user/savings/new")}
-          className="bg-blue-500 hover:bg-blue-600"
-        >
-          <Plus className=" h-4 w-4" /> Add Savings Account
-        </Button>
+
+        {canCreateSavingsAccount ? (
+          <Button asChild className="rounded-2xl bg-blue-500 hover:bg-blue-600">
+            <Link href="/account/dashboard/user/savings/new">
+              <Plus className="h-4 w-4" />
+              Add savings account
+            </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="outline" className="rounded-2xl">
+            <Link href="/account/dashboard/user/kyc">
+              <Plus className="h-4 w-4" />
+              Complete KYC
+            </Link>
+          </Button>
+        )}
       </div>
 
-      {/* EMPTY STATE */}
-      {!hasAccounts && (
-        <Card className="bg-white/5 border-white/10 text-center">
-          <CardContent className="p-10 space-y-4">
+      {!canCreateSavingsAccount ? (
+        <Alert className="rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-100">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle>
+            Savings accounts are locked until KYC is verified. Current status:{" "}
+            {formatEnumLabel(kycStatus, "Not available")}.
+          </AlertTitle>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <CardContent className="space-y-2 p-6">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Accounts
+            </p>
+            <p className="text-2xl font-semibold text-white">{accounts.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <CardContent className="space-y-2 p-6">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Total balance
+            </p>
+            <p className="text-2xl font-semibold text-white">
+              {formatCurrency(totalBalance)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <CardContent className="space-y-2 p-6">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Locked accounts
+            </p>
+            <p className="text-2xl font-semibold text-white">
+              {accounts.filter((account) => account.isLocked).length}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {!hasAccounts ? (
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
+          <CardContent className="space-y-4 p-10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
+              <PiggyBank className="h-6 w-6 text-blue-200" />
+            </div>
             <h2 className="text-lg font-semibold text-white">
               No savings account yet
             </h2>
-
             <p className="text-sm text-slate-400">
-              Start saving by creating your first account.
+              Open your first savings account to start tracking balances and
+              product-level savings rules.
             </p>
-
-            <Button
-              onClick={() => router.push("/account/dashboard/user/savings/new")}
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              Create Savings Account
-            </Button>
+            {canCreateSavingsAccount ? (
+              <Button asChild className="rounded-2xl bg-blue-500 hover:bg-blue-600">
+                <Link href="/account/dashboard/user/savings/new">
+                  Create savings account
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="rounded-2xl">
+                <Link href="/account/dashboard/user/kyc">Complete KYC</Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
-      )}
-
-      {/* ACCOUNTS */}
-      {hasAccounts && (
-        <div className="grid md:grid-cols-2 gap-6">
-          {accounts.map((acc) => (
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {accounts.map((account) => (
             <Card
-              key={acc.id}
-              className="bg-white/5 border-white/10 hover:border-white/20 transition"
+              key={account.id}
+              className="rounded-[1.75rem] border border-white/10 bg-white/5"
             >
-              <CardContent className="p-6 space-y-4">
-                {/* Title */}
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-white">
-                    {acc.name}
-                  </h2>
+              <CardContent className="space-y-5 p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold text-white">
+                      {account.name}
+                    </h2>
+                    <p className="text-sm text-slate-400">
+                      {account.product.name} • {formatEnumLabel(account.status)}
+                    </p>
+                  </div>
 
-                  {acc.interestEnabled && (
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
-                      Interest
-                    </span>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {account.product.interestEnabled ? (
+                      <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
+                        Interest
+                      </span>
+                    ) : null}
+                    {account.isLocked ? (
+                      <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-300">
+                        Locked
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
-                {/* Balance */}
                 <div>
-                  <p className="text-xs text-slate-400">Available Balance</p>
-                  <h3 className="text-2xl font-semibold text-white mt-1">
-                    ${acc.balance.toLocaleString()}
+                  <p className="text-xs text-slate-400">Available balance</p>
+                  <h3 className="mt-1 text-2xl font-semibold text-white">
+                    {formatCurrency(account.balance, account.currency)}
                   </h3>
                 </div>
 
-                {/* Product */}
-                <p className="text-xs text-slate-400">{acc.productName}</p>
+                {account.description ? (
+                  <p className="text-sm leading-7 text-slate-400">
+                    {account.description}
+                  </p>
+                ) : null}
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                    Deposit
-                  </Button>
+                <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                      Target amount
+                    </dt>
+                    <dd className="mt-2 text-sm font-medium text-white">
+                      {account.targetAmount
+                        ? formatCurrency(account.targetAmount, account.currency)
+                        : "Not set"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                      Opened
+                    </dt>
+                    <dd className="mt-2 text-sm font-medium text-white">
+                      {formatDateLabel(account.createdAt)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                      Withdrawals
+                    </dt>
+                    <dd className="mt-2 text-sm font-medium text-white">
+                      {account.product.allowsWithdrawals ? "Available" : "Restricted"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                      Lock status
+                    </dt>
+                    <dd className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
+                      <Lock className="h-4 w-4 text-slate-400" />
+                      {account.isLocked && account.lockedUntil
+                        ? `Until ${formatDateLabel(account.lockedUntil)}`
+                        : "Flexible"}
+                    </dd>
+                  </div>
+                </dl>
 
-                  <Button size="sm" variant="secondary">
-                    Withdraw
-                  </Button>
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-slate-300">
+                  {account.product.description ?? "No product description available."}
                 </div>
+
+                <Alert className="rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>
+                    Deposit and withdrawal submission for savings accounts is not
+                    wired into this dashboard card yet.
+                  </AlertTitle>
+                </Alert>
               </CardContent>
             </Card>
           ))}

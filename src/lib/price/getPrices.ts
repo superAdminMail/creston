@@ -1,21 +1,9 @@
-import { getPrice } from "./priceService";
+import { getPrices as getPriceSnapshots } from "@/lib/services/price/priceService";
 
 export async function getPrices(symbols: string[]) {
-  const unique = [...new Set(symbols)];
+  const snapshots = await getPriceSnapshots(symbols);
 
-  const results = await Promise.all(
-    unique.map(async (symbol) => {
-      try {
-        const price = await getPrice(symbol);
-        return { symbol, price };
-      } catch {
-        return { symbol, price: null };
-      }
-    }),
-  );
-
-  return Object.fromEntries(results.map((r) => [r.symbol, r.price])) as Record<
-    string,
-    number | null
-  >;
+  return Object.fromEntries(
+    Object.entries(snapshots).map(([symbol, snapshot]) => [symbol, snapshot.price]),
+  ) as Record<string, number | null>;
 }

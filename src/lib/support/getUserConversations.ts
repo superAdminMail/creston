@@ -53,7 +53,6 @@ export async function getUserConversations(userId: string) {
         },
         select: {
           content: true,
-          senderId: true,
           senderType: true,
           createdAt: true,
         },
@@ -81,8 +80,8 @@ export async function getUserConversations(userId: string) {
           createdAt: {
             gt: lastReadAt,
           },
-          senderId: {
-            not: userId,
+          senderType: {
+            in: ["SUPPORT", "SYSTEM"],
           },
         },
       });
@@ -110,7 +109,6 @@ export async function getUserConversations(userId: string) {
         lastMessage: conversation.messages[0]
           ? {
               content: conversation.messages[0].content,
-              senderId: conversation.messages[0].senderId ?? null,
               senderType: conversation.messages[0].senderType,
               createdAt: conversation.messages[0].createdAt.toISOString(),
             }

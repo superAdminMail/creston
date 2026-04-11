@@ -3,6 +3,7 @@
 import { getAgeFromIsoDate } from "@/lib/formatters/age";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { normalizePhoneToE164 } from "@/lib/formatters/phone";
+import type { FormFieldErrors } from "@/lib/forms/actionState";
 import { prisma } from "@/lib/prisma";
 import {
   onboardingSchema,
@@ -13,17 +14,43 @@ type UpsertCurrentUserInvestorProfileOptions = {
   markOnboardingComplete?: boolean;
 };
 
+type OnboardingFieldName =
+  | "countryCallingCode"
+  | "phoneNumber"
+  | "dateOfBirth"
+  | "confirmAdultAge"
+  | "country"
+  | "state"
+  | "city"
+  | "addressLine1"
+  | "addressLine2";
+
+export type UpsertCurrentUserInvestorProfileResult = {
+  success?: true;
+  error?: string;
+  fieldErrors?: FormFieldErrors<OnboardingFieldName>;
+};
+
 export async function upsertCurrentUserInvestorProfile(
   input: unknown,
   options: UpsertCurrentUserInvestorProfileOptions = {},
-) {
+): Promise<UpsertCurrentUserInvestorProfileResult> {
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    return { error: "Unauthorized" };
   }
 
-  const values = onboardingSchema.parse(input);
+  const parsed = onboardingSchema.safeParse(input);
+
+  if (!parsed.success) {
+    return {
+      error: "Please review the highlighted profile fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const values = parsed.data;
   const age = getAgeFromIsoDate(values.dateOfBirth);
   const normalizedPhoneNumber = values.phoneNumber
     ? normalizePhoneToE164({
@@ -33,7 +60,15 @@ export async function upsertCurrentUserInvestorProfile(
     : null;
 
   if (age === null || age < 18) {
-    throw new Error("You must be at least 18 years old to continue.");
+    return {
+      error: "You must be at least 18 years old to continue.",
+      fieldErrors: {
+        dateOfBirth: ["You must be at least 18 years old to continue."],
+        confirmAdultAge: [
+          "Age confirmation is only available for adults 18 and above.",
+        ],
+      },
+    };
   }
 
   const profileWriteData = {
@@ -76,6 +111,5 @@ export async function upsertCurrentUserInvestorProfile(
 export async function updateCurrentUserInvestorProfileAction(
   input: OnboardingSchemaType,
 ) {
-  await upsertCurrentUserInvestorProfile(input);
-  return { success: true } as const;
+  return upsertCurrentUserInvestorProfile(input);
 }
