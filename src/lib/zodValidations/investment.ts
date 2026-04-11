@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-import {
-  InvestmentCatalogStatus,
-  InvestmentPeriod,
-  InvestmentType,
-} from "@/generated/prisma";
+import { InvestmentCatalogStatus, InvestmentType } from "@/generated/prisma";
 import { slugify } from "@/lib/slugs/slugify";
 
 const integerPattern = /^-?\d+$/;
@@ -16,9 +12,7 @@ export const investmentFormSchema = z.object({
   type: z.nativeEnum(InvestmentType, {
     message: "Select a valid investment type.",
   }),
-  period: z.nativeEnum(InvestmentPeriod, {
-    message: "Select a valid investment period.",
-  }),
+
   status: z.nativeEnum(InvestmentCatalogStatus, {
     message: "Select a valid catalog status.",
   }),
@@ -48,7 +42,6 @@ export function normalizeInvestmentFormValues(values: InvestmentFormInput) {
     normalizedSlug: slugify(slugSource),
     description: values.description?.trim() || null,
     type: values.type,
-    period: values.period,
     status: values.status,
     iconFileAssetId: values.iconFileAssetId?.trim() || null,
     sortOrder: Number(values.sortOrder),
