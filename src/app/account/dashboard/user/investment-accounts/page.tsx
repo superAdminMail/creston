@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCurrentUserInvestmentAccountsAction } from "@/actions/accounts/get-current-user-investment-accounts";
 import { UserInvestmentAccountsPage } from "../_components/UserInvestmentAccountsPage";
 

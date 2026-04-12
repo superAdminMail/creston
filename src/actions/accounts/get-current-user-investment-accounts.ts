@@ -2,11 +2,9 @@
 
 import { type AccountStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import {
-  formatDateLabel,
-  formatEnumLabel,
-} from "@/lib/formatters/formatters";
+import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 type Decimalish = {
   toNumber(): number;
@@ -55,7 +53,7 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    redirect("/login");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
@@ -108,25 +106,31 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
     },
   });
 
-  const accounts = (investorProfile?.investmentAccounts ?? []).map((account) => ({
-    id: account.id,
-    status: account.status,
-    statusLabel: formatEnumLabel(account.status),
-    balance: toNumber(account.balance),
-    currency: account.currency || "USD",
-    planName: account.investmentPlan.name,
-    planDescription:
-      account.investmentPlan.description?.trim() ||
-      "Structured investment plan aligned to your portfolio.",
-    planPeriodLabel: formatEnumLabel(account.investmentPlan.period),
-    investmentModelLabel: formatEnumLabel(account.investmentPlan.investmentModel),
-    investmentName: account.investmentPlan.investment.name,
-    investmentTypeLabel: formatEnumLabel(account.investmentPlan.investment.type),
-    orderCount: account.investmentOrders.length,
-    openedDate: formatDateLabel(account.openedAt, "Not opened yet"),
-    createdDate: formatDateLabel(account.createdAt),
-    updatedDate: formatDateLabel(account.updatedAt),
-  }));
+  const accounts = (investorProfile?.investmentAccounts ?? []).map(
+    (account) => ({
+      id: account.id,
+      status: account.status,
+      statusLabel: formatEnumLabel(account.status),
+      balance: toNumber(account.balance),
+      currency: account.currency || "USD",
+      planName: account.investmentPlan.name,
+      planDescription:
+        account.investmentPlan.description?.trim() ||
+        "Structured investment plan aligned to your portfolio.",
+      planPeriodLabel: formatEnumLabel(account.investmentPlan.period),
+      investmentModelLabel: formatEnumLabel(
+        account.investmentPlan.investmentModel,
+      ),
+      investmentName: account.investmentPlan.investment.name,
+      investmentTypeLabel: formatEnumLabel(
+        account.investmentPlan.investment.type,
+      ),
+      orderCount: account.investmentOrders.length,
+      openedDate: formatDateLabel(account.openedAt, "Not opened yet"),
+      createdDate: formatDateLabel(account.createdAt),
+      updatedDate: formatDateLabel(account.updatedAt),
+    }),
+  );
 
   const totalAccountsCount = accounts.length;
   const activeAccountsCount = accounts.filter(
@@ -135,7 +139,10 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
   const pendingAccountsCount = accounts.filter(
     (account) => account.status === "PENDING",
   ).length;
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0,
+  );
   const marketAccountsCount = accounts.filter(
     (account) => account.investmentModelLabel === "Market",
   ).length;
