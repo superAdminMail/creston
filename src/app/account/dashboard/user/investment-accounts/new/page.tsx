@@ -68,7 +68,7 @@ export default async function Page() {
     investmentName: plan.investment.name,
     investmentTypeLabel: formatEnumLabel(plan.investment.type),
     tiers: plan.tiers.map((tier) => ({
-      roiPercent: tier.roiPercent.toNumber(),
+      roiPercent: tier.roiPercent?.toNumber() ?? 0,
       minAmount: tier.minAmount.toNumber(),
       maxAmount: tier.maxAmount.toNumber(),
     })),
@@ -81,7 +81,7 @@ export default async function Page() {
           Create investment account
         </h1>
         <p className="text-sm text-muted-foreground">
-          Choose a live plan, review its model, and create an account that matches the current schema.
+          Create a new investment account to track your investments.
         </p>
       </div>
 
