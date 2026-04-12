@@ -26,7 +26,7 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { getRoleLabel } from "./DashboardNavbar";
+import { getRoleLabel } from "./DashboardNavbar.client";
 
 type SidebarUser = UserDTO | ProfileDTO | null | undefined;
 

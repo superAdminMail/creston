@@ -56,9 +56,6 @@ export default async function Loading() {
           <p className="text-xs font-medium uppercase tracking-[0.45em] text-blue-200/80">
             {siteName}
           </p>
-          <p className="mt-3 text-sm text-slate-400">
-            {siteTagline}
-          </p>
         </div>
       </div>
 

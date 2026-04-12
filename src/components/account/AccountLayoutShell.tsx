@@ -19,7 +19,7 @@ import {
   AccountMobileSideNavShell,
   AccountSidebarShell,
 } from "./AccountSidebarShell";
-import { DashboardNavbar } from "./DashboardNavbar";
+import { DashboardNavbarClient } from "./DashboardNavbar.client";
 
 type AccountLayoutShellProps = {
   user: ProfileDTO;
@@ -51,7 +51,7 @@ export function AccountLayoutShell({
   return (
     <SidebarProvider className="min-h-screen bg-transparent text-slate-950 transition-colors dark:text-slate-100">
       <div className="w-full">
-        <DashboardNavbar
+        <DashboardNavbarClient
           user={user}
           siteName={siteName}
           siteLogoUrl={siteLogoUrl}
