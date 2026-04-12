@@ -1,8 +1,12 @@
 import { getPublicManagementTeam } from "@/lib/service/getPublicManagementTeam";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { ManagementTeamSectionClient } from "./Management-team-section.client";
 
 export async function ManagementTeamSection() {
-  const members = await getPublicManagementTeam();
+  const [members, siteConfig] = await Promise.all([
+    getPublicManagementTeam(),
+    getSiteConfigurationCached(),
+  ]);
 
   const team = members.map((member, index) => ({
     id: member.id,
@@ -19,5 +23,18 @@ export async function ManagementTeamSection() {
     return null;
   }
 
-  return <ManagementTeamSectionClient team={team} />;
+  return (
+    <ManagementTeamSectionClient
+      team={team}
+      brandName={siteConfig?.siteName?.trim() || "Havenstone"}
+      brandTagline={
+        siteConfig?.siteTagline?.trim() ||
+        "Structured financial systems, operational clarity, and long-term trust."
+      }
+      brandDescription={
+        siteConfig?.siteDescription?.trim() ||
+        "A leadership team focused on building dependable financial experiences."
+      }
+    />
+  );
 }

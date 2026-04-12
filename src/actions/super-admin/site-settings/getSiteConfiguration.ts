@@ -15,6 +15,8 @@ export type SiteSettingsFormValues = {
   supportEmail: string;
   supportPhone: string;
   locale: string;
+  seoTitle: string;
+  seoDescription: string;
   keywords: string[];
   defaultTwitterHandle: string;
   facebookUrl: string;
@@ -74,6 +76,8 @@ export async function getSiteConfiguration(): Promise<SiteSettingsData> {
       supportEmail: config?.supportEmail ?? "",
       supportPhone: config?.supportPhone ?? "",
       locale: config?.locale ?? "en_US",
+      seoTitle: config?.seoTitle ?? "",
+      seoDescription: config?.seoDescription ?? "",
       keywords: config?.keywords ?? [],
       defaultTwitterHandle: config?.defaultTwitterHandle ?? "",
       facebookUrl: config?.facebookUrl ?? "",

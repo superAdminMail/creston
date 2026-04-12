@@ -18,8 +18,14 @@ type ManagementTeamMember = {
 
 export function ManagementTeamSectionClient({
   team,
+  brandName,
+  brandTagline,
+  brandDescription,
 }: {
   team: ManagementTeamMember[];
+  brandName: string;
+  brandTagline: string;
+  brandDescription: string;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -47,8 +53,8 @@ export function ManagementTeamSectionClient({
       <div className="relative z-10">
         <SectionHeading
           eyebrow="Management Team"
-          title="Built and guided by experienced leadership"
-          description="Havenstone is led by a team focused on structured financial systems, operational clarity, and long-term trust."
+          title={`Built and guided by experienced leadership at ${brandName}`}
+          description={`${brandName} is led by a team focused on ${brandTagline.toLowerCase()}. ${brandDescription}`}
           align="center"
         />
 
@@ -198,8 +204,8 @@ function ManagementCard({
       whileHover={{ y: -6, scale: 1.02 }}
       className={`relative w-[260px] cursor-pointer rounded-[2rem] border p-5 text-center transition-all duration-300 ease-out sm:w-[300px] sm:p-6 ${
         featured
-          ? "border-blue-400/20 bg-[linear-gradient(135deg,rgba(37,99,235,0.22),rgba(15,23,42,0.96))] shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
-          : "border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))]"
+          ? "border-blue-400/25 bg-[#0f172a] shadow-[0_36px_90px_rgba(0,0,0,0.42)] ring-1 ring-blue-400/10"
+          : "border-white/8 bg-[linear-gradient(180deg,rgba(10,16,30,0.96),rgba(5,11,24,1))] opacity-90"
       }`}
     >
       {featured ? (

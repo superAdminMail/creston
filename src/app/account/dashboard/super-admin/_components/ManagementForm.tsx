@@ -26,9 +26,28 @@ import {
 } from "@/actions/super-admin/management/managementForm.state";
 
 import { createManagement } from "@/actions/super-admin/management/createManagement";
+import { updateManagement } from "@/actions/super-admin/management/updateManagement";
+
+type ManagementFormMode = "create" | "edit";
+
+type ManagementFormProps = {
+  mode?: ManagementFormMode;
+  managementId?: string;
+  defaultValues?: {
+    name?: string;
+    title?: string;
+    role?: string;
+    email?: string;
+    phone?: string;
+    bio?: string;
+    photoFileId?: string;
+    sortOrder?: string;
+  };
+  initialPhotoUrl?: string | null;
+};
 
 /* ---------------- SUBMIT BUTTON ---------------- */
-function SubmitButton() {
+function SubmitButton({ mode }: { mode: ManagementFormMode }) {
   const { pending } = useFormStatus();
 
   return (
@@ -37,22 +56,27 @@ function SubmitButton() {
       className="btn-primary rounded-xl px-5"
       disabled={pending}
     >
-      {pending ? "Saving..." : "Save profile"}
+      {pending ? "Saving..." : mode === "edit" ? "Update profile" : "Save profile"}
     </Button>
   );
 }
 
 /* ---------------- FORM ---------------- */
-export function ManagementForm() {
+export function ManagementForm({
+  mode = "create",
+  managementId,
+  defaultValues,
+  initialPhotoUrl = null,
+}: ManagementFormProps) {
   const router = useRouter();
 
   const [state, formAction] = useActionState<
     ManagementFormActionState,
     FormData
-  >(createManagement, initialManagementFormState);
+  >(mode === "edit" ? updateManagement : createManagement, initialManagementFormState);
 
-  const [photoId, setPhotoId] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
+  const [photoId, setPhotoId] = useState(defaultValues?.photoFileId ?? "");
+  const [preview, setPreview] = useState<string | null>(initialPhotoUrl);
   const [fileKey, setFileKey] = useState<string | null>(null);
 
   /* ---------------- EFFECT ---------------- */
@@ -70,6 +94,9 @@ export function ManagementForm() {
   return (
     <form action={formAction} className="space-y-6">
       {/* HIDDEN */}
+      {managementId ? (
+        <input type="hidden" name="managementId" value={managementId} />
+      ) : null}
       <input type="hidden" name="photoFileId" value={photoId} />
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -86,7 +113,12 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Full name</FieldLabel>
                   <FieldContent>
-                    <Input name="name" placeholder="John Doe" required />
+                    <Input
+                      name="name"
+                      placeholder="John Doe"
+                      required
+                      defaultValue={defaultValues?.name}
+                    />
                     <FieldError>{state.fieldErrors?.name?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -94,7 +126,11 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Title</FieldLabel>
                   <FieldContent>
-                    <Input name="title" placeholder="CEO" />
+                    <Input
+                      name="title"
+                      placeholder="CEO"
+                      defaultValue={defaultValues?.title}
+                    />
                     <FieldError>{state.fieldErrors?.title?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -102,7 +138,11 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Role</FieldLabel>
                   <FieldContent>
-                    <Input name="role" placeholder="Executive" />
+                    <Input
+                      name="role"
+                      placeholder="Executive"
+                      defaultValue={defaultValues?.role}
+                    />
                     <FieldError>{state.fieldErrors?.role?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -110,7 +150,11 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Email</FieldLabel>
                   <FieldContent>
-                    <Input name="email" placeholder="email@example.com" />
+                    <Input
+                      name="email"
+                      placeholder="email@example.com"
+                      defaultValue={defaultValues?.email}
+                    />
                     <FieldError>{state.fieldErrors?.email?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -118,7 +162,11 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Phone</FieldLabel>
                   <FieldContent>
-                    <Input name="phone" placeholder="+1234567890" />
+                    <Input
+                      name="phone"
+                      placeholder="+1234567890"
+                      defaultValue={defaultValues?.phone}
+                    />
                     <FieldError>{state.fieldErrors?.phone?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -126,7 +174,11 @@ export function ManagementForm() {
                 <Field>
                   <FieldLabel>Sort Order</FieldLabel>
                   <FieldContent>
-                    <Input name="sortOrder" placeholder="1" />
+                    <Input
+                      name="sortOrder"
+                      placeholder="1"
+                      defaultValue={defaultValues?.sortOrder}
+                    />
                     <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
@@ -138,6 +190,7 @@ export function ManagementForm() {
                       name="bio"
                       className="input-premium min-h-[120px] w-full rounded-xl px-3 py-3"
                       placeholder="Short professional bio..."
+                      defaultValue={defaultValues?.bio}
                     />
                     <FieldError>{state.fieldErrors?.bio?.[0]}</FieldError>
                   </FieldContent>
@@ -223,7 +276,7 @@ export function ManagementForm() {
 
           {/* ACTION */}
           <div className="flex justify-end">
-            <SubmitButton />
+            <SubmitButton mode={mode} />
           </div>
         </div>
       </div>

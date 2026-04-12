@@ -43,6 +43,8 @@ export const siteConfigurationSchema = z.object({
   supportEmail: optionalEmailString,
   supportPhone: optionalTrimmedString,
   locale: optionalTrimmedString,
+  seoTitle: optionalTrimmedString,
+  seoDescription: optionalTrimmedString,
   keywords: z
     .array(z.string().trim().min(1, "Keyword cannot be empty."))
     .default([]),
@@ -67,6 +69,8 @@ export function normalizeSiteConfigurationValues(
     supportEmail: values.supportEmail,
     supportPhone: values.supportPhone,
     locale: values.locale ?? "en_US",
+    seoTitle: values.seoTitle,
+    seoDescription: values.seoDescription,
     keywords: Array.from(
       new Set(
         values.keywords
