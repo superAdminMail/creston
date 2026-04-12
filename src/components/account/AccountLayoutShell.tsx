@@ -23,11 +23,15 @@ import { DashboardNavbar } from "./DashboardNavbar";
 
 type AccountLayoutShellProps = {
   user: ProfileDTO;
+  siteName: string;
+  siteLogoUrl?: string | null;
   children: React.ReactNode;
 };
 
 export function AccountLayoutShell({
   user,
+  siteName,
+  siteLogoUrl,
   children,
 }: AccountLayoutShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -49,6 +53,8 @@ export function AccountLayoutShell({
       <div className="w-full">
         <DashboardNavbar
           user={user}
+          siteName={siteName}
+          siteLogoUrl={siteLogoUrl}
           onMenuClick={() => setMobileOpen(true)}
           onLogout={handleLogout}
           isSigningOut={isSigningOut}

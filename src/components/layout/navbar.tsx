@@ -7,8 +7,14 @@ import { useId, useState } from "react";
 import * as authClient from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-const marketingLinks = [
-  { href: "#why-havenstone", label: "Why Havenstone" },
+type NavbarProps = {
+  siteName: string;
+  siteLogoUrl?: string | null;
+  siteTagline?: string | null;
+};
+
+const marketingLinks = (siteName: string) => [
+  { href: "#why-havenstone", label: `Why ${siteName}` },
   { href: "#how-it-works", label: "How It Works" },
   { href: "#benefits", label: "Benefits" },
   { href: "#testimonials", label: "Testimonials" },
@@ -22,39 +28,44 @@ const publicAuthLinks = {
 
 const dashboardLink = "/account";
 
-function HavenstoneMark() {
+function BrandMark({
+  siteName,
+  siteLogoUrl,
+}: {
+  siteName: string;
+  siteLogoUrl?: string | null;
+}) {
   return (
-    // <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.20),rgba(59,130,246,0.05))] shadow-[0_12px_34px_rgba(37,99,235,0.18)]">
-    //   <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--gradient-brand)] text-sm font-semibold text-white">
-    //     C
-    //   </span>
-    // </span>
-    <>
-      <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+    <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+      {siteLogoUrl ? (
         <img
-          src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
-          alt="Site Logo"
+          src={siteLogoUrl}
+          alt={`${siteName} logo`}
           className="h-9 w-9 rounded-2xl object-cover "
         />
-      </div>
-    </>
+      ) : (
+        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white">
+          {siteName.slice(0, 1)}
+        </span>
+      )}
+    </div>
   );
 }
 
-function Brand() {
+function Brand({ siteName, siteLogoUrl, siteTagline }: NavbarProps) {
   return (
     <Link
       href="/"
       className="group flex min-w-0 items-center gap-3"
-      aria-label="Havenstone home"
+      aria-label={`${siteName} home`}
     >
-      <HavenstoneMark />
+      <BrandMark siteName={siteName} siteLogoUrl={siteLogoUrl} />
       <span className="flex min-w-0 flex-col">
         <span className="truncate text-base font-semibold tracking-[-0.03em] text-white sm:text-lg">
-          Creston Capital
+          {siteName}
         </span>
-        <span className="hidden text-xs uppercase tracking-[0.12em] text-slate-400 sm:block">
-          Positioned for the Peak
+        <span className="hidden truncate text-xs uppercase tracking-[0.12em] text-slate-400 sm:block">
+          {siteTagline ?? "Positioned for the Peak"}
         </span>
       </span>
     </Link>
@@ -62,15 +73,17 @@ function Brand() {
 }
 
 function MarketingItems({
+  siteName,
   className,
   onNavigate,
 }: {
+  siteName: string;
   className?: string;
   onNavigate?: () => void;
 }) {
   return (
     <>
-      {marketingLinks.map((link) => (
+      {marketingLinks(siteName).map((link) => (
         <Link
           key={link.href}
           href={link.href}
@@ -157,7 +170,7 @@ function ActionLinks({
   );
 }
 
-export function Navbar() {
+export function Navbar({ siteName, siteLogoUrl, siteTagline }: NavbarProps) {
   const { data: session, isPending } = authClient.useSession();
   const menuId = useId();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -173,7 +186,11 @@ export function Navbar() {
 
           <div className="flex min-h-[72px] items-center gap-3 px-4 sm:px-5 lg:px-6">
             <div className="flex min-w-0 flex-1 items-center">
-              <Brand />
+              <Brand
+                siteName={siteName}
+                siteLogoUrl={siteLogoUrl}
+                siteTagline={siteTagline}
+              />
             </div>
 
             <div className="hidden flex-1 items-center justify-end lg:flex">
@@ -204,7 +221,10 @@ export function Navbar() {
                 aria-label="Marketing navigation"
                 className="flex items-center gap-1 rounded-full border border-white/6 bg-white/[0.025] px-2 py-1.5"
               >
-                <MarketingItems className="px-3 py-1.5 text-[0.925rem]" />
+                <MarketingItems
+                  siteName={siteName}
+                  className="px-3 py-1.5 text-[0.925rem]"
+                />
               </nav>
             </div>
           </div>
@@ -222,6 +242,7 @@ export function Navbar() {
               <div className="space-y-6 px-4 py-4 sm:px-5">
                 <nav aria-label="Mobile navigation" className="grid gap-2">
                   <MarketingItems
+                    siteName={siteName}
                     onNavigate={() => setIsMenuOpen(false)}
                     className="rounded-2xl px-4 py-3"
                   />

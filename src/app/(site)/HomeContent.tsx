@@ -8,22 +8,43 @@ import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { InvestmentPlansSection } from "@/components/home/investment-plans-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { WhySection } from "@/components/home/why-section";
+import { RevealSection } from "@/components/home/reveal-section";
 
 const HomeContent = () => {
   return (
     <>
-      <HeroSection />
-      <WhySection />
+      <RevealSection className="delay-0">
+        <HeroSection />
+      </RevealSection>
+      <RevealSection className="delay-100">
+        <WhySection />
+      </RevealSection>
 
-      <InvestmentProductsSection />
-      <InvestmentPlansSection />
+      <RevealSection className="delay-100">
+        <InvestmentProductsSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <InvestmentPlansSection />
+      </RevealSection>
 
-      <HowItWorksSection />
-      <BenefitsSection />
-      <TestimonialsSection />
-      <FaqSection />
-      <ManagementTeamSection />
-      <FinalCtaSection />
+      <RevealSection className="delay-150">
+        <HowItWorksSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <BenefitsSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <TestimonialsSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <FaqSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <ManagementTeamSection />
+      </RevealSection>
+      <RevealSection className="delay-150">
+        <FinalCtaSection />
+      </RevealSection>
     </>
   );
 };

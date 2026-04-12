@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { LogOut, Menu, Settings, User2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ import {
 
 import {
   getDashboardMenu,
-  type DashboardNavLink,
   type DashboardRole,
 } from "@/constants/dashboard-menu";
 import type { ProfileImage } from "@/lib/types";
@@ -38,6 +36,8 @@ type DashboardNavbarUser = {
 
 type DashboardNavbarProps = {
   user: DashboardNavbarUser;
+  siteName: string;
+  siteLogoUrl?: string | null;
   onMenuClick?: () => void;
   onLogout?: () => void;
   isSigningOut?: boolean;
@@ -70,12 +70,10 @@ function getPageTitle(pathname: string, role: DashboardRole) {
     .join(" ");
 }
 
-function isNavActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
 export function DashboardNavbar({
   user,
+  siteName,
+  siteLogoUrl,
   onMenuClick,
   onLogout,
   isSigningOut = false,
@@ -83,18 +81,10 @@ export function DashboardNavbar({
   const pathname = usePathname();
   const avatarFallback =
     user.name?.trim()?.charAt(0) || user.email?.trim()?.charAt(0) || "H";
-  const firstName = user.name?.trim()?.split(" ")[0] || "Account";
   const roleLabel = getRoleLabel(user.role);
   const pageTitle = getPageTitle(pathname, user.role);
   const dashboardHome = getDashboardHomeByRole(user.role);
   const avatarUrl = user.profileAvatar?.url || user.image || null;
-  const quickLinks = useMemo<DashboardNavLink[]>(
-    () =>
-      getDashboardMenu(user.role)
-        .flatMap((section) => Array.from(section.links))
-        .slice(0, 4),
-    [user.role],
-  );
 
   return (
     <motion.nav
@@ -126,16 +116,22 @@ export function DashboardNavbar({
               </span>
             </span> */}
             <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
-              <img
-                src="https://3mnjvkl4rh.ufs.sh/f/obiqfDxUd1AJERGpv8OQdY0fW6Xhc7KoRLHNpBrns9tQ8kJG"
-                alt="Site Logo"
-                className="h-9 w-9 rounded-2xl object-cover "
-              />
+              {siteLogoUrl ? (
+                <img
+                  src={siteLogoUrl}
+                  alt={`${siteName} logo`}
+                  className="h-9 w-9 rounded-2xl object-cover"
+                />
+              ) : (
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-900 dark:text-white">
+                  {siteName.slice(0, 1)}
+                </span>
+              )}
             </div>
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold tracking-wide text-slate-950 dark:text-white">
-                Creston Capital
+                {siteName}
               </p>
               <div className="mt-1 flex items-center gap-2">
                 <p className="truncate text-xs text-slate-500 dark:text-slate-400">

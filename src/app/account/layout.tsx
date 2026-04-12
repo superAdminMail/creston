@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { DEFAULT_ONBOARDING_REDIRECT } from "@/routes";
 
 export async function generateMetadata() {
@@ -63,6 +64,11 @@ export default async function ProfileLayout({
   }
 
   let user = null;
+  const [site, config] = await Promise.all([
+    getSiteSeoConfig(),
+    getSiteConfigurationCached(),
+  ]);
+
   try {
     user = await getCurrentUser();
   } catch (error) {
@@ -75,7 +81,11 @@ export default async function ProfileLayout({
   }
 
   return (
-    <AccountLayoutShell user={user}>
+    <AccountLayoutShell
+      user={user}
+      siteName={site.siteName}
+      siteLogoUrl={config?.siteLogoFileAsset?.url ?? site.defaultOgImageUrl}
+    >
       <NotificationListener userId={sessionUser.id} />
       {children}
     </AccountLayoutShell>
