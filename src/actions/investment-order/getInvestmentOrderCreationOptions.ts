@@ -36,7 +36,6 @@ export type InvestmentOrderCreationPlanOption = {
   slug: string;
   description: string;
 
-  // ✅ CORRECT SOURCE OF PERIOD
   period: InvestmentPeriod;
   periodLabel: string;
   durationDays: number;

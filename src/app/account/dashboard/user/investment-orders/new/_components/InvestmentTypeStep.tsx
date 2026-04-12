@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  Image as ImageIcon,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Image as ImageIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
 
 import type { InvestmentOrderCreationInvestmentOption } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
@@ -34,8 +29,8 @@ export function InvestmentTypeStep({
           Choose an investment
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Start with the specific Havenstone investment product you want to
-          use, then continue into the available plans and tier options for that
+          Start with the specific Havenstone investment product you want to use,
+          then continue into the available plans and tier options for that
           product.
         </p>
       </div>
@@ -119,10 +114,6 @@ export function InvestmentTypeStep({
               <p className="mt-1 text-sm leading-6 text-slate-300">
                 {featuredInvestment.description}
               </p>
-              <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.03] px-3 py-1 text-xs text-slate-300">
-                <ShieldCheck className="h-3.5 w-3.5 text-blue-300" />
-                {featuredInvestment.typeLabel} | {featuredInvestment.periodLabel}
-              </div>
             </div>
           </div>
         </div>
