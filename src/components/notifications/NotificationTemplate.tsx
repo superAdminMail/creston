@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
-import { NotificationDTO } from "@/lib/types";
-import { ShoppingBag, Truck, CreditCard, Bell, Megaphone } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+import { getNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import type { NotificationDTO, NotificationType } from "@/lib/types/notification";
 
 type NotificationVariant = "info" | "success" | "warning" | "error";
 
@@ -23,20 +23,7 @@ const VARIANT_STYLES: Record<NotificationVariant, string> = {
   error: "bg-[#fdeceb] text-[#b3261e] border-[#f7c9c6]",
 };
 
-function resolveIcon(type: NotificationDTO["type"]) {
-  switch (type) {
-    case "ORDER":
-      return <ShoppingBag className="w-4 h-4" />;
-    case "DELIVERY":
-      return <Truck className="w-4 h-4" />;
-    case "PAYMENT":
-      return <CreditCard className="w-4 h-4" />;
-    case "PROMOTION":
-      return <Megaphone className="w-4 h-4" />;
-    default:
-      return <Bell className="w-4 h-4" />;
-  }
-}
+const FALLBACK_TYPE: NotificationType = "SYSTEM";
 
 const NotificationTemplate = ({
   notification,
@@ -54,6 +41,7 @@ const NotificationTemplate = ({
   });
 
   const Wrapper = href ? Link : "div";
+  const Icon = getNotificationIcon(notification.type ?? FALLBACK_TYPE);
 
   return (
     <main>
@@ -64,7 +52,7 @@ const NotificationTemplate = ({
         <div
           className={`flex h-10 w-10 items-center justify-center rounded-full border ${VARIANT_STYLES[variant]}`}
         >
-          {resolveIcon(notification.type)}
+          <Icon className="h-4 w-4" />
         </div>
 
         <div className="flex-1 space-y-1">
