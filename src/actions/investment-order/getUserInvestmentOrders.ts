@@ -5,6 +5,7 @@ import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 type Decimalish = {
   toNumber(): number;
@@ -105,7 +106,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
   const user = await getCurrentSessionUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    redirect("/auth/login");
   }
 
   const userId = await getCurrentUserId();

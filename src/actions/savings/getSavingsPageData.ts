@@ -3,6 +3,7 @@
 import { KycStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 type SavingsAccountViewModel = {
   id: string;
@@ -57,7 +58,7 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    redirect("/auth/login");
   }
 
   const [profile, products] = await Promise.all([
@@ -128,7 +129,9 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
         description: account.description,
         balance: Number(account.balance),
         currency: account.currency,
-        targetAmount: account.targetAmount ? Number(account.targetAmount) : null,
+        targetAmount: account.targetAmount
+          ? Number(account.targetAmount)
+          : null,
         status: account.status,
         isLocked: account.isLocked,
         lockedUntil: account.lockedUntil,
@@ -141,7 +144,8 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
           interestRatePercent: account.savingsProduct.interestRatePercent
             ? Number(account.savingsProduct.interestRatePercent)
             : null,
-          interestPayoutFrequency: account.savingsProduct.interestPayoutFrequency,
+          interestPayoutFrequency:
+            account.savingsProduct.interestPayoutFrequency,
           allowsDeposits: account.savingsProduct.allowsDeposits,
           allowsWithdrawals: account.savingsProduct.allowsWithdrawals,
           isLockable: account.savingsProduct.isLockable,

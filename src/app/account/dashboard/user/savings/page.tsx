@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getSavingsPageData } from "@/actions/savings/getSavingsPageData";
 import SavingsDashboard from "../_components/SavingsDashboard";
 

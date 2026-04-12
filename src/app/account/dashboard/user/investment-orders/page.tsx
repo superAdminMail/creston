@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getUserInvestmentOrders } from "@/actions/investment-order/getUserInvestmentOrders";
 import { UserInvestmentsHeader } from "./_components/UserInvestmentsHeader";
 import { UserInvestmentsList } from "./_components/UserInvestmentsList";

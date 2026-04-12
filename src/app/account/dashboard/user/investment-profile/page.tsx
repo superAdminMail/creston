@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import { UserInvestmentProfileDetailsPage } from "../_components/UserInvestmentProfileDetailsPage";
 

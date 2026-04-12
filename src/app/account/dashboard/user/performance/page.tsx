@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getUserPerformanceDataAction } from "@/actions/dashboard/get-user-performance-data";
 import { UserPerformancePageClient } from "./_components/UserPerformancePageClient";
 

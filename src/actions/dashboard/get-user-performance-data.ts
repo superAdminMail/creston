@@ -12,6 +12,7 @@ import {
 } from "@/lib/services/investment/decimal";
 import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
 import { getPrices } from "@/lib/services/price/priceService";
+import { redirect } from "next/navigation";
 
 const ANALYTICS_MONTH_COUNT = 6;
 
@@ -145,7 +146,7 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    redirect("/auth/login");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
@@ -198,7 +199,8 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
     },
   });
 
-  const orders = (investorProfile?.investmentOrders ?? []) as PerformanceOrderRecord[];
+  const orders = (investorProfile?.investmentOrders ??
+    []) as PerformanceOrderRecord[];
   const symbols = Array.from(
     new Set(
       orders
@@ -215,12 +217,17 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
   const assets = orders
     .map<UserPerformanceAsset>((order) => {
       const symbol = order.investmentPlan.investment.symbol;
-      const currentPrice = symbol ? livePrices[symbol]?.price ?? null : null;
-      const currentValue = computeInvestmentOrderCurrentValue(order, currentPrice);
+      const currentPrice = symbol ? (livePrices[symbol]?.price ?? null) : null;
+      const currentValue = computeInvestmentOrderCurrentValue(
+        order,
+        currentPrice,
+      );
       const realizedProfit =
         order.investmentModel === "FIXED"
           ? toDecimal(order.accruedProfit)
-          : sumDecimals(order.investmentEarnings.map((earning) => earning.amount));
+          : sumDecimals(
+              order.investmentEarnings.map((earning) => earning.amount),
+            );
       const principal = toDecimal(order.amount);
 
       return {
@@ -246,7 +253,10 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
     (sum, asset) => sum + asset.principal,
     0,
   );
-  const totalPortfolioValue = assets.reduce((sum, asset) => sum + asset.value, 0);
+  const totalPortfolioValue = assets.reduce(
+    (sum, asset) => sum + asset.value,
+    0,
+  );
   const totalProfit = assets.reduce((sum, asset) => sum + asset.profit, 0);
 
   const monthBuckets = getRecentMonthBuckets(ANALYTICS_MONTH_COUNT);
@@ -272,7 +282,9 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
   const transactions = await getUserTransactions(user.id);
   const activities = transactions
     .filter(
-      (transaction): transaction is typeof transaction & {
+      (
+        transaction,
+      ): transaction is typeof transaction & {
         type: "INVESTMENT" | "WITHDRAWAL" | "EARNING";
       } => transaction.type !== "SAVINGS",
     )
@@ -296,7 +308,9 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
       totalPortfolioValue,
       totalProfit,
       changePercent:
-        totalInvestedCapital > 0 ? (totalProfit / totalInvestedCapital) * 100 : 0,
+        totalInvestedCapital > 0
+          ? (totalProfit / totalInvestedCapital) * 100
+          : 0,
       totalInvestedCapital,
       activeOrdersCount: assets.filter((asset) => !asset.isMatured).length,
       maturedOrdersCount: assets.filter((asset) => asset.isMatured).length,

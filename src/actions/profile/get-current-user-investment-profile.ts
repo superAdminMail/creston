@@ -6,6 +6,7 @@ import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { splitE164PhoneNumber } from "@/lib/formatters/phone";
 import { prisma } from "@/lib/prisma";
 import type { OnboardingSchemaInput } from "@/lib/zodValidations/onboarding";
+import { redirect } from "next/navigation";
 
 export type CurrentUserInvestmentProfileData = {
   userName: string;
@@ -83,7 +84,7 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    redirect("/auth/login");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
