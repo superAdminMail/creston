@@ -53,7 +53,12 @@ const ICON_MAP: Record<DashboardOverviewIconKey, typeof Users> = {
   banknote: Banknote,
 };
 
-function MetricCard({ title, value, description, icon }: DashboardOverviewMetric) {
+function MetricCard({
+  title,
+  value,
+  description,
+  icon,
+}: DashboardOverviewMetric) {
   const Icon = ICON_MAP[icon];
 
   return (
@@ -105,8 +110,12 @@ function SectionHeader({
 }) {
   return (
     <div className="space-y-1">
-      <h2 className="text-lg font-semibold tracking-tight text-white">{title}</h2>
-      {description ? <p className="text-sm text-white/60">{description}</p> : null}
+      <h2 className="text-lg font-semibold tracking-tight text-white">
+        {title}
+      </h2>
+      {description ? (
+        <p className="text-sm text-white/60">{description}</p>
+      ) : null}
     </div>
   );
 }
@@ -135,7 +144,11 @@ function SpotlightCard({
   );
 }
 
-function ActivityIcon({ status }: { status: DashboardOverviewActivity["status"] }) {
+function ActivityIcon({
+  status,
+}: {
+  status: DashboardOverviewActivity["status"];
+}) {
   if (status === "success") {
     return <CheckCircle2 className="h-4 w-4" />;
   }
@@ -147,7 +160,12 @@ function ActivityIcon({ status }: { status: DashboardOverviewActivity["status"] 
   return <Bell className="h-4 w-4" />;
 }
 
-function ActivityCard({ title, detail, time, status }: DashboardOverviewActivity) {
+function ActivityCard({
+  title,
+  detail,
+  time,
+  status,
+}: DashboardOverviewActivity) {
   return (
     <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-start gap-3">
@@ -211,7 +229,13 @@ function ModuleLink({ label, href, icon }: DashboardOverviewModuleLink) {
   );
 }
 
-function CtaCard({ eyebrow, title, description, href, label }: DashboardOverviewCta) {
+function CtaCard({
+  eyebrow,
+  title,
+  description,
+  href,
+  label,
+}: DashboardOverviewCta) {
   return (
     <Card className="overflow-hidden border border-[#3c9ee0]/20 bg-[linear-gradient(180deg,rgba(60,158,224,0.12),rgba(7,17,32,1))] text-white">
       <CardContent className="space-y-4 p-5">
@@ -221,7 +245,10 @@ function CtaCard({ eyebrow, title, description, href, label }: DashboardOverview
           <p className="text-sm leading-6 text-white/70">{description}</p>
         </div>
 
-        <Button asChild className="w-full bg-[#3c9ee0] text-white hover:bg-[#3692d0]">
+        <Button
+          asChild
+          className="w-full bg-[#3c9ee0] text-white hover:bg-[#3692d0]"
+        >
           <Link href={href}>{label}</Link>
         </Button>
       </CardContent>
@@ -230,7 +257,9 @@ function CtaCard({ eyebrow, title, description, href, label }: DashboardOverview
 }
 
 function HeroHighlights({ children }: { children: ReactNode }) {
-  return <div className="grid w-full max-w-xl grid-cols-2 gap-3">{children}</div>;
+  return (
+    <div className="grid w-full max-w-xl grid-cols-2 gap-3">{children}</div>
+  );
 }
 
 export function DashboardOverviewShell({
@@ -283,7 +312,9 @@ export function DashboardOverviewShell({
                   <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                     {highlight.label}
                   </p>
-                  <p className="mt-2 text-2xl font-semibold">{highlight.value}</p>
+                  <p className="mt-2 text-2xl font-semibold">
+                    {highlight.value}
+                  </p>
                 </div>
               ))}
             </HeroHighlights>

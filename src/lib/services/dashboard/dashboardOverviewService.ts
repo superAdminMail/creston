@@ -8,7 +8,7 @@ type DashboardOverviewRoute =
   | "/account/dashboard/admin"
   | "/account/dashboard/super-admin";
 
-type DashboardOverviewIconKey =
+export type DashboardOverviewIconKey =
   | "users"
   | "userCheck"
   | "wallet"
