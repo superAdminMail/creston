@@ -20,7 +20,6 @@ export function ManagementTeamSectionClient({
   team,
   brandName,
   brandTagline,
-  brandDescription,
 }: {
   team: ManagementTeamMember[];
   brandName: string;
@@ -53,8 +52,8 @@ export function ManagementTeamSectionClient({
       <div className="relative z-10">
         <SectionHeading
           eyebrow="Management Team"
-          title={`Built and guided by experienced leadership at ${brandName}`}
-          description={`${brandName} is led by a team focused on ${brandTagline.toLowerCase()}. ${brandDescription}`}
+          title={`Built by experienced professionals at ${brandName}`}
+          description={`${brandName} is led by a team focused on ${brandTagline.toLowerCase()}`}
           align="center"
         />
 
@@ -165,13 +164,21 @@ export function ManagementTeamSectionClient({
             >
               <motion.div
                 animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.05, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="absolute inset-0 rounded-[2rem] bg-blue-500/20 blur-2xl"
               />
 
               <motion.div
                 animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
                 <ManagementCard
                   member={featured}

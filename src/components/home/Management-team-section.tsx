@@ -14,7 +14,7 @@ export async function ManagementTeamSection() {
     role: member.title?.trim() || member.role?.trim() || "Leadership Team",
     description:
       member.bio?.trim() ||
-      "Provides leadership, operational clarity, and long-term stewardship across Havenstone.",
+      "Provides leadership, operational clarity, and long-term stewardship across the company.",
     photoUrl: member.photoFile?.url ?? null,
     featured: index === 0,
   }));
@@ -26,9 +26,8 @@ export async function ManagementTeamSection() {
   return (
     <ManagementTeamSectionClient
       team={team}
-      brandName={siteConfig?.siteName?.trim() || "Havenstone"}
+      brandName={siteConfig?.siteName?.trim() || "Creston Capital"}
       brandTagline={
-        siteConfig?.siteTagline?.trim() ||
         "Structured financial systems, operational clarity, and long-term trust."
       }
       brandDescription={
