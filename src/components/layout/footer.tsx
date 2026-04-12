@@ -71,6 +71,9 @@ export async function Footer() {
 
   const supportEmail = config?.supportEmail?.trim() || "support@example.com";
   const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
+  const siteAddress =
+    config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
+  const siteLLC = config?.siteLLC?.trim() || `${site.siteName} LLC`;
   const siteTagline = config?.siteTagline?.trim() || site.siteTagline;
 
   return (
@@ -115,16 +118,12 @@ export async function Footer() {
                 <div>
                   <p className="flex items-start gap-2">
                     <MapPin className="mt-0.5 h-4 w-4 text-blue-300" />
-                    <span>
-                      12 Financial District Avenue,
-                      <br />
-                      London, United Kingdom
-                    </span>
+                    <span>{siteAddress}</span>
                   </p>
 
                   <p className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-blue-300" />
-                    {site.siteName} LLC | Reg No: 14583927
+                    {siteLLC}
                   </p>
                 </div>
               </div>

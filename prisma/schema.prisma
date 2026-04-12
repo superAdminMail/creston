@@ -924,6 +924,10 @@ model Conversation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  contactName  String?
+  contactEmail String?
+  source       String?
+
   agentId String?
   agent   User?   @relation("ConversationAgent", fields: [agentId], references: [id])
 
@@ -1014,6 +1018,8 @@ model SiteConfiguration {
 
   siteDescription String?
   siteTagline     String?
+  siteAddress     String?
+  siteLLC         String?
 
   siteLogoFileAssetId String?    @unique
   siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)
@@ -1243,6 +1249,7 @@ enum ConversationType {
   SYSTEM
   ACCOUNT_ISSUES
   INVESTMENT_INQUIRIES
+  CONTACT_INQUIRY
 }
 
 enum ConversationStatus {

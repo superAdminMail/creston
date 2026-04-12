@@ -6,9 +6,8 @@ import HomeContent from "./HomeContent";
 export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
-    title: "Secure Wealth Growth and Retirement Confidence",
-    description:
-      "Havenstone is a secure and modern wealth platform built for long-term investing, retirement confidence, and financial stability. Discover how we can help you achieve your financial goals with innovative investment solutions and expert guidance.",
+    title: "Secure and Modern Wealth Platform",
+    description: "The company is a secure and modern wealth platform.",
   });
 
   return buildSeoMetadata({

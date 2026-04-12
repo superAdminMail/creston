@@ -105,6 +105,8 @@ export function SiteSettingsForm({
   const [siteDescription, setSiteDescription] = useState(
     defaultValues.siteDescription,
   );
+  const [siteAddress, setSiteAddress] = useState(defaultValues.siteAddress);
+  const [siteLLC, setSiteLLC] = useState(defaultValues.siteLLC);
   const [supportEmail, setSupportEmail] = useState(defaultValues.supportEmail);
   const [locale, setLocale] = useState(defaultValues.locale);
   const [seoTitle, setSeoTitle] = useState(defaultValues.seoTitle);
@@ -242,6 +244,8 @@ export function SiteSettingsForm({
       {/* HIDDEN */}
       <input type="hidden" name="keywords" value={serializedKeywords} />
       <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="siteAddress" value={siteAddress} />
+      <input type="hidden" name="siteLLC" value={siteLLC} />
       <input type="hidden" name="seoTitle" value={seoTitle} />
       <input type="hidden" name="seoDescription" value={seoDescription} />
       <input
@@ -309,6 +313,26 @@ export function SiteSettingsForm({
                     value={siteDescription}
                     onChange={(e) => setSiteDescription(e.target.value)}
                     className="w-full rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-slate-400 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Site address</FieldLabel>
+                  <Input
+                    name="siteAddress"
+                    value={siteAddress}
+                    onChange={(e) => setSiteAddress(e.target.value)}
+                    placeholder="123 Main St, Anytown, USA"
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>LLC name</FieldLabel>
+                  <Input
+                    name="siteLLC"
+                    value={siteLLC}
+                    onChange={(e) => setSiteLLC(e.target.value)}
+                    placeholder="Havenstone LLC"
                   />
                 </Field>
 

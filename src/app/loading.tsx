@@ -1,4 +1,14 @@
-export default function Loading() {
+import Image from "next/image";
+
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+
+export default async function Loading() {
+  const config = await getSiteConfigurationCached();
+  const siteName = config?.siteName?.trim() || "Havenstone";
+  const siteTagline =
+    config?.siteTagline?.trim() || "Securing your financial future";
+  const logoUrl = config?.siteLogoFileAsset?.url ?? null;
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050B1F]">
       {/* Background */}
@@ -25,19 +35,29 @@ export default function Loading() {
           <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
             <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-blue-400/20 via-transparent to-sky-300/20" />
             <div className="absolute inset-[1px] rounded-[calc(2rem-1px)] border border-white/5" />
-            <span className="relative text-4xl font-semibold tracking-[0.22em] text-white">
-              C
-            </span>
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={`${siteName} logo`}
+                fill
+                className="relative rounded-[2rem] object-cover p-3"
+                sizes="112px"
+              />
+            ) : (
+              <span className="relative text-4xl font-semibold tracking-[0.22em] text-white">
+                {siteName.slice(0, 1).toUpperCase()}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Brand text */}
         <div className="mt-8 text-center">
           <p className="text-xs font-medium uppercase tracking-[0.45em] text-blue-200/80">
-            Havenstone
+            {siteName}
           </p>
           <p className="mt-3 text-sm text-slate-400">
-            Securing your financial future
+            {siteTagline}
           </p>
         </div>
       </div>

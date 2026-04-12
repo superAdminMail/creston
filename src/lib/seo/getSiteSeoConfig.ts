@@ -4,11 +4,13 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 import type { SiteSeoConfig } from "./types";
 import { firstNonEmpty } from "./resolveSeoFallbacks";
 
-const DEFAULT_SITE_NAME = "Havenstone";
+const DEFAULT_SITE_NAME = "Company";
 const DEFAULT_SITE_DESCRIPTION =
   "A wealth platform designed to help you invest for the long term and achieve financial security.";
 const DEFAULT_SITE_TAGLINE =
   "Invest for the long term, achieve financial security.";
+const DEFAULT_SITE_ADDRESS = "123 Main St, Anytown, USA";
+const DEFAULT_SITE_LLC = "Company LLC";
 const DEFAULT_KEYWORDS = [
   "wealth platform",
   "investment platform",
@@ -62,6 +64,11 @@ export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
     siteTagline:
       firstNonEmpty(config?.siteTagline, DEFAULT_SITE_TAGLINE) ??
       DEFAULT_SITE_TAGLINE,
+    siteAddress:
+      firstNonEmpty(config?.siteAddress, DEFAULT_SITE_ADDRESS) ??
+      DEFAULT_SITE_ADDRESS,
+    siteLLC:
+      firstNonEmpty(config?.siteLLC, DEFAULT_SITE_LLC) ?? DEFAULT_SITE_LLC,
     defaultOgImageUrl,
     defaultTwitterHandle: firstNonEmpty(config?.defaultTwitterHandle),
     locale: firstNonEmpty(config?.locale, "en_US") ?? "en_US",

@@ -12,6 +12,8 @@ export type SiteSettingsFormValues = {
   siteName: string;
   siteDescription: string;
   siteTagline: string;
+  siteAddress: string;
+  siteLLC: string;
   supportEmail: string;
   supportPhone: string;
   locale: string;
@@ -73,6 +75,8 @@ export async function getSiteConfiguration(): Promise<SiteSettingsData> {
       siteName: config?.siteName ?? "",
       siteDescription: config?.siteDescription ?? "",
       siteTagline: config?.siteTagline ?? "",
+      siteAddress: config?.siteAddress ?? "",
+      siteLLC: config?.siteLLC ?? "",
       supportEmail: config?.supportEmail ?? "",
       supportPhone: config?.supportPhone ?? "",
       locale: config?.locale ?? "en_US",
