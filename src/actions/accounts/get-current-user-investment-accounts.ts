@@ -53,7 +53,7 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    redirect("/login");
+    redirect("/auth/login");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({

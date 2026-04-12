@@ -13,6 +13,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 type Decimalish = {
   toNumber(): number;
@@ -85,7 +86,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
   const user = await getCurrentSessionUser();
 
   if (!user?.id) {
-    throw new Error("Unauthorized");
+    redirect("/auth/login");
   }
 
   const investorProfile = await prisma.investorProfile.findUnique({
