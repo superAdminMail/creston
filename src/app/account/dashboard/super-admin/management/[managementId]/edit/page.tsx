@@ -62,6 +62,7 @@ export default async function UpdateManagementPage({ params }: PageProps) {
           phone: management.phone ?? "",
           bio: management.bio ?? "",
           photoFileId: management.photoFileId ?? "",
+          isActive: management.isActive,
           sortOrder: String(management.sortOrder),
         }}
         initialPhotoUrl={management.photoFile?.url ?? null}

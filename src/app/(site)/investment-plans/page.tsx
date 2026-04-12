@@ -10,8 +10,13 @@ export async function generateMetadata() {
   const seo = resolveGenericPageSeo(site, {
     title: "Investment Plans",
     description:
-      "Explore Havenstone investment plans built for long-term wealth growth, personal savings, and financial confidence.",
-    keywords: ["investment plans", "retirement investing", "wealth planning"],
+      `Explore ${site.siteName} investment plans built for long-term wealth growth, personal savings, and financial confidence.`,
+    keywords: [
+      "investment plans",
+      "personal savings",
+      "long-term investing",
+      "wealth planning",
+    ],
   });
 
   return buildSeoMetadata({
@@ -22,6 +27,7 @@ export async function generateMetadata() {
 }
 
 export default async function InvestmentPlansPage() {
+  const site = await getSiteSeoConfig();
   const plans = await getPublicInvestmentPlans();
 
   return (
@@ -29,13 +35,13 @@ export default async function InvestmentPlansPage() {
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-6 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur xl:px-10 xl:py-10">
         <div className="max-w-3xl space-y-4">
           <span className="inline-flex rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">
-            Havenstone plans
+            {site.siteName} plans
           </span>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             Investment plans built for disciplined long-term growth
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Review active Havenstone plans across structured savings and
+            Review active {site.siteName} plans across structured savings and
             long-term capital growth strategies.
           </p>
         </div>
@@ -47,8 +53,8 @@ export default async function InvestmentPlansPage() {
             No investment plans are available right now
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-            We are preparing the next set of Havenstone investment plans. Please
-            check back shortly.
+            We are preparing the next set of {site.siteName} investment plans.
+            Please check back shortly.
           </p>
         </section>
       ) : (
@@ -89,10 +95,10 @@ export default async function InvestmentPlansPage() {
                 ) : null}
               </div>
 
-              <p className="mt-5 flex-1 text-sm leading-7 text-slate-300">
-                {plan.description ||
-                  `${plan.name} offers a structured ${plan.durationLabel.toLowerCase()} approach for investors seeking disciplined capital growth on Havenstone.`}
-              </p>
+                <p className="mt-5 flex-1 text-sm leading-7 text-slate-300">
+                  {plan.description ||
+                  `${plan.name} offers a structured ${plan.durationLabel.toLowerCase()} approach for investors seeking disciplined capital growth on ${site.siteName}.`}
+                </p>
 
               <dl className="mt-6 grid gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
                 <div>

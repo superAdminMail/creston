@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 
 import { UploadButton } from "@/utils/uploadthing";
 import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
@@ -41,6 +42,7 @@ type ManagementFormProps = {
     phone?: string;
     bio?: string;
     photoFileId?: string;
+    isActive?: boolean;
     sortOrder?: string;
   };
   initialPhotoUrl?: string | null;
@@ -78,6 +80,7 @@ export function ManagementForm({
   const [photoId, setPhotoId] = useState(defaultValues?.photoFileId ?? "");
   const [preview, setPreview] = useState<string | null>(initialPhotoUrl);
   const [fileKey, setFileKey] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(defaultValues?.isActive ?? true);
 
   /* ---------------- EFFECT ---------------- */
   useEffect(() => {
@@ -98,6 +101,7 @@ export function ManagementForm({
         <input type="hidden" name="managementId" value={managementId} />
       ) : null}
       <input type="hidden" name="photoFileId" value={photoId} />
+      <input type="hidden" name="isActive" value={String(isActive)} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         {/* LEFT */}
@@ -180,6 +184,27 @@ export function ManagementForm({
                       defaultValue={defaultValues?.sortOrder}
                     />
                     <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Active</FieldLabel>
+                  <FieldContent>
+                    <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-white">
+                          Visible on public site
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Toggle whether this profile appears on the homepage.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={isActive}
+                        onCheckedChange={(checked) => setIsActive(checked === true)}
+                      />
+                    </div>
+                    <FieldError>{state.fieldErrors?.isActive?.[0]}</FieldError>
                   </FieldContent>
                 </Field>
 

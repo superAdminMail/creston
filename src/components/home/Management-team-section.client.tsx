@@ -52,7 +52,7 @@ export function ManagementTeamSectionClient({
       <div className="relative z-10">
         <SectionHeading
           eyebrow="Management Team"
-          title={`Built by experienced professionals at ${brandName}`}
+          title={`Where Expertise Meets Execution at ${brandName}`}
           description={`${brandName} is led by a team focused on ${brandTagline.toLowerCase()}`}
           align="center"
         />

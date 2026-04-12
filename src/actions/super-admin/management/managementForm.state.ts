@@ -9,6 +9,7 @@ export type ManagementFieldName =
   | "phone"
   | "bio"
   | "photoFileId"
+  | "isActive"
   | "sortOrder";
 
 export type ManagementFormActionState = FormActionState<ManagementFieldName>;

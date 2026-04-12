@@ -1,65 +1,56 @@
-"use client";
+import { LineChart, PiggyBank, ShieldCheck, Wallet } from "lucide-react";
 
-import * as React from "react";
-import {
-  FileCheck2,
-  Landmark,
-  LineChart,
-  UserRoundCheck,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
 
 const steps = [
   {
-    icon: Landmark,
+    icon: ShieldCheck,
     step: "01",
-    title: "Select a plan",
+    title: "Complete onboarding and verification",
     description:
-      "Choose an investment plan based on your preferred duration, structure, and estimated return range.",
+      "Create your account, confirm your identity, and finish the compliance steps needed before you can open accounts or fund anything.",
   },
   {
-    icon: UserRoundCheck,
+    icon: PiggyBank,
     step: "02",
-    title: "Create your account",
+    title: "Open a savings or investment account",
     description:
-      "Set up your Havenstone account to manage your investments and track all activity in one place.",
+      "Choose the account type that fits your goal. Savings accounts keep cash available, while investment accounts track plan-based capital separately.",
   },
   {
-    icon: FileCheck2,
+    icon: Wallet,
     step: "03",
-    title: "Fund your investment",
+    title: "Fund the right account",
     description:
-      "Add funds to your selected plan and begin participation based on the defined structure.",
+      "Deposit into savings or place capital into an investment order. Each transaction is recorded against the correct account and stays easy to review.",
   },
   {
     icon: LineChart,
     step: "04",
-    title: "Track estimated growth",
+    title: "Track balances and returns",
     description:
-      "Monitor contributions, plan status, and estimated returns over time with clear visibility.",
+      "Watch balances, interest, earnings, and account performance from your dashboard, with support available whenever you need help.",
   },
-];
+] as const;
 
-export function HowItWorksSection() {
-  const [api, setApi] = React.useState<any>();
+export async function HowItWorksSection() {
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Havenstone";
+  const siteTagline =
+    site?.siteTagline?.trim() ||
+    "Invest for the long term, achieve financial security.";
+  const supportEmail = site?.supportEmail?.trim() || "support@example.com";
 
   return (
     <SectionShell id="how-it-works" className="py-20 sm:py-24">
       <div className="rounded-[2.2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(8,17,37,0.98))] px-6 py-10 shadow-[0_28px_70px_rgba(0,0,0,0.28)] sm:px-10">
         <SectionHeading
           eyebrow="How It Works"
-          title="Onboarding simplified."
-          description="Follow a simple process from funding to tracking without unnecessary complexity."
+          title={`How ${siteName} onboarding works`}
+          description={`${siteName} keeps the process straightforward: verify your profile, open the account you need, fund it, and track everything in one place.`}
         />
 
         {/* DESKTOP TIMELINE */}
@@ -76,7 +67,7 @@ export function HowItWorksSection() {
 
                   <div className="ml-6 rounded-[1.8rem] border border-white/8 bg-white/[0.04] p-6">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs tracking-[0.2em] text-blue-200 uppercase">
+                      <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
                         Step {step.step}
                       </span>
 
@@ -89,7 +80,7 @@ export function HowItWorksSection() {
                       {step.title}
                     </h3>
 
-                    <p className="mt-3 text-sm text-slate-400 leading-7">
+                    <p className="mt-3 text-sm leading-7 text-slate-400">
                       {step.description}
                     </p>
                   </div>
@@ -99,62 +90,55 @@ export function HowItWorksSection() {
           </div>
         </div>
 
-        {/* MOBILE CAROUSEL (CONSISTENT WITH PLANS + TESTIMONIALS) */}
-        <div className="relative mt-10 lg:hidden group">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              align: "center",
-              loop: false,
-            }}
-          >
-            <CarouselContent>
-              {steps.map((step) => {
-                const Icon = step.icon;
+        {/* MOBILE TIMELINE */}
+        <div className="relative mt-10 grid gap-4 lg:hidden">
+          {steps.map((step) => {
+            const Icon = step.icon;
 
-                return (
-                  <CarouselItem key={step.title} className="basis-[85%]">
-                    <div className="px-1">
-                      <div className="rounded-[1.8rem] border border-white/8 bg-white/[0.04] p-6 shadow-sm transition">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs tracking-[0.2em] text-blue-200 uppercase">
-                            Step {step.step}
-                          </span>
+            return (
+              <div
+                key={step.title}
+                className="rounded-[1.8rem] border border-white/8 bg-white/[0.04] p-6 shadow-sm transition"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
+                    Step {step.step}
+                  </span>
 
-                          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
-                            <Icon className="h-5 w-5 text-blue-200" />
-                          </div>
-                        </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
+                    <Icon className="h-5 w-5 text-blue-200" />
+                  </div>
+                </div>
 
-                        <h3 className="mt-6 text-lg font-semibold text-white">
-                          {step.title}
-                        </h3>
+                <h3 className="mt-6 text-lg font-semibold text-white">
+                  {step.title}
+                </h3>
 
-                        <p className="mt-3 text-sm text-slate-400 leading-7">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-                  </CarouselItem>
-                );
-              })}
-            </CarouselContent>
-          </Carousel>
+                <p className="mt-3 text-sm leading-7 text-slate-400">
+                  {step.description}
+                </p>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* CHEVRONS */}
-          <button
-            onClick={() => api?.scrollPrev()}
-            className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition"
-          >
-            <ChevronLeft className="h-7 w-7 text-white/70 hover:text-white" />
-          </button>
-
-          <button
-            onClick={() => api?.scrollNext()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition"
-          >
-            <ChevronRight className="h-7 w-7 text-white/70 hover:text-white" />
-          </button>
+        <div className="mt-10 rounded-[1.6rem] border border-white/8 bg-white/[0.03] p-5 text-sm text-slate-300">
+          <p className="leading-7">
+            Need help getting started? Reach the support team at{" "}
+            <span className="text-white">{supportEmail}</span> and they’ll help
+            you move through onboarding, account setup, and funding.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-slate-500">
+            <span className="rounded-full border border-white/8 px-3 py-2">
+              Savings accounts
+            </span>
+            <span className="rounded-full border border-white/8 px-3 py-2">
+              Investment accounts
+            </span>
+            <span className="rounded-full border border-white/8 px-3 py-2">
+              Verification
+            </span>
+          </div>
         </div>
       </div>
     </SectionShell>

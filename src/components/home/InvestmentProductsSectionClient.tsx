@@ -1,19 +1,19 @@
 "use client";
 
-import Autoplay from "embla-carousel-autoplay";
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import type { PublicInvestmentProductViewModel } from "@/lib/service/publicInvestmentCatalog";
-import {
-  Carousel,
-  CarouselApi,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+
+import { Autoplay, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperInstance } from "swiper";
+
+import "swiper/css";
+import "swiper/css/pagination";
 
 type InvestmentProductsSectionClientProps = {
   products: PublicInvestmentProductViewModel[];
@@ -33,32 +33,8 @@ export function InvestmentProductsSectionClient({
   products,
   siteName,
 }: InvestmentProductsSectionClientProps) {
-  const [api, setApi] = useState<CarouselApi>();
+  const [swiper, setSwiper] = useState<SwiperInstance | null>(null);
   const [current, setCurrent] = useState(0);
-
-  const autoplay = useRef(
-    Autoplay({
-      delay: 4200,
-      stopOnInteraction: true,
-      stopOnMouseEnter: true,
-    }),
-  );
-
-  useEffect(() => {
-    if (!api) return;
-
-    setCurrent(api.selectedScrollSnap());
-
-    const onSelect = () => {
-      setCurrent(api.selectedScrollSnap());
-    };
-
-    api.on("select", onSelect);
-
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api]);
 
   return (
     <SectionShell id="investment-products" className="py-20 sm:py-24">
@@ -88,22 +64,38 @@ export function InvestmentProductsSectionClient({
         </div>
       ) : (
         <div className="relative mt-12">
-          <Carousel
-            setApi={setApi}
-            plugins={[autoplay.current]}
-            className="w-full"
-            opts={{
-              align: "start",
-              loop: products.length > 1,
+          <Swiper
+            onSwiper={setSwiper}
+            onSlideChange={(instance) => setCurrent(instance.activeIndex)}
+            modules={[Autoplay, Pagination]}
+            slidesPerView={1}
+            spaceBetween={12}
+            loop={products.length > 1}
+            speed={650}
+            autoplay={
+              products.length > 1
+                ? {
+                    delay: 4200,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                  }
+                : false
+            }
+            breakpoints={{
+              768: {
+                slidesPerView: 2,
+                spaceBetween: 12,
+              },
+              1280: {
+                slidesPerView: 3,
+                spaceBetween: 12,
+              },
             }}
+            className="w-full"
           >
-            <CarouselContent className="-ml-3">
-              {products.map((product) => (
-                <CarouselItem
-                  key={product.id}
-                  className="pl-3 md:basis-1/2 xl:basis-1/3"
-                >
-                  <article className="group relative h-full overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,17,37,0.98))] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-1 hover:border-blue-300/20">
+            {products.map((product) => (
+              <SwiperSlide key={product.id} className="h-auto">
+                <article className="group relative h-full overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.98),rgba(8,17,37,0.98))] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-1 hover:border-blue-300/20">
                     <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/40 to-transparent" />
 
                     <div className="flex items-start justify-between gap-4">
@@ -186,17 +178,16 @@ export function InvestmentProductsSectionClient({
                       </Link>
                     </div>
                   </article>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
           {products.length > 1 ? (
             <div className="mt-6 flex items-center justify-center gap-3">
               {products.map((product, index) => (
                 <button
                   key={product.id}
-                  onClick={() => api?.scrollTo(index)}
+                  onClick={() => swiper?.slideToLoop(index)}
                   className={`h-2.5 rounded-full transition ${
                     index === current
                       ? "w-8 bg-blue-400"

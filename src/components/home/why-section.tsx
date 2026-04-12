@@ -103,8 +103,7 @@ export async function WhySection() {
                   Designed for a modern financial experience
                 </h3>
                 <p className="mt-2 text-sm leading-7 text-slate-400">
-                  Clean, premium interfaces designed to reflect the seriousness
-                  of long-term financial planning.
+                  Clean and premium interfaces for better user experience.
                 </p>
               </div>
             </div>

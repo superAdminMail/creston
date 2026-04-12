@@ -10,7 +10,7 @@ export async function generateMetadata() {
   const seo = resolveGenericPageSeo(site, {
     title: "Investment Products",
     description:
-      "Explore Havenstone investment products across fixed and market-led strategies, structured for long-term growth and financial confidence.",
+      `Explore ${site.siteName} investment products across fixed and market-led strategies, structured for long-term growth and financial confidence.`,
     keywords: ["investment products", "wealth platform", "portfolio options"],
   });
 
@@ -31,6 +31,7 @@ function getInitials(name: string) {
 }
 
 export default async function InvestmentProductsPage() {
+  const site = await getSiteSeoConfig();
   const products = await getPublicInvestmentProducts();
 
   return (
@@ -38,15 +39,15 @@ export default async function InvestmentProductsPage() {
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-6 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur xl:px-10 xl:py-10">
         <div className="max-w-3xl space-y-4">
           <span className="inline-flex rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">
-            Havenstone products
+            {site.siteName} products
           </span>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             Investment products designed around clear long-term strategies
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Explore the active Havenstone investment product catalog, compare
-            plan coverage, and move into the right strategy for your timeline
-            and target entry amount.
+            Explore the active {site.siteName} investment product catalog,
+            compare plan coverage, and move into the right strategy for your
+            timeline and target entry amount.
           </p>
         </div>
       </section>
@@ -57,8 +58,8 @@ export default async function InvestmentProductsPage() {
             No investment products are available right now
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-            We are preparing the next set of Havenstone offerings. Please check
-            back shortly.
+            We are preparing the next set of {site.siteName} offerings. Please
+            check back shortly.
           </p>
         </section>
       ) : (

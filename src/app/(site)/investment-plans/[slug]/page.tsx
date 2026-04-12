@@ -55,7 +55,10 @@ export default async function InvestmentPlanDetailsPage(
   props: PageProps<"/investment-plans/[slug]">,
 ) {
   const { slug } = await props.params;
-  const plan = await getPublicInvestmentPlanBySlug(slug);
+  const [site, plan] = await Promise.all([
+    getSiteSeoConfig(),
+    getPublicInvestmentPlanBySlug(slug),
+  ]);
 
   if (!plan) {
     notFound();
@@ -88,7 +91,7 @@ export default async function InvestmentPlanDetailsPage(
             </h1>
             <p className="text-sm leading-7 text-slate-300 sm:text-base">
               {plan.description ||
-                `${plan.name} is a structured Havenstone plan available for investors seeking a disciplined ${plan.periodLabel.toLowerCase()} strategy.`}
+                `${plan.name} is a structured ${site.siteName} plan available for investors seeking a disciplined ${plan.periodLabel.toLowerCase()} strategy.`}
             </p>
           </div>
 
@@ -107,7 +110,7 @@ export default async function InvestmentPlanDetailsPage(
               href="/auth/get-started"
               className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
             >
-              Get started with Havenstone
+              Get started with {site.siteName}
             </Link>
           </div>
         </div>
@@ -224,7 +227,7 @@ export default async function InvestmentPlanDetailsPage(
                 </h3>
                 <p className="text-sm leading-7 text-slate-300">
                   {plan.investment.description ||
-                    `${plan.investment.name} is available on Havenstone for investors focused on a structured, long-term approach to financial stability.`}
+                    `${plan.investment.name} is available on ${site.siteName} for investors focused on a structured, long-term approach to financial stability.`}
                 </p>
               </div>
             </div>
@@ -233,8 +236,8 @@ export default async function InvestmentPlanDetailsPage(
           <article className="rounded-[1.75rem] border border-white/10 bg-[#0b1120]/90 p-6 shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
             <h2 className="text-xl font-semibold text-white">Next step</h2>
             <p className="mt-3 text-sm leading-7 text-slate-300">
-              Open your Havenstone account to review eligibility, complete your
-              investment profile, and continue with a secure order flow.
+              Open your {site.siteName} account to review eligibility, complete
+              your investment profile, and continue with a secure order flow.
             </p>
             <div className="mt-5 flex flex-col gap-3">
               <Link
@@ -247,7 +250,7 @@ export default async function InvestmentPlanDetailsPage(
                 href="/contact"
                 className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/10 px-5 text-sm font-medium text-slate-200 transition-colors hover:bg-white/[0.04]"
               >
-                Speak with Havenstone
+                Speak with {site.siteName}
               </Link>
             </div>
           </article>

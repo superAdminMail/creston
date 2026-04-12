@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Landmark, ShieldCheck, TrendingUp } from "lucide-react";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { getHeroSnapshot } from "@/lib/service/getHeroSnapshot";
 
 const trustPoints = [
   {
@@ -21,7 +22,10 @@ const trustPoints = [
 ];
 
 export async function HeroSection() {
-  const site = await getSiteSeoConfig();
+  const [site, snapshot] = await Promise.all([
+    getSiteSeoConfig(),
+    getHeroSnapshot(),
+  ]);
 
   return (
     <section className="relative overflow-hidden">
@@ -47,7 +51,7 @@ export async function HeroSection() {
       </div>
 
       {/* CONTENT */}
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:py-22 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-24">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-18 sm:px-6 md:py-22 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-22">
         {/* LEFT */}
         <div className="max-w-2xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase text-blue-100">
@@ -101,7 +105,7 @@ export async function HeroSection() {
           </div>
         </div>
 
-        {/* RIGHT PANEL (UNCHANGED STRUCTURE, JUST SLIGHTLY RESPONSIVE) */}
+        {/* RIGHT PANEL  */}
         <div className="relative mt-10 lg:mt-0">
           <div className="absolute inset-0 rounded-[2rem] bg-blue-500/10 blur-2xl" />
 
@@ -109,28 +113,30 @@ export async function HeroSection() {
             <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
               <div>
                 <p className="text-xs text-slate-400">Snapshot</p>
-                <p className="text-sm text-white/80">Live overview</p>
+                <p className="text-sm text-white/80">{snapshot.statusLabel} overview</p>
               </div>
-              <span className="text-xs text-blue-300">Active</span>
+              <span className="text-xs text-blue-300">{snapshot.statusLabel}</span>
             </div>
 
             <div className="mt-5">
               <p className="text-sm text-slate-400">Total Value</p>
-              <p className="text-3xl font-semibold text-white/80">$42.8M</p>
+              <p className="text-3xl font-semibold text-white/80">
+                {snapshot.totalValueLabel}
+              </p>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
-                Top: Stocks
+                Top: {snapshot.topLabel}
               </div>
               <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
-                Plan: Core Growth
+                Plan: {snapshot.planLabel}
               </div>
               <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
-                Duration: Medium
+                Duration: {snapshot.durationLabel}
               </div>
               <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
-                18k+ Users
+                {snapshot.userCountLabel}
               </div>
             </div>
           </div>
