@@ -42,6 +42,7 @@ export default async function SuperAdminSettingsPage() {
           <SiteSettingsForm
             defaultValues={data.values}
             fileAssetOptions={data.fileAssetOptions}
+            previews={data.previews}
           />
         </TabsContent>
 
