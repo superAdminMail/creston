@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
   createInvestmentOrderCryptoCheckout,
   CreateInvestmentOrderCryptoCheckoutResult,
-} from "@/lib/payments/createInvestmentOrderCryptoCheckout";
+} from "@/lib/payments/crypto/createInvestmentOrderCryptoCheckout";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 
 export type StartInvestmentOrderCryptoCheckoutResult =
