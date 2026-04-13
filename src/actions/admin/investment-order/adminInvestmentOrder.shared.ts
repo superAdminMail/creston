@@ -10,10 +10,7 @@ export function formatStatusLabel(status: InvestmentOrderStatus) {
 }
 
 export function canConfirmInvestmentOrderStatus(status: InvestmentOrderStatus) {
-  return (
-    status === InvestmentOrderStatus.PAID ||
-    status === InvestmentOrderStatus.PENDING_CONFIRMATION
-  );
+  return status === InvestmentOrderStatus.PAID;
 }
 
 export async function assertAdminInvestmentOrderAccess() {

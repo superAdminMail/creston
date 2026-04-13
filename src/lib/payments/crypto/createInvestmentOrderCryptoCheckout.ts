@@ -7,22 +7,11 @@ import {
   PlatformPaymentMethodType,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { createBitPayInvoice, toBitPayInvoiceStatus } from "./bitPay";
 
 type CreateInvestmentOrderCryptoCheckoutInput = {
   investmentOrderId: string;
   userId: string;
-};
-
-type BitPayInvoiceCreateResult = {
-  invoiceId: string;
-  invoiceUrl: string;
-  status: "new" | "paid" | "confirmed" | "complete" | "expired" | "invalid";
-  price: string;
-  currency: string;
-  token?: string | null;
-  orderId?: string | null;
-  posData?: string | null;
-  raw: unknown;
 };
 
 export type CreateInvestmentOrderCryptoCheckoutResult = {
@@ -34,27 +23,6 @@ export type CreateInvestmentOrderCryptoCheckoutResult = {
   currency: string;
 };
 
-function toBitPayStatus(
-  value: string | null | undefined,
-): "NEW" | "PAID" | "CONFIRMED" | "COMPLETE" | "EXPIRED" | "INVALID" {
-  switch ((value ?? "").toLowerCase()) {
-    case "new":
-      return "NEW";
-    case "paid":
-      return "PAID";
-    case "confirmed":
-      return "CONFIRMED";
-    case "complete":
-      return "COMPLETE";
-    case "expired":
-      return "EXPIRED";
-    case "invalid":
-      return "INVALID";
-    default:
-      return "NEW";
-  }
-}
-
 function assertEnv(name: string): string {
   const value = process.env[name];
   if (!value || !value.trim()) {
@@ -63,88 +31,11 @@ function assertEnv(name: string): string {
   return value.trim();
 }
 
-async function createBitPayInvoice(params: {
-  price: Prisma.Decimal | number | string;
-  currency: string;
-  orderId: string;
-  itemDesc: string;
-  notificationURL: string;
-  redirectURL: string;
-  token: string;
-}): Promise<BitPayInvoiceCreateResult> {
-  const response = await fetch("https://api.bitpay.com/invoices", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${params.token}`,
-    },
-    body: JSON.stringify({
-      price:
-        typeof params.price === "string"
-          ? Number(params.price)
-          : Number(params.price),
-      currency: params.currency,
-      orderId: params.orderId,
-      itemDesc: params.itemDesc,
-      notificationURL: params.notificationURL,
-      redirectURL: params.redirectURL,
-      transactionSpeed: "medium",
-      fullNotifications: true,
-      extendedNotifications: true,
-    }),
-    cache: "no-store",
-  });
-
-  const raw = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message =
-      raw && typeof raw === "object" && "error" in raw
-        ? String(
-            (raw as { error?: unknown }).error ??
-              "BitPay invoice creation failed",
-          )
-        : "BitPay invoice creation failed";
-    throw new Error(message);
-  }
-
-  const data =
-    raw && typeof raw === "object" && "data" in raw
-      ? (raw as { data: Record<string, unknown> }).data
-      : null;
-
-  if (!data) {
-    throw new Error("Invalid BitPay response: missing invoice data");
-  }
-
-  const invoiceId = String(data.id ?? "");
-  const invoiceUrl = String(data.url ?? "");
-
-  if (!invoiceId || !invoiceUrl) {
-    throw new Error("Invalid BitPay response: missing invoice id or url");
-  }
-
-  return {
-    invoiceId,
-    invoiceUrl,
-    status: (
-      (data.status as string | undefined) ?? "new"
-    ).toLowerCase() as BitPayInvoiceCreateResult["status"],
-    price: String(data.price ?? params.price),
-    currency: String(data.currency ?? params.currency),
-    token: data.token ? String(data.token) : null,
-    orderId: data.orderId ? String(data.orderId) : null,
-    posData: data.posData ? String(data.posData) : null,
-    raw,
-  };
-}
-
 export async function createInvestmentOrderCryptoCheckout({
   investmentOrderId,
   userId,
 }: CreateInvestmentOrderCryptoCheckoutInput): Promise<CreateInvestmentOrderCryptoCheckoutResult> {
   const appUrl = assertEnv("NEXT_PUBLIC_APP_URL");
-  const bitPayToken = assertEnv("BITPAY_API_TOKEN");
 
   const order = await prisma.investmentOrder.findFirst({
     where: {
@@ -282,13 +173,12 @@ export async function createInvestmentOrderCryptoCheckout({
   const itemDesc = `${order.investmentPlan.investment.name} - ${order.investmentPlan.name}`;
 
   const invoice = await createBitPayInvoice({
-    price: remainingAmount,
+    price: remainingAmount.toString(),
     currency: order.currency,
     orderId: internalReference,
     itemDesc,
     notificationURL,
     redirectURL,
-    token: bitPayToken,
   });
 
   const created = await prisma.$transaction(async (tx) => {
@@ -320,7 +210,7 @@ export async function createInvestmentOrderCryptoCheckout({
             bitpayInvoiceId: invoice.invoiceId,
             bitpayOrderId: invoice.orderId,
             bitpayToken: invoice.token,
-            status: toBitPayStatus(invoice.status),
+            status: toBitPayInvoiceStatus(invoice.status),
             price: remainingAmount,
             currency: order.currency,
             cryptoAsset,
