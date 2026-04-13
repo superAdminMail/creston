@@ -1,6 +1,7 @@
 "use server";
 
-import { auth, getAuthBaseUrl } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/config/appUrl";
 import { prisma } from "@/lib/prisma";
 
 async function checkRateLimit(email: string, ip?: string | null) {
@@ -35,7 +36,7 @@ export async function forgotPassword(email: string, ip?: string | null) {
   await auth.api.requestPasswordReset({
     body: {
       email: normalizedEmail,
-      redirectTo: `${getAuthBaseUrl()}/auth/reset-password`,
+      redirectTo: `${getAppBaseUrl()}/auth/reset-password`,
     },
   });
 

@@ -24,7 +24,7 @@ function isDefinedOrigin(value: string | null): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-export function getAuthBaseUrl() {
+function getAuthBaseUrl() {
   return (
     normalizeOrigin(process.env.BETTER_AUTH_URL) ??
     normalizeOrigin(process.env.APP_BASE_URL) ??
@@ -95,18 +95,18 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       const site = await getSiteConfigurationCached();
 
-        void sendEmail({
-          to: user.email,
-          subject: `Verify your ${site?.siteName?.trim() || "Company"} email`,
-          html: VerifyEmailTemplate({
-            verifyUrl: url,
-            expiresInMinutes: 60,
-            siteName: site?.siteName?.trim() || "Company",
-            siteLogoUrl: site?.siteLogoFileAsset?.url ?? null,
-          }),
-          from: process.env.EMAIL_FROM_NO_REPLY,
-          replyTo: process.env.EMAIL_FROM_SUPPORT,
-        });
+      void sendEmail({
+        to: user.email,
+        subject: `Verify your ${site?.siteName?.trim() || "Company"} email`,
+        html: VerifyEmailTemplate({
+          verifyUrl: url,
+          expiresInMinutes: 60,
+          siteName: site?.siteName?.trim() || "Company",
+          siteLogoUrl: site?.siteLogoFileAsset?.url ?? null,
+        }),
+        from: process.env.EMAIL_FROM_NO_REPLY,
+        replyTo: process.env.EMAIL_FROM_SUPPORT,
+      });
     },
   },
 
