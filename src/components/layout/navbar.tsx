@@ -1,5 +1,3 @@
-// /layout/navbar.tsx
-
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { NavbarClient } from "./navbar.client";

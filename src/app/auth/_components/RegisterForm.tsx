@@ -60,7 +60,7 @@ export default function RegisterForm({
         return;
       }
 
-      router.push("/account/dashboard");
+      router.replace("/auth/onboarding");
       router.refresh();
     });
   };

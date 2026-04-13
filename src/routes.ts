@@ -11,7 +11,7 @@ export const publicRoutes = [
   "/terms",
   "/compliance",
   "/contact",
-];
+] as const;
 
 export const authRoutes = [
   "/auth/login",
@@ -21,13 +21,16 @@ export const authRoutes = [
   "/auth/reset-password",
   "/auth/forgot-password",
   "/error",
-];
+] as const;
 
 export const apiAuthPrefix = "/api/auth";
 
-export const DEFAULT_LOGIN_REDIRECT = "/account/dashboard";
+export const DEFAULT_LOGIN_REDIRECT = "/account";
 export const DEFAULT_ONBOARDING_REDIRECT = "/auth/onboarding";
 
-export const staffRoutePrefix = "/account";
+export const protectedRoutePrefixes = ["/account"] as const;
 
-export const sharedRoutes = ["/profile", "/settings"];
+export const sharedRoutes = [
+  "/account/dashboard/profile",
+  "/account/dashboard/settings",
+] as const;

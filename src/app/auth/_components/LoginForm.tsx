@@ -60,7 +60,7 @@ export default function LoginForm({
         return;
       }
 
-      router.push("/account/dashboard");
+      router.replace("/account");
       router.refresh();
     });
   };

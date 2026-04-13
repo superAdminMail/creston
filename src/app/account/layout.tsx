@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AccountLayoutShell } from "@/components/account/AccountLayoutShell";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { normalizeUser } from "@/lib/normalizeUser";
 import { prisma } from "@/lib/prisma";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
@@ -27,7 +27,7 @@ export async function generateMetadata() {
   });
 }
 
-export default async function ProfileLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -38,43 +38,55 @@ export default async function ProfileLayout({
     redirect("/auth/login");
   }
 
-  const onboardingState = await prisma.user.findUnique({
-    where: { id: sessionUser.id },
-    select: {
-      role: true,
-      hasCompletedOnboarding: true,
-      investorProfile: {
-        select: {
-          id: true,
+  const [dbUser, site, config] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: {
+        role: true,
+        emailVerified: true,
+        hasCompletedOnboarding: true,
+        profileAvatarFileAsset: {
+          select: {
+            storageKey: true,
+            url: true,
+          },
+        },
+        investorProfile: {
+          select: {
+            id: true,
+            kycStatus: true,
+          },
         },
       },
-    },
-  });
-
-  if (!onboardingState) {
-    redirect("/auth/login");
-  }
-
-  if (
-    onboardingState.role === "USER" &&
-    !onboardingState.hasCompletedOnboarding &&
-    !onboardingState.investorProfile
-  ) {
-    redirect(DEFAULT_ONBOARDING_REDIRECT);
-  }
-
-  let user = null;
-  const [site, config] = await Promise.all([
+    }),
     getSiteSeoConfig(),
     getSiteConfigurationCached(),
   ]);
 
-  try {
-    user = await getCurrentUser();
-  } catch (error) {
-    console.error("Error fetching current user:", error);
-    user = null;
+  if (!dbUser) {
+    redirect("/auth/login");
   }
+
+  if (
+    dbUser.role === "USER" &&
+    !dbUser.hasCompletedOnboarding &&
+    !dbUser.investorProfile?.id
+  ) {
+    redirect(DEFAULT_ONBOARDING_REDIRECT);
+  }
+
+  const user = normalizeUser({
+    id: sessionUser.id,
+    email: sessionUser.email,
+    name: sessionUser.name,
+    image: sessionUser.image,
+    role: dbUser.role,
+    emailVerified: dbUser.emailVerified,
+    profileAvatarFileAsset: dbUser.profileAvatarFileAsset,
+    investorProfile: dbUser.investorProfile
+      ? { kycStatus: dbUser.investorProfile.kycStatus }
+      : null,
+  });
 
   if (!user) {
     redirect("/auth/login");

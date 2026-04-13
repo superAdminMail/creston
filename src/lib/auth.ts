@@ -26,9 +26,9 @@ function isDefinedOrigin(value: string | null): value is string {
 
 function getAuthBaseUrl() {
   return (
-    normalizeOrigin(process.env.BETTER_AUTH_URL) ??
     normalizeOrigin(process.env.APP_BASE_URL) ??
     normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL) ??
+    normalizeOrigin(process.env.BETTER_AUTH_URL) ??
     normalizeOrigin(process.env.NEXTAUTH_URL) ??
     "http://localhost:3000"
   );
