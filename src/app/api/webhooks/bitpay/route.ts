@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  BitPayInvoiceStatus,
   CryptoFundingIntentStatus,
   CryptoWebhookProcessingStatus,
   CryptoWebhookSource,
-  InvestmentOrderStatus,
   Prisma,
 } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
+import { applySuccessfulCryptoFundingToInvestmentOrder } from "@/lib/payments/crypto/applySuccessfulCryptoFundingToInvestmentOrder";
+import {
+  retrieveBitPayInvoice,
+  toBitPayInvoiceStatus,
+} from "@/lib/payments/crypto/bitPay";
 
 type BitPayWebhookPayload = {
   event?: {
@@ -18,44 +21,15 @@ type BitPayWebhookPayload = {
   data?: {
     id?: string;
     status?: string;
-    price?: number | string;
-    currency?: string;
-    orderId?: string;
-    url?: string;
-    token?: string;
-    posData?: string;
-    exceptionStatus?: string | null;
-    amountPaid?: number | string | null;
-    amountDue?: number | string | null;
-    rate?: number | string | null;
   };
 };
-
-function mapBitPayInvoiceStatus(
-  value: string | null | undefined,
-): BitPayInvoiceStatus {
-  switch ((value ?? "").toLowerCase()) {
-    case "new":
-      return BitPayInvoiceStatus.NEW;
-    case "paid":
-      return BitPayInvoiceStatus.PAID;
-    case "confirmed":
-      return BitPayInvoiceStatus.CONFIRMED;
-    case "complete":
-      return BitPayInvoiceStatus.COMPLETE;
-    case "expired":
-      return BitPayInvoiceStatus.EXPIRED;
-    case "invalid":
-      return BitPayInvoiceStatus.INVALID;
-    default:
-      return BitPayInvoiceStatus.NEW;
-  }
-}
 
 function mapFundingIntentStatus(
   value: string | null | undefined,
 ): CryptoFundingIntentStatus {
   switch ((value ?? "").toLowerCase()) {
+    case "new":
+      return CryptoFundingIntentStatus.REQUIRES_ACTION;
     case "paid":
     case "confirmed":
       return CryptoFundingIntentStatus.AWAITING_PROVIDER_CONFIRMATION;
@@ -65,8 +39,6 @@ function mapFundingIntentStatus(
       return CryptoFundingIntentStatus.EXPIRED;
     case "invalid":
       return CryptoFundingIntentStatus.FAILED;
-    case "new":
-      return CryptoFundingIntentStatus.REQUIRES_ACTION;
     default:
       return CryptoFundingIntentStatus.PROCESSING;
   }
@@ -91,20 +63,15 @@ function decimalOrNull(value: unknown): Prisma.Decimal | null {
   }
 }
 
-function getIdempotencyKey(payload: BitPayWebhookPayload): string | null {
-  const invoiceId = payload.data?.id?.trim();
-  const status = payload.data?.status?.trim()?.toLowerCase();
-  const eventName = payload.event?.name?.trim()?.toLowerCase() ?? "bitpay";
-  if (!invoiceId || !status) return null;
-  return `bitpay:${eventName}:${invoiceId}:${status}`;
+function getIdempotencyKey(
+  invoiceId: string,
+  status: string,
+  eventName?: string,
+): string {
+  return `bitpay:${(eventName ?? "bitpay").toLowerCase()}:${invoiceId}:${status.toLowerCase()}`;
 }
 
 export async function POST(request: NextRequest) {
-  const signature =
-    request.headers.get("x-signature") ??
-    request.headers.get("x-bitpay-sig") ??
-    request.headers.get("x-bitpay-signature");
-
   let payload: BitPayWebhookPayload;
 
   try {
@@ -125,25 +92,36 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let verifiedInvoice;
+  try {
+    verifiedInvoice = await retrieveBitPayInvoice(invoiceId);
+  } catch (error) {
+    console.error("Failed to verify BitPay invoice via API:", error);
+    return NextResponse.json(
+      { error: "Unable to verify invoice with BitPay" },
+      { status: 502 },
+    );
+  }
+
   const eventType =
     payload.event?.name?.trim() ||
-    payload.data?.status?.trim() ||
+    verifiedInvoice.status ||
     "bitpay.invoice.unknown";
 
-  const idempotencyKey = getIdempotencyKey(payload);
+  const idempotencyKey = getIdempotencyKey(
+    invoiceId,
+    verifiedInvoice.status,
+    payload.event?.name,
+  );
 
-  const existingEvent = idempotencyKey
-    ? await prisma.cryptoWebhookEvent.findUnique({
-        where: { idempotencyKey },
-        select: {
-          id: true,
-          processingStatus: true,
-        },
-      })
-    : null;
+  const existingProcessedEvent = await prisma.cryptoWebhookEvent.findUnique({
+    where: { idempotencyKey },
+    select: { id: true, processingStatus: true },
+  });
 
   if (
-    existingEvent?.processingStatus === CryptoWebhookProcessingStatus.PROCESSED
+    existingProcessedEvent?.processingStatus ===
+    CryptoWebhookProcessingStatus.PROCESSED
   ) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
@@ -159,30 +137,14 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const webhookEvent = await prisma.cryptoWebhookEvent.upsert({
-    where: {
-      idempotencyKey:
-        idempotencyKey ?? `bitpay:fallback:${invoiceId}:${Date.now()}`,
-    },
-    update: {
-      payload: payload as Prisma.InputJsonValue,
-      signature,
-      providerObjectId: invoiceId,
-      fundingIntentId: invoiceRecord?.fundingIntentId ?? null,
-      eventType,
-      source: CryptoWebhookSource.BITPAY,
-      processingStatus: CryptoWebhookProcessingStatus.RECEIVED,
-      errorMessage: null,
-      failedAt: null,
-    },
-    create: {
+  const webhookEvent = await prisma.cryptoWebhookEvent.create({
+    data: {
       source: CryptoWebhookSource.BITPAY,
       eventType,
       processingStatus: CryptoWebhookProcessingStatus.RECEIVED,
       fundingIntentId: invoiceRecord?.fundingIntentId ?? null,
       providerObjectId: invoiceId,
       idempotencyKey,
-      signature,
       payload: payload as Prisma.InputJsonValue,
     },
   });
@@ -200,12 +162,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  const bitpayStatus = mapBitPayInvoiceStatus(payload.data?.status);
-  const fundingIntentStatus = mapFundingIntentStatus(payload.data?.status);
+  const verifiedStatus = verifiedInvoice.status;
+  const bitpayStatus = toBitPayInvoiceStatus(verifiedStatus);
+  const fundingIntentStatus = mapFundingIntentStatus(verifiedStatus);
 
-  const amountPaid = decimalOrNull(payload.data?.amountPaid);
-  const amountDue = decimalOrNull(payload.data?.amountDue);
-  const exchangeRate = decimalOrNull(payload.data?.rate);
+  const amountPaid = decimalOrNull(verifiedInvoice.amountPaid);
+  const amountDue = decimalOrNull(verifiedInvoice.amountDue);
+  const exchangeRate = decimalOrNull(verifiedInvoice.rate);
+  const creditedFiatAmount =
+    decimalOrNull(verifiedInvoice.price) ??
+    invoiceRecord.fundingIntent.creditedFiatAmount ??
+    invoiceRecord.fundingIntent.fiatAmount;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -216,44 +183,44 @@ export async function POST(request: NextRequest) {
           amountPaid: amountPaid ?? undefined,
           amountDue: amountDue ?? undefined,
           exchangeRate: exchangeRate ?? undefined,
-          invoiceUrl: payload.data?.url ?? invoiceRecord.invoiceUrl,
-          bitpayOrderId: payload.data?.orderId ?? invoiceRecord.bitpayOrderId,
-          bitpayToken: payload.data?.token ?? invoiceRecord.bitpayToken,
-          posData: payload.data?.posData ?? invoiceRecord.posData,
-          rawStatusPayload: payload as Prisma.InputJsonValue,
+          invoiceUrl: verifiedInvoice.invoiceUrl ?? invoiceRecord.invoiceUrl,
+          bitpayOrderId: verifiedInvoice.orderId ?? invoiceRecord.bitpayOrderId,
+          bitpayToken: verifiedInvoice.token ?? invoiceRecord.bitpayToken,
+          posData: verifiedInvoice.posData ?? invoiceRecord.posData,
+          rawStatusPayload: verifiedInvoice.raw as Prisma.InputJsonValue,
           paidAt:
-            bitpayStatus === BitPayInvoiceStatus.PAID
-              ? new Date()
+            bitpayStatus === "PAID"
+              ? (invoiceRecord.paidAt ?? new Date())
               : invoiceRecord.paidAt,
           confirmedAt:
-            bitpayStatus === BitPayInvoiceStatus.CONFIRMED
-              ? new Date()
+            bitpayStatus === "CONFIRMED"
+              ? (invoiceRecord.confirmedAt ?? new Date())
               : invoiceRecord.confirmedAt,
           completedAt:
-            bitpayStatus === BitPayInvoiceStatus.COMPLETE
-              ? new Date()
+            bitpayStatus === "COMPLETE"
+              ? (invoiceRecord.completedAt ?? new Date())
               : invoiceRecord.completedAt,
           expiredAt:
-            bitpayStatus === BitPayInvoiceStatus.EXPIRED
-              ? new Date()
+            bitpayStatus === "EXPIRED"
+              ? (invoiceRecord.expiredAt ?? new Date())
               : invoiceRecord.expiredAt,
           invalidAt:
-            bitpayStatus === BitPayInvoiceStatus.INVALID
-              ? new Date()
+            bitpayStatus === "INVALID"
+              ? (invoiceRecord.invalidAt ?? new Date())
               : invoiceRecord.invalidAt,
         },
       });
 
-      if (isTerminalFailure(payload.data?.status)) {
+      if (isTerminalFailure(verifiedStatus)) {
         await tx.cryptoFundingIntent.update({
           where: { id: invoiceRecord.fundingIntentId },
           data: {
             status: fundingIntentStatus,
             failedAt: new Date(),
-            failureCode: payload.data?.status ?? "BITPAY_FAILURE",
+            failureCode: verifiedStatus,
             failureMessage:
-              payload.data?.exceptionStatus ??
-              "BitPay payment did not complete",
+              verifiedInvoice.exceptionStatus ??
+              "BitPay payment did not complete successfully",
             providerReference: invoiceId,
           },
         });
@@ -269,13 +236,13 @@ export async function POST(request: NextRequest) {
         return;
       }
 
-      if (!isTerminalSuccess(payload.data?.status)) {
-        await tx.cryptoFundingIntent.update({
-          where: { id: invoiceRecord.fundingIntentId },
-          data: {
-            status: fundingIntentStatus,
-            providerReference: invoiceId,
-          },
+      if (isTerminalSuccess(verifiedStatus)) {
+        await applySuccessfulCryptoFundingToInvestmentOrder(tx, {
+          fundingIntentId: invoiceRecord.fundingIntentId,
+          providerReference: invoiceId,
+          creditedFiatAmount,
+          receivedCryptoAmount: amountPaid,
+          creditedAt: new Date(),
         });
 
         await tx.cryptoWebhookEvent.update({
@@ -288,83 +255,14 @@ export async function POST(request: NextRequest) {
 
         return;
       }
-
-      const fundingIntent = await tx.cryptoFundingIntent.findUnique({
-        where: { id: invoiceRecord.fundingIntentId },
-        include: {
-          investmentOrder: true,
-        },
-      });
-
-      if (!fundingIntent) {
-        throw new Error("Crypto funding intent not found");
-      }
-
-      if (
-        fundingIntent.status === CryptoFundingIntentStatus.FUNDED &&
-        fundingIntent.creditedAt
-      ) {
-        await tx.cryptoWebhookEvent.update({
-          where: { id: webhookEvent.id },
-          data: {
-            processingStatus: CryptoWebhookProcessingStatus.PROCESSED,
-            processedAt: new Date(),
-          },
-        });
-
-        return;
-      }
-
-      const creditedFiatAmount =
-        decimalOrNull(payload.data?.price) ??
-        fundingIntent.creditedFiatAmount ??
-        fundingIntent.fiatAmount;
-
-      const newAmountPaid = new Prisma.Decimal(
-        fundingIntent.investmentOrder.amountPaid,
-      ).plus(creditedFiatAmount);
-
-      const isFullyPaid = newAmountPaid.gte(
-        fundingIntent.investmentOrder.amount,
-      );
 
       await tx.cryptoFundingIntent.update({
-        where: { id: fundingIntent.id },
+        where: { id: invoiceRecord.fundingIntentId },
         data: {
-          status: CryptoFundingIntentStatus.FUNDED,
-          fundedAt: fundingIntent.fundedAt ?? new Date(),
-          creditedAt: fundingIntent.creditedAt ?? new Date(),
-          creditedFiatAmount,
+          status: fundingIntentStatus,
           providerReference: invoiceId,
           failureCode: null,
           failureMessage: null,
-        },
-      });
-
-      await tx.investmentOrder.update({
-        where: { id: fundingIntent.investmentOrderId },
-        data: {
-          amountPaid: newAmountPaid,
-          status: isFullyPaid
-            ? InvestmentOrderStatus.PAID
-            : InvestmentOrderStatus.PARTIALLY_PAID,
-          paymentReference: invoiceId,
-          paidAt: isFullyPaid
-            ? (fundingIntent.investmentOrder.paidAt ?? new Date())
-            : fundingIntent.investmentOrder.paidAt,
-          paymentMetadata: {
-            ...(typeof fundingIntent.investmentOrder.paymentMetadata ===
-              "object" && fundingIntent.investmentOrder.paymentMetadata !== null
-              ? (fundingIntent.investmentOrder.paymentMetadata as Record<
-                  string,
-                  unknown
-                >)
-              : {}),
-            provider: "BITPAY",
-            invoiceId,
-            fundingIntentId: fundingIntent.id,
-            creditedFiatAmount: creditedFiatAmount.toString(),
-          },
         },
       });
 
@@ -387,7 +285,7 @@ export async function POST(request: NextRequest) {
         errorMessage:
           error instanceof Error
             ? error.message
-            : "Unknown webhook processing error",
+            : "Unknown BitPay webhook processing error",
       },
     });
 

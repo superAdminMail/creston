@@ -1,4 +1,4 @@
-import PlatformWalletsClient from "@/app/account/dashboard/platform-wallets/PlatformWalletsClient";
+import PlatformWalletsClient from "@/app/account/dashboard/_components/PlatformWalletsClient";
 import { getPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 
 export default async function PlatformWalletsAdminPage() {
