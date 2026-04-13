@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { UserDTO } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getDashboardMenu, type DashboardRole } from "@/constants/dashboard-menu";
+import {
+  getDashboardMenu,
+  type DashboardRole,
+} from "@/constants/dashboard-menu";
 
 type AccountSidebarContentProps = {
   user?: UserDTO | null;

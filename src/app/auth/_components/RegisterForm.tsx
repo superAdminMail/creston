@@ -60,7 +60,7 @@ export default function RegisterForm({
         return;
       }
 
-      router.replace("/auth/onboarding");
+      router.push("/account/dashboard");
       router.refresh();
     });
   };
@@ -137,8 +137,8 @@ export default function RegisterForm({
 
                     {!fieldState.error ? (
                       <FieldDescription className="text-xs text-slate-500">
-                        Use the email address that will be linked to your secure
-                        {" "}{siteName} account.
+                        Use the email address that will be linked to your secure{" "}
+                        {siteName} account.
                       </FieldDescription>
                     ) : null}
 

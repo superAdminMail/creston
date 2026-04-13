@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight, LogOut } from "lucide-react";
@@ -16,6 +15,11 @@ import { cn } from "@/lib/utils";
 import { type ProfileDTO, type UserDTO } from "@/lib/types";
 import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -75,22 +79,20 @@ function AccountIdentity({ user }: { user: SidebarUser }) {
   if (!user) return null;
   const roleLabel = getRoleLabel(user.role);
   const avatarUrl = user?.profileAvatar?.url || user?.image || null;
+  const avatarFallback = getUserInitials(user);
 
   return (
     <div className="flex items-center gap-3 rounded-[1.35rem] border border-slate-200/80 bg-white/75 px-3 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-      {avatarUrl ? (
-        <Image
-          src={avatarUrl}
-          width={42}
-          height={42}
+      <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200/80 dark:ring-white/10">
+        <AvatarImage
+          src={avatarUrl ?? undefined}
           alt={user?.name ?? "User avatar"}
-          className="h-10 w-10 rounded-2xl object-cover ring-1 ring-slate-200/80 dark:ring-white/10"
+          className="rounded-2xl object-cover"
         />
-      ) : (
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-xs font-semibold uppercase text-sky-700 ring-1 ring-sky-200 dark:bg-sky-500/12 dark:text-sky-200 dark:ring-sky-400/20">
-          {getUserInitials(user)}
-        </div>
-      )}
+        <AvatarFallback className="rounded-2xl bg-sky-100 text-xs font-semibold uppercase text-sky-700 dark:bg-sky-500/12 dark:text-sky-200">
+          {avatarFallback}
+        </AvatarFallback>
+      </Avatar>
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">

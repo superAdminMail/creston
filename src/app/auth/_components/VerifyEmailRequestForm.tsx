@@ -2,10 +2,124 @@
 
 import { useState, useTransition } from "react";
 import { Loader2, Mail } from "lucide-react";
-import { sendVerificationEmailAction } from "@/actions/auth/verify-email/request";
 
-export default function VerifyEmailRequestForm() {
-  const [email, setEmail] = useState("");
+import { sendVerificationEmailAction } from "@/actions/auth/verify-email/request";
+import { AuthShell } from "@/app/auth/_components/AuthShell";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+
+type VerifyEmailRequestFormProps = {
+  siteName: string;
+  siteLogoUrl?: string | null;
+};
+
+type VerifyEmailRequestInlineFormProps = {
+  defaultEmail?: string;
+};
+
+type VerifyEmailRequestBodyProps = {
+  isPending: boolean;
+  error: string | null;
+  success: string | null;
+  email: string;
+  setEmail: (value: string) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  compact?: boolean;
+};
+
+export function VerifyEmailRequestBody({
+  isPending,
+  error,
+  success,
+  email,
+  setEmail,
+  onSubmit,
+  compact = false,
+}: VerifyEmailRequestBodyProps) {
+  return (
+    <div className={compact ? "space-y-4" : "space-y-6"}>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400">
+            <Mail className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-white">Verify your email</p>
+            <p className="text-xs text-slate-400">
+              Request a new confirmation link to activate your account.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {error ? (
+        <Alert className="rounded-2xl border border-red-400/20 bg-red-400/10 text-red-200">
+          <AlertTitle>{error}</AlertTitle>
+        </Alert>
+      ) : null}
+
+      {success ? (
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {success}
+        </div>
+      ) : null}
+
+      <form onSubmit={onSubmit} className={compact ? "space-y-4" : "space-y-6"} noValidate>
+        <FieldGroup className="gap-5">
+          <Field>
+            <FieldLabel className="text-sm font-medium text-slate-200">
+              Email address
+            </FieldLabel>
+            <FieldContent>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isPending}
+                placeholder="Enter your email address"
+                className="input-premium h-12 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-white placeholder:text-slate-500 focus-visible:ring-[var(--ring)]"
+              />
+              {!error ? (
+                <FieldDescription className="text-xs text-slate-500">
+                  We&apos;ll only send a link if your account still needs verification.
+                </FieldDescription>
+              ) : null}
+            </FieldContent>
+          </Field>
+        </FieldGroup>
+
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
+        >
+          {isPending ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Sending link...
+            </span>
+          ) : (
+            "Send verification link"
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function useVerifyEmailRequestForm(defaultEmail = "") {
+  const [email, setEmail] = useState(defaultEmail);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -30,76 +144,57 @@ export default function VerifyEmailRequestForm() {
     });
   }
 
+  return {
+    email,
+    setEmail,
+    isPending,
+    error,
+    success,
+    handleSubmit,
+  };
+}
+
+export function VerifyEmailRequestInlineForm({
+  defaultEmail,
+}: VerifyEmailRequestInlineFormProps) {
+  const { email, setEmail, isPending, error, success, handleSubmit } =
+    useVerifyEmailRequestForm(defaultEmail);
+
   return (
-    <div className="mx-auto w-full max-w-md">
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(8,17,37,0.96),rgba(5,11,31,0.985))] shadow-[0_24px_80px_rgba(2,6,23,0.45)] backdrop-blur-xl">
-        <div className="border-b border-white/10 px-6 py-6 sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400">
-              <Mail className="h-5 w-5" />
-            </div>
+    <VerifyEmailRequestBody
+      isPending={isPending}
+      error={error}
+      success={success}
+      email={email}
+      setEmail={setEmail}
+      onSubmit={handleSubmit}
+    />
+  );
+}
 
-            <div>
-              <h1 className="text-lg font-semibold text-white">
-                Verify your email
-              </h1>
-              <p className="text-sm text-white/60">
-                Request a fresh verification link.
-              </p>
-            </div>
-          </div>
-        </div>
+export default function VerifyEmailRequestForm({
+  siteName,
+  siteLogoUrl,
+}: VerifyEmailRequestFormProps) {
+  const { email, setEmail, isPending, error, success, handleSubmit } =
+    useVerifyEmailRequestForm();
 
-        <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6 sm:px-8">
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-white/85"
-            >
-              Email address
-            </label>
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isPending}
-              placeholder="Enter your email address"
-              className="h-12 w-full rounded-2xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/35 transition focus:border-blue-500/50 focus:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-60"
-            />
-          </div>
-
-          {error ? (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-              {error}
-            </div>
-          ) : null}
-
-          {success ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-              {success}
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-sm font-medium text-white shadow-[0_12px_30px_rgba(37,99,235,0.35)] transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Sending link...
-              </>
-            ) : (
-              "Send verification link"
-            )}
-          </button>
-        </form>
-      </div>
-    </div>
+  return (
+    <AuthShell
+      eyebrow="Account Security"
+      title="Verify your email"
+      description={`Request a fresh verification link for your ${siteName} account.`}
+      siteName={siteName}
+      siteLogoUrl={siteLogoUrl}
+    >
+      <VerifyEmailRequestBody
+        isPending={isPending}
+        error={error}
+        success={success}
+        email={email}
+        setEmail={setEmail}
+        onSubmit={handleSubmit}
+      />
+    </AuthShell>
   );
 }

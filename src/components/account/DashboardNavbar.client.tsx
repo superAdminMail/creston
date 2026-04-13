@@ -1,12 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { LogOut, Menu, Settings, User2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import {
   Menubar,
   MenubarContent,
@@ -25,6 +29,7 @@ import type { ProfileImage } from "@/lib/types";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { cn } from "@/lib/utils";
 import NotificationMenu from "../notifications/NotificationMenu";
+import { getUserInitials } from "@/lib/User-Initials/user";
 
 type DashboardNavbarUser = {
   name?: string | null;
@@ -79,8 +84,12 @@ export function DashboardNavbarClient({
   isSigningOut = false,
 }: DashboardNavbarClientProps) {
   const pathname = usePathname();
-  const avatarFallback =
-    user.name?.trim()?.charAt(0) || user.email?.trim()?.charAt(0) || "H";
+
+  const avatarFallback = getUserInitials({
+    name: user.name ?? undefined,
+    email: user.email ?? "",
+    username: undefined,
+  });
   const roleLabel = getRoleLabel(user.role);
   const pageTitle = getPageTitle(pathname, user.role);
   const dashboardHome = getDashboardHomeByRole(user.role);
@@ -145,27 +154,24 @@ export function DashboardNavbarClient({
           <NotificationMenu />
 
           <Menubar className="h-auto border-0 bg-transparent p-0 shadow-none">
-            <MenubarMenu>
-              <MenubarTrigger
+          <MenubarMenu>
+            <MenubarTrigger
                 className={cn(
                   "rounded-2xl bg-transparent p-0 text-slate-700 transition-all duration-200 hover:bg-transparent hover:text-slate-950 data-[state=open]:bg-transparent data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white dark:data-[state=open]:bg-transparent dark:data-[state=open]:text-white",
                 )}
-                aria-label="Open account menu"
-              >
-                <div className="flex items-center gap-3">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt={user.name ?? "User avatar"}
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-white/10"
-                    />
-                  ) : (
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 ring-1 ring-sky-200 dark:bg-sky-400/12 dark:text-sky-200 dark:ring-sky-400/20">
-                      {avatarFallback}
-                    </span>
-                  )}
+              aria-label="Open account menu"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200 dark:ring-white/10">
+                  <AvatarImage
+                    src={avatarUrl ?? undefined}
+                    alt={user.name ?? "User avatar"}
+                    className="rounded-2xl object-cover"
+                  />
+                  <AvatarFallback className="rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 dark:bg-sky-400/12 dark:text-sky-200">
+                    {avatarFallback}
+                  </AvatarFallback>
+                </Avatar>
                 </div>
               </MenubarTrigger>
 
@@ -181,26 +187,23 @@ export function DashboardNavbarClient({
                 >
                   <MenubarLabel className="px-3 py-3 font-normal">
                     <div className="flex items-center gap-3">
-                      {avatarUrl ? (
-                        <Image
-                          src={avatarUrl}
+                      <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200 dark:ring-white/10">
+                        <AvatarImage
+                          src={avatarUrl ?? undefined}
                           alt={user.name ?? "User avatar"}
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 rounded-2xl object-cover ring-1 ring-slate-200 dark:ring-white/10"
+                          className="rounded-2xl object-cover"
                         />
-                      ) : (
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 ring-1 ring-sky-200 dark:bg-sky-400/12 dark:text-sky-200 dark:ring-sky-400/20">
+                        <AvatarFallback className="rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 dark:bg-sky-400/12 dark:text-sky-200">
                           {avatarFallback}
-                        </span>
-                      )}
+                        </AvatarFallback>
+                      </Avatar>
 
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-slate-950 dark:text-white">
                           {user.name || "Unnamed User"}
                         </p>
                         <p className="mt-1 break-all text-[11px] leading-5 text-slate-500 dark:text-slate-400">
-                          {user.email}
+                          {user.email ?? "No email"}
                         </p>
                         <div className="mt-2.5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
                           {roleLabel}

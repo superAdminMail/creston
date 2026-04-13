@@ -7,11 +7,15 @@ import {
 import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/getCurrentUser";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getUserByEmail } from "@/components/helper/data";
 import ProfilePageSkeleton from "@/components/skeletons/ProfilePageSkeleton";
 
 async function ProfilePageContent() {
-  const sessionUser = await getCurrentUser();
+  const [sessionUser, site] = await Promise.all([
+    getCurrentUser(),
+    getSiteConfigurationCached(),
+  ]);
   if (!sessionUser?.email) {
     redirect("/auth/login");
   }
@@ -26,6 +30,7 @@ async function ProfilePageContent() {
   const profileUser: CurrentProfileUser = {
     id: dbUser.id,
     email: dbUser.email,
+    emailVerified: Boolean(dbUser.emailVerified),
     role: sessionUser.role,
     image: sessionUser.image ?? dbUser.image ?? null,
     createdAt: dbUser.createdAt,
@@ -43,7 +48,11 @@ async function ProfilePageContent() {
           </p>
         </header>
 
-        <UserProfileCard user={profileUser} />
+        <UserProfileCard
+          user={profileUser}
+          siteName={site?.siteName ?? "Havenstone"}
+          siteLogoUrl={site?.siteLogoFileAsset?.url}
+        />
       </div>
     </main>
   );

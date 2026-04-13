@@ -1,9 +1,17 @@
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import VerifyEmailRequestForm from "../_components/VerifyEmailRequestForm";
 
-export default function VerifyEmailRequestPage() {
+export default async function VerifyEmailRequestPage() {
+  const [site, config] = await Promise.all([
+    getSiteSeoConfig(),
+    getSiteConfigurationCached(),
+  ]);
+
   return (
-    <div className="px-4 py-10">
-      <VerifyEmailRequestForm />
-    </div>
+    <VerifyEmailRequestForm
+      siteName={site.siteName}
+      siteLogoUrl={config?.siteLogoFileAsset?.url}
+    />
   );
 }

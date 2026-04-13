@@ -1,4 +1,6 @@
-﻿import ResetPasswordForm from "../_components/ResetPasswordForm";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import ResetPasswordForm from "../_components/ResetPasswordForm";
 
 export default async function ResetPasswordPage({
   searchParams,
@@ -9,6 +11,11 @@ export default async function ResetPasswordPage({
   const token = params.token;
   const error = params.error;
 
+  const [site, config] = await Promise.all([
+    getSiteSeoConfig(),
+    getSiteConfigurationCached(),
+  ]);
+
   if (error === "INVALID_TOKEN" || !token) {
     return (
       <div>
@@ -18,5 +25,11 @@ export default async function ResetPasswordPage({
     );
   }
 
-  return <ResetPasswordForm token={token} />;
+  return (
+    <ResetPasswordForm
+      token={token}
+      siteName={site.siteName}
+      siteLogoUrl={config?.siteLogoFileAsset?.url}
+    />
+  );
 }

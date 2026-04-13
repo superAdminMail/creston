@@ -2,11 +2,22 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Mail } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { CalendarDays, Check, Mail } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import DeleteAcountModal from "../modal/DeleteAcountModal";
+import { getUserInitials } from "@/lib/User-Initials/user";
+import { getRoleLabel } from "../account/DashboardNavbar.client";
+import { VerifyEmailRequestInlineForm } from "@/app/auth/_components/VerifyEmailRequestForm";
 
 type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN" | "MODERATOR";
 
@@ -17,18 +28,14 @@ export type CurrentProfileUser = {
   lastName: string | null;
   role: UserRole;
   image: string | null;
+  emailVerified: boolean;
   createdAt: Date;
 };
 
 type UserProfileCardProps = {
   user: CurrentProfileUser;
-};
-
-const ROLE_LABELS: Record<UserRole, string> = {
-  USER: "User",
-  ADMIN: "Admin",
-  SUPER_ADMIN: "Super Admin",
-  MODERATOR: "Moderator",
+  siteName: string;
+  siteLogoUrl?: string | null;
 };
 
 function getFullName(user: CurrentProfileUser) {
@@ -36,17 +43,11 @@ function getFullName(user: CurrentProfileUser) {
   return name || "Unnamed User";
 }
 
-function getInitials(user: CurrentProfileUser) {
-  const fullName = getFullName(user);
-  return fullName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-export function UserProfileCard({ user }: UserProfileCardProps) {
+export function UserProfileCard({
+  user,
+  siteName,
+  siteLogoUrl,
+}: UserProfileCardProps) {
   const fullName = getFullName(user);
 
   const joinedDate = new Intl.DateTimeFormat("en-US", {
@@ -55,7 +56,9 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
     year: "numeric",
   }).format(new Date(user.createdAt));
 
-  const initials = getInitials(user);
+  const roleLabel = getRoleLabel(user.role);
+
+  const initials = getUserInitials(user);
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl space-y-6">
@@ -79,13 +82,49 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
             {fullName}
           </h2>
 
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <Mail size={14} />
-            <span className="truncate">{user.email}</span>
+          <div className="flex items-center gap-10">
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Mail size={14} />
+              <span className="truncate">{user.email}</span>
+            </div>
+            {user.emailVerified ? (
+              <Badge
+                variant="outline"
+                className="h-6 border-blue-400/30 bg-blue-500/10 px-2 text-[11px] font-medium text-blue-200 shadow-[0_0_18px_rgba(59,130,246,0.22)]"
+              >
+                <Check className="h-3 w-3 text-blue-300" />
+                Verified
+              </Badge>
+            ) : (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-slate-300 shadow-md"
+                  >
+                    Verify Email
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-xl rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10">
+                  <DialogHeader className="px-6 pt-6">
+                    <DialogTitle className="text-xl text-white">
+                      Verify your email
+                    </DialogTitle>
+                    <DialogDescription className="text-sm leading-6 text-slate-400">
+                      Request a fresh verification link for your {siteName} account.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="px-6 pb-6">
+                    <VerifyEmailRequestInlineForm defaultEmail={user.email} />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           <Badge className="w-fit text-xs bg-[#3c9ee0]/10 text-[#3c9ee0] border border-[#3c9ee0]/20">
-            {ROLE_LABELS[user.role] ?? user.role}
+            {roleLabel}
           </Badge>
         </div>
       </div>
@@ -96,7 +135,7 @@ export function UserProfileCard({ user }: UserProfileCardProps) {
       <div className="relative z-10 grid grid-cols-2 gap-4 text-sm">
         <div className="space-y-1">
           <p className="text-slate-500 text-xs uppercase tracking-wide">Role</p>
-          <p className="font-medium text-white">{ROLE_LABELS[user.role]}</p>
+          <p className="font-medium text-white">{roleLabel}</p>
         </div>
 
         <div className="space-y-1 flex items-start gap-2">
