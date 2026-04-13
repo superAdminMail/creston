@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { getAuthBaseUrl } from "@/lib/auth";
+import { getAppBaseUrl } from "@/lib/config/appUrl";
 
 export async function sendVerificationEmailAction(email: string) {
   const normalizedEmail = email.toLowerCase().trim();
@@ -14,7 +14,7 @@ export async function sendVerificationEmailAction(email: string) {
     await auth.api.sendVerificationEmail({
       body: {
         email: normalizedEmail,
-        callbackURL: `${getAuthBaseUrl()}/auth/verify-email`,
+        callbackURL: `${getAppBaseUrl()}/auth/verify-email`,
       },
     });
 
