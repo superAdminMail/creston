@@ -20,10 +20,12 @@ export type StartInvestmentOrderCryptoCheckoutResult =
 
 type StartInvestmentOrderCryptoCheckoutInput = {
   investmentOrderId: string;
+  usePartialPayment?: boolean;
 };
 
 export async function startInvestmentOrderCryptoCheckout({
   investmentOrderId,
+  usePartialPayment = false,
 }: StartInvestmentOrderCryptoCheckoutInput): Promise<StartInvestmentOrderCryptoCheckoutResult> {
   try {
     const normalizedInvestmentOrderId = investmentOrderId.trim();
@@ -47,6 +49,7 @@ export async function startInvestmentOrderCryptoCheckout({
     const data = await createInvestmentOrderCryptoCheckout({
       investmentOrderId: normalizedInvestmentOrderId,
       userId: user.id,
+      usePartialPayment,
     });
 
     revalidatePath("/account/dashboard/user/investment-orders");

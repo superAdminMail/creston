@@ -12,31 +12,32 @@ type UserInvestmentsListProps = {
 };
 
 const statusSummaryConfig: Array<{
+  id: string;
   key: InvestmentOrderStatus;
   label: string;
   tone: string;
 }> = [
   {
+    id: "pending-payment",
     key: InvestmentOrderStatus.PENDING_PAYMENT,
     label: "Pending payment",
     tone: "border-amber-400/15 bg-amber-400/8",
   },
+
   {
-    key: InvestmentOrderStatus.PENDING_CONFIRMATION,
-    label: "Pending confirmation",
-    tone: "border-blue-400/15 bg-blue-400/8",
-  },
-  {
+    id: "confirmed",
     key: InvestmentOrderStatus.CONFIRMED,
     label: "Confirmed",
     tone: "border-emerald-400/15 bg-emerald-400/8",
   },
   {
+    id: "cancelled",
     key: InvestmentOrderStatus.CANCELLED,
     label: "Cancelled",
     tone: "border-slate-400/15 bg-slate-400/8",
   },
   {
+    id: "rejected",
     key: InvestmentOrderStatus.REJECTED,
     label: "Rejected",
     tone: "border-rose-400/15 bg-rose-400/8",
@@ -93,7 +94,7 @@ export function UserInvestmentsList({
           <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 xl:max-w-[34rem] 2xl:max-w-none">
             {statusSummaryConfig.map((item) => (
               <div
-                key={item.key}
+                key={item.id}
                 className={`rounded-3xl border p-4 ${item.tone}`}
               >
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-200/75">

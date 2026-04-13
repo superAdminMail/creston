@@ -73,13 +73,9 @@ function getPrimaryAction(
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return {
         label: "Make payment",
-        href: `/account/dashboard/user/investment-order/${order.id}`,
+        href: `/account/dashboard/user/investment-order/${order.id}/payment`,
       };
-    case InvestmentOrderStatus.PENDING_CONFIRMATION:
-      return {
-        label: "Open order details",
-        href: `/account/dashboard/user/investment-order/${order.id}`,
-      };
+
     case InvestmentOrderStatus.CONFIRMED:
       return order.linkedInvestmentAccountId
         ? {
@@ -171,7 +167,6 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
 
   const emptyCounts: Record<InvestmentOrderStatus, number> = {
     PENDING_PAYMENT: 0,
-    PENDING_CONFIRMATION: 0,
     CONFIRMED: 0,
     CANCELLED: 0,
     REJECTED: 0,

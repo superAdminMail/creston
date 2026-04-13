@@ -11,7 +11,7 @@ import { applySuccessfulCryptoFundingToInvestmentOrder } from "@/lib/payments/cr
 import {
   retrieveBitPayInvoice,
   toBitPayInvoiceStatus,
-} from "@/lib/payments/crypto/bitPay";
+} from "@/lib/payments/crypto/bitpay";
 
 type BitPayWebhookPayload = {
   event?: {

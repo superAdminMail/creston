@@ -20,8 +20,6 @@ function getStatusClasses(status: InvestmentOrderStatus) {
   switch (status) {
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return "border-amber-400/20 bg-amber-400/10 text-amber-300";
-    case InvestmentOrderStatus.PENDING_CONFIRMATION:
-      return "border-blue-400/20 bg-blue-400/10 text-blue-200";
     case InvestmentOrderStatus.CONFIRMED:
       return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
     case InvestmentOrderStatus.CANCELLED:
@@ -39,8 +37,6 @@ function getStatusNote(order: UserInvestmentOrdersData["orders"][number]) {
   switch (order.status) {
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return "This order has been created and is waiting for payment completion.";
-    case InvestmentOrderStatus.PENDING_CONFIRMATION:
-      return "Payment has been received and the order is now awaiting confirmation.";
     case InvestmentOrderStatus.CONFIRMED:
       return order.linkedInvestmentAccountId
         ? "This investment has been confirmed and linked to your live investment account."
@@ -155,7 +151,8 @@ export function UserInvestmentOrderCard({
                   Cancellation note
                 </p>
                 <p className="mt-2 text-sm leading-6 text-rose-100">
-                  {order.cancellationReason || "No cancellation reason was recorded."}
+                  {order.cancellationReason ||
+                    "No cancellation reason was recorded."}
                 </p>
               </div>
 
@@ -164,7 +161,8 @@ export function UserInvestmentOrderCard({
                   Admin note
                 </p>
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  {order.adminNotes || "No admin note was recorded for this order."}
+                  {order.adminNotes ||
+                    "No admin note was recorded for this order."}
                 </p>
               </div>
             </div>

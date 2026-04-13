@@ -7,11 +7,13 @@ import {
   PlatformPaymentMethodType,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import { createBitPayInvoice, toBitPayInvoiceStatus } from "./bitPay";
+import { calculateInvestmentOrderCryptoChargeAmount } from "./calculateInvestmentOrderCryptoChargeAmount";
+import { createBitPayInvoice, toBitPayInvoiceStatus } from "./bitpay";
 
 type CreateInvestmentOrderCryptoCheckoutInput = {
   investmentOrderId: string;
   userId: string;
+  usePartialPayment?: boolean;
 };
 
 export type CreateInvestmentOrderCryptoCheckoutResult = {
@@ -34,6 +36,7 @@ function assertEnv(name: string): string {
 export async function createInvestmentOrderCryptoCheckout({
   investmentOrderId,
   userId,
+  usePartialPayment = false,
 }: CreateInvestmentOrderCryptoCheckoutInput): Promise<CreateInvestmentOrderCryptoCheckoutResult> {
   const appUrl = assertEnv("NEXT_PUBLIC_APP_URL");
 
@@ -133,29 +136,32 @@ export async function createInvestmentOrderCryptoCheckout({
     throw new Error("Selected crypto payment method is inactive");
   }
 
+  const activeCryptoIntent = order.cryptoFundingIntents[0] ?? null;
+
   if (
-    order.cryptoFundingIntents.length > 0 &&
-    order.cryptoFundingIntents[0]?.bitpayInvoicePayment?.invoiceUrl &&
-    order.cryptoFundingIntents[0]?.bitpayInvoicePayment?.bitpayInvoiceId
+    activeCryptoIntent?.bitpayInvoicePayment?.invoiceUrl &&
+    activeCryptoIntent?.bitpayInvoicePayment?.bitpayInvoiceId
   ) {
     return {
-      fundingIntentId: order.cryptoFundingIntents[0].id,
-      invoiceId:
-        order.cryptoFundingIntents[0].bitpayInvoicePayment.bitpayInvoiceId,
-      invoiceUrl: order.cryptoFundingIntents[0].bitpayInvoicePayment.invoiceUrl,
+      fundingIntentId: activeCryptoIntent.id,
+      invoiceId: activeCryptoIntent.bitpayInvoicePayment.bitpayInvoiceId,
+      invoiceUrl: activeCryptoIntent.bitpayInvoicePayment.invoiceUrl,
       orderId: order.id,
-      amount: order.amount.toString(),
+      amount: new Prisma.Decimal(order.amount)
+        .minus(order.amountPaid)
+        .toString(),
       currency: order.currency,
     };
   }
 
-  const remainingAmount = new Prisma.Decimal(order.amount).minus(
-    order.amountPaid,
-  );
+  const chargeCalculation = calculateInvestmentOrderCryptoChargeAmount({
+    totalAmount: order.amount,
+    amountPaid: order.amountPaid,
+    usePartialPayment,
+    hasActiveCryptoIntent: Boolean(activeCryptoIntent),
+  });
 
-  if (remainingAmount.lte(0)) {
-    throw new Error("This order has no remaining balance to pay");
-  }
+  const chargeAmount = chargeCalculation.chargeAmount;
 
   const cryptoAsset = platformPaymentMethod.cryptoAsset;
   const cryptoNetwork = platformPaymentMethod.cryptoNetwork;
@@ -173,7 +179,7 @@ export async function createInvestmentOrderCryptoCheckout({
   const itemDesc = `${order.investmentPlan.investment.name} - ${order.investmentPlan.name}`;
 
   const invoice = await createBitPayInvoice({
-    price: remainingAmount.toString(),
+    price: chargeAmount.toString(),
     currency: order.currency,
     orderId: internalReference,
     itemDesc,
@@ -190,7 +196,7 @@ export async function createInvestmentOrderCryptoCheckout({
         asset: cryptoAsset,
         network: cryptoNetwork,
         fiatCurrency: order.currency,
-        fiatAmount: remainingAmount,
+        fiatAmount: chargeAmount,
         status: CryptoFundingIntentStatus.REQUIRES_ACTION,
         platformPaymentMethodId: order.platformPaymentMethodId,
         destinationReference: platformPaymentMethod.walletAddress,
@@ -211,7 +217,7 @@ export async function createInvestmentOrderCryptoCheckout({
             bitpayOrderId: invoice.orderId,
             bitpayToken: invoice.token,
             status: toBitPayInvoiceStatus(invoice.status),
-            price: remainingAmount,
+            price: chargeAmount,
             currency: order.currency,
             cryptoAsset,
             cryptoNetwork,
@@ -241,6 +247,10 @@ export async function createInvestmentOrderCryptoCheckout({
           provider: "BITPAY",
           fundingIntentId: fundingIntent.id,
           invoiceId: invoice.invoiceId,
+          paymentMode: usePartialPayment ? "PARTIAL" : "FULL",
+          splitNumber: chargeCalculation.splitNumber,
+          remainingBeforeCharge:
+            chargeCalculation.remainingBeforeCharge.toString(),
         },
       },
     });
@@ -253,7 +263,7 @@ export async function createInvestmentOrderCryptoCheckout({
     invoiceId: created.bitpayInvoicePayment!.bitpayInvoiceId,
     invoiceUrl: created.bitpayInvoicePayment!.invoiceUrl!,
     orderId: order.id,
-    amount: remainingAmount.toString(),
+    amount: chargeAmount.toString(),
     currency: order.currency,
   };
 }
