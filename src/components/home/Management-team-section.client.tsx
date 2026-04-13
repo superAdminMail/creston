@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 
 import { SectionHeading } from "@/components/home/section-heading";
@@ -203,50 +203,85 @@ function ManagementCard({
   featured?: boolean;
   onFocus?: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const description = member.description?.trim() ?? "";
+  const words = useMemo(
+    () => description.split(/\s+/).filter(Boolean),
+    [description],
+  );
+  const shouldShowToggle = words.length > 16;
+  const previewDescription = shouldShowToggle
+    ? `${words.slice(0, 16).join(" ")}...`
+    : description;
+
   return (
     <motion.div
       layout="position"
       onMouseEnter={onFocus}
-      onClick={onFocus}
       whileHover={{ y: -6, scale: 1.02 }}
-      className={`relative w-[260px] cursor-pointer rounded-[2rem] border p-5 text-center transition-all duration-300 ease-out sm:w-[300px] sm:p-6 ${
-        featured
-          ? "border-blue-400/25 bg-[#0f172a] shadow-[0_36px_90px_rgba(0,0,0,0.42)] ring-1 ring-blue-400/10"
-          : "border-white/8 bg-[linear-gradient(180deg,rgba(10,16,30,0.96),rgba(5,11,24,1))] opacity-90"
-      }`}
+      className="h-[420px] w-[260px] sm:h-[440px] sm:w-[300px]"
     >
-      {featured ? (
-        <div className="absolute inset-0 rounded-[2rem] bg-blue-500/20 blur-2xl" />
-      ) : null}
+      <div
+        onClick={onFocus}
+        className={`relative flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-[2rem] border p-5 text-center transition-all duration-300 ease-out sm:p-6 ${
+          featured
+            ? "border-blue-400/25 bg-[#0f172a] shadow-[0_36px_90px_rgba(0,0,0,0.42)] ring-1 ring-blue-400/10"
+            : "border-white/8 bg-[linear-gradient(180deg,rgba(10,16,30,0.96),rgba(5,11,24,1))] opacity-90"
+        }`}
+      >
+        {featured ? (
+          <div className="absolute inset-0 rounded-[2rem] bg-blue-500/20 blur-2xl" />
+        ) : null}
 
-      <div className="relative mx-auto h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-blue-500/20 sm:h-20 sm:w-20">
-        {member.photoUrl ? (
-          <Image
-            src={member.photoUrl}
-            alt={member.name}
-            fill
-            className="object-cover"
-            sizes="80px"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-white sm:text-xl">
-            {member.name
-              .split(" ")
-              .map((part) => part[0])
-              .join("")}
+        <div className="relative flex h-full flex-col">
+          <div className="relative mx-auto h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/10 bg-blue-500/20 sm:h-20 sm:w-20">
+            {member.photoUrl ? (
+              <Image
+                src={member.photoUrl}
+                alt={member.name}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-white sm:text-xl">
+                {member.name
+                  .split(" ")
+                  .map((part) => part[0])
+                  .join("")}
+              </div>
+            )}
           </div>
-        )}
+
+          <h3 className="mt-4 text-base font-semibold text-white sm:mt-5 sm:text-lg">
+            {member.name}
+          </h3>
+
+          <p className="mt-1 text-xs text-blue-200 sm:text-sm">{member.role}</p>
+
+          <div className="mt-3 flex-1 sm:mt-4">
+            <p className="overflow-hidden text-xs leading-6 text-slate-400 transition-all duration-300 sm:text-sm sm:leading-7">
+              {expanded ? description : previewDescription}
+            </p>
+          </div>
+
+          <div className="mt-4 flex min-h-8 items-start">
+            {shouldShowToggle ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setExpanded((prev) => !prev);
+                }}
+                className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-blue-200 transition hover:bg-white/[0.07] hover:text-white"
+              >
+                {expanded ? "See less" : "See more"}
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
-
-      <h3 className="mt-4 text-base font-semibold text-white sm:mt-5 sm:text-lg">
-        {member.name}
-      </h3>
-
-      <p className="mt-1 text-xs text-blue-200 sm:text-sm">{member.role}</p>
-
-      <p className="mt-3 text-xs leading-6 text-slate-400 sm:mt-4 sm:text-sm sm:leading-7">
-        {member.description}
-      </p>
     </motion.div>
   );
 }

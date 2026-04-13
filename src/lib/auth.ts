@@ -1,6 +1,10 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/resend/mail";
+import PasswordResetEmailTemplate from "./password-reset/PasswordResetEmailTemplate";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) return null;
@@ -20,7 +24,7 @@ function isDefinedOrigin(value: string | null): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-function getAuthBaseUrl() {
+export function getAuthBaseUrl() {
   return (
     normalizeOrigin(process.env.BETTER_AUTH_URL) ??
     normalizeOrigin(process.env.APP_BASE_URL) ??
@@ -56,21 +60,62 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    resetPasswordTokenExpiresIn: 60 * 30,
+    revokeSessionsOnPasswordReset: true,
+
+    sendResetPassword: async ({ user, url }) => {
+      const site = await getSiteConfigurationCached();
+
+      void sendEmail({
+        to: user.email,
+        subject: "Reset your password",
+        html: PasswordResetEmailTemplate({
+          resetUrl: url,
+          expiresInMinutes: 30,
+          siteName: site?.siteName?.trim() || "Company",
+          siteLogoUrl: site?.siteLogoFileAsset?.url ?? null,
+        }),
+        from: process.env.EMAIL_FROM_NO_REPLY,
+        replyTo: process.env.EMAIL_FROM_SUPPORT,
+      });
+    },
+
+    // optional
+    onPasswordReset: async ({ user }) => {
+      console.log(`Password reset completed for ${user.email}`);
+    },
   },
 
-  // socialProviders: {
-  //   google: {
-  //     clientId: process.env.GOOGLE_CLIENT_ID!,
-  //     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  //   },
-  // },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: false,
+    autoSignInAfterVerification: true,
+    expiresIn: 60 * 60,
+
+    sendVerificationEmail: async ({ user, url }) => {
+      const site = await getSiteConfigurationCached();
+
+        void sendEmail({
+          to: user.email,
+          subject: `Verify your ${site?.siteName?.trim() || "Company"} email`,
+          html: VerifyEmailTemplate({
+            verifyUrl: url,
+            expiresInMinutes: 60,
+            siteName: site?.siteName?.trim() || "Company",
+            siteLogoUrl: site?.siteLogoFileAsset?.url ?? null,
+          }),
+          from: process.env.EMAIL_FROM_NO_REPLY,
+          replyTo: process.env.EMAIL_FROM_SUPPORT,
+        });
+    },
+  },
 
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60,
-      strategy: "jwt", // or "jwt" or "compact"
+      strategy: "jwt",
     },
   },
 });

@@ -7,12 +7,19 @@ export const publicRoutes = [
   "/api/uploadthing",
   "/cookies",
   "/help",
+  "/privacy",
+  "/terms",
+  "/compliance",
+  "/contact",
 ];
 
 export const authRoutes = [
   "/auth/login",
   "/auth/get-started",
   "/auth/onboarding",
+  "/auth/verify-email",
+  "/auth/reset-password",
+  "/auth/forgot-password",
   "/error",
 ];
 

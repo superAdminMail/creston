@@ -17,7 +17,10 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 
-import { getDashboardMenu, type DashboardRole } from "@/constants/dashboard-menu";
+import {
+  getDashboardMenu,
+  type DashboardRole,
+} from "@/constants/dashboard-menu";
 import type { ProfileImage } from "@/lib/types";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { cn } from "@/lib/utils";

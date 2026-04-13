@@ -1,22 +1,52 @@
 import { ComplianceStrip } from "@/components/layout/ComplianceStrip";
-import { Footer } from "@/components/layout/footer";
-import { Navbar } from "@/components/layout/navbar";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import SiteLayoutClient from "./layout-client";
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [site, config] = await Promise.all([
+    getSiteSeoConfig(),
+    getSiteConfigurationCached(),
+  ]);
+
   return (
     <div className="bg-site-shell flex min-h-screen flex-col text-foreground">
-      <Navbar />
-      <main className="flex min-h-0 flex-1 flex-col">
-        <div className="flex min-h-full flex-1 flex-col overflow-x-hidden">
-          {children}
-        </div>
-      </main>
+      <SiteLayoutClient
+        siteName={site.siteName}
+        siteLogoUrl={config?.siteLogoFileAsset?.url ?? site.defaultOgImageUrl}
+        siteTagline={site.siteTagline ?? ""}
+        siteDescription={site.siteDescription ?? ""}
+        supportEmail={config?.supportEmail ?? ""}
+        supportPhone={config?.supportPhone ?? ""}
+        siteAddress={site.siteAddress ?? ""}
+        siteLLC={site.siteLLC ?? ""}
+        footerLinkGroups={[
+          {
+            title: "Platform",
+            links: [
+              { href: "/about", label: "About Us" },
+              { href: "/investment-products", label: "Investment Products" },
+              { href: "/investment-plans", label: "Investment Plans" },
+            ],
+          },
+          {
+            title: "Support",
+            links: [
+              { href: "/contact", label: "Contact" },
+              { href: "/faq", label: "FAQ" },
+              { href: "/privacy", label: "Privacy Policy" },
+            ],
+          },
+        ]}
+        year={new Date().getFullYear()}
+      >
+        {children}
+      </SiteLayoutClient>
       <ComplianceStrip />
-      <Footer />
     </div>
   );
 }

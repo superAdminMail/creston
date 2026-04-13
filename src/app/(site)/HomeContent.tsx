@@ -6,45 +6,51 @@ import { FaqSection } from "@/components/home/faq-section";
 import { FinalCtaSection } from "@/components/home/final-cta-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
 import { InvestmentPlansSection } from "@/components/home/investment-plans-section";
+import { ScrollReveal } from "@/components/home/ScrollReveal-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { WhySection } from "@/components/home/why-section";
-import { RevealSection } from "@/components/home/reveal-section";
 
 const HomeContent = () => {
   return (
     <>
-      <RevealSection className="delay-0">
+      <ScrollReveal y={26} duration={0.7} amount={0.15}>
         <HeroSection />
-      </RevealSection>
-      <RevealSection className="delay-100">
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.03}>
         <WhySection />
-      </RevealSection>
+      </ScrollReveal>
 
-      <RevealSection className="delay-100">
+      <ScrollReveal duration={0.05}>
         <InvestmentProductsSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
-        <InvestmentPlansSection />
-      </RevealSection>
+      </ScrollReveal>
 
-      <RevealSection className="delay-150">
+      <ScrollReveal duration={0.07}>
+        <InvestmentPlansSection />
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.09}>
         <HowItWorksSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
+      </ScrollReveal>
+      <ScrollReveal duration={0.011}>
         <BenefitsSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.013}>
         <TestimonialsSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.015}>
         <FaqSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.017}>
         <ManagementTeamSection />
-      </RevealSection>
-      <RevealSection className="delay-150">
+      </ScrollReveal>
+
+      <ScrollReveal duration={0.019}>
         <FinalCtaSection />
-      </RevealSection>
+      </ScrollReveal>
     </>
   );
 };
