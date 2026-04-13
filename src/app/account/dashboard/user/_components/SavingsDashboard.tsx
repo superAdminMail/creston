@@ -12,6 +12,7 @@ import {
   formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
+import { cn } from "@/lib/utils";
 
 type SavingsDashboardProps = {
   accounts: SavingsPageData["accounts"];
@@ -25,16 +26,19 @@ export default function SavingsDashboard({
   canCreateSavingsAccount,
 }: SavingsDashboardProps) {
   const hasAccounts = accounts.length > 0;
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBalance = accounts.reduce(
+    (sum, account) => sum + account.balance,
+    0,
+  );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-white">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-xl lg:flex-row lg:items-end lg:justify-between lg:p-6">
+        <div className="min-w-0 space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             Personal savings accounts
           </h1>
-          <p className="text-sm text-slate-400">
+          <p className="max-w-2xl text-sm leading-6 text-slate-400 sm:text-[15px]">
             Track balances, product rules, lock status, and account targets from
             one place.
           </p>
@@ -67,31 +71,33 @@ export default function SavingsDashboard({
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
-          <CardContent className="space-y-2 p-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
+          <CardContent className="space-y-2 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
               Accounts
             </p>
-            <p className="text-2xl font-semibold text-white">{accounts.length}</p>
+            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
+              {accounts.length}
+            </p>
           </CardContent>
         </Card>
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
-          <CardContent className="space-y-2 p-6">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
+          <CardContent className="space-y-2 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
               Total balance
             </p>
-            <p className="text-2xl font-semibold text-white">
+            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
               {formatCurrency(totalBalance)}
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
-          <CardContent className="space-y-2 p-6">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
+          <CardContent className="space-y-2 p-5 sm:p-6">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
               Locked accounts
             </p>
-            <p className="text-2xl font-semibold text-white">
+            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
               {accounts.filter((account) => account.isLocked).length}
             </p>
           </CardContent>
@@ -99,8 +105,8 @@ export default function SavingsDashboard({
       </div>
 
       {!hasAccounts ? (
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
-          <CardContent className="space-y-4 p-10">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center shadow-lg shadow-black/10">
+          <CardContent className="space-y-4 p-6 sm:p-8 lg:p-10">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
               <PiggyBank className="h-6 w-6 text-blue-200" />
             </div>
@@ -112,7 +118,10 @@ export default function SavingsDashboard({
               product-level savings rules.
             </p>
             {canCreateSavingsAccount ? (
-              <Button asChild className="rounded-2xl bg-blue-500 hover:bg-blue-600">
+              <Button
+                asChild
+                className="rounded-2xl bg-blue-500 hover:bg-blue-600"
+              >
                 <Link href="/account/dashboard/user/savings/new">
                   Create savings account
                 </Link>
@@ -125,24 +134,33 @@ export default function SavingsDashboard({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div
+          className={
+            accounts.length === 1
+              ? "grid gap-5"
+              : "grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+          }
+        >
           {accounts.map((account) => (
             <Card
               key={account.id}
-              className="rounded-[1.75rem] border border-white/10 bg-white/5"
+              className={cn(
+                "h-full rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10",
+                accounts.length === 1 && "w-full",
+              )}
             >
-              <CardContent className="space-y-5 p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <h2 className="text-lg font-semibold text-white">
+              <CardContent className="flex h-full flex-col gap-5 p-5 sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
                       {account.name}
                     </h2>
-                    <p className="text-sm text-slate-400">
+                    <p className="truncate text-sm text-slate-400">
                       {account.product.name} • {formatEnumLabel(account.status)}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex shrink-0 flex-wrap justify-end gap-2">
                     {account.product.interestEnabled ? (
                       <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
                         Interest
@@ -155,20 +173,17 @@ export default function SavingsDashboard({
                     ) : null}
                   </div>
                 </div>
-
                 <div>
                   <p className="text-xs text-slate-400">Available balance</p>
-                  <h3 className="mt-1 text-2xl font-semibold text-white">
+                  <h3 className="mt-1 break-words text-2xl font-semibold text-white sm:text-[2rem]">
                     {formatCurrency(account.balance, account.currency)}
                   </h3>
                 </div>
-
                 {account.description ? (
-                  <p className="text-sm leading-7 text-slate-400">
+                  <p className="line-clamp-3 text-sm leading-6 text-slate-400">
                     {account.description}
                   </p>
                 ) : null}
-
                 <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
                   <div>
                     <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
@@ -193,7 +208,9 @@ export default function SavingsDashboard({
                       Withdrawals
                     </dt>
                     <dd className="mt-2 text-sm font-medium text-white">
-                      {account.product.allowsWithdrawals ? "Available" : "Restricted"}
+                      {account.product.allowsWithdrawals
+                        ? "Available"
+                        : "Restricted"}
                     </dd>
                   </div>
                   <div>
@@ -208,18 +225,23 @@ export default function SavingsDashboard({
                     </dd>
                   </div>
                 </dl>
-
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-slate-300">
-                  {account.product.description ?? "No product description available."}
+                  {account.product.description ??
+                    "No product description available."}
                 </div>
 
-                <Alert className="rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>
-                    Deposit and withdrawal submission for savings accounts is not
-                    wired into this dashboard card yet.
-                  </AlertTitle>
-                </Alert>
+                <div className="flex items-center gap-3">
+                  <Button
+                    asChild
+                    className="flex-1 rounded-2xl bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Link
+                      href={`/account/dashboard/user/savings/${account.id}`}
+                    >
+                      Deposit
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

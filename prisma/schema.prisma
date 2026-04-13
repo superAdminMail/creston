@@ -52,6 +52,13 @@ model User {
   conversationMembers ConversationMember[]
   notifications       Notification[]
 
+  submittedInvestmentOrderPayments InvestmentOrderPayment[] @relation("InvestmentOrderPaymentSubmittedBy")
+  reviewedInvestmentOrderPayments  InvestmentOrderPayment[] @relation("InvestmentOrderPaymentReviewedBy")
+
+  submittedSavingsTransactionPayments SavingsTransactionPayment[] @relation("SavingsTransactionPaymentSubmittedBy")
+  reviewedSavingsTransactionPayments  SavingsTransactionPayment[] @relation("SavingsTransactionPaymentReviewedBy")
+  savingsFundingIntents               SavingsFundingIntent[]
+
   @@unique([email])
   @@index([profileAvatarFileAssetId])
   @@map("user")
@@ -163,8 +170,10 @@ model FileAsset {
   siteLogo                         SiteConfiguration?  @relation("SiteConfigurationLogo")
   investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
 
-  testimonies Testimony[]
-  management  Management[]
+  testimonies                Testimony[]
+  management                 Management[]
+  investmentOrderPayments    InvestmentOrderPayment[]
+  savingsTransactionPayments SavingsTransactionPayment[]
 
   @@index([uploadedById])
   @@index([type])
@@ -394,12 +403,21 @@ model InvestmentOrder {
   isMatured   Boolean @default(false)
   isWithdrawn Boolean @default(false)
 
-  amount   Decimal @db.Decimal(18, 2)
-  currency String  @default("USD")
-
   status            InvestmentOrderStatus @default(PENDING_PAYMENT)
   commissionStatus  CommissionStatus      @default(PENDING)
   commissionPercent Decimal               @default(0) @db.Decimal(5, 2)
+
+  paymentMethodType       InvestmentPaymentMethodType?
+  platformPaymentMethodId String?
+
+  amountPaid Decimal @default(0) @db.Decimal(18, 2)
+  amount     Decimal @db.Decimal(18, 2)
+  currency   String  @default("USD")
+
+  lastPaymentSubmittedAt DateTime?
+  lastPaymentReviewedAt  DateTime?
+
+  paymentMetadata Json?
 
   paymentReference String?
   paidAt           DateTime?
@@ -409,17 +427,22 @@ model InvestmentOrder {
   cancellationReason String?
   adminNotes         String?
 
-  investmentPlanTier InvestmentPlanTier @relation(fields: [investmentPlanTierId], references: [id])
-  investorProfile    InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentPlan     InvestmentPlan     @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
-  investmentAccount  InvestmentAccount  @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentPlanTier    InvestmentPlanTier     @relation(fields: [investmentPlanTierId], references: [id])
+  investorProfile       InvestorProfile        @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentPlan        InvestmentPlan         @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
+  investmentAccount     InvestmentAccount      @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  platformPaymentMethod PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  withdrawalOrders   WithdrawalOrder[]
-  investmentEarnings InvestmentEarning[]
+  withdrawalOrders     WithdrawalOrder[]
+  investmentEarnings   InvestmentEarning[]
+  payments             InvestmentOrderPayment[]
+  cryptoFundingIntents CryptoFundingIntent[]
 
+  @@index([paymentMethodType])
+  @@index([platformPaymentMethodId])
   @@index([investorProfileId])
   @@index([investmentPlanId])
   @@index([investmentAccountId])
@@ -515,7 +538,8 @@ model SavingsAccount {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  transactions SavingsTransaction[]
+  transactions          SavingsTransaction[]
+  savingsFundingIntents SavingsFundingIntent[]
 
   @@index([investorProfileId])
   @@index([savingsProductId])
@@ -528,6 +552,9 @@ model SavingsTransaction {
 
   savingsAccountId String
   savingsAccount   SavingsAccount @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
+
+  savingsFundingIntentId String?
+  savingsFundingIntent   SavingsFundingIntent? @relation(fields: [savingsFundingIntentId], references: [id], onDelete: SetNull)
 
   type SavingsTransactionType
 
@@ -546,6 +573,7 @@ model SavingsTransaction {
 
   createdAt DateTime @default(now())
 
+  @@index([savingsFundingIntentId])
   @@index([savingsAccountId])
   @@index([type])
   @@index([createdAt])
@@ -762,25 +790,114 @@ model Management {
 
 /// *
 /// * ===========================
-/// * PLATFORM WALLETS & CRYPTO FUNDING
+/// * PLATFORM PAYMENT METHODS & FUNDING INTENTS
 /// * ===========================
-model PlatformWallet {
-  id        String        @id @default(cuid())
-  label     String
-  asset     CryptoAsset
-  network   CryptoNetwork
-  address   String
-  isActive  Boolean       @default(true)
-  isDefault Boolean       @default(false)
-  notes     String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+model PlatformPaymentMethod {
+  id String @id @default(cuid())
 
-  fundingIntents CryptoFundingIntent[]
+  label String
+  type  PlatformPaymentMethodType
 
-  @@unique([network, address])
-  @@index([asset, network, isActive])
+  providerName String?
+  accountName  String?
+
+  currency String? @default("USD")
+  country  String?
+
+  instructions String?
+  notes        String?
+
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  verificationStatus PlatformPaymentVerificationStatus @default(UNVERIFIED)
+
+  bankName      String?
+  bankCode      String?
+  accountNumber String?
+  iban          String?
+  swiftCode     String?
+  routingNumber String?
+  branchName    String?
+
+  cryptoAsset   CryptoAsset?
+  cryptoNetwork CryptoNetwork?
+  walletAddress String?
+  walletTag     String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fundingIntents             CryptoFundingIntent[]
+  investmentOrders           InvestmentOrder[]
+  investmentOrderPayments    InvestmentOrderPayment[]
+  savingsFundingIntents      SavingsFundingIntent[]
+  savingsTransactionPayments SavingsTransactionPayment[]
+
+  @@index([type, isActive])
   @@index([isDefault, isActive])
+  @@index([currency])
+  @@index([country])
+  @@index([sortOrder])
+  @@map("platform_payment_method")
+}
+
+model InvestmentOrderPayment {
+  id String @id @default(cuid())
+
+  investmentOrderId String
+  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+
+  type   InvestmentOrderPaymentType
+  status InvestmentOrderPaymentStatus @default(PENDING_REVIEW)
+
+  platformPaymentMethodId String?
+  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
+
+  submittedByUserId String?
+  submittedByUser   User?   @relation("InvestmentOrderPaymentSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
+
+  reviewedByUserId String?
+  reviewedByUser   User?   @relation("InvestmentOrderPaymentReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  claimedAmount  Decimal  @db.Decimal(18, 2)
+  approvedAmount Decimal? @db.Decimal(18, 2)
+  currency       String   @default("USD")
+
+  depositorName        String?
+  depositorAccountName String?
+  depositorAccountNo   String?
+  transferReference    String?
+  blockchainTxHash     String?
+
+  receiptFileId String?
+  receiptFile   FileAsset? @relation(fields: [receiptFileId], references: [id], onDelete: SetNull)
+
+  note            String?
+  reviewNote      String?
+  rejectionReason String?
+
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+
+  providerReference String?
+  providerPayload   Json?
+  metadata          Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([investmentOrderId])
+  @@index([status])
+  @@index([type])
+  @@index([platformPaymentMethodId])
+  @@index([submittedByUserId])
+  @@index([reviewedByUserId])
+  @@index([submittedAt])
+  @@map("investment_order_payment")
 }
 
 model CryptoFundingIntent {
@@ -798,9 +915,9 @@ model CryptoFundingIntent {
 
   status CryptoFundingIntentStatus @default(PENDING)
 
-  platformWalletId         String?
-  destinationWalletAddress String
-  destinationWalletLabel   String?
+  platformPaymentMethodId String?
+  destinationReference    String?
+  destinationLabel        String?
 
   providerSessionId  String?
   providerExternalId String?
@@ -822,8 +939,14 @@ model CryptoFundingIntent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformWallet PlatformWallet? @relation(fields: [platformWalletId], references: [id], onDelete: SetNull)
+  creditedFiatAmount Decimal?  @db.Decimal(18, 2)
+  creditedAt         DateTime?
+
+  investmentOrderId String
+  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformPaymentMethod PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
 
   bitpayInvoicePayment BitPayInvoicePayment?
   webhookEvents        CryptoWebhookEvent[]
@@ -831,9 +954,121 @@ model CryptoFundingIntent {
   @@index([userId, status])
   @@index([provider, status])
   @@index([asset, network])
+  @@index([platformPaymentMethodId])
   @@index([providerSessionId])
   @@index([providerExternalId])
   @@index([createdAt])
+}
+
+model SavingsFundingIntent {
+  id String @id @default(cuid())
+
+  savingsAccountId String
+  savingsAccount   SavingsAccount @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fundingMethodType SavingsFundingMethodType
+  status            SavingsFundingIntentStatus @default(PENDING)
+
+  platformPaymentMethodId String?
+  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
+
+  currency       String  @default("USD")
+  targetAmount   Decimal @db.Decimal(18, 2)
+  creditedAmount Decimal @default(0) @db.Decimal(18, 2)
+
+  paymentReference String?
+
+  provider             CryptoFundingProvider?
+  providerSessionId    String?
+  providerExternalId   String?
+  providerReference    String?
+  expectedCryptoAmount Decimal?               @db.Decimal(36, 18)
+  receivedCryptoAmount Decimal?               @db.Decimal(36, 18)
+
+  submittedAt DateTime?
+  paidAt      DateTime?
+  creditedAt  DateTime?
+  cancelledAt DateTime?
+  failedAt    DateTime?
+
+  failureCode    String?
+  failureMessage String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments     SavingsTransactionPayment[]
+  transactions SavingsTransaction[]
+
+  @@index([savingsAccountId])
+  @@index([userId, status])
+  @@index([fundingMethodType, status])
+  @@index([platformPaymentMethodId])
+  @@index([provider, status])
+  @@index([providerSessionId])
+  @@index([providerExternalId])
+  @@index([createdAt])
+  @@map("savings_funding_intent")
+}
+
+model SavingsTransactionPayment {
+  id String @id @default(cuid())
+
+  savingsFundingIntentId String
+  savingsFundingIntent   SavingsFundingIntent @relation(fields: [savingsFundingIntentId], references: [id], onDelete: Cascade)
+
+  type   SavingsTransactionPaymentType
+  status SavingsTransactionPaymentStatus @default(PENDING_REVIEW)
+
+  platformPaymentMethodId String?
+  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
+
+  submittedByUserId String?
+  submittedByUser   User?   @relation("SavingsTransactionPaymentSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
+
+  reviewedByUserId String?
+  reviewedByUser   User?   @relation("SavingsTransactionPaymentReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  claimedAmount  Decimal  @db.Decimal(18, 2)
+  approvedAmount Decimal? @db.Decimal(18, 2)
+  currency       String   @default("USD")
+
+  depositorName        String?
+  depositorAccountName String?
+  depositorAccountNo   String?
+  transferReference    String?
+  blockchainTxHash     String?
+
+  receiptFileId String?
+  receiptFile   FileAsset? @relation(fields: [receiptFileId], references: [id], onDelete: SetNull)
+
+  note            String?
+  reviewNote      String?
+  rejectionReason String?
+
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+
+  providerReference String?
+  providerPayload   Json?
+  metadata          Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([savingsFundingIntentId])
+  @@index([status])
+  @@index([type])
+  @@index([platformPaymentMethodId])
+  @@index([submittedByUserId])
+  @@index([reviewedByUserId])
+  @@index([submittedAt])
+  @@map("savings_transaction_payment")
 }
 
 model BitPayInvoicePayment {
@@ -1048,6 +1283,56 @@ model SiteConfiguration {
 /// * ===========================
 /// * Enums & Constants
 /// * ===========================
+enum SavingsFundingMethodType {
+  BANK_TRANSFER
+  CRYPTO_PROVIDER
+}
+
+enum SavingsFundingIntentStatus {
+  PENDING
+  SUBMITTED
+  PARTIALLY_PAID
+  PAID
+  CREDITED
+  FAILED
+  CANCELLED
+}
+
+enum SavingsTransactionPaymentType {
+  BANK_DEPOSIT
+  CRYPTO_PROVIDER
+}
+
+enum SavingsTransactionPaymentStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  CANCELED
+}
+
+enum InvestmentOrderPaymentType {
+  BANK_DEPOSIT
+  CRYPTO_PROVIDER
+}
+
+enum InvestmentOrderPaymentStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  CANCELED
+}
+
+enum PlatformPaymentMethodType {
+  BANK_INFO
+  WALLET_ADDRESS
+}
+
+enum PlatformPaymentVerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  SUSPENDED
+}
+
 enum CryptoAsset {
   BTC
   ETH
@@ -1119,8 +1404,12 @@ enum InvestmentModel {
   MARKET
 }
 
+enum InvestmentPaymentMethodType {
+  BANK_TRANSFER
+  CRYPTO_PROVIDER
+}
+
 enum InvestmentOrderStatus {
-  PENDING_CONFIRMATION
   CONFIRMED
   REJECTED
   CANCELLED

@@ -271,7 +271,7 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
-          name: "Platform Wallets",
+        name: "Platform Payment Methods",
           href: "/account/dashboard/admin/platform-wallets",
           icon: Landmark,
         },
@@ -425,7 +425,7 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
-          name: "Platform Wallets",
+        name: "Platform Payment Methods",
           href: "/account/dashboard/super-admin/platform-wallets",
           icon: Landmark,
         },

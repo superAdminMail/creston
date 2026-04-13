@@ -175,7 +175,7 @@ export async function getDashboardOverviewByHref(
     approvedKyc,
     rejectedKyc,
     activePlans,
-    activePlatformWallets,
+    activePlatformPaymentMethods,
     activeManagementMembers,
     savingsDepositAggregate,
     fundedInvestmentAggregate,
@@ -184,7 +184,7 @@ export async function getDashboardOverviewByHref(
     latestPlan,
     latestPendingWithdrawal,
     latestVerifiedKyc,
-    latestPlatformWallet,
+    latestPlatformPaymentMethod,
     latestPendingKyc,
     latestDeposit,
     latestInvestmentOrder,
@@ -255,7 +255,7 @@ export async function getDashboardOverviewByHref(
         isActive: true,
       },
     }),
-    prisma.platformWallet.count({
+    prisma.platformPaymentMethod.count({
       where: {
         isActive: true,
       },
@@ -345,7 +345,7 @@ export async function getDashboardOverviewByHref(
         },
       },
     }),
-    prisma.platformWallet.findFirst({
+    prisma.platformPaymentMethod.findFirst({
       orderBy: {
         updatedAt: "desc",
       },
@@ -488,18 +488,18 @@ export async function getDashboardOverviewByHref(
             time: "Live",
             status: "info",
           },
-      latestPlatformWallet
+      latestPlatformPaymentMethod
         ? {
-            title: latestPlatformWallet.isDefault
-              ? "Default platform wallet updated"
-              : "Platform wallet configuration touched",
-            detail: `${latestPlatformWallet.label} is currently available for funding operations.`,
-            time: formatActivityTime(latestPlatformWallet.updatedAt),
+            title: latestPlatformPaymentMethod.isDefault
+              ? "Default payment method updated"
+              : "Platform payment method configuration touched",
+            detail: `${latestPlatformPaymentMethod.label} is currently available for funding operations.`,
+            time: formatActivityTime(latestPlatformPaymentMethod.updatedAt),
             status: "info",
           }
         : {
-            title: "Platform wallets still need setup",
-            detail: "Add a platform wallet to support crypto funding flows.",
+            title: "Platform payment methods still need setup",
+            detail: "Add a platform payment method to support bank and crypto funding flows.",
             time: "Live",
             status: "pending",
           },
@@ -625,12 +625,12 @@ export async function getDashboardOverviewByHref(
           tone: getStatusTone(pendingKyc),
         },
         {
-          label: "Platform Wallets",
+          label: "Platform Payment Methods",
           value:
-            activePlatformWallets > 0
-              ? `${formatCount(activePlatformWallets)} active`
+            activePlatformPaymentMethods > 0
+              ? `${formatCount(activePlatformPaymentMethods)} active`
               : "Not configured",
-          tone: activePlatformWallets > 0 ? "success" : "warning",
+          tone: activePlatformPaymentMethods > 0 ? "success" : "warning",
         },
         {
           label: "Management Team",
@@ -655,7 +655,7 @@ export async function getDashboardOverviewByHref(
           icon: "creditCard",
         },
         {
-          label: "Platform Wallets",
+        label: "Platform Payment Methods",
           href: "/account/dashboard/super-admin/platform-wallets",
           icon: "wallet",
         },
@@ -874,12 +874,12 @@ export async function getDashboardOverviewByHref(
         tone: fundedInvestmentOrdersCount > 0 ? "success" : "neutral",
       },
       {
-        label: "Platform Wallets",
+        label: "Platform Payment Methods",
         value:
-          activePlatformWallets > 0
-            ? `${formatCount(activePlatformWallets)} active`
+          activePlatformPaymentMethods > 0
+            ? `${formatCount(activePlatformPaymentMethods)} active`
             : "Not configured",
-        tone: activePlatformWallets > 0 ? "success" : "warning",
+        tone: activePlatformPaymentMethods > 0 ? "success" : "warning",
       },
     ],
     modulesTitle: "Admin modules",
