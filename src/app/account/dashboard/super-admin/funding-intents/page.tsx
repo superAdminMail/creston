@@ -25,7 +25,7 @@ type FundingIntentItem = {
   id: string;
   userName: string;
   userEmail: string;
-  provider: "BITPAY" | "TRANSAK";
+  provider: "TRANSAK";
   asset: "BTC" | "ETH";
   network: "BITCOIN" | "ETHEREUM";
   fiatCurrency: string;
@@ -47,7 +47,7 @@ const fundingIntents: FundingIntentItem[] = [
     id: "fi_001",
     userName: "Michael N.",
     userEmail: "michael@example.com",
-    provider: "BITPAY",
+      provider: "TRANSAK",
     asset: "BTC",
     network: "BITCOIN",
     fiatCurrency: "USD",
@@ -58,8 +58,8 @@ const fundingIntents: FundingIntentItem[] = [
     destinationWalletLabel: "Primary Bitcoin Treasury",
     destinationWalletAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
     providerReference: "BP-INV-290184",
-    providerSessionId: "bitpay_session_9dk21",
-    redirectUrl: "https://checkout.example.com/bitpay/fi_001",
+      providerSessionId: "transak_session_9dk21",
+      redirectUrl: "https://checkout.example.com/transak/fi_001",
     createdAt: "2026-04-11T09:14:00.000Z",
     fundedAt: "2026-04-11T09:28:00.000Z",
   },
@@ -85,7 +85,7 @@ const fundingIntents: FundingIntentItem[] = [
     id: "fi_003",
     userName: "David A.",
     userEmail: "david@example.com",
-    provider: "BITPAY",
+      provider: "TRANSAK",
     asset: "BTC",
     network: "BITCOIN",
     fiatCurrency: "USD",
@@ -95,8 +95,8 @@ const fundingIntents: FundingIntentItem[] = [
     destinationWalletLabel: "Primary Bitcoin Treasury",
     destinationWalletAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
     providerReference: "BP-INV-290322",
-    providerSessionId: "bitpay_session_0af4",
-    redirectUrl: "https://checkout.example.com/bitpay/fi_003",
+      providerSessionId: "transak_session_0af4",
+      redirectUrl: "https://checkout.example.com/transak/fi_003",
     createdAt: "2026-04-10T16:04:00.000Z",
   },
   {

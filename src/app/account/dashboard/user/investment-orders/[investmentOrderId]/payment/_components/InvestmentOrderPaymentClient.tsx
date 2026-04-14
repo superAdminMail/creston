@@ -1,12 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { CircleAlert, Landmark, Wallet } from "lucide-react";
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
-import { Button } from "@/components/ui/button";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
-import StartCryptoCheckoutButton from "@/app/account/dashboard/user/_components/StartCryptoCheckoutButton";
 
 export type InvestmentOrderPaymentDetails = {
   id: string;
@@ -33,9 +30,7 @@ export type InvestmentOrderPaymentDetails = {
 };
 
 type Props = {
-  investmentOrderId: string;
   order: InvestmentOrderPaymentDetails;
-  canPay: boolean;
 };
 
 function PaymentSummaryCard({
@@ -60,22 +55,16 @@ function PaymentSummaryCard({
   );
 }
 
-export default function InvestmentOrderPaymentClient({
-  investmentOrderId,
-  order,
-  canPay,
-}: Props) {
+export default function InvestmentOrderPaymentClient({ order }: Props) {
+  const PaymentIcon =
+    order.paymentMethodType === "CRYPTO_PROVIDER" ? Wallet : Landmark;
+
   const statusTone =
     order.status === InvestmentOrderStatus.PENDING_PAYMENT
       ? "border-amber-400/20 bg-amber-400/10 text-amber-300"
       : order.status === InvestmentOrderStatus.PARTIALLY_PAID
         ? "border-blue-400/20 bg-blue-400/10 text-blue-300"
         : "border-white/10 bg-white/[0.04] text-slate-300";
-
-  const paymentIcon =
-    order.paymentMethodType === "CRYPTO_PROVIDER" ? Wallet : Landmark;
-
-  const PaymentIcon = paymentIcon;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -87,11 +76,11 @@ export default function InvestmentOrderPaymentClient({
               Investment payment
             </div>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Choose how you want to pay this order
+              Investment order payment
             </h1>
             <p className="mt-3 text-sm leading-6 text-slate-400">
-              Review the order amount, status, plan, and tier before selecting
-              a full or partial payment path.
+              Review the order amount, status, plan, and tier for this
+              investment order.
             </p>
           </div>
 
@@ -146,7 +135,7 @@ export default function InvestmentOrderPaymentClient({
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                Payment mode
+                Order payment mode
               </p>
               <p className="mt-2 text-sm text-white">
                 {order.paymentMethodType
@@ -156,34 +145,10 @@ export default function InvestmentOrderPaymentClient({
             </div>
           </div>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <StartCryptoCheckoutButton
-              investmentOrderId={investmentOrderId}
-              disabled={!canPay}
-              className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
-            >
-              Make full payment
-            </StartCryptoCheckoutButton>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-2xl border-white/10 bg-white/[0.04] px-5 py-3 text-white hover:bg-white/[0.08]"
-              asChild
-            >
-              <Link href={`/account/dashboard/user/investment-orders/${investmentOrderId}/payment/partial`}>
-                Partial payment
-              </Link>
-            </Button>
+          <div className="mt-6 flex items-start gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+            <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Payment actions were removed.</span>
           </div>
-
-          {!canPay ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-400/15 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
-              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                This order is not currently eligible for payment actions.
-              </span>
-            </div>
-          ) : null}
         </div>
       </div>
     </div>

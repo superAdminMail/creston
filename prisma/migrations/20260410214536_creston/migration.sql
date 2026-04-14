@@ -5,16 +5,13 @@ CREATE TYPE "CryptoAsset" AS ENUM ('BTC', 'ETH');
 CREATE TYPE "CryptoNetwork" AS ENUM ('BITCOIN', 'ETHEREUM');
 
 -- CreateEnum
-CREATE TYPE "CryptoFundingProvider" AS ENUM ('BITPAY', 'TRANSAK');
+CREATE TYPE "CryptoFundingProvider" AS ENUM ('TRANSAK');
 
 -- CreateEnum
 CREATE TYPE "CryptoFundingIntentStatus" AS ENUM ('PENDING', 'REQUIRES_ACTION', 'PROCESSING', 'AWAITING_PROVIDER_CONFIRMATION', 'FUNDED', 'FAILED', 'EXPIRED', 'CANCELED');
 
 -- CreateEnum
-CREATE TYPE "BitPayInvoiceStatus" AS ENUM ('NEW', 'PAID', 'CONFIRMED', 'COMPLETE', 'EXPIRED', 'INVALID');
-
--- CreateEnum
-CREATE TYPE "CryptoWebhookSource" AS ENUM ('BITPAY', 'TRANSAK');
+CREATE TYPE "CryptoWebhookSource" AS ENUM ('TRANSAK');
 
 -- CreateEnum
 CREATE TYPE "CryptoWebhookProcessingStatus" AS ENUM ('RECEIVED', 'PROCESSED', 'IGNORED', 'FAILED');
@@ -618,36 +615,6 @@ CREATE TABLE "CryptoFundingIntent" (
 );
 
 -- CreateTable
-CREATE TABLE "BitPayInvoicePayment" (
-    "id" TEXT NOT NULL,
-    "fundingIntentId" TEXT NOT NULL,
-    "bitpayInvoiceId" TEXT NOT NULL,
-    "bitpayOrderId" TEXT,
-    "bitpayToken" TEXT,
-    "status" "BitPayInvoiceStatus" NOT NULL DEFAULT 'NEW',
-    "price" DECIMAL(18,2) NOT NULL,
-    "currency" TEXT NOT NULL DEFAULT 'USD',
-    "cryptoAsset" "CryptoAsset",
-    "cryptoNetwork" "CryptoNetwork",
-    "amountPaid" DECIMAL(36,18),
-    "amountDue" DECIMAL(36,18),
-    "exchangeRate" DECIMAL(36,18),
-    "invoiceUrl" TEXT,
-    "posData" TEXT,
-    "paidAt" TIMESTAMP(3),
-    "confirmedAt" TIMESTAMP(3),
-    "completedAt" TIMESTAMP(3),
-    "expiredAt" TIMESTAMP(3),
-    "invalidAt" TIMESTAMP(3),
-    "rawInvoiceSnapshot" JSONB,
-    "rawStatusPayload" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "BitPayInvoicePayment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "CryptoWebhookEvent" (
     "id" TEXT NOT NULL,
     "source" "CryptoWebhookSource" NOT NULL,
@@ -1011,18 +978,6 @@ CREATE INDEX "CryptoFundingIntent_providerExternalId_idx" ON "CryptoFundingInten
 CREATE INDEX "CryptoFundingIntent_createdAt_idx" ON "CryptoFundingIntent"("createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "BitPayInvoicePayment_fundingIntentId_key" ON "BitPayInvoicePayment"("fundingIntentId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "BitPayInvoicePayment_bitpayInvoiceId_key" ON "BitPayInvoicePayment"("bitpayInvoiceId");
-
--- CreateIndex
-CREATE INDEX "BitPayInvoicePayment_status_idx" ON "BitPayInvoicePayment"("status");
-
--- CreateIndex
-CREATE INDEX "BitPayInvoicePayment_createdAt_idx" ON "BitPayInvoicePayment"("createdAt");
-
--- CreateIndex
 CREATE UNIQUE INDEX "CryptoWebhookEvent_idempotencyKey_key" ON "CryptoWebhookEvent"("idempotencyKey");
 
 -- CreateIndex
@@ -1159,9 +1114,6 @@ ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_userId_fke
 
 -- AddForeignKey
 ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_platformWalletId_fkey" FOREIGN KEY ("platformWalletId") REFERENCES "PlatformWallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "BitPayInvoicePayment" ADD CONSTRAINT "BitPayInvoicePayment_fundingIntentId_fkey" FOREIGN KEY ("fundingIntentId") REFERENCES "CryptoFundingIntent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CryptoWebhookEvent" ADD CONSTRAINT "CryptoWebhookEvent_fundingIntentId_fkey" FOREIGN KEY ("fundingIntentId") REFERENCES "CryptoFundingIntent"("id") ON DELETE SET NULL ON UPDATE CASCADE;

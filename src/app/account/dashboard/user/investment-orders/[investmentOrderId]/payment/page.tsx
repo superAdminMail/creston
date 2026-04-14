@@ -1,6 +1,5 @@
 import { redirect, notFound } from "next/navigation";
 
-import { InvestmentOrderStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -93,15 +92,7 @@ export default async function InvestmentOrderPaymentPage({ params }: PageProps) 
   const { investmentOrderId } = await params;
   const order = await getOrderDetails(investmentOrderId);
 
-  const canPay =
-    order.status === InvestmentOrderStatus.PENDING_PAYMENT ||
-    order.status === InvestmentOrderStatus.PARTIALLY_PAID;
-
   return (
-    <InvestmentOrderPaymentClient
-      order={order}
-      canPay={canPay}
-      investmentOrderId={investmentOrderId}
-    />
+    <InvestmentOrderPaymentClient order={order} />
   );
 }

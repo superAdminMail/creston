@@ -948,8 +948,7 @@ model CryptoFundingIntent {
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   platformPaymentMethod PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
 
-  bitpayInvoicePayment BitPayInvoicePayment?
-  webhookEvents        CryptoWebhookEvent[]
+  webhookEvents CryptoWebhookEvent[]
 
   @@index([userId, status])
   @@index([provider, status])
@@ -1069,45 +1068,6 @@ model SavingsTransactionPayment {
   @@index([reviewedByUserId])
   @@index([submittedAt])
   @@map("savings_transaction_payment")
-}
-
-model BitPayInvoicePayment {
-  id              String @id @default(cuid())
-  fundingIntentId String @unique
-
-  bitpayInvoiceId String              @unique
-  bitpayOrderId   String?
-  bitpayToken     String?
-  status          BitPayInvoiceStatus @default(NEW)
-
-  price    Decimal @db.Decimal(18, 2)
-  currency String  @default("USD")
-
-  cryptoAsset   CryptoAsset?
-  cryptoNetwork CryptoNetwork?
-  amountPaid    Decimal?       @db.Decimal(36, 18)
-  amountDue     Decimal?       @db.Decimal(36, 18)
-  exchangeRate  Decimal?       @db.Decimal(36, 18)
-
-  invoiceUrl String?
-  posData    String?
-
-  paidAt      DateTime?
-  confirmedAt DateTime?
-  completedAt DateTime?
-  expiredAt   DateTime?
-  invalidAt   DateTime?
-
-  rawInvoiceSnapshot Json?
-  rawStatusPayload   Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  fundingIntent CryptoFundingIntent @relation(fields: [fundingIntentId], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([createdAt])
 }
 
 model CryptoWebhookEvent {
@@ -1344,7 +1304,6 @@ enum CryptoNetwork {
 }
 
 enum CryptoFundingProvider {
-  BITPAY
   TRANSAK
 }
 
@@ -1359,17 +1318,7 @@ enum CryptoFundingIntentStatus {
   CANCELED
 }
 
-enum BitPayInvoiceStatus {
-  NEW
-  PAID
-  CONFIRMED
-  COMPLETE
-  EXPIRED
-  INVALID
-}
-
 enum CryptoWebhookSource {
-  BITPAY
   TRANSAK
 }
 
