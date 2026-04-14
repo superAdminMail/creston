@@ -113,13 +113,17 @@ export async function HeroSection() {
             <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
               <div>
                 <p className="text-xs text-slate-400">Snapshot</p>
-                <p className="text-sm text-white/80">{snapshot.statusLabel} overview</p>
+                <p className="text-sm text-white/80">
+                  {snapshot.statusLabel} overview
+                </p>
               </div>
-              <span className="text-xs text-blue-300">{snapshot.statusLabel}</span>
+              <span className="text-xs text-blue-300">
+                {snapshot.statusLabel}
+              </span>
             </div>
 
             <div className="mt-5">
-              <p className="text-sm text-slate-400">Total Value</p>
+              <p className="text-sm text-slate-400">Total Capital Inflow</p>
               <p className="text-3xl font-semibold text-white/80">
                 {snapshot.totalValueLabel}
               </p>

@@ -30,12 +30,11 @@ export default async function ContactPage() {
   const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
   const officeLine = config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
   const siteLLC = config?.siteLLC?.trim() || `${site.siteName} LLC`;
-  const availability =
-    "Monday - Friday, 6:00 AM - 6:00 PM (EST) | SAT, 9:00 AM - 5:00 PM (EST) | SUN, CLOSED";
+  const availability = "24/7";
 
   return (
-    <div className="relative min-h-screen bg-[#050B1F] px-4 py-16 md:px-8">
-      <div className="absolute inset-0">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#050B1F] px-4 py-16 md:px-8">
+      <div className="absolute inset-0 overflow-hidden">
         <div className="absolute left-[-10%] top-[-20%] h-[30rem] w-[30rem] rounded-full bg-blue-500/10 blur-3xl" />
         <div className="absolute bottom-[-20%] right-[-10%] h-[30rem] w-[30rem] rounded-full bg-sky-400/10 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_40%)]" />

@@ -51,6 +51,7 @@ model User {
   agentProfile        AgentProfile?
   conversationMembers ConversationMember[]
   notifications       Notification[]
+  conversations       Conversation[]       @relation("ConversationUser")
 
   submittedInvestmentOrderPayments InvestmentOrderPayment[] @relation("InvestmentOrderPaymentSubmittedBy")
   reviewedInvestmentOrderPayments  InvestmentOrderPayment[] @relation("InvestmentOrderPaymentReviewedBy")
@@ -1109,6 +1110,7 @@ model CryptoWebhookEvent {
 model Conversation {
   id                  String  @id @default(cuid())
   investmentAccountId String?
+  userId              String?
 
   type   ConversationType
   status ConversationStatus @default(OPEN)
@@ -1125,6 +1127,7 @@ model Conversation {
 
   agentId String?
   agent   User?   @relation("ConversationAgent", fields: [agentId], references: [id])
+  user    User?   @relation("ConversationUser", fields: [userId], references: [id], onDelete: SetNull)
 
   priority ConversationPriority @default(NORMAL)
 
@@ -1132,6 +1135,7 @@ model Conversation {
   messages Message[]
 
   @@index([lastMessageAt])
+  @@index([userId])
   @@index([type, status])
 }
 
