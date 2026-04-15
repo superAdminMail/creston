@@ -4,6 +4,7 @@ import { getPublicInvestmentProducts } from "@/lib/service/publicInvestmentCatal
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+import type { InvestmentModel } from "@/generated/prisma";
 
 export async function generateMetadata() {
   const site = await getSiteSeoConfig();
@@ -30,9 +31,47 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-export default async function InvestmentProductsPage() {
+async function resolveModel(searchParams?: Promise<{
+  model?: string | string[];
+}>) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const raw = Array.isArray(resolvedSearchParams?.model)
+    ? resolvedSearchParams?.model[0]
+    : resolvedSearchParams?.model;
+
+  const normalized = raw?.trim().toUpperCase();
+
+  if (normalized === "FIXED" || normalized === "MARKET") {
+    return normalized as InvestmentModel;
+  }
+
+  return null;
+}
+
+export default async function InvestmentProductsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    model?: string | string[];
+  }>;
+}) {
   const site = await getSiteSeoConfig();
-  const products = await getPublicInvestmentProducts();
+  const model = await resolveModel(searchParams);
+  const products = await getPublicInvestmentProducts(model ?? undefined);
+
+  const title =
+    model === "FIXED"
+      ? "Fixed investment products"
+      : model === "MARKET"
+        ? "Market investment products"
+        : "Investment products designed around clear long-term strategies";
+
+  const description =
+    model === "FIXED"
+      ? `Explore ${site.siteName} fixed investment products with defined structure, steady planning, and long-term discipline.`
+      : model === "MARKET"
+        ? `Explore ${site.siteName} market investment products with responsive valuation and growth tied to market movement.`
+        : `Explore the active ${site.siteName} investment product catalog, compare plan coverage, and move into the right strategy for your timeline and target entry amount.`;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-16 sm:px-6 lg:px-8">
@@ -42,12 +81,10 @@ export default async function InvestmentProductsPage() {
             {site.siteName} products
           </span>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Investment products designed around clear long-term strategies
+            {title}
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
-            Explore the active {site.siteName} investment product catalog,
-            compare plan coverage, and move into the right strategy for your
-            timeline and target entry amount.
+            {description}
           </p>
         </div>
       </section>
@@ -137,12 +174,12 @@ export default async function InvestmentProductsPage() {
               </dl>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/investment-plans"
-                  className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
-                >
-                  View active plans
-                </Link>
+                    <Link
+                      href={model ? "/investment-plans" : "/investment-plans"}
+                      className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+                    >
+                      View active plans
+                    </Link>
                 {product.featuredPlan ? (
                   <Link
                     href={`/investment-plans/${product.featuredPlan.slug}`}

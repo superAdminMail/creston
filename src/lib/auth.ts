@@ -92,6 +92,19 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60,
 
+    async onEmailVerification(user: { id: string }) {
+      await prisma.user.updateMany({
+        where: {
+          id: user.id,
+          accountStatus: { not: "ACTIVE" },
+        },
+        data: {
+          emailVerifiedAt: new Date(),
+          accountStatus: "ACTIVE",
+        },
+      });
+    },
+
     sendVerificationEmail: async ({ user, url }) => {
       const site = await getSiteConfigurationCached();
 

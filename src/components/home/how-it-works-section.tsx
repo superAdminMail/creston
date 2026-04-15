@@ -4,6 +4,13 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const steps = [
   {
@@ -65,25 +72,28 @@ export async function HowItWorksSection() {
                 <div key={step.title} className="relative">
                   <div className="absolute left-0 top-7 z-10 h-4 w-4 rounded-full bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.6)]" />
 
-                  <div className="ml-6 rounded-[1.8rem] border border-white/8 bg-white/[0.04] p-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
-                        Step {step.step}
-                      </span>
+                  <Card className="ml-6 flex h-full min-h-[300px] border-white/8 bg-white/[0.04] shadow-none">
+                    <CardHeader className="space-y-0 pb-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
+                          Step {step.step}
+                        </span>
 
-                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
-                        <Icon className="h-5 w-5 text-blue-200" />
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
+                          <Icon className="h-5 w-5 text-blue-200" />
+                        </div>
                       </div>
-                    </div>
+                      <CardTitle className="mt-6 text-lg font-semibold text-white">
+                        {step.title}
+                      </CardTitle>
+                    </CardHeader>
 
-                    <h3 className="mt-6 text-lg font-semibold text-white">
-                      {step.title}
-                    </h3>
-
-                    <p className="mt-3 text-sm leading-7 text-slate-400">
-                      {step.description}
-                    </p>
-                  </div>
+                    <CardContent className="flex flex-1 pt-3">
+                      <CardDescription className="line-clamp-5 text-sm leading-7 text-slate-400">
+                        {step.description}
+                      </CardDescription>
+                    </CardContent>
+                  </Card>
                 </div>
               );
             })}
@@ -96,28 +106,31 @@ export async function HowItWorksSection() {
             const Icon = step.icon;
 
             return (
-              <div
+              <Card
                 key={step.title}
-                className="rounded-[1.8rem] border border-white/8 bg-white/[0.04] p-6 shadow-sm transition"
+                className="flex min-h-[260px] border-white/8 bg-white/[0.04] shadow-none"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
-                    Step {step.step}
-                  </span>
+                <CardHeader className="space-y-0 pb-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-[0.2em] text-blue-200">
+                      Step {step.step}
+                    </span>
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
-                    <Icon className="h-5 w-5 text-blue-200" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.05))]">
+                      <Icon className="h-5 w-5 text-blue-200" />
+                    </div>
                   </div>
-                </div>
+                  <CardTitle className="mt-6 text-lg font-semibold text-white">
+                    {step.title}
+                  </CardTitle>
+                </CardHeader>
 
-                <h3 className="mt-6 text-lg font-semibold text-white">
-                  {step.title}
-                </h3>
-
-                <p className="mt-3 text-sm leading-7 text-slate-400">
-                  {step.description}
-                </p>
-              </div>
+                <CardContent className="flex flex-1 pt-3">
+                  <CardDescription className="line-clamp-5 text-sm leading-7 text-slate-400">
+                    {step.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
             );
           })}
         </div>

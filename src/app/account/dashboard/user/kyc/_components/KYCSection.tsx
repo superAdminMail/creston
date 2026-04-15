@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Pusher from "pusher-js";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -15,6 +16,31 @@ export default function KYCSection({
 }) {
   const [status, setStatus] = useState<KycStatus>(initialStatus);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    });
+
+    const channel = pusher.subscribe(`kyc-${userId}`);
+
+    channel.bind(
+      "kyc-status-updated",
+      (payload: { status?: KycStatus }) => {
+        if (payload?.status) {
+          setStatus(payload.status);
+        }
+      },
+    );
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+      pusher.disconnect();
+    };
+  }, [userId]);
 
   const startKYC = async () => {
     try {

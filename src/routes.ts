@@ -18,6 +18,7 @@ export const authRoutes = [
   "/auth/get-started",
   "/auth/onboarding",
   "/auth/verify-email",
+  "/auth/send-verify-email",
   "/auth/reset-password",
   "/auth/forgot-password",
   "/error",

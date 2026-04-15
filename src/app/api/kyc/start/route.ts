@@ -1,41 +1,127 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const { userId } = await req.json();
+  try {
+    const { userId } = await req.json();
 
-  const investor = await prisma.investorProfile.findUnique({
-    where: { userId },
-  });
+    if (!userId) {
+      return NextResponse.json({ message: "Missing userId" }, { status: 400 });
+    }
 
-  if (!investor) throw new Error("Investor not found");
+    const investor = await prisma.investorProfile.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        kycStatus: true,
+      },
+    });
 
-  const res = await fetch("https://api.didit.me/v1/verification/session", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.DIDIT_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      workflowId: process.env.DIDIT_WORKFLOW_ID,
-      vendorData: userId,
-    }),
-  });
+    if (!investor) {
+      return NextResponse.json(
+        { message: "Investor not found" },
+        { status: 404 },
+      );
+    }
 
-  const data = await res.json();
+    if (investor.kycStatus === "PENDING_REVIEW") {
+      return NextResponse.json(
+        { message: "Verification already in progress" },
+        { status: 409 },
+      );
+    }
 
-  await prisma.kYCVerification.upsert({
-    where: { investorProfileId: investor.id },
-    update: {
-      providerSessionId: data.session_id,
-      status: "PENDING_REVIEW",
-    },
-    create: {
-      investorProfileId: investor.id,
-      providerSessionId: data.session_id,
-      vendorData: userId,
-    },
-  });
+    const callbackBase =
+      process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL;
 
-  return NextResponse.json({ url: data.verification_url });
+    const callbackUrl = callbackBase
+      ? `${callbackBase.replace(/\/$/, "")}/api/webhooks/didit`
+      : undefined;
+
+    const diditRes = await fetch("https://verification.didit.me/v3/session/", {
+      method: "POST",
+      headers: {
+        "x-api-key": process.env.DIDIT_API_KEY!,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        workflow_id: process.env.DIDIT_WORKFLOW_ID,
+        vendor_data: userId,
+        ...(callbackUrl ? { callback: callbackUrl } : {}),
+      }),
+    });
+
+    const rawText = await diditRes.text();
+    let data: Record<string, unknown> | null = null;
+
+    try {
+      data = rawText ? JSON.parse(rawText) : null;
+    } catch {
+      data = { raw: rawText };
+    }
+
+    if (!diditRes.ok) {
+      return NextResponse.json(
+        {
+          message: "Failed to create Didit session",
+          diditStatus: diditRes.status,
+          diditResponse: data,
+        },
+        { status: 502 },
+      );
+    }
+
+    const sessionId =
+      typeof data?.session_id === "string" ? data.session_id : null;
+    const verificationUrl = typeof data?.url === "string" ? data.url : null;
+
+    if (!sessionId || !verificationUrl) {
+      return NextResponse.json(
+        {
+          message: "Didit returned an unexpected response",
+          diditResponse: data,
+        },
+        { status: 502 },
+      );
+    }
+
+    await prisma.kYCVerification.upsert({
+      where: { investorProfileId: investor.id },
+      update: {
+        providerSessionId: sessionId,
+        vendorData: userId,
+        status: "PENDING_REVIEW",
+        failureReason: null,
+        verifiedAt: null,
+      },
+      create: {
+        investorProfileId: investor.id,
+        providerSessionId: sessionId,
+        vendorData: userId,
+        status: "PENDING_REVIEW",
+      },
+    });
+
+    await prisma.investorProfile.update({
+      where: { id: investor.id },
+      data: {
+        kycStatus: "PENDING_REVIEW",
+      },
+    });
+
+    return NextResponse.json({
+      url: verificationUrl,
+      sessionId,
+    });
+  } catch (error) {
+    console.error("Didit start KYC error:", error);
+
+    return NextResponse.json(
+      { message: "Unable to start verification" },
+      { status: 500 },
+    );
+  }
 }

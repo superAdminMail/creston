@@ -21,11 +21,12 @@ export async function sendVerificationEmailAction(email: string) {
     return {
       success: true,
       message:
-        "If an account exists and still needs verification, a new link has been sent.",
+        "If your account exists and still requires verification, we’ve sent a fresh confirmation link to your inbox.",
     };
   } catch {
     return {
-      error: "Unable to send verification email right now. Please try again.",
+      error:
+        "We couldn’t send a new verification email right now. Please try again in a moment.",
     };
   }
 }

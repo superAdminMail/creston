@@ -1,67 +1,49 @@
-import { Suspense } from "react";
-import {
-  UserProfileCard,
-  type CurrentProfileUser,
-} from "@/components/profile/UserProfileCard";
+import { prisma } from "@/lib/prisma";
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 
-import { redirect } from "next/navigation";
+import ProfilePageView from "@/app/account/dashboard/profile/ProfilePageView";
 
-import { getCurrentUser } from "@/lib/getCurrentUser";
-import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
-import { getUserByEmail } from "@/components/helper/data";
-import ProfilePageSkeleton from "@/components/skeletons/ProfilePageSkeleton";
+export default async function Page() {
+  const sessionUser = await getCurrentSessionUser();
 
-async function ProfilePageContent() {
-  const [sessionUser, site] = await Promise.all([
-    getCurrentUser(),
-    getSiteConfigurationCached(),
-  ]);
-  if (!sessionUser?.email) {
-    redirect("/auth/login");
+  if (!sessionUser?.id || !sessionUser.email) {
+    return null;
   }
 
-  const dbUser = await getUserByEmail(sessionUser.email);
+  const dbUser = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: {
+      name: true,
+      email: true,
+      image: true,
+      role: true,
+      investorProfile: {
+        select: {
+          phoneNumber: true,
+          country: true,
+          state: true,
+          city: true,
+          addressLine1: true,
+          addressLine2: true,
+          isVerified: true,
+        },
+      },
+    },
+  });
+
   if (!dbUser) {
-    redirect("/auth/login");
+    return null;
   }
 
-  const fullName = (dbUser.name ?? sessionUser.name ?? "").trim();
-  const [firstName, ...rest] = fullName.split(/\s+/);
-  const profileUser: CurrentProfileUser = {
-    id: dbUser.id,
-    email: dbUser.email,
-    emailVerified: Boolean(dbUser.emailVerified),
-    role: sessionUser.role,
-    image: sessionUser.image ?? dbUser.image ?? null,
-    createdAt: dbUser.createdAt,
-    firstName: firstName || null,
-    lastName: rest.length > 0 ? rest.join(" ") : null,
-  };
-
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold text-white/90">My Profile</h1>
-          <p className="text-sm text-gray-500 dark:text-zinc-400">
-            Manage your personal account information and security.
-          </p>
-        </header>
-
-        <UserProfileCard
-          user={profileUser}
-          siteName={site?.siteName ?? "Havenstone"}
-          siteLogoUrl={site?.siteLogoFileAsset?.url}
-        />
-      </div>
-    </main>
-  );
-}
-
-export default function ProfilePage() {
-  return (
-    <Suspense fallback={<ProfilePageSkeleton />}>
-      <ProfilePageContent />
-    </Suspense>
+    <ProfilePageView
+      user={{
+        name: dbUser.name,
+        email: dbUser.email,
+        image: dbUser.image,
+        role: dbUser.role,
+      }}
+      profile={dbUser.investorProfile}
+    />
   );
 }

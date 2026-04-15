@@ -61,6 +61,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${site.siteUrl}/savings-products`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.78,
+    },
   ];
 
   const investmentPlans = await prisma.investmentPlan.findMany({

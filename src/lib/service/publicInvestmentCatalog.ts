@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { Prisma } from "@/generated/prisma";
+import type { InvestmentModel } from "@/generated/prisma";
 
 import {
   formatCurrency,
@@ -363,20 +364,38 @@ function mapPublicInvestmentPlan(
 }
 
 export const getPublicInvestmentProducts = cache(
-  async (): Promise<PublicInvestmentProductViewModel[]> => {
+  async (
+    model?: InvestmentModel,
+  ): Promise<PublicInvestmentProductViewModel[]> => {
     const products = await prisma.investment.findMany({
       where: {
         isActive: true,
-        investmentPlans: {
-          some: {
-            isActive: true,
-            tiers: {
-              some: {
-                isActive: true,
+        ...(model
+          ? {
+              investmentPlans: {
+                some: {
+                  isActive: true,
+                  investmentModel: model,
+                  tiers: {
+                    some: {
+                      isActive: true,
+                    },
+                  },
+                },
               },
-            },
-          },
-        },
+            }
+          : {
+              investmentPlans: {
+                some: {
+                  isActive: true,
+                  tiers: {
+                    some: {
+                      isActive: true,
+                    },
+                  },
+                },
+              },
+            }),
       },
       select: publicInvestmentProductSelect,
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],

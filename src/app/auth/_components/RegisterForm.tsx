@@ -19,11 +19,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signUp } from "@/lib/auth-client";
 import {
   registerUserSchema,
   type RegisterUserSchemaType,
 } from "@/lib/zodValidations/user";
+import { registerUserAction } from "@/actions/auth/register/user";
 
 export default function RegisterForm({
   siteName,
@@ -49,18 +49,17 @@ export default function RegisterForm({
     setError(undefined);
 
     startTransition(async () => {
-      const { error } = await signUp.email({
-        name: values.email.split("@")[0],
+      const result = await registerUserAction({
         email: values.email,
         password: values.password,
       });
 
-      if (error) {
-        setError(error.message ?? "Unable to create account");
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
 
-      router.replace("/auth/onboarding");
+      router.replace(`/auth/send-verify-email?email=${values.email}`);
       router.refresh();
     });
   };
@@ -137,8 +136,8 @@ export default function RegisterForm({
 
                     {!fieldState.error ? (
                       <FieldDescription className="text-xs text-slate-500">
-                        Use the email address that will be linked to your secure{" "}
-                        {siteName} account.
+                        Use a valid personal or business email address for your
+                        secure {siteName} account.
                       </FieldDescription>
                     ) : null}
 
@@ -191,7 +190,7 @@ export default function RegisterForm({
                     {!fieldState.error ? (
                       <FieldDescription className="text-xs text-slate-500">
                         Choose a strong password to protect access to your
-                        personal retirement and investment profile.
+                        account.
                       </FieldDescription>
                     ) : null}
 

@@ -40,6 +40,13 @@ function isProtectedPath(pathname: string) {
   );
 }
 
+function isVerificationUtilityRoute(pathname: string) {
+  return (
+    matchesRoute(pathname, "/auth/verify-email") ||
+    matchesRoute(pathname, "/auth/send-verify-email")
+  );
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -48,20 +55,19 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = matchesAny(pathname, authRoutes);
   const isProtectedRoute = isProtectedPath(pathname);
   const hasCookie = hasSessionCookie(request);
+  const isVerificationRoute = isVerificationUtilityRoute(pathname);
 
   if (process.env.NODE_ENV === "development") {
     console.log("🧠 BetterAuth Middleware");
-
     console.log({
       "➡️ Path": pathname,
-      "🍪 Has Cookie": hasCookie,
-      //  "📦 Cookies": request.cookies.getAll().map((c) => c.name),
+      "🍪 Has Cookie & isLoggedin": hasCookie,
       "🌐 Public": isPublicRoute,
       "🔐 Auth": isAuthRoute,
       "🛡️ Protected": isProtectedRoute,
+      "✉️ Verify Flow": isVerificationRoute,
       "🧩 API Auth": isApiAuthRoute,
     });
-
     console.log("------------------------");
   }
 
@@ -69,16 +75,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (isPublicRoute || isAuthRoute) {
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
+
+  if (isAuthRoute) {
+    if (isVerificationRoute) {
+      return NextResponse.next();
+    }
+
+    if (hasCookie) {
+      return NextResponse.redirect(new URL("/account", request.url));
+    }
+
     return NextResponse.next();
   }
 
   if (isProtectedRoute && !hasCookie) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
-    console.log("🔍 Decision:", {
-      willBlock: isProtectedRoute && !hasCookie,
-    });
     return NextResponse.redirect(loginUrl);
   }
 

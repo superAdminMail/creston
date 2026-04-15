@@ -25,6 +25,15 @@ model User {
   emailVerified Boolean @default(false)
   image         String?
 
+  accountStatus             UserAccountStatus @default(PENDING_VERIFICATION)
+  emailVerificationRequired Boolean           @default(true)
+  isDisposableEmail         Boolean           @default(false)
+  disposableEmailChecked    Boolean           @default(false)
+  disposableEmailDomain     String?
+  disposableCheckProvider   String?
+  disposableCheckedAt       DateTime?
+  emailVerifiedAt           DateTime?
+
   isDeleted           Boolean   @default(false)
   deletedAt           DateTime?
   scheduledDeletionAt DateTime?
@@ -61,6 +70,9 @@ model User {
   savingsFundingIntents               SavingsFundingIntent[]
 
   @@unique([email])
+  @@index([accountStatus])
+  @@index([emailVerified])
+  @@index([isDisposableEmail])
   @@index([profileAvatarFileAssetId])
   @@map("user")
 }
@@ -1524,4 +1536,12 @@ enum ConversationRole {
   SUPPORT
   ADMIN
   SYSTEM
+}
+
+enum UserAccountStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+  DELETED
 }

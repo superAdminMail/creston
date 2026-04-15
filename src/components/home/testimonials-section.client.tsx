@@ -19,11 +19,7 @@ type TestimonialsSectionClientProps = {
   testimonials: PublicTestimonyViewModel[];
 };
 
-function TestimonyCard({
-  testimony,
-}: {
-  testimony: PublicTestimonyViewModel;
-}) {
+function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
   const [expanded, setExpanded] = React.useState(false);
   const quote = testimony.quote?.trim() ?? "";
   const words = React.useMemo(
@@ -32,7 +28,7 @@ function TestimonyCard({
   );
   const shouldShowToggle = words.length > 16;
   const previewQuote = shouldShowToggle
-    ? `${words.slice(0, 16).join(" ")}...`
+    ? `${words.slice(0, 21).join(" ")}...`
     : quote;
 
   return (

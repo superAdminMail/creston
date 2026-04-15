@@ -6,11 +6,7 @@ import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Menubar,
   MenubarContent,
@@ -154,24 +150,24 @@ export function DashboardNavbarClient({
           <NotificationMenu />
 
           <Menubar className="h-auto border-0 bg-transparent p-0 shadow-none">
-          <MenubarMenu>
-            <MenubarTrigger
+            <MenubarMenu>
+              <MenubarTrigger
                 className={cn(
                   "rounded-2xl bg-transparent p-0 text-slate-700 transition-all duration-200 hover:bg-transparent hover:text-slate-950 data-[state=open]:bg-transparent data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white dark:data-[state=open]:bg-transparent dark:data-[state=open]:text-white",
                 )}
-              aria-label="Open account menu"
-            >
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200 dark:ring-white/10">
-                  <AvatarImage
-                    src={avatarUrl ?? undefined}
-                    alt={user.name ?? "User avatar"}
-                    className="rounded-2xl object-cover"
-                  />
-                  <AvatarFallback className="rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 dark:bg-sky-400/12 dark:text-sky-200">
-                    {avatarFallback}
-                  </AvatarFallback>
-                </Avatar>
+                aria-label="Open account menu"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200 dark:ring-white/10">
+                    <AvatarImage
+                      src={avatarUrl ?? undefined}
+                      alt={user.name ?? "User avatar"}
+                      className="rounded-2xl object-cover"
+                    />
+                    <AvatarFallback className="rounded-2xl bg-sky-100 text-sm font-semibold uppercase text-sky-700 dark:bg-sky-400/12 dark:text-sky-200">
+                      {avatarFallback}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
               </MenubarTrigger>
 
@@ -219,7 +215,7 @@ export function DashboardNavbarClient({
                     className="rounded-xl px-3 py-3 text-slate-700 dark:text-slate-200"
                   >
                     <Link
-                      href={`${dashboardHome}/profile`}
+                      href={`/account/dashboard/profile`}
                       className="flex items-center gap-3"
                     >
                       <User2 className="h-4 w-4" />
@@ -232,7 +228,7 @@ export function DashboardNavbarClient({
                     className="rounded-xl px-3 py-3 text-slate-700 dark:text-slate-200"
                   >
                     <Link
-                      href={`${dashboardHome}/settings`}
+                      href={`/account/dashboard/settings`}
                       className="flex items-center gap-3"
                     >
                       <Settings className="h-4 w-4" />

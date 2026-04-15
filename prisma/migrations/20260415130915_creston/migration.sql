@@ -1,4 +1,28 @@
 -- CreateEnum
+CREATE TYPE "SavingsFundingMethodType" AS ENUM ('BANK_TRANSFER', 'CRYPTO_PROVIDER');
+
+-- CreateEnum
+CREATE TYPE "SavingsFundingIntentStatus" AS ENUM ('PENDING', 'SUBMITTED', 'PARTIALLY_PAID', 'PAID', 'CREDITED', 'FAILED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "SavingsTransactionPaymentType" AS ENUM ('BANK_DEPOSIT', 'CRYPTO_PROVIDER');
+
+-- CreateEnum
+CREATE TYPE "SavingsTransactionPaymentStatus" AS ENUM ('PENDING_REVIEW', 'APPROVED', 'REJECTED', 'CANCELED');
+
+-- CreateEnum
+CREATE TYPE "InvestmentOrderPaymentType" AS ENUM ('BANK_DEPOSIT', 'CRYPTO_PROVIDER');
+
+-- CreateEnum
+CREATE TYPE "InvestmentOrderPaymentStatus" AS ENUM ('PENDING_REVIEW', 'APPROVED', 'REJECTED', 'CANCELED');
+
+-- CreateEnum
+CREATE TYPE "PlatformPaymentMethodType" AS ENUM ('BANK_INFO', 'WALLET_ADDRESS');
+
+-- CreateEnum
+CREATE TYPE "PlatformPaymentVerificationStatus" AS ENUM ('UNVERIFIED', 'VERIFIED', 'SUSPENDED');
+
+-- CreateEnum
 CREATE TYPE "CryptoAsset" AS ENUM ('BTC', 'ETH');
 
 -- CreateEnum
@@ -29,7 +53,10 @@ CREATE TYPE "PenaltyType" AS ENUM ('FIXED', 'PERCENT');
 CREATE TYPE "InvestmentModel" AS ENUM ('FIXED', 'MARKET');
 
 -- CreateEnum
-CREATE TYPE "InvestmentOrderStatus" AS ENUM ('PENDING_CONFIRMATION', 'CONFIRMED', 'REJECTED', 'CANCELLED', 'PAID', 'PENDING_PAYMENT', 'PARTIALLY_PAID');
+CREATE TYPE "InvestmentPaymentMethodType" AS ENUM ('BANK_TRANSFER', 'CRYPTO_PROVIDER');
+
+-- CreateEnum
+CREATE TYPE "InvestmentOrderStatus" AS ENUM ('CONFIRMED', 'REJECTED', 'CANCELLED', 'PAID', 'PENDING_PAYMENT', 'PARTIALLY_PAID');
 
 -- CreateEnum
 CREATE TYPE "CommissionStatus" AS ENUM ('PENDING', 'PAID', 'CANCELLED', 'PARTIALLY_PAID', 'VOID');
@@ -80,7 +107,7 @@ CREATE TYPE "InvestmentTierLevel" AS ENUM ('CORE', 'ADVANCED', 'ELITE');
 CREATE TYPE "FileStorageProvider" AS ENUM ('UPLOADTHING', 'S3', 'CLOUDINARY', 'R2', 'LOCAL');
 
 -- CreateEnum
-CREATE TYPE "ConversationType" AS ENUM ('SUPPORT', 'SYSTEM', 'ACCOUNT_ISSUES', 'INVESTMENT_INQUIRIES');
+CREATE TYPE "ConversationType" AS ENUM ('SUPPORT', 'SYSTEM', 'ACCOUNT_ISSUES', 'INVESTMENT_INQUIRIES', 'CONTACT_INQUIRY');
 
 -- CreateEnum
 CREATE TYPE "ConversationStatus" AS ENUM ('OPEN', 'RESOLVED', 'CLOSED', 'ARCHIVED', 'WAITING', 'CANCELLED', 'REJECTED', 'BLOCKED', 'DELETED');
@@ -94,6 +121,9 @@ CREATE TYPE "ConversationPriority" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
 -- CreateEnum
 CREATE TYPE "ConversationRole" AS ENUM ('USER', 'SUPPORT', 'ADMIN', 'SYSTEM');
 
+-- CreateEnum
+CREATE TYPE "UserAccountStatus" AS ENUM ('PENDING_VERIFICATION', 'ACTIVE', 'SUSPENDED', 'BLOCKED', 'DELETED');
+
 -- CreateTable
 CREATE TABLE "user" (
     "id" TEXT NOT NULL,
@@ -103,6 +133,14 @@ CREATE TABLE "user" (
     "username" TEXT,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "image" TEXT,
+    "accountStatus" "UserAccountStatus" NOT NULL DEFAULT 'PENDING_VERIFICATION',
+    "emailVerificationRequired" BOOLEAN NOT NULL DEFAULT true,
+    "isDisposableEmail" BOOLEAN NOT NULL DEFAULT false,
+    "disposableEmailChecked" BOOLEAN NOT NULL DEFAULT false,
+    "disposableEmailDomain" TEXT,
+    "disposableCheckProvider" TEXT,
+    "disposableCheckedAt" TIMESTAMP(3),
+    "emailVerifiedAt" TIMESTAMP(3),
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "deletedAt" TIMESTAMP(3),
     "scheduledDeletionAt" TIMESTAMP(3),
@@ -339,11 +377,17 @@ CREATE TABLE "investment_order" (
     "lastValuationAt" TIMESTAMP(3),
     "isMatured" BOOLEAN NOT NULL DEFAULT false,
     "isWithdrawn" BOOLEAN NOT NULL DEFAULT false,
-    "amount" DECIMAL(18,2) NOT NULL,
-    "currency" TEXT NOT NULL DEFAULT 'USD',
     "status" "InvestmentOrderStatus" NOT NULL DEFAULT 'PENDING_PAYMENT',
     "commissionStatus" "CommissionStatus" NOT NULL DEFAULT 'PENDING',
     "commissionPercent" DECIMAL(5,2) NOT NULL DEFAULT 0,
+    "paymentMethodType" "InvestmentPaymentMethodType",
+    "platformPaymentMethodId" TEXT,
+    "amountPaid" DECIMAL(18,2) NOT NULL DEFAULT 0,
+    "amount" DECIMAL(18,2) NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "lastPaymentSubmittedAt" TIMESTAMP(3),
+    "lastPaymentReviewedAt" TIMESTAMP(3),
+    "paymentMetadata" JSONB,
     "paymentReference" TEXT,
     "paidAt" TIMESTAMP(3),
     "confirmedAt" TIMESTAMP(3),
@@ -417,6 +461,7 @@ CREATE TABLE "savings_account" (
 CREATE TABLE "savings_transaction" (
     "id" TEXT NOT NULL,
     "savingsAccountId" TEXT NOT NULL,
+    "savingsFundingIntentId" TEXT,
     "type" "SavingsTransactionType" NOT NULL,
     "amount" DECIMAL(18,2) NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'USD',
@@ -566,19 +611,68 @@ CREATE TABLE "management" (
 );
 
 -- CreateTable
-CREATE TABLE "PlatformWallet" (
+CREATE TABLE "platform_payment_method" (
     "id" TEXT NOT NULL,
     "label" TEXT NOT NULL,
-    "asset" "CryptoAsset" NOT NULL,
-    "network" "CryptoNetwork" NOT NULL,
-    "address" TEXT NOT NULL,
+    "type" "PlatformPaymentMethodType" NOT NULL,
+    "providerName" TEXT,
+    "accountName" TEXT,
+    "currency" TEXT DEFAULT 'USD',
+    "country" TEXT,
+    "instructions" TEXT,
+    "notes" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
-    "notes" TEXT,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "verificationStatus" "PlatformPaymentVerificationStatus" NOT NULL DEFAULT 'UNVERIFIED',
+    "bankName" TEXT,
+    "bankCode" TEXT,
+    "accountNumber" TEXT,
+    "iban" TEXT,
+    "swiftCode" TEXT,
+    "routingNumber" TEXT,
+    "branchName" TEXT,
+    "cryptoAsset" "CryptoAsset",
+    "cryptoNetwork" "CryptoNetwork",
+    "walletAddress" TEXT,
+    "walletTag" TEXT,
+    "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "PlatformWallet_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "platform_payment_method_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "investment_order_payment" (
+    "id" TEXT NOT NULL,
+    "investmentOrderId" TEXT NOT NULL,
+    "type" "InvestmentOrderPaymentType" NOT NULL,
+    "status" "InvestmentOrderPaymentStatus" NOT NULL DEFAULT 'PENDING_REVIEW',
+    "platformPaymentMethodId" TEXT,
+    "submittedByUserId" TEXT,
+    "reviewedByUserId" TEXT,
+    "claimedAmount" DECIMAL(18,2) NOT NULL,
+    "approvedAmount" DECIMAL(18,2),
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "depositorName" TEXT,
+    "depositorAccountName" TEXT,
+    "depositorAccountNo" TEXT,
+    "transferReference" TEXT,
+    "blockchainTxHash" TEXT,
+    "receiptFileId" TEXT,
+    "note" TEXT,
+    "reviewNote" TEXT,
+    "rejectionReason" TEXT,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reviewedAt" TIMESTAMP(3),
+    "providerReference" TEXT,
+    "providerPayload" JSONB,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "investment_order_payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -593,9 +687,9 @@ CREATE TABLE "CryptoFundingIntent" (
     "expectedCryptoAmount" DECIMAL(36,18),
     "receivedCryptoAmount" DECIMAL(36,18),
     "status" "CryptoFundingIntentStatus" NOT NULL DEFAULT 'PENDING',
-    "platformWalletId" TEXT,
-    "destinationWalletAddress" TEXT NOT NULL,
-    "destinationWalletLabel" TEXT,
+    "platformPaymentMethodId" TEXT,
+    "destinationReference" TEXT,
+    "destinationLabel" TEXT,
     "providerSessionId" TEXT,
     "providerExternalId" TEXT,
     "providerReference" TEXT,
@@ -610,8 +704,75 @@ CREATE TABLE "CryptoFundingIntent" (
     "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "creditedFiatAmount" DECIMAL(18,2),
+    "creditedAt" TIMESTAMP(3),
+    "investmentOrderId" TEXT NOT NULL,
 
     CONSTRAINT "CryptoFundingIntent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "savings_funding_intent" (
+    "id" TEXT NOT NULL,
+    "savingsAccountId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "fundingMethodType" "SavingsFundingMethodType" NOT NULL,
+    "status" "SavingsFundingIntentStatus" NOT NULL DEFAULT 'PENDING',
+    "platformPaymentMethodId" TEXT,
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "targetAmount" DECIMAL(18,2) NOT NULL,
+    "creditedAmount" DECIMAL(18,2) NOT NULL DEFAULT 0,
+    "paymentReference" TEXT,
+    "provider" "CryptoFundingProvider",
+    "providerSessionId" TEXT,
+    "providerExternalId" TEXT,
+    "providerReference" TEXT,
+    "expectedCryptoAmount" DECIMAL(36,18),
+    "receivedCryptoAmount" DECIMAL(36,18),
+    "submittedAt" TIMESTAMP(3),
+    "paidAt" TIMESTAMP(3),
+    "creditedAt" TIMESTAMP(3),
+    "cancelledAt" TIMESTAMP(3),
+    "failedAt" TIMESTAMP(3),
+    "failureCode" TEXT,
+    "failureMessage" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "savings_funding_intent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "savings_transaction_payment" (
+    "id" TEXT NOT NULL,
+    "savingsFundingIntentId" TEXT NOT NULL,
+    "type" "SavingsTransactionPaymentType" NOT NULL,
+    "status" "SavingsTransactionPaymentStatus" NOT NULL DEFAULT 'PENDING_REVIEW',
+    "platformPaymentMethodId" TEXT,
+    "submittedByUserId" TEXT,
+    "reviewedByUserId" TEXT,
+    "claimedAmount" DECIMAL(18,2) NOT NULL,
+    "approvedAmount" DECIMAL(18,2),
+    "currency" TEXT NOT NULL DEFAULT 'USD',
+    "depositorName" TEXT,
+    "depositorAccountName" TEXT,
+    "depositorAccountNo" TEXT,
+    "transferReference" TEXT,
+    "blockchainTxHash" TEXT,
+    "receiptFileId" TEXT,
+    "note" TEXT,
+    "reviewNote" TEXT,
+    "rejectionReason" TEXT,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "reviewedAt" TIMESTAMP(3),
+    "providerReference" TEXT,
+    "providerPayload" JSONB,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "savings_transaction_payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -640,12 +801,16 @@ CREATE TABLE "CryptoWebhookEvent" (
 CREATE TABLE "Conversation" (
     "id" TEXT NOT NULL,
     "investmentAccountId" TEXT,
+    "userId" TEXT,
     "type" "ConversationType" NOT NULL,
     "status" "ConversationStatus" NOT NULL DEFAULT 'OPEN',
     "subject" TEXT,
     "lastMessageAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "contactName" TEXT,
+    "contactEmail" TEXT,
+    "source" TEXT,
     "agentId" TEXT,
     "priority" "ConversationPriority" NOT NULL DEFAULT 'NORMAL',
 
@@ -713,6 +878,8 @@ CREATE TABLE "site_configuration" (
     "supportPhone" TEXT,
     "siteDescription" TEXT,
     "siteTagline" TEXT,
+    "siteAddress" TEXT,
+    "siteLLC" TEXT,
     "siteLogoFileAssetId" TEXT,
     "seoTitle" TEXT,
     "seoDescription" TEXT,
@@ -727,6 +894,15 @@ CREATE TABLE "site_configuration" (
 
     CONSTRAINT "site_configuration_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE INDEX "user_accountStatus_idx" ON "user"("accountStatus");
+
+-- CreateIndex
+CREATE INDEX "user_emailVerified_idx" ON "user"("emailVerified");
+
+-- CreateIndex
+CREATE INDEX "user_isDisposableEmail_idx" ON "user"("isDisposableEmail");
 
 -- CreateIndex
 CREATE INDEX "user_profileAvatarFileAssetId_idx" ON "user"("profileAvatarFileAssetId");
@@ -837,6 +1013,12 @@ CREATE INDEX "investment_plan_tier_level_idx" ON "investment_plan_tier"("level")
 CREATE UNIQUE INDEX "investment_plan_tier_investmentPlanId_level_key" ON "investment_plan_tier"("investmentPlanId", "level");
 
 -- CreateIndex
+CREATE INDEX "investment_order_paymentMethodType_idx" ON "investment_order"("paymentMethodType");
+
+-- CreateIndex
+CREATE INDEX "investment_order_platformPaymentMethodId_idx" ON "investment_order"("platformPaymentMethodId");
+
+-- CreateIndex
 CREATE INDEX "investment_order_investorProfileId_idx" ON "investment_order"("investorProfileId");
 
 -- CreateIndex
@@ -877,6 +1059,9 @@ CREATE INDEX "savings_account_savingsProductId_idx" ON "savings_account"("saving
 
 -- CreateIndex
 CREATE INDEX "savings_account_status_idx" ON "savings_account"("status");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_savingsFundingIntentId_idx" ON "savings_transaction"("savingsFundingIntentId");
 
 -- CreateIndex
 CREATE INDEX "savings_transaction_savingsAccountId_idx" ON "savings_transaction"("savingsAccountId");
@@ -951,13 +1136,40 @@ CREATE INDEX "management_sortOrder_idx" ON "management"("sortOrder");
 CREATE INDEX "management_photoFileId_idx" ON "management"("photoFileId");
 
 -- CreateIndex
-CREATE INDEX "PlatformWallet_asset_network_isActive_idx" ON "PlatformWallet"("asset", "network", "isActive");
+CREATE INDEX "platform_payment_method_type_isActive_idx" ON "platform_payment_method"("type", "isActive");
 
 -- CreateIndex
-CREATE INDEX "PlatformWallet_isDefault_isActive_idx" ON "PlatformWallet"("isDefault", "isActive");
+CREATE INDEX "platform_payment_method_isDefault_isActive_idx" ON "platform_payment_method"("isDefault", "isActive");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PlatformWallet_network_address_key" ON "PlatformWallet"("network", "address");
+CREATE INDEX "platform_payment_method_currency_idx" ON "platform_payment_method"("currency");
+
+-- CreateIndex
+CREATE INDEX "platform_payment_method_country_idx" ON "platform_payment_method"("country");
+
+-- CreateIndex
+CREATE INDEX "platform_payment_method_sortOrder_idx" ON "platform_payment_method"("sortOrder");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_investmentOrderId_idx" ON "investment_order_payment"("investmentOrderId");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_status_idx" ON "investment_order_payment"("status");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_type_idx" ON "investment_order_payment"("type");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_platformPaymentMethodId_idx" ON "investment_order_payment"("platformPaymentMethodId");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_submittedByUserId_idx" ON "investment_order_payment"("submittedByUserId");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_reviewedByUserId_idx" ON "investment_order_payment"("reviewedByUserId");
+
+-- CreateIndex
+CREATE INDEX "investment_order_payment_submittedAt_idx" ON "investment_order_payment"("submittedAt");
 
 -- CreateIndex
 CREATE INDEX "CryptoFundingIntent_userId_status_idx" ON "CryptoFundingIntent"("userId", "status");
@@ -969,6 +1181,9 @@ CREATE INDEX "CryptoFundingIntent_provider_status_idx" ON "CryptoFundingIntent"(
 CREATE INDEX "CryptoFundingIntent_asset_network_idx" ON "CryptoFundingIntent"("asset", "network");
 
 -- CreateIndex
+CREATE INDEX "CryptoFundingIntent_platformPaymentMethodId_idx" ON "CryptoFundingIntent"("platformPaymentMethodId");
+
+-- CreateIndex
 CREATE INDEX "CryptoFundingIntent_providerSessionId_idx" ON "CryptoFundingIntent"("providerSessionId");
 
 -- CreateIndex
@@ -976,6 +1191,51 @@ CREATE INDEX "CryptoFundingIntent_providerExternalId_idx" ON "CryptoFundingInten
 
 -- CreateIndex
 CREATE INDEX "CryptoFundingIntent_createdAt_idx" ON "CryptoFundingIntent"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_savingsAccountId_idx" ON "savings_funding_intent"("savingsAccountId");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_userId_status_idx" ON "savings_funding_intent"("userId", "status");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_fundingMethodType_status_idx" ON "savings_funding_intent"("fundingMethodType", "status");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_platformPaymentMethodId_idx" ON "savings_funding_intent"("platformPaymentMethodId");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_provider_status_idx" ON "savings_funding_intent"("provider", "status");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_providerSessionId_idx" ON "savings_funding_intent"("providerSessionId");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_providerExternalId_idx" ON "savings_funding_intent"("providerExternalId");
+
+-- CreateIndex
+CREATE INDEX "savings_funding_intent_createdAt_idx" ON "savings_funding_intent"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_savingsFundingIntentId_idx" ON "savings_transaction_payment"("savingsFundingIntentId");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_status_idx" ON "savings_transaction_payment"("status");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_type_idx" ON "savings_transaction_payment"("type");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_platformPaymentMethodId_idx" ON "savings_transaction_payment"("platformPaymentMethodId");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_submittedByUserId_idx" ON "savings_transaction_payment"("submittedByUserId");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_reviewedByUserId_idx" ON "savings_transaction_payment"("reviewedByUserId");
+
+-- CreateIndex
+CREATE INDEX "savings_transaction_payment_submittedAt_idx" ON "savings_transaction_payment"("submittedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CryptoWebhookEvent_idempotencyKey_key" ON "CryptoWebhookEvent"("idempotencyKey");
@@ -997,6 +1257,9 @@ CREATE INDEX "CryptoWebhookEvent_receivedAt_idx" ON "CryptoWebhookEvent"("receiv
 
 -- CreateIndex
 CREATE INDEX "Conversation_lastMessageAt_idx" ON "Conversation"("lastMessageAt");
+
+-- CreateIndex
+CREATE INDEX "Conversation_userId_idx" ON "Conversation"("userId");
 
 -- CreateIndex
 CREATE INDEX "Conversation_type_status_idx" ON "Conversation"("type", "status");
@@ -1071,6 +1334,9 @@ ALTER TABLE "investment_order" ADD CONSTRAINT "investment_order_investmentPlanId
 ALTER TABLE "investment_order" ADD CONSTRAINT "investment_order_investmentAccountId_fkey" FOREIGN KEY ("investmentAccountId") REFERENCES "investment_account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "investment_order" ADD CONSTRAINT "investment_order_platformPaymentMethodId_fkey" FOREIGN KEY ("platformPaymentMethodId") REFERENCES "platform_payment_method"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "InvestmentEarning" ADD CONSTRAINT "InvestmentEarning_investmentOrderId_fkey" FOREIGN KEY ("investmentOrderId") REFERENCES "investment_order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -1081,6 +1347,9 @@ ALTER TABLE "savings_account" ADD CONSTRAINT "savings_account_savingsProductId_f
 
 -- AddForeignKey
 ALTER TABLE "savings_transaction" ADD CONSTRAINT "savings_transaction_savingsAccountId_fkey" FOREIGN KEY ("savingsAccountId") REFERENCES "savings_account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction" ADD CONSTRAINT "savings_transaction_savingsFundingIntentId_fkey" FOREIGN KEY ("savingsFundingIntentId") REFERENCES "savings_funding_intent"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "withdrawal_order" ADD CONSTRAINT "withdrawal_order_payoutMethodId_fkey" FOREIGN KEY ("payoutMethodId") REFERENCES "PaymentMethod"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1110,16 +1379,61 @@ ALTER TABLE "testimony" ADD CONSTRAINT "testimony_avatarFileId_fkey" FOREIGN KEY
 ALTER TABLE "management" ADD CONSTRAINT "management_photoFileId_fkey" FOREIGN KEY ("photoFileId") REFERENCES "file_asset"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "investment_order_payment" ADD CONSTRAINT "investment_order_payment_investmentOrderId_fkey" FOREIGN KEY ("investmentOrderId") REFERENCES "investment_order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "investment_order_payment" ADD CONSTRAINT "investment_order_payment_platformPaymentMethodId_fkey" FOREIGN KEY ("platformPaymentMethodId") REFERENCES "platform_payment_method"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "investment_order_payment" ADD CONSTRAINT "investment_order_payment_submittedByUserId_fkey" FOREIGN KEY ("submittedByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "investment_order_payment" ADD CONSTRAINT "investment_order_payment_reviewedByUserId_fkey" FOREIGN KEY ("reviewedByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "investment_order_payment" ADD CONSTRAINT "investment_order_payment_receiptFileId_fkey" FOREIGN KEY ("receiptFileId") REFERENCES "file_asset"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_investmentOrderId_fkey" FOREIGN KEY ("investmentOrderId") REFERENCES "investment_order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_platformWalletId_fkey" FOREIGN KEY ("platformWalletId") REFERENCES "PlatformWallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "CryptoFundingIntent" ADD CONSTRAINT "CryptoFundingIntent_platformPaymentMethodId_fkey" FOREIGN KEY ("platformPaymentMethodId") REFERENCES "platform_payment_method"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_funding_intent" ADD CONSTRAINT "savings_funding_intent_savingsAccountId_fkey" FOREIGN KEY ("savingsAccountId") REFERENCES "savings_account"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_funding_intent" ADD CONSTRAINT "savings_funding_intent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_funding_intent" ADD CONSTRAINT "savings_funding_intent_platformPaymentMethodId_fkey" FOREIGN KEY ("platformPaymentMethodId") REFERENCES "platform_payment_method"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction_payment" ADD CONSTRAINT "savings_transaction_payment_savingsFundingIntentId_fkey" FOREIGN KEY ("savingsFundingIntentId") REFERENCES "savings_funding_intent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction_payment" ADD CONSTRAINT "savings_transaction_payment_platformPaymentMethodId_fkey" FOREIGN KEY ("platformPaymentMethodId") REFERENCES "platform_payment_method"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction_payment" ADD CONSTRAINT "savings_transaction_payment_submittedByUserId_fkey" FOREIGN KEY ("submittedByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction_payment" ADD CONSTRAINT "savings_transaction_payment_reviewedByUserId_fkey" FOREIGN KEY ("reviewedByUserId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "savings_transaction_payment" ADD CONSTRAINT "savings_transaction_payment_receiptFileId_fkey" FOREIGN KEY ("receiptFileId") REFERENCES "file_asset"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CryptoWebhookEvent" ADD CONSTRAINT "CryptoWebhookEvent_fundingIntentId_fkey" FOREIGN KEY ("fundingIntentId") REFERENCES "CryptoFundingIntent"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_agentId_fkey" FOREIGN KEY ("agentId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AgentProfile" ADD CONSTRAINT "AgentProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;

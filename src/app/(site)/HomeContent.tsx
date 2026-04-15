@@ -9,6 +9,7 @@ import { InvestmentPlansSection } from "@/components/home/investment-plans-secti
 import { ScrollReveal } from "@/components/home/ScrollReveal-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { WhySection } from "@/components/home/why-section";
+import { InvestmentModelsSection } from "@/components/home/investment-model-section";
 
 const HomeContent = () => {
   return (
@@ -22,12 +23,16 @@ const HomeContent = () => {
       </ScrollReveal>
 
       <ScrollReveal duration={0.05}>
-        <InvestmentProductsSection />
+        <InvestmentModelsSection />
       </ScrollReveal>
 
-      <ScrollReveal duration={0.07}>
+      {/* <ScrollReveal duration={0.05}>
+        <InvestmentProductsSection />
+      </ScrollReveal> */}
+
+      {/* <ScrollReveal duration={0.07}>
         <InvestmentPlansSection />
-      </ScrollReveal>
+      </ScrollReveal> */}
 
       <ScrollReveal duration={0.09}>
         <HowItWorksSection />

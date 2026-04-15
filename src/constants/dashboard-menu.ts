@@ -271,13 +271,28 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
-        name: "Platform Payment Methods",
-          href: "/account/dashboard/admin/platform-wallets",
+          name: "Payment Methods",
+          href: "/account/dashboard/admin/payment-methods",
           icon: Landmark,
         },
         {
           name: "Transactions",
           href: "/account/dashboard/admin/transactions",
+          icon: CircleDollarSign,
+        },
+      ],
+    },
+    {
+      title: "Payouts",
+      links: [
+        {
+          name: "Withdrawals",
+          href: "/account/dashboard/admin/withdrawals",
+          icon: CircleDollarSign,
+        },
+        {
+          name: "Deposits",
+          href: "/account/dashboard/admin/deposits",
           icon: CircleDollarSign,
         },
       ],
@@ -425,13 +440,28 @@ export const DASHBOARD_MENU = {
           icon: Wallet,
         },
         {
-        name: "Platform Payment Methods",
-          href: "/account/dashboard/super-admin/platform-wallets",
+          name: "Payment Methods",
+          href: "/account/dashboard/super-admin/payment-methods",
           icon: Landmark,
         },
         {
           name: "Transactions",
           href: "/account/dashboard/super-admin/transactions",
+          icon: CircleDollarSign,
+        },
+      ],
+    },
+    {
+      title: "Payouts",
+      links: [
+        {
+          name: "Withdrawals",
+          href: "/account/dashboard/admin/withdrawals",
+          icon: CircleDollarSign,
+        },
+        {
+          name: "Deposits",
+          href: "/account/dashboard/admin/deposits",
           icon: CircleDollarSign,
         },
       ],
@@ -485,14 +515,14 @@ export const DASHBOARD_MENU = {
       title: "System",
       links: [
         {
-          name: "Settings",
-          href: "/account/dashboard/super-admin/settings",
-          icon: Settings,
-        },
-        {
           name: "Profile",
           href: "/account/dashboard/super-admin/profile",
           icon: User,
+        },
+        {
+          name: "Settings",
+          href: "/account/dashboard/super-admin/settings",
+          icon: Settings,
         },
       ],
     },
