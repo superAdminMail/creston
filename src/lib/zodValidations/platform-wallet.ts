@@ -11,8 +11,8 @@ export const platformPaymentVerificationStatusSchema = z.enum([
   "SUSPENDED",
 ]);
 
-export const cryptoAssetSchema = z.enum(["BTC", "ETH"]);
-export const cryptoNetworkSchema = z.enum(["BITCOIN", "ETHEREUM"]);
+export const cryptoAssetSchema = z.enum(["BTC"]);
+export const cryptoNetworkSchema = z.enum(["BITCOIN"]);
 
 const optionalText = z
   .string()
@@ -35,8 +35,13 @@ const basePlatformPaymentMethodSchema = z.object({
   notes: optionalText,
   isActive: z.boolean().default(true),
   isDefault: z.boolean().default(false),
-  sortOrder: z.coerce.number().int().min(0, "Sort order must be zero or greater.").default(0),
-  verificationStatus: platformPaymentVerificationStatusSchema.default("UNVERIFIED"),
+  sortOrder: z.coerce
+    .number()
+    .int()
+    .min(0, "Sort order must be zero or greater.")
+    .default(0),
+  verificationStatus:
+    platformPaymentVerificationStatusSchema.default("UNVERIFIED"),
   bankName: optionalText,
   bankCode: optionalText,
   accountNumber: optionalText,
@@ -50,8 +55,8 @@ const basePlatformPaymentMethodSchema = z.object({
   walletTag: optionalText,
 });
 
-export const platformPaymentMethodSchema = basePlatformPaymentMethodSchema.superRefine(
-  (value, ctx) => {
+export const platformPaymentMethodSchema =
+  basePlatformPaymentMethodSchema.superRefine((value, ctx) => {
     if (value.type === "BANK_INFO") {
       if (!value.bankName) {
         ctx.addIssue({
@@ -103,21 +108,19 @@ export const platformPaymentMethodSchema = basePlatformPaymentMethodSchema.super
         });
       }
     }
-  },
-);
+  });
 
 export type PlatformPaymentMethodFormInput = z.infer<
   typeof platformPaymentMethodSchema
 >;
 
-export const updatePlatformPaymentMethodSchema = platformPaymentMethodSchema.extend(
-  {
+export const updatePlatformPaymentMethodSchema =
+  platformPaymentMethodSchema.extend({
     platformPaymentMethodId: z
       .string()
       .trim()
       .min(1, "Missing platform payment method id."),
-  },
-);
+  });
 
 export type UpdatePlatformPaymentMethodFormInput = z.infer<
   typeof updatePlatformPaymentMethodSchema
@@ -150,7 +153,8 @@ export function normalizePlatformPaymentMethodValues(
       values.type === "WALLET_ADDRESS" ? values.cryptoAsset || null : null,
     cryptoNetwork:
       values.type === "WALLET_ADDRESS" ? values.cryptoNetwork || null : null,
-    walletAddress: values.type === "WALLET_ADDRESS" ? values.walletAddress : null,
+    walletAddress:
+      values.type === "WALLET_ADDRESS" ? values.walletAddress : null,
     walletTag: values.type === "WALLET_ADDRESS" ? values.walletTag : null,
   };
 }
