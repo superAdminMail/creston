@@ -56,7 +56,7 @@ export async function InvestmentModelsSection() {
           href: "/investments?model=market",
           icon: "trendingUp",
           bgImage:
-            "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuxOpET5qDGTsEfN54wUVQ0beuiXC96cR1kSyg",
+            "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuwBHw2mbCHr5DVm6yM7ulFPO28oxfdaT9IehR",
           description:
             "Built for investors seeking broader market exposure, dynamic valuation, and growth aligned with live market movement.",
           bullets: [
