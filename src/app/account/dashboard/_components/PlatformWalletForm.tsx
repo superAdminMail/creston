@@ -369,7 +369,10 @@ export default function PlatformWalletForm({
         <input type="hidden" name="platformPaymentMethodId" value={walletId} />
       ) : null}
 
-      <Tabs value={type} onValueChange={(value) => setType(value as typeof type)}>
+      <Tabs
+        value={type}
+        onValueChange={(value) => setType(value as typeof type)}
+      >
         <TabsList className="grid w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1">
           <TabsTrigger value="BANK_INFO">Bank Info</TabsTrigger>
           <TabsTrigger value="WALLET_ADDRESS">Crypto Wallet</TabsTrigger>

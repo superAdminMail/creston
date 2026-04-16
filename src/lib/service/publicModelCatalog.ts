@@ -39,7 +39,7 @@ export type PublicSavingsProductViewModel = {
   description: string | null;
   interestRateLabel: string | null;
   payoutFrequencyLabel: string | null;
-  lockLabel: string | null;
+  lockLabel: string;
   balanceRangeLabel: string | null;
   featureLabels: string[];
   overview: string;
@@ -51,7 +51,6 @@ export type PublicSavingsProductViewModel = {
 export type PublicModelCatalogItem = {
   id: string;
   name: string;
-  slug: string;
   kind: "investment" | "savings";
   kindLabel: string;
   href: string;
@@ -103,7 +102,8 @@ function formatBalanceRange(product: PublicSavingsProductRecord) {
   const max = product.maxBalance ? Number(product.maxBalance) : null;
 
   if (min !== null && max !== null) {
-    return formatCurrency(min, product.currency) === formatCurrency(max, product.currency)
+    return formatCurrency(min, product.currency) ===
+      formatCurrency(max, product.currency)
       ? formatCurrency(min, product.currency)
       : `${formatCurrency(min, product.currency)} - ${formatCurrency(max, product.currency)}`;
   }
@@ -130,7 +130,9 @@ function mapSavingsProduct(
   const featureLabels = [
     product.interestEnabled ? "Interest enabled" : "Interest off",
     product.allowsDeposits ? "Deposits allowed" : "Deposits restricted",
-    product.allowsWithdrawals ? "Withdrawals allowed" : "Withdrawals restricted",
+    product.allowsWithdrawals
+      ? "Withdrawals allowed"
+      : "Withdrawals restricted",
   ];
 
   return {
@@ -165,76 +167,83 @@ export const getPublicSavingsProducts = cache(
   },
 );
 
-export const getPublicModelCatalog = cache(async (): Promise<
-  Array<PublicModelCatalogItem & { product: PublicInvestmentProductViewModel | PublicSavingsProductViewModel }>
-> => {
-  const [investmentProducts, savingsProducts] = await Promise.all([
-    getPublicInvestmentProducts(),
-    getPublicSavingsProducts(),
-  ]);
+export const getPublicModelCatalog = cache(
+  async (): Promise<
+    Array<
+      PublicModelCatalogItem & {
+        product:
+          | PublicInvestmentProductViewModel
+          | PublicSavingsProductViewModel;
+      }
+    >
+  > => {
+    const [investmentProducts, savingsProducts] = await Promise.all([
+      getPublicInvestmentProducts(),
+      getPublicSavingsProducts(),
+    ]);
 
-  const investmentItems = investmentProducts.map((product) => ({
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    kind: "investment" as const,
-    kindLabel: "Investment Product",
-    href: `/investment-products#${product.slug}`,
-    iconUrl: product.iconUrl,
-    description: product.overview,
-    badges: [product.typeLabel, ...product.modelLabels],
-    stats: [
-      {
-        label: "Starting from",
-        value: product.startingAmountLabel ?? "Quoted per plan",
-      },
-      {
-        label: "Plans",
-        value: product.planCountLabel,
-      },
-      {
-        label: "Timeline",
-        value: product.durationLabel ?? "Varies",
-      },
-    ],
-    product,
-  }));
+    const investmentItems = investmentProducts.map((product) => ({
+      id: product.id,
+      name: product.name,
+      kind: "investment" as const,
+      kindLabel: "Investment Product",
+      href: `/investment-products#${product.slug}`,
+      iconUrl: product.iconUrl,
+      description: product.overview,
+      badges: [product.typeLabel, ...product.modelLabels],
+      stats: [
+        {
+          label: "Starting from",
+          value: product.startingAmountLabel ?? "Quoted per plan",
+        },
+        {
+          label: "Plans",
+          value: product.planCountLabel,
+        },
+        {
+          label: "Timeline",
+          value: product.durationLabel ?? "Varies",
+        },
+      ],
+      product,
+    }));
 
-  const savingsItems = savingsProducts.map((product) => ({
-    id: product.id,
-    name: product.name,
-    kind: "savings" as const,
-    kindLabel: "Savings Product",
-    href: `/savings-products#${product.id}`,
-    iconUrl: null,
-    description: product.overview,
-    badges: [
-      product.interestRateLabel ?? "No fixed rate",
-      product.payoutFrequencyLabel ?? "Flexible payout",
-      ...product.featureLabels.slice(0, 1),
-    ],
-    stats: [
-      {
-        label: "Balance range",
-        value: product.balanceRangeLabel ?? "Quoted per account",
-      },
-      {
-        label: "Lock",
-        value: product.lockLabel,
-      },
-      {
-        label: "Interest",
-        value: product.interestRateLabel ?? "Variable",
-      },
-    ],
-    product,
-  }));
+    const savingsItems = savingsProducts.map((product) => ({
+      id: product.id,
+      name: product.name,
+      kind: "savings" as const,
+      kindLabel: "Savings Product",
+      href: `/savings-products#${product.id}`,
+      iconUrl: null,
+      description: product.overview,
+      badges: [
+        product.interestRateLabel ?? "No fixed rate",
+        product.payoutFrequencyLabel ?? "Flexible payout",
+        ...product.featureLabels.slice(0, 1),
+      ],
+      stats: [
+        {
+          label: "Balance range",
+          value: product.balanceRangeLabel ?? "Quoted per account",
+        },
+        {
+          label: "Lock",
+          value: product.lockLabel,
+        },
+        {
+          label: "Interest",
+          value: product.interestRateLabel ?? "Variable",
+        },
+      ],
+      product,
+    }));
 
-  return [...investmentItems, ...savingsItems].sort((left, right) => {
-    if (left.kind !== right.kind) {
-      return left.kind === "investment" ? -1 : 1;
-    }
+    return [...investmentItems, ...savingsItems].sort((left, right) => {
+      if (left.kind !== right.kind) {
+        return left.kind === "investment" ? -1 : 1;
+      }
 
-    return left.name.localeCompare(right.name);
-  });
-});
+      return left.name.localeCompare(right.name);
+    });
+  },
+);

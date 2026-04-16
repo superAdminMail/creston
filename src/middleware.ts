@@ -40,10 +40,11 @@ function isProtectedPath(pathname: string) {
   );
 }
 
-function isVerificationUtilityRoute(pathname: string) {
+function isAuthUtilityRoute(pathname: string) {
   return (
     matchesRoute(pathname, "/auth/verify-email") ||
-    matchesRoute(pathname, "/auth/send-verify-email")
+    matchesRoute(pathname, "/auth/send-verify-email") ||
+    matchesRoute(pathname, "/auth/onboarding")
   );
 }
 
@@ -55,7 +56,7 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = matchesAny(pathname, authRoutes);
   const isProtectedRoute = isProtectedPath(pathname);
   const hasCookie = hasSessionCookie(request);
-  const isVerificationRoute = isVerificationUtilityRoute(pathname);
+  const isAuthUtility = isAuthUtilityRoute(pathname);
 
   if (process.env.NODE_ENV === "development") {
     console.log("🧠 BetterAuth Middleware");
@@ -65,7 +66,7 @@ export function middleware(request: NextRequest) {
       "🌐 Public": isPublicRoute,
       "🔐 Auth": isAuthRoute,
       "🛡️ Protected": isProtectedRoute,
-      "✉️ Verify Flow": isVerificationRoute,
+      "✉️ Verify Flow": isAuthUtility,
       "🧩 API Auth": isApiAuthRoute,
     });
     console.log("------------------------");
@@ -80,7 +81,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (isAuthRoute) {
-    if (isVerificationRoute) {
+    if (isAuthUtility) {
       return NextResponse.next();
     }
 

@@ -36,7 +36,7 @@ export default async function OnboardingPage() {
   }
 
   if (user.investorProfile || user.hasCompletedOnboarding) {
-    redirect("/account/dashboard");
+    redirect("/account/dashboard/user");
   }
 
   return <OnboardingDialog userName={user.name} siteName={site.siteName} />;

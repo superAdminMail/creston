@@ -36,6 +36,7 @@ export default function RegisterForm({
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [success, setSuccess] = useState<string | null>(null);
 
   const form = useForm<RegisterUserSchemaType>({
     resolver: zodResolver(registerUserSchema),
@@ -47,6 +48,7 @@ export default function RegisterForm({
 
   const handleSubmit = (values: RegisterUserSchemaType) => {
     setError(undefined);
+    setSuccess(null);
 
     startTransition(async () => {
       const result = await registerUserAction({
@@ -59,8 +61,13 @@ export default function RegisterForm({
         return;
       }
 
-      router.replace(`/auth/send-verify-email?email=${values.email}`);
-      router.refresh();
+      setSuccess("Account created. Redirecting you to verify your email...");
+
+      setTimeout(() => {
+        router.replace(
+          `/auth/send-verify-email?email=${encodeURIComponent(values.email)}`,
+        );
+      }, 800);
     });
   };
 
@@ -104,6 +111,12 @@ export default function RegisterForm({
             <AlertTitle>{error}</AlertTitle>
           </Alert>
         ) : null}
+        {success && (
+          <Alert className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-emerald-200 text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{success}</AlertTitle>
+          </Alert>
+        )}
 
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -204,7 +217,7 @@ export default function RegisterForm({
           </FieldGroup>
 
           <Button
-            disabled={isPending}
+            disabled={isPending || !!success}
             type="submit"
             className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
           >
@@ -213,6 +226,8 @@ export default function RegisterForm({
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Creating account...
               </span>
+            ) : success ? (
+              "Redirecting..."
             ) : (
               "Create account"
             )}

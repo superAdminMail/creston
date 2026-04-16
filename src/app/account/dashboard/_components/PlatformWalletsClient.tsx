@@ -15,9 +15,7 @@ import { toast } from "sonner";
 
 import { deletePlatformPaymentMethod } from "@/actions/admin/platform-wallets/deletePlatformWallet";
 import { setDefaultPlatformPaymentMethod } from "@/actions/admin/platform-wallets/setDefaultPlatformPaymentMethod";
-import {
-  initialPlatformPaymentMethodFormState,
-} from "@/actions/admin/platform-wallets/platformWalletForm.state";
+import { initialPlatformPaymentMethodFormState } from "@/actions/admin/platform-wallets/platformWalletForm.state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,7 +35,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import PlatformWalletForm, { type PlatformPaymentMethodFormDefaults } from "./PlatformWalletForm";
+import PlatformWalletForm, {
+  type PlatformPaymentMethodFormDefaults,
+} from "./PlatformWalletForm";
 
 export type PlatformPaymentMethodItem = PlatformPaymentMethodFormDefaults & {
   id: string;
@@ -109,11 +109,7 @@ function SetDefaultPaymentMethodForm({
 }) {
   return (
     <form action={setDefaultPlatformPaymentMethod}>
-      <input
-        type="hidden"
-        name="platformPaymentMethodId"
-        value={wallet.id}
-      />
+      <input type="hidden" name="platformPaymentMethodId" value={wallet.id} />
       <button
         type="submit"
         className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
@@ -266,8 +262,8 @@ function PaymentMethodCard({
               try {
                 await navigator.clipboard.writeText(
                   method.type === "BANK_INFO"
-                    ? method.accountNumber ?? ""
-                    : method.walletAddress ?? "",
+                    ? (method.accountNumber ?? "")
+                    : (method.walletAddress ?? ""),
                 );
                 toast.success("Copied.");
               } catch {
@@ -340,9 +336,8 @@ export default function PlatformWalletsClient({
   wallets,
 }: PlatformWalletsClientProps) {
   const [addOpen, setAddOpen] = useState(false);
-  const [editWallet, setEditWallet] = useState<PlatformPaymentMethodItem | null>(
-    null,
-  );
+  const [editWallet, setEditWallet] =
+    useState<PlatformPaymentMethodItem | null>(null);
 
   const stats = useMemo(() => {
     const total = wallets.length;
@@ -393,7 +388,7 @@ export default function PlatformWalletsClient({
                     Add Payment Method
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl rounded-[1.75rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+                <DialogContent className="max-w-full rounded-[1.75rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
                   <DialogHeader className="px-6 pt-6">
                     <DialogTitle className="text-2xl font-semibold tracking-tight text-white">
                       Add platform payment method

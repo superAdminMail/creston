@@ -138,6 +138,13 @@ function ActionLinks({
         >
           Dashboard
         </Link>
+        {/* <Button
+          variant={"destructive"}
+          onClick={() => signOut()}
+          className=" font-medium px-4 py-2"
+        >
+          Sign Out
+        </Button> */}
       </div>
     );
   }

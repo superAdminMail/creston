@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   AlertCircle,
   CheckCircle2,
@@ -11,9 +10,9 @@ import { VerifyEmailRequestInlineForm } from "../_components/VerifyEmailRequestF
 import { AuthShell } from "@/app/auth/_components/AuthShell";
 import { Button } from "@/components/ui/button";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { prisma } from "@/lib/prisma";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { prisma } from "@/lib/prisma";
 
 type VerifyEmailPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -65,20 +64,6 @@ function resolveVerificationState(
   return { state: "default" as const, email };
 }
 
-async function activateVerifiedUser(userId: string) {
-  await prisma.user.updateMany({
-    where: {
-      id: userId,
-      emailVerified: true,
-      accountStatus: { not: "ACTIVE" },
-    },
-    data: {
-      emailVerifiedAt: new Date(),
-      accountStatus: "ACTIVE",
-    },
-  });
-}
-
 function StateCard({
   icon,
   title,
@@ -119,6 +104,39 @@ function StateCard({
   );
 }
 
+async function reconcileVerifiedUser(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      emailVerified: true,
+      accountStatus: true,
+      emailVerifiedAt: true,
+    },
+  });
+
+  if (!user) return null;
+
+  if (user.emailVerified && user.accountStatus !== "ACTIVE") {
+    const verifiedAt = user.emailVerifiedAt ?? new Date();
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        accountStatus: "ACTIVE",
+        emailVerifiedAt: verifiedAt,
+      },
+    });
+
+    return {
+      ...user,
+      accountStatus: "ACTIVE" as const,
+      emailVerifiedAt: verifiedAt,
+    };
+  }
+
+  return user;
+}
+
 export default async function VerifyEmailPage({
   searchParams,
 }: VerifyEmailPageProps) {
@@ -131,11 +149,11 @@ export default async function VerifyEmailPage({
 
   const { state, email } = resolveVerificationState(params);
 
-  if (sessionUser?.id) {
-    await activateVerifiedUser(sessionUser.id);
-  }
+  const user = await reconcileVerifiedUser(sessionUser?.id ?? "");
 
-  if (state === "success") {
+  const isActivated = user?.emailVerified && user.accountStatus === "ACTIVE";
+
+  if (isActivated) {
     return (
       <AuthShell
         eyebrow="Account Security"
@@ -215,20 +233,6 @@ export default async function VerifyEmailPage({
         <VerifyEmailRequestInlineForm defaultEmail={email} mode="invalid" />
       </AuthShell>
     );
-  }
-
-  if (sessionUser?.id) {
-    const user = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      select: {
-        emailVerified: true,
-        accountStatus: true,
-      },
-    });
-
-    if (user?.emailVerified && user.accountStatus === "ACTIVE") {
-      redirect("/account");
-    }
   }
 
   return (

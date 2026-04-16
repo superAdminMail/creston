@@ -19,13 +19,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "utfs.io",
-        pathname: "/**",
-        port: "",
+        hostname: "**.ufs.sh",
       },
       {
         protocol: "https",
-        hostname: "ijucjait38.ufs.sh",
+        hostname: "utfs.io",
+        pathname: "/**",
+        port: "",
       },
     ],
   },

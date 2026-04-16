@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { loadDisposableDomainsLocal } from "@/lib/data/loadDisposableDomainsLocal";
 
 type RegisterUserInput = {
   email: string;
@@ -11,6 +12,13 @@ type RegisterUserInput = {
 };
 
 type RegisterUserResult = { ok: true } | { ok: false; message: string };
+
+const SAFE_DOMAINS = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+]);
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -20,79 +28,8 @@ function buildDisplayNameFromEmail(email: string) {
   return email.split("@")[0].slice(0, 50);
 }
 
-type DisposableEmailCheckResult =
-  | {
-      ok: true;
-      isDisposable: boolean;
-      provider: string | null;
-      domain: string | null;
-    }
-  | {
-      ok: false;
-      provider: string | null;
-      domain: string | null;
-    };
-
-async function checkDisposableEmail(
-  email: string,
-): Promise<DisposableEmailCheckResult> {
-  const apiKey = process.env.DISPOSABLE_EMAIL_API_KEY;
-  const endpoint = process.env.DISPOSABLE_EMAIL_API_URL;
-
-  const domain = email.split("@")[1] ?? null;
-
-  if (!apiKey || !endpoint) {
-    return {
-      ok: false,
-      provider: endpoint ?? null,
-      domain,
-    };
-  }
-
-  try {
-    const response = await fetch(
-      `${endpoint}?email=${encodeURIComponent(email)}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/json",
-        },
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        provider: endpoint,
-        domain,
-      };
-    }
-
-    const data = (await response.json()) as {
-      disposable?: boolean;
-      is_disposable?: boolean;
-      isDisposable?: boolean;
-    };
-
-    const isDisposable = Boolean(
-      data.disposable ?? data.is_disposable ?? data.isDisposable,
-    );
-
-    return {
-      ok: true,
-      isDisposable,
-      provider: endpoint,
-      domain,
-    };
-  } catch {
-    return {
-      ok: false,
-      provider: endpoint,
-      domain,
-    };
-  }
+function getEmailDomain(email: string) {
+  return email.trim().toLowerCase().split("@")[1] ?? "";
 }
 
 export async function registerUserAction(
@@ -120,17 +57,10 @@ export async function registerUserAction(
     };
   }
 
-  const disposableCheck = await checkDisposableEmail(email);
+  const domains = loadDisposableDomainsLocal();
+  const domain = getEmailDomain(email);
 
-  if (!disposableCheck.ok) {
-    return {
-      ok: false,
-      message:
-        "We could not verify your email address right now. Please try again shortly.",
-    };
-  }
-
-  if (disposableCheck.isDisposable) {
+  if (!SAFE_DOMAINS.has(domain) && domains.has(domain)) {
     return {
       ok: false,
       message: "Please use a valid personal or business email address.",
@@ -156,8 +86,8 @@ export async function registerUserAction(
         emailVerifiedAt: null,
         isDisposableEmail: false,
         disposableEmailChecked: true,
-        disposableEmailDomain: disposableCheck.domain,
-        disposableCheckProvider: disposableCheck.provider,
+        disposableEmailDomain: domain,
+        disposableCheckProvider: "local_blocklist",
         disposableCheckedAt: new Date(),
       },
     });

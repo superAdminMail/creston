@@ -62,6 +62,7 @@ export const auth = betterAuth({
     enabled: true,
     resetPasswordTokenExpiresIn: 60 * 30,
     revokeSessionsOnPasswordReset: true,
+    requireEmailVerification: true,
 
     sendResetPassword: async ({ user, url }) => {
       const site = await getSiteConfigurationCached();

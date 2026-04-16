@@ -4,12 +4,12 @@ import { AccountLayoutShell } from "@/components/account/AccountLayoutShell";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { normalizeUser } from "@/lib/normalizeUser";
-import { prisma } from "@/lib/prisma";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { DEFAULT_ONBOARDING_REDIRECT } from "@/routes";
+import { requireActiveVerifiedUser } from "@/lib/auth/requireActiveVerifiedUser";
 
 export async function generateMetadata() {
   const site = await getSiteSeoConfig();
@@ -32,38 +32,14 @@ export default async function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const sessionUser = await getCurrentSessionUser();
-
-  if (!sessionUser?.id) {
-    redirect("/auth/login");
-  }
-
-  const [dbUser, site, config] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      select: {
-        role: true,
-        emailVerified: true,
-        hasCompletedOnboarding: true,
-        profileAvatarFileAsset: {
-          select: {
-            storageKey: true,
-            url: true,
-          },
-        },
-        investorProfile: {
-          select: {
-            id: true,
-            kycStatus: true,
-          },
-        },
-      },
-    }),
+  const [sessionUser, dbUser, site, config] = await Promise.all([
+    getCurrentSessionUser(),
+    requireActiveVerifiedUser(),
     getSiteSeoConfig(),
     getSiteConfigurationCached(),
   ]);
 
-  if (!dbUser) {
+  if (!sessionUser?.id) {
     redirect("/auth/login");
   }
 
@@ -82,7 +58,7 @@ export default async function AccountLayout({
     image: sessionUser.image,
     role: dbUser.role,
     emailVerified: dbUser.emailVerified,
-    profileAvatarFileAsset: dbUser.profileAvatarFileAsset,
+    profileAvatarFileAsset: dbUser.profileAvatarFileAsset ?? undefined,
     investorProfile: dbUser.investorProfile
       ? { kycStatus: dbUser.investorProfile.kycStatus }
       : null,
