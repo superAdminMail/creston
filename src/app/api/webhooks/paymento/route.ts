@@ -27,6 +27,15 @@ function toNullableJsonValue(
   return value as Prisma.InputJsonValue;
 }
 
+function asPlainObject(
+  value: Prisma.JsonValue | null | undefined,
+): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+  return value as Record<string, unknown>;
+}
+
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const signature = getPaymentoSignature(req.headers);
@@ -75,9 +84,6 @@ export async function POST(req: Request) {
       providerSessionId: token,
       investmentOrderId: orderId,
     },
-    include: {
-      investmentOrder: true,
-    },
   });
 
   if (!fundingIntent) {
@@ -106,9 +112,19 @@ export async function POST(req: Request) {
 
   try {
     await prisma.$transaction(async (tx) => {
+      const now = new Date();
+
       const mappedIntentStatus = mapPaymentoIntentStatus(statusCode);
       const mappedOrderStatus = mapPaymentoInvestmentOrderStatus(statusCode);
-      const now = new Date();
+
+      const existingOrder = await tx.investmentOrder.findUnique({
+        where: { id: fundingIntent.investmentOrderId },
+        select: { paymentMetadata: true },
+      });
+
+      const existingOrderPaymentMetadata = asPlainObject(
+        existingOrder?.paymentMetadata,
+      );
 
       const event = await tx.cryptoWebhookEvent.create({
         data: {
@@ -127,12 +143,7 @@ export async function POST(req: Request) {
         },
       });
 
-      const existingMetadata =
-        fundingIntent.metadata &&
-        typeof fundingIntent.metadata === "object" &&
-        !Array.isArray(fundingIntent.metadata)
-          ? (fundingIntent.metadata as Record<string, unknown>)
-          : {};
+      const existingMetadata = asPlainObject(fundingIntent.metadata);
 
       await tx.cryptoFundingIntent.update({
         where: { id: fundingIntent.id },
@@ -150,6 +161,7 @@ export async function POST(req: Request) {
             ...existingMetadata,
             lastCallback: payload,
             lastVerify: verified,
+            lastWebhookAt: now.toISOString(),
           }),
         },
       });
@@ -163,10 +175,12 @@ export async function POST(req: Request) {
             paymentReference: paymentId ?? token,
             lastPaymentSubmittedAt: now,
             paymentMetadata: toNullableJsonValue({
+              ...existingOrderPaymentMetadata,
               provider: "PAYMENTO",
               token,
               paymentId,
               callbackStatus: statusCode,
+              lastWebhookAt: now.toISOString(),
             }),
           },
         });
@@ -191,7 +205,6 @@ export async function POST(req: Request) {
               status: "APPROVED",
               platformPaymentMethodId: fundingIntent.platformPaymentMethodId,
               submittedByUserId: fundingIntent.userId,
-              reviewedByUserId: null,
               claimedAmount: fundingIntent.fiatAmount,
               approvedAmount: fundingIntent.fiatAmount,
               currency: fundingIntent.fiatCurrency,
@@ -218,10 +231,13 @@ export async function POST(req: Request) {
             lastPaymentSubmittedAt: now,
             lastPaymentReviewedAt: now,
             paymentMetadata: toNullableJsonValue({
+              ...existingOrderPaymentMetadata,
               provider: "PAYMENTO",
               token,
               paymentId,
               callbackStatus: statusCode,
+              verified: true,
+              lastWebhookAt: now.toISOString(),
             }),
           },
         });
@@ -251,10 +267,12 @@ export async function POST(req: Request) {
             cancelledAt: now,
             paymentReference: paymentId ?? token,
             paymentMetadata: toNullableJsonValue({
+              ...existingOrderPaymentMetadata,
               provider: "PAYMENTO",
               token,
               paymentId,
               callbackStatus: statusCode,
+              lastWebhookAt: now.toISOString(),
             }),
           },
         });
