@@ -22,6 +22,7 @@ export const getCurrentUser = cache(async () => {
       investorProfile: {
         select: {
           kycStatus: true,
+          id: true,
         },
       },
     },

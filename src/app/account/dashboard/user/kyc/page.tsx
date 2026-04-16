@@ -1,16 +1,47 @@
-import { getCurrentUser } from "@/lib/getCurrentUser";
+import { prisma } from "@/lib/prisma";
 import KYCSection from "./_components/KYCSection";
 import KYCVerifiedCard from "./_components/KYCVerifiedCard";
+import { getCurrentUserId } from "@/lib/getCurrentUser";
 
 export default async function Page() {
-  const user = await getCurrentUser();
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      investorProfile: {
+        select: {
+          id: true,
+          kycStatus: true,
+        },
+      },
+    },
+  });
+
   if (!user) return null;
 
-  const kycStatus = user.investorProfile?.kycStatus ?? "NOT_STARTED";
+  const profile = user.investorProfile;
 
-  console.log("KYC Status:", kycStatus);
+  const kycStatus = profile?.kycStatus ?? "NOT_STARTED";
 
-  console.log("USER ID:", user.id);
+  const latestSession = profile
+    ? await prisma.kycVerificationSession.findFirst({
+        where: {
+          investorProfileId: profile.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          status: true,
+          sessionUrl: true,
+          updatedAt: true,
+        },
+      })
+    : null;
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">
@@ -26,7 +57,11 @@ export default async function Page() {
       {kycStatus === "VERIFIED" ? (
         <KYCVerifiedCard name={user.name} />
       ) : (
-        <KYCSection initialStatus={kycStatus} userId={user.id} />
+        <KYCSection
+          initialStatus={kycStatus}
+          userId={user.id}
+          latestSession={latestSession}
+        />
       )}
     </div>
   );

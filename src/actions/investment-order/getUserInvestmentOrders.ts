@@ -73,7 +73,7 @@ function getPrimaryAction(
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return {
         label: "Make payment",
-        href: `/account/dashboard/user/investment-order/${order.id}/payment`,
+        href: `/account/dashboard/user/investment-orders/${order.id}/payment`,
       };
 
     case InvestmentOrderStatus.CONFIRMED:
@@ -84,7 +84,7 @@ function getPrimaryAction(
           }
         : {
             label: "Open order details",
-            href: `/account/dashboard/user/investment-order/${order.id}`,
+            href: `/account/dashboard/user/investment-orders/${order.id}`,
           };
     case InvestmentOrderStatus.CANCELLED:
     case InvestmentOrderStatus.REJECTED:

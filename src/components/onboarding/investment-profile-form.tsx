@@ -100,7 +100,7 @@ export function InvestmentProfileForm({
       }
 
       toast.success(successMessage);
-      router.push("/account/dashboard/user/profile");
+      router.push("/account/dashboard/user/investment-profile");
       router.refresh();
     });
   };

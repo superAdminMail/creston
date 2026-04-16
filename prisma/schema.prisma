@@ -224,11 +224,12 @@ model InvestorProfile {
 
   investmentOrders InvestmentOrder[]
 
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  withdrawalOrders WithdrawalOrder[]
-  savingsAccounts  SavingsAccount[]
-  paymentMethods   PaymentMethod[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  withdrawalOrders        WithdrawalOrder[]
+  savingsAccounts         SavingsAccount[]
+  paymentMethods          PaymentMethod[]
+  kycVerificationSessions KycVerificationSession[]
 
   @@index([kycStatus])
   @@index([avatarFileId])
@@ -719,6 +720,33 @@ model KYCVerification {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+}
+
+model KycVerificationSession {
+  id                String @id @default(cuid())
+  investorProfileId String
+  provider          String @default("DIDIT")
+
+  providerSessionId String  @unique
+  sessionUrl        String?
+  callbackUrl       String?
+
+  status       String
+  startedAt    DateTime?
+  completedAt  DateTime?
+  abandonedAt  DateTime?
+  expiredAt    DateTime?
+  lastSyncedAt DateTime?
+
+  attemptCount Int   @default(1)
+  rawPayload   Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([investorProfileId, status])
 }
 
 /// *

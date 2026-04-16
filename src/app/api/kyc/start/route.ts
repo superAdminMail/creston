@@ -1,17 +1,34 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/getCurrentUser";
+import {
+  createDiditSession,
+  isDiditActiveStatus,
+  isDiditRetryableStatus,
+  isDiditSessionStale,
+} from "@/lib/kyc/didit";
+import {
+  createLocalKycVerificationSession,
+  getLatestKycVerificationSession,
+} from "@/lib/kyc/kycVerificationSessionService";
 
-export const runtime = "nodejs";
+function getBaseUrl() {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_BASE_URL ||
+    "http://localhost:3000"
+  );
+}
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const { userId } = await req.json();
+    const userId = await getCurrentUserId();
 
     if (!userId) {
-      return NextResponse.json({ message: "Missing userId" }, { status: 400 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const investor = await prisma.investorProfile.findUnique({
+    const profile = await prisma.investorProfile.findUnique({
       where: { userId },
       select: {
         id: true,
@@ -19,108 +36,77 @@ export async function POST(req: Request) {
       },
     });
 
-    if (!investor) {
+    if (!profile) {
       return NextResponse.json(
-        { message: "Investor not found" },
+        { error: "Investor profile not found" },
         { status: 404 },
       );
     }
 
-    if (investor.kycStatus === "PENDING_REVIEW") {
-      return NextResponse.json(
-        { message: "Verification already in progress" },
-        { status: 409 },
-      );
+    if (profile.kycStatus === "VERIFIED") {
+      return NextResponse.json({ error: "Already verified" }, { status: 400 });
     }
 
-    const callbackBase =
-      process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL;
+    const latestSession = await getLatestKycVerificationSession(profile.id);
 
-    const callbackUrl = callbackBase
-      ? `${callbackBase.replace(/\/$/, "")}/api/webhooks/didit`
-      : undefined;
+    if (
+      latestSession &&
+      latestSession.sessionUrl &&
+      isDiditActiveStatus(latestSession.status) &&
+      !isDiditSessionStale(latestSession.updatedAt)
+    ) {
+      return NextResponse.json({
+        url: latestSession.sessionUrl,
+        reused: true,
+      });
+    }
 
-    const diditRes = await fetch("https://verification.didit.me/v3/session/", {
-      method: "POST",
-      headers: {
-        "x-api-key": process.env.DIDIT_API_KEY!,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        workflow_id: process.env.DIDIT_WORKFLOW_ID,
-        vendor_data: userId,
-        ...(callbackUrl ? { callback: callbackUrl } : {}),
-      }),
+    if (
+      latestSession &&
+      (isDiditRetryableStatus(latestSession.status) ||
+        (isDiditActiveStatus(latestSession.status) &&
+          isDiditSessionStale(latestSession.updatedAt)))
+    ) {
+      await prisma.kycVerificationSession.update({
+        where: { id: latestSession.id },
+        data: {
+          status: isDiditSessionStale(latestSession.updatedAt)
+            ? "Abandoned"
+            : latestSession.status,
+          abandonedAt: new Date(),
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      await prisma.investorProfile.update({
+        where: { id: profile.id },
+        data: { kycStatus: "NOT_STARTED" },
+      });
+    }
+
+    const callbackUrl = `${getBaseUrl()}/account/dashboard/verification`;
+
+    const diditSession = await createDiditSession({
+      vendorData: userId,
+      callbackUrl,
     });
 
-    const rawText = await diditRes.text();
-    let data: Record<string, unknown> | null = null;
-
-    try {
-      data = rawText ? JSON.parse(rawText) : null;
-    } catch {
-      data = { raw: rawText };
-    }
-
-    if (!diditRes.ok) {
-      return NextResponse.json(
-        {
-          message: "Failed to create Didit session",
-          diditStatus: diditRes.status,
-          diditResponse: data,
-        },
-        { status: 502 },
-      );
-    }
-
-    const sessionId =
-      typeof data?.session_id === "string" ? data.session_id : null;
-    const verificationUrl = typeof data?.url === "string" ? data.url : null;
-
-    if (!sessionId || !verificationUrl) {
-      return NextResponse.json(
-        {
-          message: "Didit returned an unexpected response",
-          diditResponse: data,
-        },
-        { status: 502 },
-      );
-    }
-
-    await prisma.kYCVerification.upsert({
-      where: { investorProfileId: investor.id },
-      update: {
-        providerSessionId: sessionId,
-        vendorData: userId,
-        status: "PENDING_REVIEW",
-        failureReason: null,
-        verifiedAt: null,
-      },
-      create: {
-        investorProfileId: investor.id,
-        providerSessionId: sessionId,
-        vendorData: userId,
-        status: "PENDING_REVIEW",
-      },
-    });
-
-    await prisma.investorProfile.update({
-      where: { id: investor.id },
-      data: {
-        kycStatus: "PENDING_REVIEW",
-      },
+    await createLocalKycVerificationSession({
+      investorProfileId: profile.id,
+      providerSessionId: diditSession.session_id,
+      sessionUrl: diditSession.url,
+      callbackUrl,
+      rawPayload: diditSession,
     });
 
     return NextResponse.json({
-      url: verificationUrl,
-      sessionId,
+      url: diditSession.url,
+      reused: false,
     });
   } catch (error) {
-    console.error("Didit start KYC error:", error);
-
+    console.error("[KYC_START_ROUTE_ERROR]", error);
     return NextResponse.json(
-      { message: "Unable to start verification" },
+      { error: "Failed to start verification" },
       { status: 500 },
     );
   }

@@ -1,4 +1,4 @@
-import { redirect, notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
@@ -50,6 +50,17 @@ async function getOrderDetails(investmentOrderId: string) {
           roiPercent: true,
         },
       },
+      platformPaymentMethod: {
+        select: {
+          id: true,
+          label: true,
+          type: true,
+          bankName: true,
+          accountName: true,
+          accountNumber: true,
+          instructions: true,
+        },
+      },
     },
   });
 
@@ -81,6 +92,16 @@ async function getOrderDetails(investmentOrderId: string) {
       maxAmount: order.investmentPlanTier.maxAmount.toNumber(),
       roiPercent: order.investmentPlanTier.roiPercent?.toNumber() ?? 0,
     },
+    bankMethod: order.platformPaymentMethod
+      ? {
+          id: order.platformPaymentMethod.id,
+          label: order.platformPaymentMethod.label,
+          bankName: order.platformPaymentMethod.bankName,
+          accountName: order.platformPaymentMethod.accountName,
+          accountNumber: order.platformPaymentMethod.accountNumber,
+          instructions: order.platformPaymentMethod.instructions,
+        }
+      : null,
     amountLabel: formatCurrency(amount, order.currency),
     remainingAmountLabel: formatCurrency(remainingAmount, order.currency),
   };
@@ -88,11 +109,11 @@ async function getOrderDetails(investmentOrderId: string) {
   return details;
 }
 
-export default async function InvestmentOrderPaymentPage({ params }: PageProps) {
+export default async function InvestmentOrderPaymentPage({
+  params,
+}: PageProps) {
   const { investmentOrderId } = await params;
   const order = await getOrderDetails(investmentOrderId);
 
-  return (
-    <InvestmentOrderPaymentClient order={order} />
-  );
+  return <InvestmentOrderPaymentClient order={order} />;
 }

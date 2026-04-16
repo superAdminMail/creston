@@ -4,9 +4,9 @@ import {
   InvestmentOrderStatus,
   InvestmentPaymentMethodType,
   PlatformPaymentMethodType,
-  Prisma,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 
 type CreateInvestmentOrderBankDepositSubmissionInput = {
   investmentOrderId: string;
@@ -30,80 +30,6 @@ export type CreateInvestmentOrderBankDepositSubmissionResult = {
   platformPaymentMethodId: string;
   platformPaymentMethodLabel: string;
 };
-
-type CalculateBankChargeAmountInput = {
-  totalAmount: Prisma.Decimal | string | number;
-  amountPaid: Prisma.Decimal | string | number;
-  usePartialPayment: boolean;
-  hasPendingSubmission: boolean;
-};
-
-function calculateBankChargeAmount({
-  totalAmount,
-  amountPaid,
-  usePartialPayment,
-  hasPendingSubmission,
-}: CalculateBankChargeAmountInput) {
-  const total = new Prisma.Decimal(totalAmount);
-  const paid = new Prisma.Decimal(amountPaid);
-
-  if (total.lte(0)) {
-    throw new Error("Investment order amount must be greater than zero");
-  }
-
-  if (paid.lt(0)) {
-    throw new Error("Amount paid cannot be negative");
-  }
-
-  if (paid.gte(total)) {
-    throw new Error("This investment order has already been fully paid");
-  }
-
-  if (hasPendingSubmission) {
-    throw new Error(
-      "There is already a pending bank payment submission for this order",
-    );
-  }
-
-  const remaining = total.minus(paid);
-
-  if (!usePartialPayment) {
-    return {
-      claimedAmount: remaining,
-      splitNumber: null as 1 | 2 | null,
-      paymentMode: "FULL" as const,
-      remainingBeforeCharge: remaining,
-    };
-  }
-
-  if (paid.eq(0)) {
-    const half = total
-      .dividedBy(2)
-      .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
-
-    if (half.lte(0)) {
-      throw new Error("Unable to calculate the first partial payment amount");
-    }
-
-    return {
-      claimedAmount: half,
-      splitNumber: 1 as const,
-      paymentMode: "PARTIAL" as const,
-      remainingBeforeCharge: remaining,
-    };
-  }
-
-  if (paid.gt(0) && paid.lt(total)) {
-    return {
-      claimedAmount: remaining,
-      splitNumber: 2 as const,
-      paymentMode: "PARTIAL" as const,
-      remainingBeforeCharge: remaining,
-    };
-  }
-
-  throw new Error("Partial payment is no longer available for this order");
-}
 
 export async function createInvestmentOrderBankDepositSubmission({
   investmentOrderId,
@@ -193,12 +119,14 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("Selected bank payment method is inactive");
   }
 
-  const chargeCalculation = calculateBankChargeAmount({
+  const chargeCalculation = calculateInvestmentOrderBankChargeAmount({
     totalAmount: order.amount,
     amountPaid: order.amountPaid,
     usePartialPayment,
     hasPendingSubmission: Boolean(order.payments[0]),
   });
+
+  const paymentMode = chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL";
 
   const payment = await prisma.$transaction(async (tx) => {
     const createdPayment = await tx.investmentOrderPayment.create({
@@ -208,7 +136,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
         platformPaymentMethodId: order.platformPaymentMethodId,
         submittedByUserId: userId,
-        claimedAmount: chargeCalculation.claimedAmount,
+        claimedAmount: chargeCalculation.chargeAmount,
         currency: order.currency,
         depositorName: depositorName?.trim() || null,
         depositorAccountName: depositorAccountName?.trim() || null,
@@ -217,7 +145,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         receiptFileId: receiptFileId?.trim() || null,
         note: note?.trim() || null,
         metadata: {
-          paymentMode: chargeCalculation.paymentMode,
+          paymentMode,
           splitNumber: chargeCalculation.splitNumber,
           remainingBeforeCharge:
             chargeCalculation.remainingBeforeCharge.toString(),
@@ -242,7 +170,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         paymentMetadata: {
           provider: "BANK_TRANSFER",
           paymentId: createdPayment.id,
-          paymentMode: chargeCalculation.paymentMode,
+          paymentMode,
           splitNumber: chargeCalculation.splitNumber,
           remainingBeforeCharge:
             chargeCalculation.remainingBeforeCharge.toString(),
