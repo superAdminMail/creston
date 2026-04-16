@@ -55,6 +55,24 @@ function PaymentSummaryCard({
   );
 }
 
+async function startPaymentoPayment(investmentOrderId: string) {
+  const res = await fetch("/api/payments/paymento/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ investmentOrderId }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data?.redirectUrl) {
+    throw new Error(data?.error || "Failed to start crypto payment");
+  }
+
+  window.location.href = data.redirectUrl;
+}
+
 export default function InvestmentOrderPaymentClient({ order }: Props) {
   const PaymentIcon =
     order.paymentMethodType === "CRYPTO_PROVIDER" ? Wallet : Landmark;

@@ -1311,16 +1311,18 @@ enum PlatformPaymentVerificationStatus {
 
 enum CryptoAsset {
   BTC
-  ETH
 }
 
 enum CryptoNetwork {
   BITCOIN
-  ETHEREUM
 }
 
 enum CryptoFundingProvider {
-  TRANSAK
+  PAYMENTO
+}
+
+enum CryptoWebhookSource {
+  PAYMENTO
 }
 
 enum CryptoFundingIntentStatus {
@@ -1332,10 +1334,6 @@ enum CryptoFundingIntentStatus {
   FAILED
   EXPIRED
   CANCELED
-}
-
-enum CryptoWebhookSource {
-  TRANSAK
 }
 
 enum CryptoWebhookProcessingStatus {
