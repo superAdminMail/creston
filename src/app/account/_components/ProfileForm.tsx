@@ -1,69 +1,42 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { FormFieldWrapper } from "@/components/ui/form-field-wrapper";
+import { UploadButton } from "@/utils/uploadthing";
+import { getUserInitials } from "@/lib/User-Initials/user";
 import {
   updateUserSchema,
   updateUserSchemaType,
 } from "@/lib/zodValidations/user";
-import { UploadButton } from "@/utils/uploadthing";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { UserDTO } from "@/lib/types";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";
-
-import { Eye } from "lucide-react";
-import Link from "next/link";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  deleteProfileAvatarAction,
-  updateUserProfile,
-} from "@/actions/auth/user";
-import { getUserInitials } from "@/lib/User-Initials/user";
-import { FormFieldWrapper } from "@/components/ui/form-field-wrapper";
+import { deleteProfileAvatarAction, updateUserProfile } from "@/actions/auth/user";
+import { type UserDTO } from "@/lib/types";
 
 type Props = {
   userData: UserDTO;
 };
 
 export default function ProfileForm({ userData }: Props) {
-  const { data: user } = useCurrentUserQuery(userData);
-
   const [isPending, startTransition] = useTransition();
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(new Set());
-
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const form = useForm<updateUserSchemaType>({
     resolver: zodResolver(updateUserSchema),
     defaultValues: {
-      name: user?.name ?? "",
-      username: user?.username ?? "",
-      profileAvatar: user?.profileAvatar ?? undefined,
+      name: userData.name ?? "",
+      username: userData.username ?? "",
+      profileAvatar: userData.profileAvatar ?? undefined,
     },
   });
-
-  useEffect(() => {
-    if (user) {
-      form.reset({
-        name: user.name ?? "",
-        username: user.username ?? "",
-        profileAvatar: user.profileAvatar ?? undefined,
-      });
-    }
-  }, [form, user]);
 
   const { control, handleSubmit, setValue, getValues, clearErrors, setError } =
     form;
@@ -78,9 +51,7 @@ export default function ProfileForm({ userData }: Props) {
         Object.entries(res.fieldErrors).forEach(([fieldName, messages]) => {
           const message = messages?.[0];
 
-          if (!message) {
-            return;
-          }
+          if (!message) return;
 
           setError(fieldName as keyof updateUserSchemaType, {
             type: "server",
@@ -102,19 +73,16 @@ export default function ProfileForm({ userData }: Props) {
 
   const deleteProfileImage = async () => {
     const image = getValues("profileAvatar");
-    if (!image || !image.key) return;
-
+    if (!image?.key) return;
     if (deletingKeys.has(image.key)) return;
 
     setDeletingKeys((previous) => new Set(previous).add(image.key));
 
     try {
       await deleteProfileAvatarAction();
-      setValue("profileAvatar", null, {
-        shouldDirty: true,
-      });
+      setValue("profileAvatar", null, { shouldDirty: true });
       toast.success("Profile image removed");
-      window.location.reload();
+      router.refresh();
     } catch {
       toast.error("Failed to remove image");
     } finally {
@@ -126,40 +94,19 @@ export default function ProfileForm({ userData }: Props) {
     }
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
   const avatar =
-    form.watch("profileAvatar")?.url ??
-    user.profileAvatar?.url ??
-    user.image ??
-    null;
+    form.watch("profileAvatar")?.url ?? userData.profileAvatar?.url ?? userData.image ?? null;
 
   const initials = getUserInitials({
-    name: user.name ?? null,
-    username: user.username ?? null,
-    email: user.email ?? null,
+    name: userData.name ?? null,
+    username: userData.username ?? null,
+    email: userData.email ?? null,
   });
 
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
-        <CardTitle>Profile Information</CardTitle>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href="/profile"
-              className="text-[var(--brand-blue)] hover:text-[var(--brand-blue-hover)]"
-            >
-              <Eye />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Profile</p>
-          </TooltipContent>
-        </Tooltip>
+        <CardTitle>Personal Information</CardTitle>
       </CardHeader>
 
       <CardContent>
@@ -183,7 +130,7 @@ export default function ProfileForm({ userData }: Props) {
                 )}
               </div>
 
-              <span>
+              <div className="flex flex-col items-center gap-2">
                 <UploadButton
                   endpoint="profileAvatar"
                   onClientUploadComplete={async (res) => {
@@ -199,29 +146,40 @@ export default function ProfileForm({ userData }: Props) {
                       { shouldDirty: true },
                     );
 
-                    await updateUserProfile({
-                      profileAvatar: {
-                        url: file.url,
-                        key: file.key,
-                      },
+                    const result = await updateUserProfile({
+                      profileAvatar: { url: file.url, key: file.key },
                     });
 
-                    queryClient.invalidateQueries({
-                      queryKey: ["currentUser"],
-                    });
+                    if (result.error) {
+                      toast.error(result.error);
+                      return;
+                    }
 
                     toast.success("Profile image updated");
+                    router.refresh();
                   }}
                   className="
-                    ut-button:bg-blue-600
-                    ut-button:text-blue-500
-                    ut-button:border
-                    ut-button:border-blue-500/30
-                    ut-button:rounded-full
-                    ut-button:px-5
-                    ut-button:py-2
-                    ut-button:text-sm
-                    hover:ut-button:bg-blue-500/20
+                    ut-button:!inline-flex
+                    ut-button:!items-center
+                    ut-button:!gap-2
+                    ut-button:!rounded-full
+                    ut-button:!border
+                    ut-button:!border-blue-300/30
+                    ut-button:!bg-slate-950
+                    ut-button:!px-5
+                    ut-button:!py-2.5
+                    ut-button:!text-sm
+                    ut-button:!font-semibold
+                    ut-button:!text-white
+                    ut-button:!shadow-[0_12px_28px_rgba(2,6,23,0.42)]
+                    ut-button:!ring-1
+                    ut-button:!ring-inset
+                    ut-button:!ring-white/10
+                    ut-button:transition
+                    ut-button:duration-200
+                    hover:ut-button:!-translate-y-0.5
+                    hover:ut-button:!bg-blue-600
+                    hover:ut-button:!shadow-[0_16px_36px_rgba(37,99,235,0.34)]
                   "
                 />
 
@@ -238,7 +196,7 @@ export default function ProfileForm({ userData }: Props) {
                     Remove photo
                   </Button>
                 ) : null}
-              </span>
+              </div>
             </div>
           </section>
 
@@ -252,23 +210,21 @@ export default function ProfileForm({ userData }: Props) {
             )}
           </FormFieldWrapper>
 
-          <FormFieldWrapper
-            control={control}
-            name="username"
-            label="Username"
-            description="Pick a public username for your profile."
-          >
+          <FormFieldWrapper control={control} name="username" label="Username">
             {(field) => (
               <Input
                 {...field}
-                placeholder="Doe"
+                placeholder="johndoe"
                 className="border-white/10 bg-white/[0.04] focus:border-blue-400"
               />
             )}
           </FormFieldWrapper>
 
-          <div className="text-sm text-muted-foreground">
-            Email: <span className="font-medium">{user.email}</span>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+              Email
+            </p>
+            <p className="mt-2">{userData.email}</p>
           </div>
 
           <Button

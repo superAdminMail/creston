@@ -8,12 +8,14 @@ import { Separator } from "@/components/ui/separator";
 import { UserDTO } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
+  getBestDashboardMenuMatch,
   getDashboardMenu,
   type DashboardRole,
 } from "@/constants/dashboard-menu";
 
 type AccountSidebarContentProps = {
   user?: UserDTO | null;
+  siteName: string;
   pathname: string;
   isMobile?: boolean;
   onNavigate?: () => void;
@@ -22,22 +24,24 @@ type AccountSidebarContentProps = {
 
 export function AccountSidebarContent({
   user,
+  siteName,
   pathname,
   isMobile,
   onNavigate,
   onLogout,
 }: AccountSidebarContentProps) {
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const role = (user?.role as DashboardRole | undefined) ?? "USER";
   const sections = getDashboardMenu(role);
+  const activeMatch = getBestDashboardMenuMatch(pathname, role);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(
+    () => (activeMatch?.sectionTitle ? { [activeMatch.sectionTitle]: true } : {}),
+  );
 
   const toggle = (title: string) =>
     setOpenSections((prev) => ({ ...prev, [title]: !prev[title] }));
 
   const isActive = (href: string) => {
-    const p = pathname.replace(/\/$/, "");
-    const h = href.replace(/\/$/, "");
-    return p === h;
+    return activeMatch?.link.href === href;
   };
 
   return (
@@ -49,7 +53,7 @@ export function AccountSidebarContent({
     >
       <div className="flex-1 overflow-y-auto py-3 space-y-4">
         <p className="font-semibold text-gray-800 uppercase text-[13px] tracking-wide px-6 pb-2">
-          Havenstone Account
+          {siteName} Account
         </p>
         <Separator />
 
@@ -71,7 +75,10 @@ export function AccountSidebarContent({
               <div
                 className={cn(
                   "mx-1 mt-1 space-y-1 overflow-hidden transition-all",
-                  openSections[section.title] ? "max-h-96" : "max-h-0",
+                  (openSections[section.title] ||
+                    section.title === activeMatch?.sectionTitle)
+                    ? "max-h-96"
+                    : "max-h-0",
                 )}
               >
                 {section.links.map(({ href, icon: Icon, name }) => (

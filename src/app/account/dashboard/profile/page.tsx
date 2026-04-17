@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-
-import ProfilePageView from "@/app/account/dashboard/profile/ProfilePageView";
+import ProfilePageView from "../_components/ProfilePageView";
 
 export default async function Page() {
   const sessionUser = await getCurrentSessionUser();
@@ -13,19 +12,17 @@ export default async function Page() {
   const dbUser = await prisma.user.findUnique({
     where: { id: sessionUser.id },
     select: {
+      id: true,
       name: true,
       email: true,
+      username: true,
       image: true,
       role: true,
-      investorProfile: {
+      emailVerified: true,
+      profileAvatarFileAsset: {
         select: {
-          phoneNumber: true,
-          country: true,
-          state: true,
-          city: true,
-          addressLine1: true,
-          addressLine2: true,
-          isVerified: true,
+          storageKey: true,
+          url: true,
         },
       },
     },
@@ -40,10 +37,11 @@ export default async function Page() {
       user={{
         name: dbUser.name,
         email: dbUser.email,
-        image: dbUser.image,
+        username: dbUser.username,
+        image: dbUser.profileAvatarFileAsset?.url ?? dbUser.image,
         role: dbUser.role,
+        isEmailVerified: dbUser.emailVerified,
       }}
-      profile={dbUser.investorProfile}
     />
   );
 }

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/menubar";
 
 import {
-  getDashboardMenu,
+  getBestDashboardMenuMatch,
   type DashboardRole,
 } from "@/constants/dashboard-menu";
 import type { ProfileImage } from "@/lib/types";
@@ -61,6 +61,9 @@ function getPageTitle(pathname: string, role: DashboardRole) {
   const base = getDashboardHomeByRole(role);
 
   if (pathname === base) return "Dashboard";
+
+  const matched = getBestDashboardMenuMatch(pathname, role);
+  if (matched) return matched.link.name;
 
   const segments = pathname.split("/").filter(Boolean);
   const last = segments[segments.length - 1] ?? "dashboard";

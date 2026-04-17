@@ -65,6 +65,9 @@ model User {
   submittedInvestmentOrderPayments InvestmentOrderPayment[] @relation("InvestmentOrderPaymentSubmittedBy")
   reviewedInvestmentOrderPayments  InvestmentOrderPayment[] @relation("InvestmentOrderPaymentReviewedBy")
 
+  createdPromotionCampaigns PromotionCampaign[] @relation("PromotionCampaignCreatedBy")
+  promotionDeliveries       PromotionDelivery[] @relation("PromotionDeliveryUser")
+
   submittedSavingsTransactionPayments SavingsTransactionPayment[] @relation("SavingsTransactionPaymentSubmittedBy")
   reviewedSavingsTransactionPayments  SavingsTransactionPayment[] @relation("SavingsTransactionPaymentReviewedBy")
   savingsFundingIntents               SavingsFundingIntent[]
@@ -1239,6 +1242,8 @@ model Notification {
 
   metadata Json?
 
+  promotionDeliveries PromotionDelivery[]
+
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1246,7 +1251,7 @@ model Notification {
 
 /// *
 /// * ===========================
-/// *   SITE CONFIGURATION
+/// *   SITE CONFIGURATION 
 /// * ===========================
 model SiteConfiguration {
   id String @id @default("default")
@@ -1281,6 +1286,83 @@ model SiteConfiguration {
 
   @@index([defaultOgImageFileAssetId])
   @@map("site_configuration")
+}
+
+/// *
+/// * ===========================
+/// *   PROMOTIONS
+/// * ===========================
+model PromotionCampaign {
+  id String @id @default(cuid())
+
+  createdByUserId String
+  createdByUser   User   @relation("PromotionCampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  title   String
+  subject String?
+  message String
+
+  audienceType PromotionAudienceType
+  channel      PromotionChannel
+  status       PromotionCampaignStatus @default(DRAFT)
+
+  sendToAllUsers Boolean @default(false)
+
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  failedAt    DateTime?
+
+  failureMessage String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deliveries PromotionDelivery[]
+
+  @@index([createdByUserId])
+  @@index([status])
+  @@index([audienceType])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("promotion_campaign")
+}
+
+model PromotionDelivery {
+  id String @id @default(cuid())
+
+  campaignId String
+  campaign   PromotionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("PromotionDeliveryUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  channel PromotionChannel
+  status  PromotionDeliveryStatus @default(PENDING)
+
+  notificationId String?
+  notification   Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
+  emailAddress String?
+  emailSentAt  DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedAt     DateTime?
+
+  failureMessage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([campaignId, userId, channel])
+  @@index([campaignId])
+  @@index([userId])
+  @@index([status])
+  @@index([channel])
+  @@map("promotion_delivery")
 }
 
 /// *
@@ -1570,4 +1652,31 @@ enum UserAccountStatus {
   SUSPENDED
   BLOCKED
   DELETED
+}
+
+enum PromotionAudienceType {
+  SINGLE_USER
+  BROADCAST_ALL_USERS
+}
+
+enum PromotionChannel {
+  IN_APP
+  EMAIL
+}
+
+enum PromotionCampaignStatus {
+  DRAFT
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum PromotionDeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  CANCELLED
 }

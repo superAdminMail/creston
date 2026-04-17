@@ -1,9 +1,32 @@
-import { ShoppingBag, Truck, CreditCard, Megaphone, Bell } from "lucide-react";
+import { createElement } from "react";
+import { ShoppingBag, CreditCard, Megaphone, Bell } from "lucide-react";
 
-import { NotificationType } from "@/lib/types/notification";
+import type { NotificationDTO } from "@/lib/types/notification";
+import {
+  isInvestmentOrderBankInfoReadyNotification,
+  isInvestmentOrderBankInfoRequestNotification,
+} from "@/lib/notifications/investmentOrderBankInfo";
 
-export function getNotificationIcon(type?: NotificationType) {
-  switch (type) {
+export function getNotificationIcon(
+  notification?: Pick<NotificationDTO, "type" | "metadata">,
+) {
+  const isPromotion =
+    notification?.type === "PROMOTION" ||
+    notification?.metadata?.campaignType === "PROMOTION";
+
+  const isInvestmentBankInfo =
+    isInvestmentOrderBankInfoRequestNotification(notification) ||
+    isInvestmentOrderBankInfoReadyNotification(notification);
+
+  if (isPromotion) {
+    return Megaphone;
+  }
+
+  if (isInvestmentBankInfo) {
+    return CreditCard;
+  }
+
+  switch (notification?.type) {
     case "INVESTMENT_ORDER":
       return ShoppingBag;
 
@@ -13,10 +36,16 @@ export function getNotificationIcon(type?: NotificationType) {
     case "WITHDRAWAL":
       return CreditCard;
 
-    case "PROMOTION":
-      return Megaphone;
-
     default:
       return Bell;
   }
+}
+
+export function renderNotificationIcon(
+  notification?: Pick<NotificationDTO, "type" | "metadata">,
+  className = "h-4 w-4",
+) {
+  const Icon = getNotificationIcon(notification);
+
+  return createElement(Icon, { className });
 }

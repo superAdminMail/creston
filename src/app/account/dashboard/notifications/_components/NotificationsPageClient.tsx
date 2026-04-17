@@ -7,7 +7,8 @@ import { Bell, CheckCheck, ChevronRight } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 
 import { markNotificationRead } from "@/actions/notifications/markNotificationRead";
-import { getNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
 import type { NotificationDTO } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -47,10 +48,6 @@ function formatNotificationTime(value: string) {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function formatNotificationType(type?: string | null) {
-  return type ? type.replaceAll("_", " ") : "SYSTEM";
 }
 
 export default function NotificationsPageClient({
@@ -130,8 +127,8 @@ export default function NotificationsPageClient({
                 Notification Center
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Review account activity, profit updates, withdrawal status, and
-                system announcements from one place.
+                Review account activity, promotion messages, profit updates,
+                withdrawal status, and system announcements from one place.
               </p>
             </div>
           </div>
@@ -185,14 +182,13 @@ export default function NotificationsPageClient({
             No notifications yet
           </h2>
           <p className="mt-2 text-sm text-slate-400">
-            New investment, withdrawal, and system updates will appear here.
+            New investment, promotion, withdrawal, and system updates will
+            appear here.
           </p>
         </div>
       ) : (
         <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.25)] sm:p-4">
           {notifications.map((notification) => {
-            const Icon = getNotificationIcon(notification.type);
-
             return (
               <button
                 key={notification.id}
@@ -213,7 +209,7 @@ export default function NotificationsPageClient({
                       : "border-slate-200 bg-white text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400",
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  {renderNotificationIcon(notification, "h-4 w-4")}
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -239,7 +235,7 @@ export default function NotificationsPageClient({
 
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-zinc-400">
-                      {formatNotificationType(notification.type)}
+                      {getNotificationDisplayType(notification)}
                     </span>
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-300">
                       {notification.link ? "Open" : "Viewed"}

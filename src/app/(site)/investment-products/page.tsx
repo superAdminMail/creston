@@ -174,12 +174,12 @@ export default async function InvestmentProductsPage({
               </dl>
 
               <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
-                      href={model ? "/investment-plans" : "/investment-plans"}
-                      className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
-                    >
-                      View active plans
-                    </Link>
+                <Link
+                  href="/investment-plans"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+                >
+                  View active plans
+                </Link>
                 {product.featuredPlan ? (
                   <Link
                     href={`/investment-plans/${product.featuredPlan.slug}`}

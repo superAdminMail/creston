@@ -1,12 +1,16 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { SenderType } from "@/generated/prisma/client";
+import { revalidatePath } from "next/cache";
+
+import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
 import {
-  persistConversationMessage,
-  processConversationMessageAfterWrite,
-} from "@/lib/inbox/conversationService";
-import { getCurrentUserId } from "@/lib/getCurrentUser";
+  createSupportConversation,
+  getSupportConversationThread,
+} from "@/lib/support/supportConversationService";
+import {
+  supportConversationSchema,
+  type SupportConversationValues,
+} from "@/lib/zodValidations/support";
 
 export async function createConversationAction({
   subject,
@@ -18,67 +22,58 @@ export async function createConversationAction({
   const userId = await getCurrentUserId();
   if (!userId) return { error: "Unauthorized" };
 
-  const cleanMessage = message.trim();
-  if (!cleanMessage) return { error: "Message cannot be empty" };
+  const parsed = supportConversationSchema.safeParse({
+    subject,
+    message,
+  } satisfies SupportConversationValues);
 
-  const conversation = await prisma.$transaction(async (tx) => {
-    const createdConversation = await tx.conversation.create({
-      data: {
-        type: "SUPPORT",
-        status: "OPEN",
-        subject: subject?.trim() || "Support Ticket",
-        members: {
-          create: {
-            userId,
-          },
-        },
-      },
-      select: {
-        id: true,
-        subject: true,
-      },
-    });
-
-    await persistConversationMessage(tx, {
-      conversationId: createdConversation.id,
-      senderType: SenderType.SYSTEM,
-      content:
-        "Hello. I'm your AI Assistant. A support agent will assist you shortly.",
-    });
-
-    const createdUserMessage = await persistConversationMessage(tx, {
-      conversationId: createdConversation.id,
-      senderType: SenderType.USER,
-      content: cleanMessage,
-    });
-
-    const messages = await tx.message.findMany({
-      where: { conversationId: createdConversation.id },
-      orderBy: { createdAt: "asc" },
-    });
-
+  if (!parsed.success) {
     return {
-      ...createdConversation,
-      createdUserMessage,
-      messages,
+      error:
+        parsed.error.issues[0]?.message ?? "Please complete the support form.",
     };
+  }
+
+  const conversation = await createSupportConversation({
+    creatorUserId: userId,
+    subject: parsed.data.subject,
+    message: parsed.data.message,
+    type: "SUPPORT",
+    source: "dashboard-support",
   });
 
-  await processConversationMessageAfterWrite(conversation.createdUserMessage);
+  const role = await getCurrentUserRole();
+  const thread =
+    role && userId
+      ? await getSupportConversationThread({
+          conversationId: conversation.id,
+          viewerUserId: userId,
+          viewerRole: role,
+        })
+      : null;
+
+  revalidatePath("/account/dashboard/user/support");
+  revalidatePath("/account/dashboard/admin/support");
+
+  if (!thread) {
+    return {
+      ok: true,
+      conversation: {
+        id: conversation.id,
+        ticketId: conversation.id,
+        subject: conversation.subject,
+        messages: [],
+      },
+    };
+  }
 
   return {
     ok: true,
     conversation: {
-      id: conversation.id,
-      subject: conversation.subject,
-      messages: conversation.messages.map((m) => ({
-        id: m.id,
-        conversationId: conversation.id,
-        senderType: m.senderType,
-        content: m.content,
-        createdAt: m.createdAt.toISOString(),
-        deliveredAt: m.deliveredAt?.toISOString() ?? null,
-      })),
+      id: thread.id,
+      ticketId: thread.ticketId,
+      subject: thread.subject,
+      messages: thread.messages,
     },
   };
 }

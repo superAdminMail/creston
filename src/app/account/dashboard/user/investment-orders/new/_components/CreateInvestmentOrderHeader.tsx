@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, Landmark, Plus } from "lucide-react";
 
-export function CreateInvestmentOrderHeader() {
+export function CreateInvestmentOrderHeader({
+  siteName,
+}: {
+  siteName: string;
+}) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -22,7 +26,7 @@ export function CreateInvestmentOrderHeader() {
           Create Investment Order
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-          Choose an investment type, select a structured Havenstone plan, and
+          Choose an investment type, select a structured {siteName} plan, and
           submit a secure investment order for payment review and confirmation.
         </p>
       </div>

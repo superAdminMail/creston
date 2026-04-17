@@ -1,15 +1,34 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { sendMessageAction } from "@/actions/inbox/sendMessageAction";
 import { sendTypingAction } from "@/actions/inbox/sendTypingAction";
 import { Spinner } from "@/components/ui/spinner";
 import { SenderType } from "@/generated/prisma/client";
+import { ChatMessage } from "@/lib/types/chat.types";
 
 type Props = {
   conversationId: string;
+  senderType?: SenderType;
+  placeholder?: string;
+  sendLabel?: string;
+  selfUserId?: string | null;
+  senderLookup?: Record<
+    string,
+    {
+      name: string;
+      email?: string | null;
+      role?: ChatMessage["senderRole"];
+    }
+  >;
+  onSendMessage?: (input: {
+    conversationId: string;
+    content: string;
+  }) => Promise<{ error?: string; success?: boolean } | void>;
+  onSendComplete?: () => void;
   onPreviewUpdate?: (payload: {
     content: string;
     senderType: SenderType;
@@ -17,7 +36,17 @@ type Props = {
   }) => void;
 };
 
-export function ChatInput({ conversationId, onPreviewUpdate }: Props) {
+export function ChatInput({
+  conversationId,
+  senderType = SenderType.USER,
+  placeholder = "Type a message...",
+  sendLabel = "Send",
+  selfUserId = null,
+  senderLookup,
+  onSendMessage,
+  onSendComplete,
+  onPreviewUpdate,
+}: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const lastTypingAtRef = useRef(0);
 
@@ -33,16 +62,29 @@ export function ChatInput({ conversationId, onPreviewUpdate }: Props) {
   const send = async () => {
     if (!text.trim() || isSending) return;
     const value = text;
-    setText("");
     setIsSending(true);
     try {
-      const res = await sendMessageAction({ conversationId, content: value });
-      if (!res?.error) {
+      const res = await (onSendMessage
+        ? onSendMessage({ conversationId, content: value })
+        : sendMessageAction({ conversationId, content: value }));
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        setText("");
+        const previewSender =
+          selfUserId && senderLookup?.[selfUserId]
+            ? senderLookup[selfUserId]
+            : null;
         onPreviewUpdate?.({
+          senderId: selfUserId,
+          senderName: previewSender?.name ?? null,
+          senderRole: previewSender?.role ?? null,
+          senderEmail: previewSender?.email ?? null,
           content: value,
-          senderType: SenderType.USER,
+          senderType,
           createdAt: new Date().toISOString(),
         });
+        onSendComplete?.();
       }
     } finally {
       setIsSending(false);
@@ -66,7 +108,7 @@ export function ChatInput({ conversationId, onPreviewUpdate }: Props) {
               }
             }}
             onKeyDown={(e) => e.key === "Enter" && send()}
-            placeholder="Type a message..."
+            placeholder={placeholder}
             className="min-h-10 w-full resize-none max-h-40 overflow-y-auto rounded-md border px-3 py-2 pr-14 text-sm leading-6 focus:outline-none"
           />
           <Button
@@ -79,7 +121,7 @@ export function ChatInput({ conversationId, onPreviewUpdate }: Props) {
                 <Spinner className="h-4 w-4 animate-spin text-white" />
               </span>
             ) : (
-              "Send"
+              sendLabel
             )}
           </Button>
         </div>

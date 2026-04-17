@@ -8,6 +8,10 @@ export type ChatMessage = {
   id: string;
   conversationId: string;
   senderType: SenderType;
+  senderId?: string | null;
+  senderName?: string | null;
+  senderEmail?: string | null;
+  senderRole?: UserRole | "SYSTEM" | "CONTACT" | null;
   content: string;
   createdAt: string;
   readAt?: string | null;
@@ -34,6 +38,7 @@ export type InboxPreview = {
 
 export type NewConversation = {
   id: string;
+  ticketId?: string;
   subject: string | null;
   messages: ChatMessage[];
 };

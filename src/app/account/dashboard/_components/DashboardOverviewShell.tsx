@@ -73,7 +73,7 @@ function MetricCard({
             <p className="text-sm text-white/60">{description}</p>
           </div>
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
+          <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
             <Icon className="h-5 w-5" />
           </div>
         </div>

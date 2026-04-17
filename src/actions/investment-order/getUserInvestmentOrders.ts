@@ -3,7 +3,6 @@
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
@@ -93,7 +92,7 @@ function getPrimaryAction(
     default:
       return {
         label: "View details",
-        href: `/account/dashboard/user/investments#order/${order.id}`,
+        href: `/account/dashboard/user/investment-orders/${order.id}`,
       };
   }
 }
@@ -105,15 +104,9 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
     redirect("/auth/login");
   }
 
-  const userId = await getCurrentUserId();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
-  }
-
   const investorProfile = await prisma.investorProfile.findUnique({
     where: {
-      userId: userId,
+      userId: user.id,
     },
     select: {
       id: true,

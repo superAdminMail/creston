@@ -4,9 +4,12 @@ import { ArrowLeft, PencilLine } from "lucide-react";
 import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import { updateCurrentUserInvestorProfileAction } from "@/actions/profile/upsert-current-user-investor-profile";
 import { InvestmentProfileForm } from "@/components/onboarding/investment-profile-form";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function Page() {
   const profile = await getCurrentUserInvestmentProfileData();
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName ?? "";
 
   return (
     <div className="space-y-6">
@@ -24,7 +27,7 @@ export default async function Page() {
             Edit Investment Profile
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-            Review and update your Havenstone investment profile.
+            Review and update your {siteName} investment profile.
           </p>
         </div>
 
@@ -37,10 +40,10 @@ export default async function Page() {
       <section className="card-premium rounded-[2rem] p-6 sm:p-8">
         <div className="max-w-3xl">
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
-            Personal information
+            Investment profile details
           </h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            Review and update your personal information.
+            Review and update your investment profile details.
           </p>
         </div>
 
@@ -51,6 +54,7 @@ export default async function Page() {
             submitLabel="Save profile updates"
             pendingLabel="Saving profile..."
             successMessage="Profile updated successfully."
+            compactFields
           />
         </div>
       </section>

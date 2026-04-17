@@ -1,11 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ChatBox from "./ChatBox";
-import { ChatMessage } from "@/lib/types/chat.types";
+import { SenderType } from "@/generated/prisma/client";
 import { Spinner } from "@/components/ui/spinner";
+import { ChatMessage } from "@/lib/types/chat.types";
+import ChatBox from "./ChatBox";
 
 type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
+
+type Props = {
+  conversationId: string;
+  title: string;
+  subtitle?: string;
+  forceOnline?: boolean;
+  presenceTargetRoles?: PresenceRole[];
+  viewerSenderType?: SenderType;
+  incomingSenderTypes?: SenderType[];
+  canReply?: boolean;
+  sendLabel?: string;
+  selfUserId?: string | null;
+  onSendComplete?: () => void;
+  sendAction?: (input: {
+    conversationId: string;
+    content: string;
+  }) => Promise<{ error?: string; success?: boolean } | void>;
+  onOpenMenu?: () => void;
+  onPreviewUpdate?: (payload: {
+    senderId?: string | null;
+    senderName?: string | null;
+    senderRole?: ChatMessage["senderRole"];
+    senderEmail?: string | null;
+    content: string;
+    senderType: ChatMessage["senderType"];
+    createdAt: string;
+  }) => void;
+};
 
 export default function ChatMessages({
   conversationId,
@@ -13,21 +42,14 @@ export default function ChatMessages({
   subtitle,
   forceOnline,
   presenceTargetRoles,
+  viewerSenderType,
+  incomingSenderTypes,
+  canReply,
+  sendLabel,
+  sendAction,
   onOpenMenu,
   onPreviewUpdate,
-}: {
-  conversationId: string;
-  title: string;
-  subtitle?: string;
-  forceOnline?: boolean;
-  presenceTargetRoles?: PresenceRole[];
-  onOpenMenu?: () => void;
-  onPreviewUpdate?: (payload: {
-    content: string;
-    senderType: ChatMessage["senderType"];
-    createdAt: string;
-  }) => void;
-}) {
+}: Props) {
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
 
   useEffect(() => {
@@ -88,6 +110,13 @@ export default function ChatMessages({
         subtitle={subtitle}
         forceOnline={forceOnline}
         presenceTargetRoles={presenceTargetRoles}
+      viewerSenderType={viewerSenderType}
+      incomingSenderTypes={incomingSenderTypes}
+      canReply={canReply}
+      sendLabel={sendLabel}
+      selfUserId={selfUserId}
+      onSendComplete={onSendComplete}
+      sendAction={sendAction}
         onOpenMenu={onOpenMenu}
         onPreviewUpdate={onPreviewUpdate}
       />

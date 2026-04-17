@@ -1,17 +1,15 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowRight,
   BadgeCheck,
   CalendarDays,
   CircleAlert,
+  ArrowRight,
   FileText,
-  Mail,
   MapPin,
   PencilLine,
   Phone,
   ShieldCheck,
-  UserCircle2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 type UserInvestmentProfileDetailsPageProps = {
   profile: CurrentUserInvestmentProfileData;
+  siteName: string;
 };
 
 function DetailCard({
@@ -49,15 +48,16 @@ function DetailCard({
 
 export function UserInvestmentProfileDetailsPage({
   profile,
+  siteName,
 }: UserInvestmentProfileDetailsPageProps) {
   const readinessItems = [
     {
       title: profile.profileComplete
-        ? "Core identity information complete"
-        : "Personal details still need attention",
+        ? "Investment profile complete"
+        : "Investment details still need attention",
       body: profile.profileComplete
-        ? "Your core personal information is complete and ready for account servicing."
-        : "Finish the missing profile fields to fully prepare your account for secure servicing.",
+        ? "Your investment profile is complete and ready for account servicing."
+        : "Finish the missing investment fields to keep your account ready for secure servicing.",
       icon: profile.profileComplete ? BadgeCheck : CircleAlert,
       tone: profile.profileComplete
         ? "border-emerald-400/15 bg-emerald-400/8"
@@ -73,7 +73,7 @@ export function UserInvestmentProfileDetailsPage({
           : `KYC ${profile.kycStatusLabel.toLowerCase()}`,
       body:
         profile.kycStatusLabel === "Verified"
-          ? "Your identity verification is complete for this account."
+          ? "Your identity verification is complete for this investment profile."
           : "Verification documents still need to be prepared or reviewed before full account readiness.",
       icon: ShieldCheck,
       tone:
@@ -85,22 +85,11 @@ export function UserInvestmentProfileDetailsPage({
     {
       title: `${profile.completedFieldCount} of ${profile.totalFieldCount} profile fields completed`,
       body: profile.profileComplete
-        ? "Your account profile is fully completed and ready for the next financial steps."
-        : "Continue updating your profile to improve completion and readiness across your Havenstone account.",
+        ? "Your investment profile is fully completed and ready for the next financial steps."
+        : `Continue updating your investment profile to improve completion and readiness across your ${siteName} account.`,
       icon: FileText,
       tone: "border-white/8 bg-white/[0.03]",
       iconColor: "text-blue-300",
-    },
-  ];
-
-  const nextActions = [
-    {
-      href: "/account/dashboard/user/investment-profile/edit",
-      label: "Update personal details",
-    },
-    {
-      href: "/account/dashboard/user/settings",
-      label: "Review account settings",
     },
   ];
 
@@ -120,9 +109,8 @@ export function UserInvestmentProfileDetailsPage({
             Investment Profile
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-            Review your current investment profile details and update any
-            information to keep your account ready for secure financial
-            servicing.
+            Review and update your investment profile details for secure
+            servicing and account readiness.
           </p>
         </div>
 
@@ -137,41 +125,38 @@ export function UserInvestmentProfileDetailsPage({
 
       <section className="card-premium rounded-[2rem] p-6 sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.20),rgba(59,130,246,0.08))]">
-              <UserCircle2 className="h-8 w-8 text-blue-200" />
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-xl font-semibold tracking-[-0.03em] text-white sm:text-2xl">
+                Investment details
+              </h2>
+
+              <span
+                className={cn(
+                  "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
+                  profile.profileComplete
+                    ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+                    : "border border-amber-400/20 bg-amber-400/10 text-amber-300",
+                )}
+              >
+                {profile.profileStatusLabel}
+              </span>
             </div>
 
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-xl font-semibold tracking-[-0.03em] text-white sm:text-2xl">
-                  {profile.userName}
-                </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              These details are kept separate from your personal profile and
+              are used for investment servicing.
+            </p>
 
-                <span
-                  className={cn(
-                    "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
-                    profile.profileComplete
-                      ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                      : "border border-amber-400/20 bg-amber-400/10 text-amber-300",
-                  )}
-                >
-                  {profile.profileStatusLabel}
-                </span>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
+                <ShieldCheck className="h-4 w-4 text-blue-300" />
+                Secure investment profile
               </div>
 
-              <p className="mt-2 text-sm text-slate-400">{profile.email}</p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                  <ShieldCheck className="h-4 w-4 text-blue-300" />
-                  Secure account profile
-                </div>
-
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                  <FileText className="h-4 w-4 text-blue-300" />
-                  KYC status: {profile.kycStatusLabel}
-                </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
+                <FileText className="h-4 w-4 text-blue-300" />
+                KYC status: {profile.kycStatusLabel}
               </div>
             </div>
           </div>
@@ -208,8 +193,8 @@ export function UserInvestmentProfileDetailsPage({
 
             <p className="mt-4 text-sm leading-6 text-slate-400">
               {profile.profileComplete
-                ? "Your profile is fully completed and ready for secure financial servicing."
-                : "Complete all key personal details to prepare your account for verification and investment readiness."}
+                ? "Your investment profile is fully completed and ready for secure financial servicing."
+                : "Complete the remaining investment fields to prepare your account for verification and investment readiness."}
             </p>
           </div>
         </div>
@@ -220,26 +205,15 @@ export function UserInvestmentProfileDetailsPage({
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
-                Personal details
+                Investment details
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                These details help Havenstone maintain a complete and secure
-                investor profile for your account.
+                These fields belong to your investor profile model.
               </p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <DetailCard
-              label="Full name"
-              value={profile.details.fullName}
-              icon={UserCircle2}
-            />
-            <DetailCard
-              label="Email address"
-              value={profile.details.email}
-              icon={Mail}
-            />
             <DetailCard
               label="Phone number"
               value={profile.details.phoneNumber}
@@ -260,11 +234,7 @@ export function UserInvestmentProfileDetailsPage({
               value={profile.details.state}
               icon={MapPin}
             />
-            <DetailCard
-              label="City"
-              value={profile.details.city}
-              icon={MapPin}
-            />
+            <DetailCard label="City" value={profile.details.city} icon={MapPin} />
             <DetailCard
               label="Address line 1"
               value={profile.details.addressLine1}
@@ -280,9 +250,29 @@ export function UserInvestmentProfileDetailsPage({
 
         <div className="space-y-6">
           <section className="glass-strong rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">
-              Profile readiness
-            </h2>
+            <h2 className="text-lg font-semibold text-white">Next actions</h2>
+
+            <div className="mt-5 space-y-3">
+              <Link
+                href="/account/dashboard/user/investment-profile/edit"
+                className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+              >
+                Update investment profile
+                <ArrowRight className="h-4 w-4 text-blue-300" />
+              </Link>
+
+              <Link
+                href="/account/dashboard/profile"
+                className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+              >
+                Review your personal profile
+                <ArrowRight className="h-4 w-4 text-blue-300" />
+              </Link>
+            </div>
+          </section>
+
+          <section className="card-premium rounded-[2rem] p-6">
+            <h2 className="text-lg font-semibold text-white">Profile readiness</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
               Review the key areas below to improve account completeness and
               verification readiness.
@@ -311,27 +301,6 @@ export function UserInvestmentProfileDetailsPage({
                   </div>
                 );
               })}
-            </div>
-          </section>
-
-          <section className="card-premium rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">Next actions</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Keep your profile up-to-date to ensure smooth account servicing
-              and investment readiness.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              {nextActions.map((action) => (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/[0.05] hover:text-white"
-                >
-                  <span>{action.label}</span>
-                  <ArrowRight className="h-4 w-4 text-slate-500" />
-                </Link>
-              ))}
             </div>
           </section>
         </div>

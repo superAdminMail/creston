@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatMessage } from "@/lib/types/chat.types";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
 import { ChatInput } from "./ChatInput";
 import { useConversationPresence } from "@/hooks/useConversationPresence";
 import { useConversationMessages } from "@/hooks/useConversationMessages";
+import { SenderType } from "@/generated/prisma/client";
 
 type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 
@@ -17,20 +18,38 @@ type Props = {
   subtitle?: string;
   forceOnline?: boolean;
   presenceTargetRoles?: PresenceRole[];
+  viewerSenderType?: SenderType;
+  incomingSenderTypes?: SenderType[];
+  canReply?: boolean;
+  sendLabel?: string;
+  selfUserId?: string | null;
+  senderLookup?: Record<
+    string,
+    {
+      name: string;
+      email?: string | null;
+      role?: ChatMessage["senderRole"];
+    }
+  >;
+  sendAction?: (input: {
+    conversationId: string;
+    content: string;
+  }) => Promise<{ error?: string; success?: boolean } | void>;
+  onSendComplete?: () => void;
   onOpenMenu?: () => void;
   onPreviewUpdate?: (payload: {
+    senderId?: string | null;
+    senderName?: string | null;
+    senderRole?: ChatMessage["senderRole"];
+    senderEmail?: string | null;
     content: string;
     senderType: ChatMessage["senderType"];
     createdAt: string;
   }) => void;
 };
 
-function isIncomingMessage(message: ChatMessage) {
-  return message.senderType === "SUPPORT" || message.senderType === "SYSTEM";
-}
-
-function isOwnMessage(message: ChatMessage) {
-  return message.senderType === "USER";
+function isOwnMessage(message: ChatMessage, viewerSenderType: SenderType) {
+  return message.senderType === viewerSenderType;
 }
 
 export default function ChatBox({
@@ -40,34 +59,63 @@ export default function ChatBox({
   subtitle,
   forceOnline,
   presenceTargetRoles,
+  viewerSenderType = SenderType.USER,
+  incomingSenderTypes = [SenderType.SUPPORT, SenderType.SYSTEM],
+  canReply = true,
+  sendLabel,
+  selfUserId = null,
+  senderLookup,
+  sendAction,
+  onSendComplete,
   onOpenMenu,
   onPreviewUpdate,
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
+
   const { online, typing, lastSeenAt } = useConversationPresence(
     conversationId,
     {
       targetRoles: presenceTargetRoles,
-      selfUserId: null,
+      selfUserId,
     },
   );
 
   useConversationMessages({
     conversationId,
     onMessage: async (message) => {
+      const senderMeta =
+        message.senderId && senderLookup?.[message.senderId]
+          ? senderLookup[message.senderId]
+          : null;
+      const nextMessage = senderMeta
+        ? {
+            ...message,
+            senderName: senderMeta.name,
+            senderEmail: senderMeta.email ?? null,
+            senderRole: senderMeta.role ?? message.senderRole ?? null,
+          }
+        : message;
+
       setMessages((prev) => {
-        if (prev.find((current) => current.id === message.id)) return prev;
-        return [...prev, message];
+        if (prev.find((current) => current.id === nextMessage.id)) return prev;
+        return [...prev, nextMessage];
       });
 
       onPreviewUpdate?.({
-        content: message.content,
-        senderType: message.senderType,
-        createdAt: message.createdAt,
+        senderId: nextMessage.senderId ?? null,
+        senderName: nextMessage.senderName ?? null,
+        senderRole: nextMessage.senderRole ?? null,
+        senderEmail: nextMessage.senderEmail ?? null,
+        content: nextMessage.content,
+        senderType: nextMessage.senderType,
+        createdAt: nextMessage.createdAt,
       });
 
-      if (isIncomingMessage(message)) {
+      if (incomingSenderTypes.includes(nextMessage.senderType)) {
         await fetch("/api/messages/delivered", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -84,7 +132,7 @@ export default function ChatBox({
     onDelivered: ({ deliveredAt }) => {
       setMessages((prev) =>
         prev.map((message) =>
-          isOwnMessage(message) && !message.deliveredAt
+          isOwnMessage(message, viewerSenderType) && !message.deliveredAt
             ? { ...message, deliveredAt }
             : message,
         ),
@@ -93,7 +141,7 @@ export default function ChatBox({
     onSeen: ({ readAt }) => {
       setMessages((prev) =>
         prev.map((message) =>
-          isOwnMessage(message) && !message.readAt
+          isOwnMessage(message, viewerSenderType) && !message.readAt
             ? { ...message, readAt }
             : message,
         ),
@@ -120,14 +168,22 @@ export default function ChatBox({
       <MessageList
         messages={messages}
         typing={typing}
-        viewerSenderType="USER"
+        viewerSenderType={viewerSenderType}
       />
 
       <div className="shrink-0">
-        <ChatInput
-          conversationId={conversationId}
-          onPreviewUpdate={onPreviewUpdate}
-        />
+        {canReply ? (
+          <ChatInput
+            conversationId={conversationId}
+            senderType={viewerSenderType}
+            sendLabel={sendLabel}
+            selfUserId={selfUserId}
+            senderLookup={senderLookup}
+            onSendMessage={sendAction}
+            onSendComplete={onSendComplete}
+            onPreviewUpdate={onPreviewUpdate}
+          />
+        ) : null}
       </div>
     </div>
   );

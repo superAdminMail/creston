@@ -45,6 +45,7 @@ type InvestmentProfileFormProps = {
   submitLabel?: string;
   pendingLabel?: string;
   successMessage?: string;
+  compactFields?: boolean;
 };
 
 export function InvestmentProfileForm({
@@ -54,6 +55,7 @@ export function InvestmentProfileForm({
   submitLabel = "Save and continue",
   pendingLabel = "Saving...",
   successMessage = "Investment profile saved.",
+  compactFields = false,
 }: InvestmentProfileFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -64,7 +66,7 @@ export function InvestmentProfileForm({
       countryCallingCode: "+1",
       phoneNumber: "",
       dateOfBirth: "",
-      confirmAdultAge: false,
+      confirmAdultAge: compactFields ? true : false,
       country: "United States",
       state: "",
       city: "",
@@ -111,11 +113,14 @@ export function InvestmentProfileForm({
   });
   const derivedAge = getAgeFromIsoDate(selectedDateOfBirth);
   const isAdult = derivedAge !== null && derivedAge >= 18;
-  const hasConfirmedAdultAge = useWatch({
+  const watchedConfirmAdultAge = useWatch({
     control: form.control,
     name: "confirmAdultAge",
     defaultValue: false,
   });
+  const hasConfirmedAdultAge = compactFields
+    ? true
+    : watchedConfirmAdultAge;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
@@ -123,25 +128,7 @@ export function InvestmentProfileForm({
         <Field>
           <FieldLabel className="text-white/80">Phone number</FieldLabel>
           <FieldContent>
-            <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
-              <Controller
-                control={form.control}
-                name="countryCallingCode"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldContent>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        inputMode="tel"
-                        placeholder="+1"
-                        className="input-premium h-11 rounded-xl"
-                      />
-                    </FieldContent>
-                  </Field>
-                )}
-              />
-
+            {compactFields ? (
               <Controller
                 control={form.control}
                 name="phoneNumber"
@@ -160,16 +147,59 @@ export function InvestmentProfileForm({
                   </Field>
                 )}
               />
-            </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
+                <Controller
+                  control={form.control}
+                  name="countryCallingCode"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          inputMode="tel"
+                          placeholder="+1"
+                          className="input-premium h-11 rounded-xl"
+                        />
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          placeholder="555 123 4567"
+                          className="input-premium h-11 rounded-xl"
+                        />
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+              </div>
+            )}
             <FieldDescription className="pt-1">
               We will use this number to send you important updates regarding
               your account.
             </FieldDescription>
             <FieldError
-              errors={[
-                form.formState.errors.countryCallingCode,
-                form.formState.errors.phoneNumber,
-              ]}
+              errors={
+                compactFields
+                  ? [form.formState.errors.phoneNumber]
+                  : [
+                      form.formState.errors.countryCallingCode,
+                      form.formState.errors.phoneNumber,
+                    ]
+              }
             />
           </FieldContent>
         </Field>
@@ -207,11 +237,11 @@ export function InvestmentProfileForm({
                     <Calendar
                       mode="single"
                       selected={field.value ? parseISO(field.value) : undefined}
-                      onSelect={(date) => {
+                        onSelect={(date) => {
                         const nextDate = date ? format(date, "yyyy-MM-dd") : "";
 
                         field.onChange(nextDate);
-                        form.setValue("confirmAdultAge", false, {
+                        form.setValue("confirmAdultAge", compactFields, {
                           shouldValidate: true,
                           shouldDirty: true,
                         });
@@ -231,46 +261,48 @@ export function InvestmentProfileForm({
           )}
         />
 
-        <Controller
-          control={form.control}
-          name="confirmAdultAge"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="items-start gap-3 rounded-xl border border-white/8 px-4 py-3">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    const nextValue = checked === true;
+        {compactFields ? null : (
+          <Controller
+            control={form.control}
+            name="confirmAdultAge"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldLabel className="items-start gap-3 rounded-xl border border-white/8 px-4 py-3">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      const nextValue = checked === true;
 
-                    field.onChange(nextValue);
-                    if (nextValue) {
-                      form.clearErrors("confirmAdultAge");
-                    } else {
-                      void form.trigger("confirmAdultAge");
-                    }
-                  }}
-                  disabled={isPending || !derivedAge || !isAdult}
-                  className="mt-0.5 border-white/20 data-[state=checked]:border-[var(--primary)] data-[state=checked]:bg-[var(--primary)]"
-                />
-                <div className="space-y-1">
-                  <span className="text-sm font-medium text-white">
-                    {derivedAge
-                      ? `Yes, I confirm I am ${derivedAge} years old.`
-                      : "Select your date of birth to confirm your age."}
-                  </span>
-                  <FieldDescription className="text-sm text-slate-400">
-                    {derivedAge && !isAdult
-                      ? "Havenstone onboarding is only available to adults age 18 and above."
-                      : "We use this confirmation to verify age eligibility before account setup."}
-                  </FieldDescription>
-                </div>
-              </FieldLabel>
-              {fieldState.error ? (
-                <FieldError errors={[fieldState.error]} />
-              ) : null}
-            </Field>
-          )}
-        />
+                      field.onChange(nextValue);
+                      if (nextValue) {
+                        form.clearErrors("confirmAdultAge");
+                      } else {
+                        void form.trigger("confirmAdultAge");
+                      }
+                    }}
+                    disabled={isPending || !derivedAge || !isAdult}
+                    className="mt-0.5 border-white/20 data-[state=checked]:border-[var(--primary)] data-[state=checked]:bg-[var(--primary)]"
+                  />
+                  <div className="space-y-1">
+                    <span className="text-sm font-medium text-white">
+                      {derivedAge
+                        ? `Yes, I confirm I am ${derivedAge} years old.`
+                        : "Select your date of birth to confirm your age."}
+                    </span>
+                    <FieldDescription className="text-sm text-slate-400">
+                      {derivedAge && !isAdult
+                        ? "Havenstone onboarding is only available to adults age 18 and above."
+                        : "We use this confirmation to verify age eligibility before account setup."}
+                    </FieldDescription>
+                  </div>
+                </FieldLabel>
+                {fieldState.error ? (
+                  <FieldError errors={[fieldState.error]} />
+                ) : null}
+              </Field>
+            )}
+          />
+        )}
 
         <Controller
           control={form.control}

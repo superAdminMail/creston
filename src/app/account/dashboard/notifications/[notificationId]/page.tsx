@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
 import { getCurrentUserId } from "@/lib/getCurrentUser";
-import { getNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
 import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,6 @@ function formatNotificationTime(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
-}
-
-function formatNotificationType(type?: string | null) {
-  return type ? type.replaceAll("_", " ") : "SYSTEM";
 }
 
 export default async function NotificationDetailsPage({
@@ -53,8 +50,6 @@ export default async function NotificationDetailsPage({
   }
 
   const dto = toNotificationDto(notification);
-  const Icon = getNotificationIcon(dto.type);
-
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
       <div className="flex items-center justify-between gap-3">
@@ -78,13 +73,13 @@ export default async function NotificationDetailsPage({
       <article className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-300">
-            <Icon className="h-5 w-5" />
+            {renderNotificationIcon(dto, "h-5 w-5")}
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-300/80">
-                {formatNotificationType(dto.type)}
+                {getNotificationDisplayType(dto)}
               </p>
               <h1 className="text-2xl font-semibold text-white">{dto.title}</h1>
               <p className="text-sm text-slate-400">

@@ -2,7 +2,13 @@
 
 import { CheckCircle2 } from "lucide-react";
 
-export default function KYCVerifiedCard({ name }: { name?: string | null }) {
+export default function KYCVerifiedCard({
+  name,
+  siteName,
+}: {
+  name?: string | null;
+  siteName: string;
+}) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
       {/* Gradient Glow */}
@@ -22,7 +28,7 @@ export default function KYCVerifiedCard({ name }: { name?: string | null }) {
 
           <p className="text-sm text-slate-400 max-w-sm leading-relaxed">
             Your identity has been successfully verified. You now have full
-            access to all Havenstone investment and savings features.
+            access to all {siteName} investment and savings features.
           </p>
 
           {name && (

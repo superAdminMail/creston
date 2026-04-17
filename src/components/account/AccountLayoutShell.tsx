@@ -70,6 +70,7 @@ export function AccountLayoutShell({
             <div className="h-full px-4 py-4">
               <AccountSidebarShell
                 initialUser={user}
+                siteName={siteName}
                 onLogout={handleLogout}
                 isSigningOut={isSigningOut}
               />
@@ -112,6 +113,7 @@ export function AccountLayoutShell({
                 >
                   <AccountMobileSideNavShell
                     initialUser={user}
+                    siteName={siteName}
                     onNavigate={() => setMobileOpen(false)}
                     onLogout={handleLogout}
                     isSigningOut={isSigningOut}

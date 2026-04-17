@@ -1,9 +1,12 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
-import { createAndProcessConversationMessage } from "@/lib/inbox/conversationService";
-import { SenderType } from "@/generated/prisma/client";
-import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { revalidatePath } from "next/cache";
+
+import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
+import {
+  replyToSupportConversation,
+  isSupportStaff,
+} from "@/lib/support/supportConversationService";
 
 export async function sendMessageAction({
   conversationId,
@@ -13,34 +16,27 @@ export async function sendMessageAction({
   content: string;
 }) {
   const userId = await getCurrentUserId();
-  if (!userId) return { error: "Unauthorized" };
+  const role = await getCurrentUserRole();
+  if (!userId || !role) return { error: "Unauthorized" };
+
+  if (isSupportStaff(role)) {
+    return { error: "Unauthorized" };
+  }
 
   const text = content.trim();
   if (!text) {
     return { error: "Message cannot be empty" };
   }
 
-  const isMember = await prisma.conversationMember.findFirst({
-    where: {
-      conversationId,
-      userId,
-    },
+  await replyToSupportConversation({
+    conversationId,
+    viewerUserId: userId,
+    viewerRole: role,
+    content: text,
   });
 
-  if (!isMember) {
-    return { error: "Not allowed in this conversation" };
-  }
-
-  await createAndProcessConversationMessage(
-    {
-      conversationId,
-      senderType: SenderType.USER,
-      content: text,
-    },
-    {
-      publish: true,
-    },
-  );
+  revalidatePath("/account/dashboard/user/support");
+  revalidatePath("/account/dashboard/admin/support");
 
   return { success: true };
 }

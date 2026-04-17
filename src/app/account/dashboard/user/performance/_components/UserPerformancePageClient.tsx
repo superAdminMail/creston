@@ -159,10 +159,10 @@ export function UserPerformancePageClient({ data }: Props) {
             </div>
           </div>
 
-          <TabsList className="h-auto w-full flex-col items-stretch gap-1 rounded-2xl border border-white/8 bg-white/[0.03] p-1 text-slate-400 sm:inline-flex sm:w-auto sm:flex-row sm:items-center">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-1 text-slate-400 sm:inline-flex sm:w-auto sm:grid-cols-none sm:flex-row sm:items-center">
             <TabsTrigger
               value="performance"
-              className="h-11 w-full justify-start rounded-xl border border-transparent px-4 text-sm font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:w-[172px]"
+              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm"
             >
               <div className="flex items-center gap-2.5">
                 <TrendingUp className="h-4.5 w-4.5 text-[#8fd0ff]" />
@@ -172,7 +172,7 @@ export function UserPerformancePageClient({ data }: Props) {
 
             <TabsTrigger
               value="analytics"
-              className="h-11 w-full justify-start rounded-xl border border-transparent px-4 text-sm font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:w-[172px]"
+              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm"
             >
               <div className="flex items-center gap-2.5">
                 <BarChart3 className="h-4.5 w-4.5 text-emerald-300" />

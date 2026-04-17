@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import {
   Loader2,
   CreditCard,
@@ -15,9 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import {
-  createPaymentMethod,
-} from "@/actions/accounts/payments/createPaymentMethod";
+import { createPaymentMethod } from "@/actions/accounts/payments/createPaymentMethod";
 import { deletePaymentMethod } from "@/actions/accounts/payments/deletePaymentMethod";
 import { setDefaultPaymentMethod } from "@/actions/accounts/payments/setDefaultPaymentMethod";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -162,9 +166,7 @@ function PaymentMethodCard({
           <>
             <div className="flex justify-between gap-4">
               <span className="text-slate-400">Network</span>
-              <span className="text-right text-white">
-                {method.network}
-              </span>
+              <span className="text-right text-white">{method.network}</span>
             </div>
             <div className="flex justify-between gap-4">
               <span className="text-slate-400">Address</span>
@@ -211,7 +213,9 @@ function PaymentMethodCard({
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove payment method?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will remove this {method.type === "BANK" ? "bank account" : "crypto wallet"} from your withdrawal options.
+                  This will remove this{" "}
+                  {method.type === "BANK" ? "bank account" : "crypto wallet"}{" "}
+                  from your withdrawal options.
                 </AlertDialogDescription>
               </AlertDialogHeader>
 
@@ -317,10 +321,7 @@ function PaymentMethodModal({
             </TabsList>
 
             {type === "BANK" ? (
-              <form
-                action={formAction}
-                className="space-y-5"
-              >
+              <form action={formAction} className="space-y-5">
                 <input type="hidden" name="type" value="BANK" />
 
                 <FieldGroup className="gap-5">
@@ -429,10 +430,7 @@ function PaymentMethodModal({
                 </div>
               </form>
             ) : (
-              <form
-                action={formAction}
-                className="space-y-5"
-              >
+              <form action={formAction} className="space-y-5">
                 <input type="hidden" name="type" value="CRYPTO" />
 
                 <FieldGroup className="gap-5">
@@ -441,9 +439,7 @@ function PaymentMethodModal({
                       Boolean(cryptoState.fieldErrors?.network) || undefined
                     }
                   >
-                    <FieldLabel className="text-slate-200">
-                      Network
-                    </FieldLabel>
+                    <FieldLabel className="text-slate-200">Network</FieldLabel>
                     <FieldContent>
                       <Input
                         name="network"
@@ -543,11 +539,7 @@ export default function PaymentInfoClient({
       case "NOT_STARTED":
         return (
           <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
-            Complete{" "}
-            <Link href="/account/dashboard/user/kyc" className="underline">
-              Identity Verification
-            </Link>{" "}
-            to enable withdrawals and add payment methods.
+            Complete your KYC to enable withdrawals and add payment methods.
           </div>
         );
       case "PENDING_REVIEW":

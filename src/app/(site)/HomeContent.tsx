@@ -1,11 +1,9 @@
 import { HeroSection } from "@/components/home/Hero-section";
-import { InvestmentProductsSection } from "@/components/home/Investment-products-section";
 import { ManagementTeamSection } from "@/components/home/Management-team-section";
 import { BenefitsSection } from "@/components/home/benefits-section";
 import { FaqSection } from "@/components/home/faq-section";
 import { FinalCtaSection } from "@/components/home/final-cta-section";
 import { HowItWorksSection } from "@/components/home/how-it-works-section";
-import { InvestmentPlansSection } from "@/components/home/investment-plans-section";
 import { ScrollReveal } from "@/components/home/ScrollReveal-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { WhySection } from "@/components/home/why-section";
@@ -26,34 +24,26 @@ const HomeContent = () => {
         <InvestmentModelsSection />
       </ScrollReveal>
 
-      {/* <ScrollReveal duration={0.05}>
-        <InvestmentProductsSection />
-      </ScrollReveal> */}
-
-      {/* <ScrollReveal duration={0.07}>
-        <InvestmentPlansSection />
-      </ScrollReveal> */}
-
-      <ScrollReveal duration={0.09}>
+      <ScrollReveal duration={0.07}>
         <HowItWorksSection />
       </ScrollReveal>
-      <ScrollReveal duration={0.011}>
+      <ScrollReveal duration={0.09}>
         <BenefitsSection />
       </ScrollReveal>
 
-      <ScrollReveal duration={0.013}>
+      <ScrollReveal duration={0.011}>
         <TestimonialsSection />
       </ScrollReveal>
 
-      <ScrollReveal duration={0.015}>
+      <ScrollReveal duration={0.013}>
         <FaqSection />
       </ScrollReveal>
 
-      <ScrollReveal duration={0.017}>
+      <ScrollReveal duration={0.015}>
         <ManagementTeamSection />
       </ScrollReveal>
 
-      <ScrollReveal duration={0.019}>
+      <ScrollReveal duration={0.017}>
         <FinalCtaSection />
       </ScrollReveal>
     </>

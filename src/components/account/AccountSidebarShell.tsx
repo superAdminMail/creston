@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import {
+  getBestDashboardMenuMatch,
   getDashboardMenu,
   type DashboardRole,
 } from "@/constants/dashboard-menu";
@@ -36,6 +37,7 @@ type SidebarUser = UserDTO | ProfileDTO | null | undefined;
 
 type SidebarBodyProps = {
   user: SidebarUser;
+  siteName: string;
   pathname: string;
   isMobile?: boolean;
   onNavigate?: () => void;
@@ -46,33 +48,11 @@ type SidebarBodyProps = {
 const sidebarShellClasses =
   "h-full overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] dark:text-slate-100 dark:shadow-[0_28px_60px_rgba(0,0,0,0.34)]";
 
-function normalizePath(value: string) {
-  return value === "/" ? "/" : value.replace(/\/+$/, "");
-}
-
 function getActiveSectionTitle(
   pathname: string,
   role: DashboardRole,
 ): string | null {
-  const currentPath = normalizePath(pathname);
-
-  let bestSectionTitle: string | null = null;
-  let matchedLength = -1;
-
-  for (const section of getDashboardMenu(role)) {
-    for (const link of section.links) {
-      const href = normalizePath(link.href);
-      const isMatch =
-        currentPath === href || currentPath.startsWith(`${href}/`);
-
-      if (isMatch && href.length > matchedLength) {
-        bestSectionTitle = section.title;
-        matchedLength = href.length;
-      }
-    }
-  }
-
-  return bestSectionTitle;
+  return getBestDashboardMenuMatch(pathname, role)?.sectionTitle ?? null;
 }
 
 function AccountIdentity({ user }: { user: SidebarUser }) {
@@ -111,6 +91,7 @@ function AccountIdentity({ user }: { user: SidebarUser }) {
 
 function SidebarBody({
   user,
+  siteName,
   pathname,
   isMobile,
   onNavigate,
@@ -136,12 +117,8 @@ function SidebarBody({
   };
 
   const isLinkActive = (href: string) => {
-    const currentPath = normalizePath(pathname);
-    const targetPath = normalizePath(href);
-
-    return (
-      currentPath === targetPath || currentPath.startsWith(`${targetPath}/`)
-    );
+    const bestMatch = getBestDashboardMenuMatch(pathname, role);
+    return bestMatch?.link.href === href;
   };
 
   return (
@@ -163,7 +140,7 @@ function SidebarBody({
             ) : (
               <div className="rounded-[1.35rem] border border-slate-200/80 bg-white/75 px-3 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Havenstone
+                  {siteName}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
                   Account Workspace
@@ -175,10 +152,12 @@ function SidebarBody({
 
         <SidebarSeparator className="mx-3 bg-slate-200/80 dark:bg-white/10" />
 
-        <SidebarContent className="px-2 py-3">
-          {sections.map((section, index) => {
-            const isOpen =
-              openSections[section.title] ?? section.title === defaultOpenTitle;
+            <SidebarContent className="px-2 py-3">
+              {sections.map((section, index) => {
+                const isOpen =
+                  openSections[section.title] ??
+                  (section.title === defaultOpenTitle ||
+                    section.title === activeSectionTitle);
 
             return (
               <motion.section
@@ -282,10 +261,12 @@ function SidebarBody({
 
 export const AccountSidebarShell = ({
   initialUser,
+  siteName,
   onLogout,
   isSigningOut,
 }: {
   initialUser: UserDTO | ProfileDTO | null;
+  siteName: string;
   onLogout?: () => void;
   isSigningOut?: boolean;
 }) => {
@@ -295,6 +276,7 @@ export const AccountSidebarShell = ({
   return (
     <SidebarBody
       user={user}
+      siteName={siteName}
       pathname={pathname}
       onLogout={onLogout}
       isSigningOut={isSigningOut}
@@ -304,11 +286,13 @@ export const AccountSidebarShell = ({
 
 export const AccountMobileSideNavShell = ({
   initialUser,
+  siteName,
   onNavigate,
   onLogout,
   isSigningOut,
 }: {
   initialUser: UserDTO | ProfileDTO | null;
+  siteName: string;
   onNavigate?: () => void;
   onLogout?: () => void;
   isSigningOut?: boolean;
@@ -319,6 +303,7 @@ export const AccountMobileSideNavShell = ({
   return (
     <SidebarBody
       user={user}
+      siteName={siteName}
       pathname={pathname}
       isMobile
       onNavigate={onNavigate}

@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import Pusher from "pusher-js";
 import { toast } from "sonner";
 
 import type { NotificationDTO } from "@/lib/types/notification";
+import { createPusherClient } from "@/lib/pusher-client";
 
 type NotificationListenerProps = {
   userId: string;
@@ -16,9 +16,7 @@ export default function NotificationListener({
   useEffect(() => {
     if (!userId) return;
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
+    const pusher = createPusherClient();
 
     const channel = pusher.subscribe(`notifications-${userId}`);
 

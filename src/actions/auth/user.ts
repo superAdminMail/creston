@@ -6,6 +6,7 @@ import { getFriendlyServerError } from "@/lib/forms/actionState";
 
 import { revalidatePath } from "next/cache";
 import { UTApi } from "uploadthing/server";
+import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
 // import { ensureFileAsset } from "@/lib/file-assets";
 // import { touchOrMarkFileAssetOrphaned } from "@/lib/product-images";
 // import { userProfileAvatarInclude } from "@/lib/media-views";
@@ -17,7 +18,11 @@ import {
 
 const utapi = new UTApi();
 
-type UpdateUserProfileFieldName = "name" | "username" | "email" | "profileAvatar";
+type UpdateUserProfileFieldName =
+  | "name"
+  | "username"
+  | "profileAvatar"
+  ;
 
 export type UpdateUserProfileResult = {
   success?: true;
@@ -53,8 +58,6 @@ export const deleteProfileAvatarAction = async () => {
     }
 
     await prisma.$transaction(async (tx) => {
-      const previousProfileAvatarFileAssetId = dbUser.profileAvatarFileAssetId;
-
       await tx.user.update({
         where: { id: user.id },
         data: {
@@ -89,7 +92,11 @@ export async function updateUserProfile(
     };
   }
 
-  const { name, username, profileAvatar } = parsed.data;
+  const {
+    name,
+    username,
+    profileAvatar,
+  } = parsed.data;
 
   const user = await getCurrentSessionUser();
   if (!user) return { error: "Unauthorized" };
@@ -114,29 +121,17 @@ export async function updateUserProfile(
 
   try {
     await prisma.$transaction(async (tx) => {
-      const currentUser = await tx.user.findUnique({
-        where: { id: user.id },
-        //  include: userProfileAvatarInclude,
-      });
-
       let nextProfileAvatarFileAssetId: string | null | undefined = undefined;
-      let previousProfileAvatarFileAssetId: string | null = null;
 
       if (profileAvatar !== undefined) {
-        previousProfileAvatarFileAssetId =
-          currentUser?.profileAvatarFileAssetId ?? null;
-
         if (profileAvatar === null) {
           nextProfileAvatarFileAssetId = null;
         } else {
-          // const asset = await ensureFileAsset(tx, {
-          //   uploadedById: user.id,
-          //   file: profileAvatar,
-          //   category: "PROFILE_IMAGE",
-          //   kind: "IMAGE",
-          //   isPublic: true,
-          // });
-          // nextProfileAvatarFileAssetId = asset.id;
+          const asset = await createFileAssetFromUpload({
+            url: profileAvatar.url,
+            key: profileAvatar.key,
+          });
+          nextProfileAvatarFileAssetId = asset.id;
         }
       }
 
@@ -158,6 +153,7 @@ export async function updateUserProfile(
     });
 
     revalidatePath("/account/dashboard/profile/update");
+    revalidatePath("/account/dashboard/profile");
 
     return { success: true };
   } catch (error) {

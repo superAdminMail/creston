@@ -11,17 +11,19 @@ import {
 
 type CreateInvestmentOrderEmptyStateProps = {
   hasInvestorProfile: boolean;
+  siteName: string;
 };
 
 export function CreateInvestmentOrderEmptyState({
   hasInvestorProfile,
+  siteName,
 }: CreateInvestmentOrderEmptyStateProps) {
   const title = hasInvestorProfile
     ? "No active investment plans are available right now"
     : "Complete your investment profile before starting";
 
   const description = hasInvestorProfile
-    ? "Havenstone does not currently have an active investment plan available for your account. Please check back soon or contact support for guidance."
+    ? `${siteName} does not currently have an active investment plan available for your account. Please check back soon or contact support for guidance.`
     : "Your investor profile needs to be completed before you can submit an investment order. Add your personal details first so your account is ready for plan selection and payment review.";
 
   const primaryHref = hasInvestorProfile

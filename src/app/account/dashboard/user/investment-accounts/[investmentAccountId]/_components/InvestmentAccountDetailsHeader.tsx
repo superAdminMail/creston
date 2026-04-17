@@ -21,8 +21,10 @@ function getStatusClasses(status: InvestmentAccountDetailsViewModel["status"]) {
 
 export function InvestmentAccountDetailsHeader({
   account,
+  siteName,
 }: {
   account: InvestmentAccountDetailsViewModel;
+  siteName: string;
 }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -51,7 +53,7 @@ export function InvestmentAccountDetailsHeader({
 
         <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
           {account.subtitle}. Review its plan structure, investment product
-          profile, and account lifecycle details in one secure Havenstone view.
+          profile, and account lifecycle details in one secure {siteName} view.
         </p>
       </div>
     </div>

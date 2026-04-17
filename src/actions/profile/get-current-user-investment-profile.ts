@@ -9,8 +9,6 @@ import type { OnboardingSchemaInput } from "@/lib/zodValidations/onboarding";
 import { redirect } from "next/navigation";
 
 export type CurrentUserInvestmentProfileData = {
-  userName: string;
-  email: string;
   profileStatusLabel: string;
   kycStatusLabel: string;
   profileComplete: boolean;
@@ -18,8 +16,6 @@ export type CurrentUserInvestmentProfileData = {
   completedFieldCount: number;
   totalFieldCount: number;
   details: {
-    fullName: string;
-    email: string;
     phoneNumber: string;
     dateOfBirth: string;
     country: string;
@@ -32,8 +28,6 @@ export type CurrentUserInvestmentProfileData = {
 };
 
 const PROFILE_COMPLETION_FIELDS = [
-  "fullName",
-  "email",
   "phoneNumber",
   "dateOfBirth",
   "country",
@@ -109,8 +103,6 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
   );
 
   const details = {
-    fullName: user.name?.trim() || "",
-    email: user.email?.trim() || "",
     phoneNumber: investorProfile?.phoneNumber?.trim() || "",
     dateOfBirth: formatDisplayDate(investorProfile?.dateOfBirth),
     country: investorProfile?.country?.trim() || "",
@@ -123,11 +115,9 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
   const completionSnapshot = getCompletionSnapshot(details);
 
   return {
-    userName: details.fullName || "Havenstone User",
-    email: details.email || "No email address",
     profileStatusLabel: completionSnapshot.profileComplete
-      ? "Profile complete"
-      : "Profile incomplete",
+      ? "Investment profile complete"
+      : "Investment profile incomplete",
     kycStatusLabel: formatKycStatus(investorProfile?.kycStatus),
     profileComplete: completionSnapshot.profileComplete,
     completionPercent: completionSnapshot.completionPercent,

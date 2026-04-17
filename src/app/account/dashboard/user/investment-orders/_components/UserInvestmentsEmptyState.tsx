@@ -11,17 +11,19 @@ import {
 
 type UserInvestmentsEmptyStateProps = {
   hasInvestorProfile: boolean;
+  siteName: string;
 };
 
 export function UserInvestmentsEmptyState({
   hasInvestorProfile,
+  siteName,
 }: UserInvestmentsEmptyStateProps) {
   const title = hasInvestorProfile
     ? "No investment orders yet"
     : "Complete your investment profile first";
 
   const description = hasInvestorProfile
-    ? "When you create an investment order, Havenstone will list it here with its status, plan details, and next steps."
+    ? `When you create an investment order, ${siteName} will list it here with its status, plan details, and next steps.`
     : "Your investor profile needs to be completed before you can create and manage investment orders from this workspace.";
 
   const href = hasInvestorProfile

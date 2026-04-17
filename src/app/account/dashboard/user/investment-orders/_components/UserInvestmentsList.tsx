@@ -9,6 +9,7 @@ import { UserInvestmentsEmptyState } from "./UserInvestmentsEmptyState";
 type UserInvestmentsListProps = {
   data: UserInvestmentOrdersData;
   createdOrderId?: string | null;
+  siteName: string;
 };
 
 const statusSummaryConfig: Array<{
@@ -47,10 +48,14 @@ const statusSummaryConfig: Array<{
 export function UserInvestmentsList({
   data,
   createdOrderId,
+  siteName,
 }: UserInvestmentsListProps) {
   if (data.orders.length === 0) {
     return (
-      <UserInvestmentsEmptyState hasInvestorProfile={data.hasInvestorProfile} />
+      <UserInvestmentsEmptyState
+        hasInvestorProfile={data.hasInvestorProfile}
+        siteName={siteName}
+      />
     );
   }
 
@@ -87,7 +92,7 @@ export function UserInvestmentsList({
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
               Track payment, confirmation, and completed order activity across
-              your Havenstone investment workflow.
+              your {siteName} investment workflow.
             </p>
           </div>
 
@@ -111,7 +116,11 @@ export function UserInvestmentsList({
 
       <section className="space-y-4">
         {data.orders.map((order) => (
-          <UserInvestmentOrderCard key={order.id} order={order} />
+          <UserInvestmentOrderCard
+            key={order.id}
+            order={order}
+            siteName={siteName}
+          />
         ))}
       </section>
 

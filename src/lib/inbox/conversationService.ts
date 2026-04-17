@@ -13,6 +13,7 @@ export type RealtimeMessagePayload = {
   id: string;
   conversationId: string;
   senderType: SenderType;
+  senderId: string | null;
   content: string;
   createdAt: string;
 };
@@ -22,6 +23,7 @@ type PersistedConversationMessage = {
   id: string;
   conversationId: string;
   senderType: SenderType;
+  senderId: string | null;
   content: string;
   createdAt: Date;
 };
@@ -31,23 +33,40 @@ export async function persistConversationMessage(
   input: {
     conversationId: string;
     senderType: SenderType;
+    senderId?: string | null;
     content: string;
   },
 ) {
   const message = await db.message.create({
     data: {
       conversationId: input.conversationId,
+      senderId: input.senderId ?? null,
       senderType: input.senderType,
       content: input.content.trim(),
     },
   });
 
-  await db.conversation.update({
-    where: { id: input.conversationId },
-    data: {
-      lastMessageAt: message.createdAt,
-    },
-  });
+  const unreadRecipientRole = input.senderType === SenderType.USER ? "SUPPORT" : "USER";
+
+  await Promise.all([
+    db.conversation.update({
+      where: { id: input.conversationId },
+      data: {
+        lastMessageAt: message.createdAt,
+      },
+    }),
+    db.conversationMember.updateMany({
+      where: {
+        conversationId: input.conversationId,
+        role: unreadRecipientRole,
+      },
+      data: {
+        unreadCount: {
+          increment: 1,
+        },
+      },
+    }),
+  ]);
 
   return message;
 }
@@ -80,6 +99,7 @@ export async function createAndProcessConversationMessage(
   input: {
     conversationId: string;
     senderType: SenderType;
+    senderId?: string | null;
     content: string;
   },
   options?: {
@@ -94,6 +114,7 @@ function toRealtimeMessagePayload(message: {
   id: string;
   conversationId: string;
   senderType: SenderType;
+  senderId: string | null;
   content: string;
   createdAt: Date;
 }): RealtimeMessagePayload {
@@ -101,6 +122,7 @@ function toRealtimeMessagePayload(message: {
     id: message.id,
     conversationId: message.conversationId,
     senderType: message.senderType,
+    senderId: message.senderId,
     content: message.content,
     createdAt: message.createdAt.toISOString(),
   };
@@ -110,6 +132,7 @@ export async function publishConversationMessage(message: {
   id: string;
   conversationId: string;
   senderType: SenderType;
+  senderId: string | null;
   content: string;
   createdAt: Date;
 }) {

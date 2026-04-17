@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 
 export async function GET() {
   const userId = await getCurrentUserId();
@@ -20,7 +21,7 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    notifications,
+    notifications: notifications.map(toNotificationDto),
     unreadCount,
   });
 }

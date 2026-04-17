@@ -13,4 +13,5 @@ export type NotificationDTO = {
   createdAt: string;
   type: NotificationType;
   link?: string;
+  metadata?: Record<string, unknown>;
 };

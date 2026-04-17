@@ -8,7 +8,8 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationDTO } from "@/lib/types/notification";
-import { getNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
 import { cn } from "@/lib/utils";
 import { markNotificationRead } from "@/actions/notifications/markNotificationRead";
 import { IconCountBadge } from "@/components/ui/icon-count-badge";
@@ -50,10 +51,6 @@ function formatNotificationTime(value: string) {
     month: "short",
     day: "numeric",
   });
-}
-
-function formatNotificationType(type?: string | null) {
-  return type ? type.replaceAll("_", " ") : "SYSTEM";
 }
 
 export default function NotificationMenu() {
@@ -125,8 +122,8 @@ export default function NotificationMenu() {
                 Notifications
               </SheetTitle>
               <SheetDescription className="text-xs text-slate-700/90 dark:text-slate-300/85 sm:text-sm">
-                Track investment activity, profits updates, and important
-                announcements all in one place.
+                Track investment activity, promotion messages, profits
+                updates, and important announcements all in one place.
               </SheetDescription>
             </div>
 
@@ -160,8 +157,6 @@ export default function NotificationMenu() {
 
             {!isLoading &&
               previewNotifications.map((notification) => {
-                const Icon = getNotificationIcon(notification.type);
-
                 return (
                   <button
                     key={notification.id}
@@ -182,7 +177,7 @@ export default function NotificationMenu() {
                           : "border-slate-200 bg-white text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400",
                       )}
                     >
-                      <Icon className="h-4 w-4" />
+                      {renderNotificationIcon(notification, "h-4 w-4")}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -208,7 +203,7 @@ export default function NotificationMenu() {
 
                       <div className="mt-3 flex items-center justify-between">
                         <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-zinc-400">
-                          {formatNotificationType(notification.type)}
+                          {getNotificationDisplayType(notification)}
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-300">
                           Open

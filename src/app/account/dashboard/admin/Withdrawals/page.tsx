@@ -1,7 +1,9 @@
-import React from "react";
+import { getAdminWithdrawals } from "@/lib/service/getAdminWithdrawals";
 
-const page = () => {
-  return <div>page</div>;
-};
+import AdminWithdrawalsClient from "./_components/AdminWithdrawalsClient";
 
-export default page;
+export default async function AdminWithdrawalsPage() {
+  const withdrawals = await getAdminWithdrawals();
+
+  return <AdminWithdrawalsClient withdrawals={withdrawals} />;
+}

@@ -13,8 +13,8 @@ export async function InvestmentModelsSection() {
           key: "savings",
           title: "Savings",
           eyebrow: "Secure Saving",
-          href: "/savings",
-          icon: "piggyBank",
+          href: "/savings-products",
+          iconKey: "PiggyBank",
           bgImage:
             "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuGbHPEmQFQP6RCHjxTU7LK3Ot42qesJhvwgl0",
           description:
@@ -33,8 +33,8 @@ export async function InvestmentModelsSection() {
           key: "fixed",
           title: "Fixed",
           eyebrow: "Structured Returns",
-          href: "/investments?model=fixed",
-          icon: "lockKeyhole",
+          href: "/investment-products?model=fixed",
+          iconKey: "LockKeyhole",
           bgImage:
             "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0Ojuuc0Hk7BFlTvc2HsJt8AudagIr1jB6fWNhm5R",
           description:
@@ -53,8 +53,8 @@ export async function InvestmentModelsSection() {
           key: "market",
           title: "Market",
           eyebrow: "Market Growth",
-          href: "/investments?model=market",
-          icon: "trendingUp",
+          href: "/investment-products?model=market",
+          iconKey: "TrendingUp",
           bgImage:
             "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuwBHw2mbCHr5DVm6yM7ulFPO28oxfdaT9IehR",
           description:

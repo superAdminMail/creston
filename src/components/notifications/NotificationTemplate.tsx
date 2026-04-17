@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
-import { getNotificationIcon } from "@/lib/notifications/getNotificationIcon";
-import type { NotificationDTO, NotificationType } from "@/lib/types/notification";
+import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
+import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
+import type { NotificationDTO } from "@/lib/types/notification";
 
 type NotificationVariant = "info" | "success" | "warning" | "error";
 
@@ -23,8 +24,6 @@ const VARIANT_STYLES: Record<NotificationVariant, string> = {
   error: "bg-[#fdeceb] text-[#b3261e] border-[#f7c9c6]",
 };
 
-const FALLBACK_TYPE: NotificationType = "SYSTEM";
-
 const NotificationTemplate = ({
   notification,
   href,
@@ -41,7 +40,6 @@ const NotificationTemplate = ({
   });
 
   const Wrapper = href ? Link : "div";
-  const Icon = getNotificationIcon(notification.type ?? FALLBACK_TYPE);
 
   return (
     <main>
@@ -52,7 +50,7 @@ const NotificationTemplate = ({
         <div
           className={`flex h-10 w-10 items-center justify-center rounded-full border ${VARIANT_STYLES[variant]}`}
         >
-          <Icon className="h-4 w-4" />
+          {renderNotificationIcon(notification, "h-4 w-4")}
         </div>
 
         <div className="flex-1 space-y-1">
@@ -98,6 +96,7 @@ const NotificationTemplate = ({
           <span className="mt-1 h-2 w-2 rounded-full bg-[#3c9ee0]" />
         )}
       </Wrapper>
+      <span className="sr-only">{getNotificationDisplayType(notification)}</span>
     </main>
   );
 };

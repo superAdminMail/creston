@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Landmark, Plus } from "lucide-react";
 
-export function UserInvestmentsHeader() {
+export function UserInvestmentsHeader({ siteName }: { siteName: string }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -22,7 +22,7 @@ export function UserInvestmentsHeader() {
           Investment Orders
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-          Review your Havenstone investment orders, follow payment and
+          Review your {siteName} investment orders, follow payment and
           confirmation progress, and return to active orders from one calm,
           structured workspace.
         </p>

@@ -10,5 +10,8 @@ export function toNotificationDto(notification: Notification): NotificationDTO {
     createdAt: notification.createdAt.toISOString(),
     type: (notification.type as NotificationDTO["type"]) ?? "SYSTEM",
     link: notification.link ?? undefined,
+    metadata: notification.metadata
+      ? (notification.metadata as Record<string, unknown>)
+      : undefined,
   };
 }

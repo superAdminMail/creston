@@ -2,11 +2,13 @@ import { formatDistanceToNow } from "date-fns";
 
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
 
 type DashboardOverviewRoute =
   | "/account/dashboard/admin"
-  | "/account/dashboard/super-admin";
+  | "/account/dashboard/super-admin"
+  | "/account/dashboard/admin/moderator";
 
 export type DashboardOverviewIconKey =
   | "users"
@@ -116,7 +118,10 @@ function getPercentageLabel(value: number) {
   return "0.0%";
 }
 
-function getMonthlyGrowthLabel(currentPeriodCount: number, previousPeriodCount: number) {
+function getMonthlyGrowthLabel(
+  currentPeriodCount: number,
+  previousPeriodCount: number,
+) {
   if (previousPeriodCount === 0) {
     return currentPeriodCount > 0 ? "+100.0%" : "0.0%";
   }
@@ -161,6 +166,8 @@ export async function getDashboardOverviewByHref(
     await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
   }
 
+  const site = await getSiteSeoConfig();
+  const siteName = site.siteName;
   const now = new Date();
   const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -432,7 +439,10 @@ export async function getDashboardOverviewByHref(
   const savingsDeposits = toNumber(savingsDepositAggregate._sum.amount);
   const fundedInvestments = toNumber(fundedInvestmentAggregate._sum.amount);
   const totalDeposits = savingsDeposits + fundedInvestments;
-  const monthlyGrowth = getMonthlyGrowthLabel(currentMonthUsers, previousMonthUsers);
+  const monthlyGrowth = getMonthlyGrowthLabel(
+    currentMonthUsers,
+    previousMonthUsers,
+  );
   const totalReviewedKyc = approvedKyc + pendingKyc + rejectedKyc;
   const kycApprovalRate =
     totalReviewedKyc > 0 ? (approvedKyc / totalReviewedKyc) * 100 : 0;
@@ -499,14 +509,15 @@ export async function getDashboardOverviewByHref(
           }
         : {
             title: "Platform payment methods still need setup",
-            detail: "Add a platform payment method to support bank and crypto funding flows.",
+            detail:
+              "Add a platform payment method to support bank and crypto funding flows.",
             time: "Live",
             status: "pending",
           },
     ];
 
     return {
-      badgeLabel: "Havenstone Super Admin",
+      badgeLabel: `${siteName} Super Admin`,
       title: "Platform control center",
       description:
         "Monitor investments, user growth, operational health, KYC activity, deposits, withdrawals, and platform-wide performance from one place.",
@@ -560,8 +571,7 @@ export async function getDashboardOverviewByHref(
         },
         {
           title: "Manage Leadership Profiles",
-          description:
-            "Update the public management team shown on the site.",
+          description: "Update the public management team shown on the site.",
           href: "/account/dashboard/super-admin/management",
         },
         {
@@ -572,7 +582,7 @@ export async function getDashboardOverviewByHref(
       ],
       spotlightTitle: "Platform performance overview",
       spotlightDescription:
-        "A live snapshot of Havenstone-wide capital, verification, and catalog readiness.",
+        `A live snapshot of capital, verification, and catalog readiness across ${siteName}.`,
       spotlights: [
         {
           title: "Capital Inflow",
@@ -595,8 +605,7 @@ export async function getDashboardOverviewByHref(
         },
         {
           title: "Active Plans",
-          description:
-            "Investment plans currently available on the platform.",
+          description: "Investment plans currently available on the platform.",
           value: formatCount(activePlans),
           icon: "landmark",
         },
@@ -611,17 +620,24 @@ export async function getDashboardOverviewByHref(
       statusItems: [
         {
           label: "Investment Catalog",
-          value: activePlans > 0 ? `${formatCount(activePlans)} active` : "Needs setup",
+          value:
+            activePlans > 0
+              ? `${formatCount(activePlans)} active`
+              : "Needs setup",
           tone: activePlans > 0 ? "success" : "warning",
         },
         {
           label: "Withdrawal Queue",
-          value: openWithdrawals > 0 ? `${formatCount(openWithdrawals)} open` : "Clear",
+          value:
+            openWithdrawals > 0
+              ? `${formatCount(openWithdrawals)} open`
+              : "Clear",
           tone: getStatusTone(openWithdrawals),
         },
         {
           label: "KYC Review Pipeline",
-          value: pendingKyc > 0 ? `${formatCount(pendingKyc)} pending` : "Healthy",
+          value:
+            pendingKyc > 0 ? `${formatCount(pendingKyc)} pending` : "Healthy",
           tone: getStatusTone(pendingKyc),
         },
         {
@@ -642,7 +658,7 @@ export async function getDashboardOverviewByHref(
         },
       ],
       modulesTitle: "Administrative modules",
-      modulesDescription: "Fast access to core Havenstone management areas.",
+      modulesDescription: `Fast access to core ${siteName} management areas.`,
       moduleLinks: [
         {
           label: "User Management",
@@ -655,7 +671,7 @@ export async function getDashboardOverviewByHref(
           icon: "creditCard",
         },
         {
-        label: "Platform Payment Methods",
+          label: "Platform Payment Methods",
           href: "/account/dashboard/super-admin/platform-wallets",
           icon: "wallet",
         },
@@ -706,8 +722,7 @@ export async function getDashboardOverviewByHref(
         }
       : {
           title: "Withdrawal desk is stable",
-          detail:
-            "No new withdrawal request is waiting in the review queue.",
+          detail: "No new withdrawal request is waiting in the review queue.",
           time: "Live",
           status: "success",
         },
@@ -752,7 +767,7 @@ export async function getDashboardOverviewByHref(
   ];
 
   return {
-    badgeLabel: "Havenstone Admin",
+    badgeLabel: `${siteName} Admin`,
     title: "Administrative operations dashboard",
     description:
       "Oversee investor activity, monitor KYC submissions, manage withdrawals, track deposits, and keep day-to-day operations moving cleanly.",
@@ -812,7 +827,8 @@ export async function getDashboardOverviewByHref(
       },
       {
         title: "Track Transactions",
-        description: "Monitor platform-side financial movement across accounts.",
+        description:
+          "Monitor platform-side financial movement across accounts.",
         href: "/account/dashboard/admin/transactions",
       },
     ],
@@ -822,7 +838,8 @@ export async function getDashboardOverviewByHref(
     spotlights: [
       {
         title: "KYC Approval Rate",
-        description: "Share of reviewed investor KYC records currently approved.",
+        description:
+          "Share of reviewed investor KYC records currently approved.",
         value: getPercentageLabel(kycApprovalRate),
         icon: "shieldCheck",
       },
@@ -842,8 +859,7 @@ export async function getDashboardOverviewByHref(
       },
       {
         title: "Active Investments",
-        description:
-          "Funded investment orders currently under administration.",
+        description: "Funded investment orders currently under administration.",
         value: formatCount(fundedInvestmentOrdersCount),
         icon: "briefcaseBusiness",
       },
@@ -862,7 +878,10 @@ export async function getDashboardOverviewByHref(
       },
       {
         label: "Withdrawals Desk",
-        value: openWithdrawals > 0 ? `${formatCount(openWithdrawals)} open` : "Stable",
+        value:
+          openWithdrawals > 0
+            ? `${formatCount(openWithdrawals)} open`
+            : "Stable",
         tone: getStatusTone(openWithdrawals),
       },
       {

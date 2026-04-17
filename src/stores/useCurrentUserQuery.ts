@@ -3,14 +3,16 @@
 import { UserDTO } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 
-export function useCurrentUserQuery(initialUser?: UserDTO | null) {
-  return useQuery<UserDTO | null>({
+export function useCurrentUserQuery<TUser extends UserDTO = UserDTO>(
+  initialUser?: TUser | null,
+) {
+  return useQuery<TUser | null>({
     queryKey: ["currentUser"],
-    queryFn: async () => {
+    queryFn: async (): Promise<TUser | null> => {
       const res = await fetch("/api/current-user", { credentials: "include" });
 
       if (!res.ok) return null;
-      return (await res.json()) as UserDTO;
+      return (await res.json()) as TUser;
     },
     initialData: initialUser,
     staleTime: 1000 * 60 * 5,

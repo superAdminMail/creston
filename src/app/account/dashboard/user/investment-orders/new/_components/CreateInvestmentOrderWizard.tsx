@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { CheckCircle2, Landmark, ShieldCheck, Wallet } from "lucide-react";
 
 import { createInvestmentOrder } from "@/actions/investment-order/createInvestmentOrder";
@@ -27,6 +27,7 @@ const stepTitles = ["Investment", "Plan", "Tier", "Amount", "Review"] as const;
 type CreateInvestmentOrderWizardProps = {
   options: InvestmentOrderCreationOptionsData;
   createdOrderId?: string | null;
+  siteName: string;
 };
 
 type InvestmentPlanCardOption = InvestmentOrderCreationPlanOption & {
@@ -64,6 +65,7 @@ function getAmountError(
 export function CreateInvestmentOrderWizard({
   options,
   createdOrderId,
+  siteName,
 }: CreateInvestmentOrderWizardProps) {
   const [actionState, formAction] = useActionState(
     createInvestmentOrder,
@@ -77,23 +79,20 @@ export function CreateInvestmentOrderWizard({
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
 
-  useEffect(() => {
-    const firstInvestmentId = options.investments[0]?.id ?? null;
-    const hasSelectedInvestment = options.investments.some(
+  const firstInvestmentId = options.investments[0]?.id ?? null;
+  const effectiveSelectedInvestmentId =
+    options.investments.some(
       (investment) => investment.id === selectedInvestmentId,
-    );
-
-    if (!selectedInvestmentId || !hasSelectedInvestment) {
-      setSelectedInvestmentId(firstInvestmentId);
-    }
-  }, [options.investments, selectedInvestmentId]);
+    )
+      ? selectedInvestmentId
+      : firstInvestmentId;
 
   const selectedInvestment = useMemo(
     () =>
       options.investments.find(
-        (investment) => investment.id === selectedInvestmentId,
+        (investment) => investment.id === effectiveSelectedInvestmentId,
       ) ?? null,
-    [options.investments, selectedInvestmentId],
+    [effectiveSelectedInvestmentId, options.investments],
   );
 
   const matchingPlans = useMemo<InvestmentPlanCardOption[]>(
@@ -107,40 +106,33 @@ export function CreateInvestmentOrderWizard({
     [selectedInvestment],
   );
 
-  useEffect(() => {
-    const firstPlanId = matchingPlans[0]?.id ?? null;
-    const hasSelectedPlan = matchingPlans.some(
-      (plan) => plan.id === selectedPlanId,
-    );
-
-    if (!selectedPlanId || !hasSelectedPlan) {
-      setSelectedPlanId(firstPlanId);
-    }
-  }, [matchingPlans, selectedPlanId]);
+  const firstPlanId = matchingPlans[0]?.id ?? null;
+  const effectiveSelectedPlanId = matchingPlans.some(
+    (plan) => plan.id === selectedPlanId,
+  )
+    ? selectedPlanId
+    : firstPlanId;
 
   const selectedPlan = useMemo(
-    () => matchingPlans.find((plan) => plan.id === selectedPlanId) ?? null,
-    [matchingPlans, selectedPlanId],
+    () => matchingPlans.find((plan) => plan.id === effectiveSelectedPlanId) ?? null,
+    [effectiveSelectedPlanId, matchingPlans],
   );
+
+  const firstTierId = selectedPlan?.tiers[0]?.id ?? null;
+  const effectiveSelectedTierId = selectedPlan?.tiers.some(
+    (tier) => tier.id === selectedTierId,
+  )
+    ? selectedTierId
+    : firstTierId;
+
+  const featuredInvestment = selectedInvestment;
 
   const selectedTier = useMemo(
     () =>
-      selectedPlan?.tiers.find((tier) => tier.id === selectedTierId) ?? null,
-    [selectedPlan, selectedTierId],
+      selectedPlan?.tiers.find((tier) => tier.id === effectiveSelectedTierId) ??
+      null,
+    [effectiveSelectedTierId, selectedPlan],
   );
-
-  useEffect(() => {
-    const firstTierId = selectedPlan?.tiers[0]?.id ?? null;
-    const hasSelectedTier = selectedPlan?.tiers.some(
-      (tier) => tier.id === selectedTierId,
-    );
-
-    if (!selectedTierId || !hasSelectedTier) {
-      setSelectedTierId(firstTierId);
-    }
-  }, [selectedPlan, selectedTierId]);
-
-  const featuredInvestment = selectedInvestment;
 
   const amountError = getAmountError(selectedPlan, selectedTier, amount);
 
@@ -269,7 +261,7 @@ export function CreateInvestmentOrderWizard({
                 setAmount("");
               }}
               onContinue={() => setCurrentStep(1)}
-              canContinue={Boolean(selectedInvestmentId)}
+              canContinue={Boolean(effectiveSelectedInvestmentId)}
               featuredInvestment={featuredInvestment}
             />
           ) : null}
@@ -285,7 +277,7 @@ export function CreateInvestmentOrderWizard({
               }}
               onBack={() => setCurrentStep(0)}
               onContinue={() => setCurrentStep(2)}
-              canContinue={Boolean(selectedPlanId)}
+              canContinue={Boolean(effectiveSelectedPlanId)}
             />
           ) : null}
 
@@ -300,7 +292,7 @@ export function CreateInvestmentOrderWizard({
               }}
               onBack={() => setCurrentStep(1)}
               onContinue={() => setCurrentStep(3)}
-              canContinue={Boolean(selectedTierId)}
+              canContinue={Boolean(effectiveSelectedTierId)}
             />
           ) : null}
 
@@ -425,7 +417,7 @@ export function CreateInvestmentOrderWizard({
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Plan summary</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Once you select a plan, Havenstone will surface its tier structure
+              Once you select a plan, {siteName} will surface its tier structure
               and product profile here for a calmer review flow.
             </p>
 

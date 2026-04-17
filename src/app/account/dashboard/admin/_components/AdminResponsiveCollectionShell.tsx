@@ -37,7 +37,7 @@ export function AdminResponsiveCollectionShell<TItem>({
     return emptyState ? (
       <>{emptyState}</>
     ) : (
-      <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
+      <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.98))] text-center shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
         <CardContent className="space-y-3 p-8">
           <h2 className="text-lg font-semibold text-white">No records found</h2>
           <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
@@ -54,14 +54,15 @@ export function AdminResponsiveCollectionShell<TItem>({
         {items.map((item) => (
           <Card
             key={getItemKey(item)}
-            className="rounded-[1.75rem] border border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_18px_50px_rgba(2,6,23,0.14)]"
+            className="group relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:border-sky-400/20 hover:shadow-[0_28px_80px_rgba(0,0,0,0.28)]"
           >
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/40 to-transparent" />
             <CardContent className="p-5">{renderMobileCard(item)}</CardContent>
           </Card>
         ))}
       </div>
 
-      <Card className="hidden rounded-[2rem] border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_22px_60px_rgba(2,6,23,0.18)] lg:block">
+      <Card className="hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)] lg:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -83,14 +84,14 @@ export function AdminResponsiveCollectionShell<TItem>({
                   key={getItemKey(item)}
                   className="border-white/8 hover:bg-white/[0.03]"
                 >
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      className={column.cellClassName ?? "px-5 py-4 align-top"}
-                    >
-                      {column.render(item)}
-                    </TableCell>
-                  ))}
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.key}
+                    className={column.cellClassName ?? "px-5 py-4 align-top"}
+                  >
+                    {column.render(item)}
+                  </TableCell>
+                ))}
                 </TableRow>
               ))}
             </TableBody>

@@ -52,7 +52,11 @@ export default function SavingsDashboard({
             </Link>
           </Button>
         ) : (
-          <Button asChild variant="outline" className="rounded-2xl">
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-2xl text-slate-400 hover:bg-slate-800"
+          >
             <Link href="/account/dashboard/user/kyc">
               <Plus className="h-4 w-4" />
               Complete KYC

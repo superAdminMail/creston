@@ -12,6 +12,7 @@ type InvestmentTypeStepProps = {
   onContinue: () => void;
   canContinue: boolean;
   featuredInvestment?: InvestmentOrderCreationInvestmentOption | null;
+  siteName: string;
 };
 
 export function InvestmentTypeStep({
@@ -21,6 +22,7 @@ export function InvestmentTypeStep({
   onContinue,
   canContinue,
   featuredInvestment,
+  siteName,
 }: InvestmentTypeStepProps) {
   return (
     <div className="space-y-6">
@@ -29,7 +31,7 @@ export function InvestmentTypeStep({
           Choose an investment
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
-          Start with the specific Havenstone investment product you want to use,
+          Start with the specific {siteName} investment product you want to use,
           then continue into the available plans and tier options for that
           product.
         </p>

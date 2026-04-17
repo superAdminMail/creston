@@ -1,0 +1,251 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
+import type { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
+
+import InvestmentOrderConfirmationCard from "./InvestmentOrderPaymentConfirmationCard";
+import { approveInvestmentOrderPayment } from "@/actions/admin/investment-payments/approveInvestmentOrderPayment";
+import { rejectInvestmentOrderPayment } from "@/actions/admin/investment-payments/rejectInvestmentOrderPayment";
+
+function formatDate(value: string | null) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString();
+}
+
+export default function InvestmentPaymentReviewDetail({
+  payment,
+}: {
+  payment: InvestmentPaymentReviewDetails;
+}) {
+  const [approvedAmount, setApprovedAmount] = useState(
+    payment.approvedAmount ?? payment.claimedAmount,
+  );
+  const [reviewNote, setReviewNote] = useState(payment.reviewNote ?? "");
+  const [rejectionReason, setRejectionReason] = useState(
+    payment.rejectionReason ?? "",
+  );
+  const [pending, startTransition] = useTransition();
+
+  const canReview = payment.status === "PENDING_REVIEW";
+
+  function handleApprove() {
+    startTransition(async () => {
+      const result = await approveInvestmentOrderPayment({
+        paymentId: payment.id,
+        approvedAmount,
+        reviewNote,
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+    });
+  }
+
+  function handleReject() {
+    startTransition(async () => {
+      const result = await rejectInvestmentOrderPayment({
+        paymentId: payment.id,
+        rejectionReason,
+        reviewNote,
+      });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+    });
+  }
+
+  return (
+    <div className="space-y-6 px-4 py-6 md:px-6">
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-xl">Payment review</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">{formatEnumLabel(payment.status)}</Badge>
+            <Badge variant="outline">{formatEnumLabel(payment.type)}</Badge>
+            <Badge variant="outline">
+              {formatEnumLabel(payment.order.status)}
+            </Badge>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Investor
+              </p>
+              <p className="mt-2 font-semibold">
+                {payment.order.investor.name ?? "-"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {payment.order.investor.email ?? "-"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Order
+              </p>
+              <p className="mt-2 font-semibold">{payment.order.plan.name}</p>
+              <p className="text-sm text-muted-foreground">
+                Order status: {formatEnumLabel(payment.order.status)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Claimed amount
+              </p>
+              <p className="mt-2 font-semibold">
+                {payment.claimedAmount.toLocaleString()} {payment.currency}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Order progress
+              </p>
+              <p className="mt-2 font-semibold">
+                Paid: {payment.order.amountPaid.toLocaleString()} /{" "}
+                {payment.order.amount.toLocaleString()} {payment.order.currency}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Remaining: {payment.order.remainingAmount.toLocaleString()}{" "}
+                {payment.order.currency}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Submission details</CardTitle>
+        </CardHeader>
+
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div>
+            <span className="font-medium">Depositor:</span>{" "}
+            {payment.depositorName ?? "-"}
+          </div>
+          <div>
+            <span className="font-medium">Account name:</span>{" "}
+            {payment.depositorAccountName ?? "-"}
+          </div>
+          <div>
+            <span className="font-medium">Account number:</span>{" "}
+            {payment.depositorAccountNo ?? "-"}
+          </div>
+          <div>
+            <span className="font-medium">Transfer reference:</span>{" "}
+            {payment.transferReference ?? "-"}
+          </div>
+          <div>
+            <span className="font-medium">Submitted:</span>{" "}
+            {formatDate(payment.submittedAt)}
+          </div>
+          <div>
+            <span className="font-medium">Reviewed:</span>{" "}
+            {formatDate(payment.reviewedAt)}
+          </div>
+        </CardContent>
+      </Card>
+
+      {payment.receipt?.url ? (
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Receipt</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <a
+              href={payment.receipt.url}
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-4"
+            >
+              View uploaded receipt
+            </a>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">Review action</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="grid gap-2 max-w-sm">
+            <label className="text-sm font-medium">Approved amount</label>
+            <Input
+              type="number"
+              step="0.01"
+              min={0}
+              value={approvedAmount}
+              onChange={(e) => setApprovedAmount(Number(e.target.value))}
+              disabled={!canReview || pending}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Review note</label>
+            <Textarea
+              rows={4}
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              disabled={!canReview || pending}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Rejection reason</label>
+            <Textarea
+              rows={4}
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              disabled={!canReview || pending}
+            />
+          </div>
+
+          {canReview ? (
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={handleApprove} disabled={pending}>
+                Approve payment
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleReject}
+                disabled={pending}
+              >
+                Reject payment
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              This payment has already been reviewed.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <InvestmentOrderConfirmationCard order={payment.order} />
+    </div>
+  );
+}

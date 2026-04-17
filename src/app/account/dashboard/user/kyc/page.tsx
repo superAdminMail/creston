@@ -2,10 +2,13 @@ import { prisma } from "@/lib/prisma";
 import KYCSection from "./_components/KYCSection";
 import KYCVerifiedCard from "./_components/KYCVerifiedCard";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function Page() {
   const userId = await getCurrentUserId();
   if (!userId) return null;
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName ?? "";
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -55,7 +58,7 @@ export default async function Page() {
       </header>
 
       {kycStatus === "VERIFIED" ? (
-        <KYCVerifiedCard name={user.name} />
+        <KYCVerifiedCard name={user.name} siteName={siteName} />
       ) : (
         <KYCSection
           initialStatus={kycStatus}

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowRight,
   BadgeCheck,
   CircleAlert,
   Clock3,
@@ -14,6 +13,7 @@ import type { UserInvestmentOrdersData } from "@/actions/investment-order/getUse
 
 type UserInvestmentOrderCardProps = {
   order: UserInvestmentOrdersData["orders"][number];
+  siteName: string;
 };
 
 function getStatusClasses(status: InvestmentOrderStatus) {
@@ -40,7 +40,7 @@ function getStatusNote(order: UserInvestmentOrdersData["orders"][number]) {
     case InvestmentOrderStatus.CONFIRMED:
       return order.linkedInvestmentAccountId
         ? "This investment has been confirmed and linked to your live investment account."
-        : "This investment has been confirmed and is now part of your Havenstone portfolio workflow.";
+        : "This investment has been confirmed and is now part of your portfolio workflow.";
     case InvestmentOrderStatus.CANCELLED:
       return "This investment order has been cancelled and is no longer progressing.";
     case InvestmentOrderStatus.REJECTED:
@@ -55,6 +55,7 @@ function getStatusNote(order: UserInvestmentOrdersData["orders"][number]) {
 
 export function UserInvestmentOrderCard({
   order,
+  siteName,
 }: UserInvestmentOrderCardProps) {
   const ActionIcon =
     order.status === InvestmentOrderStatus.CONFIRMED &&
@@ -65,6 +66,12 @@ export function UserInvestmentOrderCard({
         : order.status === InvestmentOrderStatus.PENDING_PAYMENT
           ? Clock3
           : CircleAlert;
+
+  const statusNote =
+    order.status === InvestmentOrderStatus.CONFIRMED &&
+    !order.linkedInvestmentAccountId
+      ? `This investment has been confirmed and is now part of your ${siteName} portfolio workflow.`
+      : getStatusNote(order);
 
   return (
     <article
@@ -140,7 +147,7 @@ export function UserInvestmentOrderCard({
           </div>
 
           <div className="rounded-2xl border border-white/8 bg-[#0b1229]/55 px-4 py-3 text-sm leading-6 text-slate-300">
-            {getStatusNote(order)}
+            {statusNote}
           </div>
 
           {order.status === InvestmentOrderStatus.CANCELLED ||

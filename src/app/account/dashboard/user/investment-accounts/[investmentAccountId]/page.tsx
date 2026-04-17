@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getInvestmentAccountDetails } from "@/actions/investment-account/getInvestmentAccountDetails";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { InvestmentAccountActivityCard } from "./_components/InvestmentAccountActivityCard";
 import { InvestmentAccountDetailsHeader } from "./_components/InvestmentAccountDetailsHeader";
 import { InvestmentAccountMetaCard } from "./_components/InvestmentAccountMetaCard";
@@ -19,6 +20,7 @@ export default async function Page(
 ) {
   const { investmentAccountId } = await props.params;
   const account = await getInvestmentAccountDetails(investmentAccountId);
+  const site = await getSiteConfigurationCached();
 
   if (!account) {
     notFound();
@@ -26,7 +28,10 @@ export default async function Page(
 
   return (
     <div className="space-y-6">
-      <InvestmentAccountDetailsHeader account={account} />
+      <InvestmentAccountDetailsHeader
+        account={account}
+        siteName={site?.siteName ?? ""}
+      />
       <InvestmentAccountSummaryCards account={account} />
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">

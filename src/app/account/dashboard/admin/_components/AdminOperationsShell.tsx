@@ -42,7 +42,7 @@ export function AdminOperationsShell({
           {stats.map((stat) => (
             <Card
               key={stat.title}
-              className="rounded-[1.75rem] border border-white/10 bg-white/5"
+              className="rounded-[1.85rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] shadow-[0_18px_50px_rgba(0,0,0,0.18)]"
             >
               <CardContent className="space-y-2 p-5">
                 <p className="text-sm text-slate-400">{stat.title}</p>
@@ -63,7 +63,7 @@ export function AdminOperationsShell({
           {collections.map((collection) => (
             <article
               key={collection.href}
-              className="card-premium rounded-[1.75rem] p-6 sm:p-7"
+              className="card-premium-hover rounded-[1.9rem] p-6 sm:p-7"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -89,7 +89,7 @@ export function AdminOperationsShell({
                   collection.items.slice(0, 5).map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3"
+                      className="rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86),rgba(8,17,37,0.96))] px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.12)]"
                     >
                       <p className="text-sm font-medium text-white">
                         {item.title}

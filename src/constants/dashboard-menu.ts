@@ -23,6 +23,7 @@ import {
   TrendingUp,
   Banknote,
   LifeBuoy,
+  Gift,
 } from "lucide-react";
 
 export type DashboardRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
@@ -36,6 +37,11 @@ export type DashboardNavLink = {
 export type DashboardNavSection = {
   title: string;
   links: DashboardNavLink[];
+};
+
+export type DashboardMenuMatch = {
+  sectionTitle: string;
+  link: DashboardNavLink;
 };
 
 export const DASHBOARD_MENU = {
@@ -106,7 +112,7 @@ export const DASHBOARD_MENU = {
       links: [
         {
           name: "Support Center",
-          href: "/account/dashboard/support",
+          href: "/account/dashboard/user/support",
           icon: LifeBuoy,
         },
       ],
@@ -204,7 +210,12 @@ export const DASHBOARD_MENU = {
       links: [
         {
           name: "Support Center",
-          href: "/account/dashboard/support",
+          href: "/account/dashboard/user/support",
+          icon: LifeBuoy,
+        },
+        {
+          name: "Support Inbox",
+          href: "/account/dashboard/admin/support",
           icon: LifeBuoy,
         },
       ],
@@ -280,6 +291,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/transactions",
           icon: CircleDollarSign,
         },
+        {
+          name: "Investment Payments",
+          href: "/account/dashboard/admin/investment-payments",
+          icon: CircleDollarSign,
+        },
       ],
     },
     {
@@ -301,8 +317,8 @@ export const DASHBOARD_MENU = {
       title: "Investment Catalog",
       links: [
         {
-          name: "Investments Products",
-          href: "/account/dashboard/admin/investments-products",
+          name: "Investment Products",
+          href: "/account/dashboard/admin/investment-products",
           icon: TrendingUp,
         },
         {
@@ -330,14 +346,19 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/audit-logs",
           icon: ScrollText,
         },
+        {
+          name: "Promotions & Offers",
+          href: "/account/dashboard/admin/promotions",
+          icon: Gift,
+        },
       ],
     },
     {
       title: "Communication",
       links: [
         {
-          name: "Support Center",
-          href: "/account/dashboard/support",
+          name: "Support Inbox",
+          href: "/account/dashboard/admin/support",
           icon: LifeBuoy,
         },
       ],
@@ -506,7 +527,7 @@ export const DASHBOARD_MENU = {
       links: [
         {
           name: "Support Center",
-          href: "/account/dashboard/support",
+          href: "/account/dashboard/user/support",
           icon: LifeBuoy,
         },
       ],
@@ -531,3 +552,31 @@ export const DASHBOARD_MENU = {
 
 export const getDashboardMenu = (role: DashboardRole): DashboardNavSection[] =>
   DASHBOARD_MENU[role] as DashboardNavSection[];
+
+export function normalizeDashboardPath(value: string) {
+  return value === "/" ? "/" : value.replace(/\/+$/, "");
+}
+
+export function getBestDashboardMenuMatch(
+  pathname: string,
+  role: DashboardRole,
+): DashboardMenuMatch | null {
+  const currentPath = normalizeDashboardPath(pathname);
+  let bestMatch: DashboardMenuMatch | null = null;
+  let bestLength = -1;
+
+  for (const section of getDashboardMenu(role)) {
+    for (const link of section.links) {
+      const href = normalizeDashboardPath(link.href);
+      const isExactOrNested =
+        currentPath === href || currentPath.startsWith(`${href}/`);
+
+      if (isExactOrNested && href.length > bestLength) {
+        bestMatch = { sectionTitle: section.title, link };
+        bestLength = href.length;
+      }
+    }
+  }
+
+  return bestMatch;
+}

@@ -246,21 +246,18 @@ function formatPercentRange(values: Array<number | null>) {
 function mapPublicInvestmentProduct(
   product: PublicInvestmentProductRecord,
 ): PublicInvestmentProductViewModel {
-  const tiers = product.investmentPlans.flatMap((plan) => plan.tiers);
+  const plans = product.investmentPlans;
+  const tiers = plans.flatMap((plan) => plan.tiers);
   const startingAmount =
     tiers.length > 0 ? Math.min(...tiers.map((tier) => Number(tier.minAmount))) : null;
-  const durationLabel = formatDurationRange(
-    product.investmentPlans.map((plan) => plan.durationDays),
-  );
+  const durationLabel = formatDurationRange(plans.map((plan) => plan.durationDays));
   const modelLabels = Array.from(
-    new Set(
-      product.investmentPlans.map((plan) => formatEnumLabel(plan.investmentModel)),
-    ),
+    new Set(plans.map((plan) => formatEnumLabel(plan.investmentModel))),
   );
-  const featuredPlan = product.investmentPlans[0]
+  const featuredPlan = plans[0]
     ? {
-        name: product.investmentPlans[0].name,
-        slug: product.investmentPlans[0].slug,
+        name: plans[0].name,
+        slug: plans[0].slug,
       }
     : null;
 
@@ -276,16 +273,16 @@ function mapPublicInvestmentProduct(
     sortOrder: product.sortOrder,
     isActive: product.isActive,
     iconUrl: product.iconFileAsset?.url ?? null,
-    planCount: product.investmentPlans.length,
+    planCount: plans.length,
     planCountLabel:
-      product.investmentPlans.length === 1
+      plans.length === 1
         ? "1 active plan"
-        : `${product.investmentPlans.length} active plans`,
+        : `${plans.length} active plans`,
     durationLabel,
     startingAmount,
     startingAmountLabel:
       startingAmount !== null
-        ? formatCurrency(startingAmount, product.investmentPlans[0]?.currency ?? "USD")
+        ? formatCurrency(startingAmount, plans[0]?.currency ?? "USD")
         : null,
     modelLabels,
     overview:
