@@ -1,6 +1,10 @@
 import { cache } from "react";
 
-import { InvestmentModel, InvestmentOrderStatus, SavingsStatus } from "@/generated/prisma";
+import {
+  InvestmentModel,
+  InvestmentOrderStatus,
+  SavingsStatus,
+} from "@/generated/prisma";
 
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
@@ -70,49 +74,50 @@ function resolveDurationLabel(durationDays: number | null) {
 export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
   const site = await getSiteSeoConfig();
 
-  const [investmentOrders, savingsSummary, investorProfileCount] = await Promise.all([
-    prisma.investmentOrder.findMany({
-      where: {
-        status: InvestmentOrderStatus.CONFIRMED,
-        isWithdrawn: false,
-      },
-      select: {
-        amount: true,
-        currentValue: true,
-        accruedProfit: true,
-        investmentModel: true,
-        investmentPlan: {
-          select: {
-            name: true,
-            durationDays: true,
-          },
+  const [investmentOrders, savingsSummary, investorProfileCount] =
+    await Promise.all([
+      prisma.investmentOrder.findMany({
+        where: {
+          status: InvestmentOrderStatus.CONFIRMED,
+          isWithdrawn: false,
         },
-        investmentPlanTier: {
-          select: {
-            investmentPlan: {
-              select: {
-                investment: {
-                  select: {
-                    type: true,
+        select: {
+          amount: true,
+          currentValue: true,
+          accruedProfit: true,
+          investmentModel: true,
+          investmentPlan: {
+            select: {
+              name: true,
+              durationDays: true,
+            },
+          },
+          investmentPlanTier: {
+            select: {
+              investmentPlan: {
+                select: {
+                  investment: {
+                    select: {
+                      type: true,
+                    },
                   },
                 },
               },
             },
           },
         },
-      },
-    }),
-    prisma.savingsAccount.aggregate({
-      where: {
-        status: SavingsStatus.ACTIVE,
-        isLocked: false,
-      },
-      _sum: {
-        balance: true,
-      },
-    }),
-    prisma.investorProfile.count(),
-  ]);
+      }),
+      prisma.savingsAccount.aggregate({
+        where: {
+          status: SavingsStatus.ACTIVE,
+          isLocked: false,
+        },
+        _sum: {
+          balance: true,
+        },
+      }),
+      prisma.investorProfile.count(),
+    ]);
 
   const totalInvestments = investmentOrders.reduce((sum, order) => {
     const resolvedValue =
@@ -126,11 +131,14 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   const totalSavings = toDecimal(savingsSummary._sum.balance);
   const totalValue = totalInvestments.add(totalSavings);
-  const headlineTotalValue = toDecimal(150_000_000).add(totalValue);
-  const headlineUserCount = investorProfileCount + 10_000;
+  const headlineTotalValue = toDecimal(153_000_000).add(totalValue);
+  const headlineUserCount = investorProfileCount + 11_000;
 
   const typeTotals = new Map<string, { total: number; label: string }>();
-  const planTotals = new Map<string, { total: number; durationDays: number | null; label: string }>();
+  const planTotals = new Map<
+    string,
+    { total: number; durationDays: number | null; label: string }
+  >();
 
   for (const order of investmentOrders) {
     const resolvedValue =
@@ -158,8 +166,12 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
     });
   }
 
-  const topType = Array.from(typeTotals.values()).sort((left, right) => right.total - left.total)[0];
-  const topPlan = Array.from(planTotals.values()).sort((left, right) => right.total - left.total)[0];
+  const topType = Array.from(typeTotals.values()).sort(
+    (left, right) => right.total - left.total,
+  )[0];
+  const topPlan = Array.from(planTotals.values()).sort(
+    (left, right) => right.total - left.total,
+  )[0];
 
   return {
     statusLabel: "Active",

@@ -6,6 +6,7 @@ import { Prisma } from "@/generated/prisma";
 import {
   InvestmentCatalogStatus,
   InvestmentOrderStatus,
+  KycStatus,
 } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
@@ -61,12 +62,19 @@ export async function createInvestmentOrder(
     },
     select: {
       id: true,
+      kycStatus: true,
     },
   });
 
   if (!investorProfile?.id) {
     return createErrorState(
       "Complete your investment profile before creating an investment order.",
+    );
+  }
+
+  if (investorProfile.kycStatus !== KycStatus.VERIFIED) {
+    return createErrorState(
+      "Verify your KYC before creating an investment order.",
     );
   }
 

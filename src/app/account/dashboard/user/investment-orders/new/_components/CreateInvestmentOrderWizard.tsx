@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Landmark, ShieldCheck, Wallet } from "lucide-react";
 
 import { createInvestmentOrder } from "@/actions/investment-order/createInvestmentOrder";
@@ -67,6 +67,7 @@ export function CreateInvestmentOrderWizard({
   createdOrderId,
   siteName,
 }: CreateInvestmentOrderWizardProps) {
+  const wizardRootRef = useRef<HTMLDivElement>(null);
   const [actionState, formAction] = useActionState(
     createInvestmentOrder,
     initialCreateInvestmentOrderActionState,
@@ -149,6 +150,13 @@ export function CreateInvestmentOrderWizard({
     return currentStep;
   }, [actionState, currentStep]);
 
+  useEffect(() => {
+    wizardRootRef.current?.scrollIntoView({
+      block: "start",
+      behavior: "auto",
+    });
+  }, [effectiveStep, createdOrderId]);
+
   if (options.totalActivePlans === 0) {
     return (
       <CreateInvestmentOrderEmptyState
@@ -178,7 +186,10 @@ export function CreateInvestmentOrderWizard({
   const progressValue = ((effectiveStep + 1) / stepTitles.length) * 100;
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]">
+    <section
+      ref={wizardRootRef}
+      className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]"
+    >
       <div className="space-y-6">
         {createdOrderId ? (
           <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-400/10 p-5">

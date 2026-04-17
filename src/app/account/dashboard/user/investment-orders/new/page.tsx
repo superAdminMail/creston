@@ -16,7 +16,11 @@ type NewInvestmentOrderPageProps = {
 };
 
 function shouldRenderEmptyState(data: InvestmentOrderCreationOptionsData) {
-  return !data.hasInvestorProfile || data.totalActivePlans === 0;
+  return (
+    !data.hasInvestorProfile ||
+    !data.canCreateInvestmentOrder ||
+    data.totalActivePlans === 0
+  );
 }
 
 export default async function NewInvestmentOrderPage({
@@ -35,6 +39,8 @@ export default async function NewInvestmentOrderPage({
       {shouldRenderEmptyState(data) ? (
         <CreateInvestmentOrderEmptyState
           hasInvestorProfile={data.hasInvestorProfile}
+          canCreateInvestmentOrder={data.canCreateInvestmentOrder}
+          kycStatus={data.kycStatus}
           siteName={siteName}
         />
       ) : (

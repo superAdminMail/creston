@@ -266,11 +266,6 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/investment-orders",
           icon: ClipboardList,
         },
-        {
-          name: "KYC Management",
-          href: "/account/dashboard/admin/kyc-documents",
-          icon: ShieldCheck,
-        },
       ],
     },
     {

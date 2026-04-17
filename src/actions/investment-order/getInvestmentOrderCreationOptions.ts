@@ -4,6 +4,7 @@ import type {
   InvestmentTierLevel,
   InvestmentPeriod,
   InvestmentType,
+  KycStatus,
 } from "@/generated/prisma";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
 import {
@@ -70,6 +71,8 @@ export type InvestmentOrderCreationInvestmentOption = {
 
 export type InvestmentOrderCreationOptionsData = {
   hasInvestorProfile: boolean;
+  kycStatus: KycStatus | null;
+  canCreateInvestmentOrder: boolean;
   totalActiveInvestments: number;
   totalActivePlans: number;
   totalActiveTiers: number;
@@ -91,12 +94,17 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
 
   const investorProfile = await prisma.investorProfile.findUnique({
     where: { userId: user.id },
-    select: { id: true },
+    select: {
+      id: true,
+      kycStatus: true,
+    },
   });
 
   if (!investorProfile?.id) {
     return {
       hasInvestorProfile: false,
+      kycStatus: null,
+      canCreateInvestmentOrder: false,
       totalActiveInvestments: 0,
       totalActivePlans: 0,
       totalActiveTiers: 0,
@@ -237,6 +245,8 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
 
   return {
     hasInvestorProfile: true,
+    kycStatus: investorProfile.kycStatus,
+    canCreateInvestmentOrder: investorProfile.kycStatus === KycStatus.VERIFIED,
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
       (acc, inv) => acc + inv.plans.length,
