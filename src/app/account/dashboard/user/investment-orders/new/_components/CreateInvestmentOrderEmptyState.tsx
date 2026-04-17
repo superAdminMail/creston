@@ -17,11 +17,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
 
 type CreateInvestmentOrderEmptyStateProps = {
   hasInvestorProfile: boolean;
   canCreateInvestmentOrder: boolean;
-  kycStatus: string | null;
+  kycStatus: InvestmentOrderCreationKycStatus | null;
   siteName: string;
 };
 

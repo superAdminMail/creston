@@ -2,7 +2,6 @@
 
 import {
   InvestmentCatalogStatus,
-  KycStatus,
   type InvestmentTierLevel,
   type InvestmentPeriod,
   type InvestmentType,
@@ -14,6 +13,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
 import { redirect } from "next/navigation";
 
 type Decimalish = {
@@ -71,7 +71,7 @@ export type InvestmentOrderCreationInvestmentOption = {
 
 export type InvestmentOrderCreationOptionsData = {
   hasInvestorProfile: boolean;
-  kycStatus: KycStatus | null;
+  kycStatus: InvestmentOrderCreationKycStatus | null;
   canCreateInvestmentOrder: boolean;
   totalActiveInvestments: number;
   totalActivePlans: number;
@@ -83,6 +83,20 @@ function toNumber(value: Decimalish | number | null | undefined) {
   if (!value) return 0;
   if (typeof value === "number") return value;
   return value.toNumber();
+}
+
+function toInvestmentOrderCreationKycStatus(
+  value: string | null | undefined,
+): InvestmentOrderCreationKycStatus | null {
+  switch (value) {
+    case "NOT_STARTED":
+    case "PENDING_REVIEW":
+    case "VERIFIED":
+    case "REJECTED":
+      return value;
+    default:
+      return null;
+  }
 }
 
 export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrderCreationOptionsData> {
@@ -245,8 +259,10 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
 
   return {
     hasInvestorProfile: true,
-    kycStatus: investorProfile.kycStatus,
-    canCreateInvestmentOrder: investorProfile.kycStatus === KycStatus.VERIFIED,
+    kycStatus: toInvestmentOrderCreationKycStatus(investorProfile.kycStatus),
+    canCreateInvestmentOrder:
+      toInvestmentOrderCreationKycStatus(investorProfile.kycStatus) ===
+      "VERIFIED",
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
       (acc, inv) => acc + inv.plans.length,
