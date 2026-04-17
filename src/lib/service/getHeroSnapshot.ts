@@ -4,7 +4,7 @@ import { InvestmentModel, InvestmentOrderStatus, SavingsStatus } from "@/generat
 
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
-import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { toDecimal } from "@/lib/services/investment/decimal";
 
 type HeroSnapshot = {
@@ -26,6 +26,22 @@ function abbreviateNumber(value: number) {
   }
 
   return `${value}`;
+}
+
+function formatCompactDollar(value: number) {
+  if (value >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}b`;
+  }
+
+  if (value >= 1_000_000) {
+    return `$${(value / 1_000_000).toFixed(value >= 10_000_000 ? 0 : 1).replace(/\.0$/, "")}m`;
+  }
+
+  if (value >= 1_000) {
+    return `$${(value / 1_000).toFixed(value >= 10_000 ? 0 : 1).replace(/\.0$/, "")}k`;
+  }
+
+  return `$${value.toFixed(0)}`;
 }
 
 function resolveDurationLabel(durationDays: number | null) {
@@ -110,6 +126,8 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   const totalSavings = toDecimal(savingsSummary._sum.balance);
   const totalValue = totalInvestments.add(totalSavings);
+  const headlineTotalValue = toDecimal(150_000_000).add(totalValue);
+  const headlineUserCount = investorProfileCount + 10_000;
 
   const typeTotals = new Map<string, { total: number; label: string }>();
   const planTotals = new Map<string, { total: number; durationDays: number | null; label: string }>();
@@ -145,10 +163,10 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   return {
     statusLabel: "Active",
-    totalValueLabel: formatCurrency(totalValue.toNumber(), "USD"),
+    totalValueLabel: formatCompactDollar(headlineTotalValue.toNumber()),
     topLabel: topType?.label ?? "Savings",
     planLabel: topPlan?.label ?? site.siteName,
     durationLabel: resolveDurationLabel(topPlan?.durationDays ?? null),
-    userCountLabel: `${abbreviateNumber(investorProfileCount)}+ Investors`,
+    userCountLabel: `${abbreviateNumber(headlineUserCount)}+ Investors`,
   };
 });
