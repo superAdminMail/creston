@@ -150,7 +150,12 @@ export function CreateInvestmentOrderWizard({
   }, [actionState, currentStep]);
 
   if (options.totalActivePlans === 0) {
-    return <CreateInvestmentOrderEmptyState hasInvestorProfile />;
+    return (
+      <CreateInvestmentOrderEmptyState
+        hasInvestorProfile
+        siteName={siteName}
+      />
+    );
   }
 
   const guidanceItems = [
@@ -263,6 +268,7 @@ export function CreateInvestmentOrderWizard({
               onContinue={() => setCurrentStep(1)}
               canContinue={Boolean(effectiveSelectedInvestmentId)}
               featuredInvestment={featuredInvestment}
+              siteName={siteName}
             />
           ) : null}
 
