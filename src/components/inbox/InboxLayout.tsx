@@ -15,7 +15,6 @@ type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 
 type Props = {
   conversations: InboxPreview[];
-  currentUserId: string;
   initialActiveId?: string | null;
 };
 
@@ -47,18 +46,6 @@ function getConversationSubtitle(conversation: InboxPreview) {
     : "Support ticket";
 }
 
-function getConversationMeta(conversation: InboxPreview) {
-  if (conversation.agentId) {
-    return conversation.agentName
-      ? `Assigned to ${conversation.agentName}`
-      : "Support ticket";
-  }
-
-  return conversation.participantName
-    ? `Assigned to ${conversation.participantName}`
-    : "Support ticket";
-}
-
 function getPresenceTargetRoles(conversation: InboxPreview) {
   if (conversation.participantRole) {
     return [conversation.participantRole] as PresenceRole[];
@@ -69,7 +56,6 @@ function getPresenceTargetRoles(conversation: InboxPreview) {
 
 export default function InboxLayout({
   conversations,
-  currentUserId,
   initialActiveId,
 }: Props) {
   const router = useRouter();
@@ -81,7 +67,6 @@ export default function InboxLayout({
     initialActiveId ?? null,
   );
   const [open, setOpen] = useState(false);
-  const [mobileListOpen, setMobileListOpen] = useState(false);
 
   const hasConversations = list.length > 0;
   const active = useMemo(
@@ -188,7 +173,6 @@ export default function InboxLayout({
           <InboxList
             conversations={list}
             activeId={activeId}
-            currentUserId={currentUserId}
             onSelect={(id) => {
               setActiveId(id);
               updateConversationQuery(id);

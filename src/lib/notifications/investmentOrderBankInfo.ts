@@ -1,5 +1,3 @@
-import type { NotificationDTO } from "@/lib/types/notification";
-
 export const INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND =
   "INVESTMENT_ORDER_BANK_INFO_REQUEST";
 export const INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND =
@@ -7,7 +5,10 @@ export const INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND =
 export const INVESTMENT_ORDER_BANK_INFO_READY_KIND =
   "INVESTMENT_ORDER_BANK_INFO_READY";
 
-type NotificationLike = Pick<NotificationDTO, "type" | "metadata">;
+type NotificationLike = {
+  type?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
 
 export type InvestmentOrderBankInfoRequestMetadata = {
   kind: typeof INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND;
@@ -66,4 +67,3 @@ export function isInvestmentOrderBankInfoReadyNotification(
     INVESTMENT_ORDER_BANK_INFO_READY_KIND
   );
 }
-

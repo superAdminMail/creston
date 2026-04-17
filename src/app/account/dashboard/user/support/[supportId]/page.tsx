@@ -28,7 +28,7 @@ export default async function SupportConversationPage({
   }
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-[calc(100dvh-7rem)] w-full max-w-none px-0 py-0">
       <SupportConversationDetailWorkspace
         mode="user"
         viewerId={userId}

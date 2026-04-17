@@ -3,7 +3,7 @@
 import { InboxPreview } from "@/lib/types/chat.types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { MdDelete } from "react-icons/md";
 import { MoreVertical, Trash2, Loader2 } from "lucide-react";
 import {
@@ -28,11 +28,11 @@ import { Label } from "../ui/label";
 import { deleteConversationAction } from "@/actions/inbox/deleteConversationAction";
 import { clearAllConversationsAction } from "@/actions/inbox/clearAllConversationsAction";
 import { toast } from "sonner";
+import { getChatMessagePreviewText } from "@/lib/inbox/chatMessageContent";
 
 type Props = {
   conversations: InboxPreview[];
   activeId: string | null;
-  currentUserId: string;
   onSelect: (id: string) => void;
   onNew: () => void;
   onDeleteConversation: (id: string) => void;
@@ -66,7 +66,6 @@ function getPreviewPrefix(conversation: InboxPreview) {
 export default function InboxList({
   conversations,
   activeId,
-  currentUserId,
   onSelect,
   onNew,
   onDeleteConversation,
@@ -76,13 +75,10 @@ export default function InboxList({
   const [isPending, startTransition] = useTransition();
   const [clearOpen, setClearOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
-  const [mounted, setMounted] = useState(false);
 
   const deletableCount = conversations.filter(
     (conversation) => conversation.canDelete,
   ).length;
-
-  useEffect(() => setMounted(true), []);
 
   const formatPreviewTime = (value?: string) => {
     if (!value) return "";
@@ -147,9 +143,7 @@ export default function InboxList({
                       </span>
                     )}
                     <span className="text-[11px] text-gray-400">
-                      {mounted
-                        ? formatPreviewTime(conversation.lastMessage?.createdAt)
-                        : ""}
+                      {formatPreviewTime(conversation.lastMessage?.createdAt)}
                     </span>
                   </div>
                 </div>
@@ -163,7 +157,7 @@ export default function InboxList({
                     <span className="font-medium text-gray-700">
                       {getPreviewPrefix(conversation)}
                     </span>
-                    {conversation.lastMessage.content}
+                    {getChatMessagePreviewText(conversation.lastMessage.content)}
                   </p>
                 )}
               </button>
@@ -236,7 +230,7 @@ export default function InboxList({
               </AlertDialogHeader>
 
               <div className="space-y-2">
-                <Label>Type "CLEAR ALL" to confirm</Label>
+                <Label>Type &quot;CLEAR ALL&quot; to confirm</Label>
                 <Input
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}

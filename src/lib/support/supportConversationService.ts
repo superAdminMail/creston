@@ -30,7 +30,7 @@ import {
   processConversationMessageAfterWrite,
 } from "@/lib/inbox/conversationService";
 
-const SUPPORT_CONVERSATION_TYPES: ConversationType[] = [
+export const SUPPORT_CONVERSATION_TYPES: ConversationType[] = [
   ConversationType.SUPPORT,
   ConversationType.ACCOUNT_ISSUES,
   ConversationType.INVESTMENT_INQUIRIES,

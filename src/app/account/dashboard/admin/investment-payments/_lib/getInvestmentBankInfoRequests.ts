@@ -52,22 +52,35 @@ export async function getInvestmentBankInfoRequests(): Promise<
     select: {
       id: true,
       createdAt: true,
+      type: true,
       metadata: true,
     },
   });
 
   const requestNotifications = notifications
-    .map((notification) => ({
-      ...notification,
-      metadata: getRequestMetadata(notification.metadata),
-    }))
-    .filter(
-      (
-        notification,
-      ): notification is (typeof notification & {
-        metadata: InvestmentOrderBankInfoRequestMetadata;
-      }) => isInvestmentOrderBankInfoRequestNotification(notification),
-    );
+    .flatMap((notification) => {
+      const metadata = getRequestMetadata(notification.metadata);
+
+      if (!metadata) {
+        return [];
+      }
+
+      if (
+        !isInvestmentOrderBankInfoRequestNotification({
+          type: notification.type,
+          metadata,
+        })
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          ...notification,
+          metadata,
+        },
+      ];
+    });
 
   const uniqueOrderIds = Array.from(
     new Set(requestNotifications.map((notification) => notification.metadata.orderId)),
@@ -115,40 +128,39 @@ export async function getInvestmentBankInfoRequests(): Promise<
 
   const orderById = new Map(orders.map((order) => [order.id, order]));
 
-  return requestNotifications
-    .map((notification) => {
-      const order = orderById.get(notification.metadata.orderId);
+  return requestNotifications.flatMap((notification) => {
+    const order = orderById.get(notification.metadata.orderId);
 
-      if (!order) {
-        return null;
-      }
+    if (!order) {
+      return [];
+    }
 
-      const amount = toNumber(order.amount);
-      const amountPaid = toNumber(order.amountPaid);
+    const amount = toNumber(order.amount);
+    const amountPaid = toNumber(order.amountPaid);
 
-      return {
-        requestNotificationId: notification.id,
-        requestedAt: notification.createdAt.toISOString(),
-        orderId: order.id,
-        requester: {
-          id: order.investorProfile.user.id,
-          name: order.investorProfile.user.name,
-          email: order.investorProfile.user.email,
+    const item = {
+      requestNotificationId: notification.id,
+      requestedAt: notification.createdAt.toISOString(),
+      orderId: order.id,
+      requester: {
+        id: order.investorProfile.user.id,
+        name: order.investorProfile.user.name,
+        email: order.investorProfile.user.email,
+      },
+      order: {
+        id: order.id,
+        status: order.status,
+        amount,
+        amountPaid,
+        remainingAmount: Math.max(amount - amountPaid, 0),
+        currency: order.currency,
+        plan: {
+          name: order.investmentPlan.name,
+          period: order.investmentPlan.period,
         },
-        order: {
-          id: order.id,
-          status: order.status,
-          amount,
-          amountPaid,
-          remainingAmount: Math.max(amount - amountPaid, 0),
-          currency: order.currency,
-          plan: {
-            name: order.investmentPlan.name,
-            period: order.investmentPlan.period,
-          },
-        },
-      } satisfies InvestmentBankInfoRequestItem;
-    })
-    .filter((item): item is InvestmentBankInfoRequestItem => item !== null);
+      },
+    } satisfies InvestmentBankInfoRequestItem;
+
+    return [item];
+  });
 }
-

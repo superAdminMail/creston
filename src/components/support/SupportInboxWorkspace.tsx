@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import {
   Inbox,
   Loader2,
+  MessageSquareText,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
   Trash2,
@@ -175,19 +177,20 @@ export default function SupportInboxWorkspace({
   const [sort, setSort] = useState<SupportInboxSort>("latest");
   const [createOpen, setCreateOpen] = useState(false);
 
-  const filters = mode === "staff" ? ADMIN_FILTERS : USER_FILTERS;
+  const isStaffView = mode === "staff";
+  const filters = isStaffView ? ADMIN_FILTERS : USER_FILTERS;
   const canManageTickets =
-    mode === "staff" &&
+    isStaffView &&
     (viewerRole === UserRole.ADMIN || viewerRole === UserRole.SUPER_ADMIN);
-  const canDeleteTickets = mode === "staff" && viewerRole === UserRole.SUPER_ADMIN;
+  const canDeleteTickets = isStaffView && viewerRole === UserRole.SUPER_ADMIN;
   const detailPath = (conversationId: string) =>
-    mode === "staff"
+    isStaffView
       ? `/account/dashboard/admin/support/${conversationId}`
       : `/account/dashboard/user/support/${conversationId}`;
 
   const filteredConversations = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    const list = conversations
+    return conversations
       .filter((ticket) => {
         const matchesQuery =
           !normalized ||
@@ -235,8 +238,6 @@ export default function SupportInboxWorkspace({
           new Date(left.lastMessageAt ?? left.updatedAt).getTime()
         );
       });
-
-    return list;
   }, [conversations, filter, query, sort]);
 
   const stats = useMemo(() => {
@@ -334,19 +335,19 @@ export default function SupportInboxWorkspace({
             </p>
             <div>
               <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-                {mode === "staff"
+                {isStaffView
                   ? "Customer support tickets"
                   : "My support tickets"}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-                {mode === "staff"
+                {isStaffView
                   ? "Track pending requests, assignment, and unread customer replies in one place."
                   : "Review replies from the support team and keep every conversation in one secure thread."}
               </p>
             </div>
           </div>
 
-          {mode !== "staff" ? (
+          {!isStaffView ? (
             <Button
               onClick={() => setCreateOpen(true)}
               className="rounded-full bg-[linear-gradient(135deg,var(--brand-blue),#1e74c6)] px-5 text-white shadow-[0_18px_40px_-22px_rgba(60,158,224,0.9)] hover:bg-[linear-gradient(135deg,#4aa7eb,#1e74c6)]"
@@ -439,7 +440,7 @@ export default function SupportInboxWorkspace({
                           {ticket.subject}
                         </p>
                         <p className="mt-1 text-xs text-slate-400">
-                          {ticket.ticketId} · {getPreviewSubtitle(ticket)}
+                          {ticket.ticketId} | {getPreviewSubtitle(ticket)}
                         </p>
                       </div>
 
@@ -523,42 +524,95 @@ export default function SupportInboxWorkspace({
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-          <CardContent className="flex min-h-full flex-col justify-between p-5">
-            <div className="space-y-5">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                  Dedicated thread view
-                </p>
-                <h2 className="mt-2 text-lg font-semibold text-white">
-                  Support tickets in a thread
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  You can view and reply to support tickets in a dedicated
-                  thread view.
-                </p>
+        {isStaffView ? (
+          <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+            <CardContent className="flex min-h-full flex-col justify-between p-5">
+              <div className="space-y-5">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Support ops
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold text-white">
+                    Team queue
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    Manage assignment, unread replies, and ticket state from a single
+                    operational view.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                  <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Total tickets
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {stats.total}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Unread
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {stats.unread}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Open
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {stats.open}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      Pending
+                    </p>
+                    <p className="mt-2 text-2xl font-semibold text-white">
+                      {stats.waiting}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
+                  Use the filters to find the queue you want, then assign or open the
+                  ticket directly from the list.
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
+                Tip: High-priority work shows up faster when the queue is filtered to
+                unread or unassigned tickets.
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="rounded-[1.9rem] border border-sky-500/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.94),rgba(6,13,28,0.97))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
+            <CardContent className="space-y-5 p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]">
+                  <MessageSquareText className="h-5 w-5 text-sky-300" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Support center
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold text-white">
+                    Help from one secure place
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-400">
+                    Track every request, continue existing threads, and create a new
+                    ticket when you need fresh help.
+                  </p>
+                </div>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Total tickets
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {stats.total}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Unread
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {stats.unread}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Open
+                    Open threads
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-white">
                     {stats.open}
@@ -566,23 +620,57 @@ export default function SupportInboxWorkspace({
                 </div>
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Pending
+                    Unread replies
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-white">
-                    {stats.waiting}
+                    {stats.unread}
                   </p>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
-              Tip: Use the filters above to narrow down your search.
-            </div>
-          </CardContent>
-        </Card>
+              <div className="space-y-3 rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                  <ShieldCheck className="h-4 w-4" />
+                  What to expect
+                </div>
+                <div className="space-y-3 text-sm leading-6 text-slate-400">
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/15 text-xs font-semibold text-sky-200">
+                      1
+                    </span>
+                    <p>Create one ticket for each new issue so replies stay easy to track.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/15 text-xs font-semibold text-sky-200">
+                      2
+                    </span>
+                    <p>Support replies inside the same thread and your inbox updates live.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/15 text-xs font-semibold text-sky-200">
+                      3
+                    </span>
+                    <p>Use the ticket list to jump back into any conversation at any time.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
+                Need a new request?
+                <Button
+                  type="button"
+                  onClick={() => setCreateOpen(true)}
+                  className="mt-3 w-full rounded-full bg-[linear-gradient(135deg,var(--brand-blue),#1e74c6)] text-white shadow-[0_18px_40px_-22px_rgba(60,158,224,0.9)] hover:bg-[linear-gradient(135deg,#4aa7eb,#1e74c6)]"
+                >
+                  New support ticket
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </section>
 
-      {mode !== "staff" ? (
+      {!isStaffView ? (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="border-white/10 bg-zinc-950 text-white sm:max-w-xl">
             <DialogHeader>

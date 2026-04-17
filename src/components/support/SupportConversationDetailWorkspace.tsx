@@ -101,7 +101,13 @@ export default function SupportConversationDetailWorkspace({
   }, [conversation]);
 
   return (
-    <div className="space-y-6">
+    <div
+      className={
+        isStaffView
+          ? "space-y-6"
+          : "flex min-h-[calc(100dvh-7rem)] flex-col gap-6"
+      }
+    >
       <section
         className={
           isStaffView
@@ -133,7 +139,8 @@ export default function SupportConversationDetailWorkspace({
                 {conversation.subject}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-                {conversation.ticketId} | opened {formatDateShort(conversation.createdAt)}
+                {conversation.ticketId} | opened{" "}
+                {formatDateShort(conversation.createdAt)}
               </p>
             </div>
           </div>
@@ -305,16 +312,18 @@ export default function SupportConversationDetailWorkspace({
                 </div>
                 <Separator className="my-3 bg-white/10" />
                 <p>
-                  {conversation.source ? `Source: ${conversation.source}. ` : ""}
-                  Replies are visible only to the ticket owner and assigned support
-                  staff.
+                  {conversation.source
+                    ? `Source: ${conversation.source}. `
+                    : ""}
+                  Replies are visible only to the ticket owner and assigned
+                  support staff.
                 </p>
               </div>
             </CardContent>
           </Card>
         </section>
       ) : (
-        <section className="space-y-6">
+        <section className="flex min-h-0 flex-1 flex-col gap-6">
           <Card className="rounded-[1.9rem] border border-sky-500/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.94),rgba(6,13,28,0.97))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
             <CardContent className="space-y-4 p-5 sm:p-6">
               <div className="flex items-start gap-3">
@@ -329,8 +338,8 @@ export default function SupportConversationDetailWorkspace({
                     Your private request
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-400">
-                    Keep this thread open to follow every reply from support in one
-                    secure place.
+                    Keep this thread open to follow every reply from support in
+                    one secure place.
                   </p>
                 </div>
               </div>
@@ -363,14 +372,14 @@ export default function SupportConversationDetailWorkspace({
               </div>
 
               <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
-                Support replies will arrive in this thread. You do not need to create
-                another ticket for the same issue.
+                Support replies will arrive in this thread. You do not need to
+                create another ticket for the same issue.
               </div>
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.02] text-white shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
-            <CardContent className="p-0">
+          <Card className="flex min-h-0 flex-1 overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.02] text-white shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
+            <CardContent className="h-full p-0">
               <ChatBox
                 key={conversation.id}
                 conversationId={conversation.id}

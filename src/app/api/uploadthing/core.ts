@@ -59,6 +59,20 @@ export const ourFileRouter = {
 
       return { uploadedBy: metadata.user.id };
     }),
+
+  conversationImage: f({
+    image: {
+      maxFileSize: "8MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(() => handleAuth())
+
+    .onUploadComplete(async ({ metadata }) => {
+      console.log("Conversation image uploaded for userId:", metadata.user.id);
+
+      return { uploadedBy: metadata.user.id };
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

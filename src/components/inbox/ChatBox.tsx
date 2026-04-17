@@ -8,6 +8,7 @@ import { ChatInput } from "./ChatInput";
 import { useConversationPresence } from "@/hooks/useConversationPresence";
 import { useConversationMessages } from "@/hooks/useConversationMessages";
 import { SenderType } from "@/generated/prisma/client";
+import { getChatMessagePreviewText } from "@/lib/inbox/chatMessageContent";
 
 type PresenceRole = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 
@@ -110,7 +111,7 @@ export default function ChatBox({
         senderName: nextMessage.senderName ?? null,
         senderRole: nextMessage.senderRole ?? null,
         senderEmail: nextMessage.senderEmail ?? null,
-        content: nextMessage.content,
+        content: getChatMessagePreviewText(nextMessage.content),
         senderType: nextMessage.senderType,
         createdAt: nextMessage.createdAt,
       });

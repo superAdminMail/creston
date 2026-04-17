@@ -5,6 +5,7 @@ import type { PresenceChannel } from "pusher-js";
 import { pusherClient } from "@/lib/pusher-client";
 
 type Role = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
+const DEFAULT_TARGET_ROLES: Role[] = ["ADMIN", "MODERATOR", "SUPER_ADMIN"];
 type PresenceMember = { info?: { role?: Role; isAgent?: boolean } };
 type PresenceMembersPayload = {
   members?: Record<string, PresenceMember>;
@@ -23,16 +24,19 @@ export function useConversationPresence(
   const [agentAssigned, setAgentAssigned] = useState(false);
   const [lastSeenAt, setLastSeenAt] = useState<Date | null>(null);
   const lastOnlineRef = useRef(false);
+  const selfUserId = options?.selfUserId ?? null;
+  const targetRolesKey = (options?.targetRoles ?? DEFAULT_TARGET_ROLES).join(",");
 
   useEffect(() => {
+    if (!conversationId) {
+      return;
+    }
+
     const channelName = `presence-conversation-${conversationId}`;
     const channel = pusherClient.subscribe(channelName) as PresenceChannel;
-
-    const targetRoles = options?.targetRoles ?? [
-      "ADMIN",
-      "MODERATOR",
-      "SUPER_ADMIN",
-    ];
+    const targetRoles = targetRolesKey
+      .split(",")
+      .filter(Boolean) as Role[];
 
     const hasTargetRole = (member: PresenceMember) => {
       if (member?.info?.isAgent) return true;
@@ -109,7 +113,7 @@ export function useConversationPresence(
     });
 
     channel.bind("typing", (payload: { userId?: string }) => {
-      if (options?.selfUserId && payload?.userId === options.selfUserId) {
+      if (selfUserId && payload?.userId === selfUserId) {
         return;
       }
       setTyping(true);
@@ -120,7 +124,7 @@ export function useConversationPresence(
       channel.unbind_all();
       pusherClient.unsubscribe(channelName);
     };
-  }, [conversationId, options?.targetRoles?.join(",")]);
+  }, [conversationId, targetRolesKey, selfUserId]);
 
   return { online, typing, agentAssigned, lastSeenAt };
 }
