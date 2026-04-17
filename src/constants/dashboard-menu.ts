@@ -65,11 +65,6 @@ export const DASHBOARD_MENU = {
           icon: User,
         },
         {
-          name: "Investment Accounts",
-          href: "/account/dashboard/user/investment-accounts",
-          icon: Wallet,
-        },
-        {
           name: "Manage Investment Orders",
           href: "/account/dashboard/user/investment-orders",
           icon: ClipboardList,
@@ -336,11 +331,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/testimonies",
           icon: FileText,
         },
-        {
-          name: "Audit Logs",
-          href: "/account/dashboard/admin/audit-logs",
-          icon: ScrollText,
-        },
+        // {
+        //   name: "Audit Logs",
+        //   href: "/account/dashboard/admin/audit-logs",
+        //   icon: ScrollText,
+        // },
         {
           name: "Promotions & Offers",
           href: "/account/dashboard/admin/promotions",

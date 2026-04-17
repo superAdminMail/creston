@@ -1,12 +1,12 @@
 "use server";
 
-import type {
-  InvestmentTierLevel,
-  InvestmentPeriod,
-  InvestmentType,
+import {
+  InvestmentCatalogStatus,
   KycStatus,
+  type InvestmentTierLevel,
+  type InvestmentPeriod,
+  type InvestmentType,
 } from "@/generated/prisma";
-import { InvestmentCatalogStatus } from "@/generated/prisma";
 import {
   formatCurrency,
   formatEnumLabel,
