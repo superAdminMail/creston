@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { deleteFileAssetAction } from "@/actions/files/file";
@@ -9,10 +10,17 @@ import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUp
 import { sendMessageAction } from "@/actions/inbox/sendMessageAction";
 import { sendTypingAction } from "@/actions/inbox/sendTypingAction";
 import { SenderType } from "@/generated/prisma/client";
+import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
-import { UploadButton } from "@/utils/uploadthing";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { UploadDropzone } from "@/utils/uploadthing";
 import { ChatMessage } from "@/lib/types/chat.types";
 import {
   getChatMessagePreviewText,
@@ -75,6 +83,7 @@ export function ChatInput({
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   const attachmentRef = useRef<Attachment | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -200,12 +209,22 @@ export function ChatInput({
         ) : null}
 
         <div className="flex items-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setUploadOpen(true)}
+            className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white"
+            aria-label="Add image attachment"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+
           <div className="flex-1">
             <div className="relative">
               <Textarea
                 value={text}
                 ref={ref}
-                rows={1}
                 onChange={(e) => {
                   setText(e.target.value);
                   const now = Date.now();
@@ -221,67 +240,8 @@ export function ChatInput({
                   }
                 }}
                 placeholder={placeholder}
-                className="min-h-12 max-h-40 w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 pr-16 text-sm leading-6 shadow-none focus:outline-none"
+                className="h-full w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.04]  text-sm leading-6 shadow-none focus:outline-none"
               />
-
-              <div className="absolute bottom-2.5 right-2.5">
-                <UploadButton
-                  endpoint="conversationImage"
-                  onClientUploadComplete={async (res) => {
-                    try {
-                      const file = res?.[0];
-                      if (!file) {
-                        toast.error("Upload failed");
-                        return;
-                      }
-
-                      const asset = await createFileAssetFromUpload({
-                        url: file.url,
-                        key: file.key,
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                      });
-
-                      setAttachment({
-                        assetId: asset.id,
-                        storageKey: file.key,
-                        url: file.url,
-                        name: file.name ?? null,
-                      });
-
-                      toast.success("Image attached");
-                    } catch {
-                      toast.error("Unable to attach image");
-                    }
-                  }}
-                  onUploadError={() => {
-                    toast.error("Image upload failed");
-                  }}
-                  className="
-                    ut-button:!inline-flex
-                    ut-button:!h-8
-                    ut-button:!items-center
-                    ut-button:!gap-2
-                    ut-button:!rounded-full
-                    ut-button:!border
-                    ut-button:!border-white/10
-                    ut-button:!bg-slate-950
-                    ut-button:!px-3
-                    ut-button:!text-xs
-                    ut-button:!font-semibold
-                    ut-button:!text-white
-                    ut-button:!shadow-[0_12px_28px_rgba(2,6,23,0.42)]
-                    ut-button:!ring-1
-                    ut-button:!ring-inset
-                    ut-button:!ring-white/10
-                    ut-button:transition
-                    ut-button:duration-200
-                    hover:ut-button:!-translate-y-0.5
-                    hover:ut-button:!bg-slate-800
-                  "
-                />
-              </div>
             </div>
           </div>
 
@@ -300,6 +260,90 @@ export function ChatInput({
           </Button>
         </div>
       </div>
+
+      <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+        <DialogContent
+          className="border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] text-white shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:max-w-md"
+          showCloseButton={false}
+        >
+          <DialogHeader className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle className="text-lg font-semibold text-white">
+                Add image
+              </DialogTitle>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setUploadOpen(false)}
+                className="h-9 w-9 rounded-full border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                aria-label="Close upload dialog"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <DialogDescription className="text-sm leading-6 text-slate-400">
+              Drag and drop an image here, or browse to upload it into this
+              conversation.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <UploadDropzone
+              endpoint="conversationImage"
+              className="ut-label:block ut-button:hidden ut-allowed-content:block"
+              appearance={{
+                container:
+                  "rounded-[1.75rem] border border-dashed border-sky-400/25 bg-white/[0.03] p-4",
+                uploadIcon:
+                  "mx-auto h-12 w-12 rounded-2xl border border-sky-400/20 bg-sky-500/10 p-3 text-sky-200",
+                label: "mt-3 text-center text-sm font-medium text-white",
+                allowedContent:
+                  "mt-2 text-center text-xs leading-5 text-slate-400",
+                button:
+                  "mx-auto mt-4 inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(2,6,23,0.42)] transition hover:-translate-y-0.5 hover:bg-slate-800",
+              }}
+              content={{
+                label: () => "Drop image to upload",
+                allowedContent: () => "PNG, JPG, WEBP up to 8MB",
+                button: () => "Browse files",
+              }}
+              onClientUploadComplete={async (res) => {
+                try {
+                  const file = res?.[0];
+                  if (!file) {
+                    toast.error("Upload failed");
+                    return;
+                  }
+
+                  const asset = await createFileAssetFromUpload({
+                    url: file.url,
+                    key: file.key,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                  });
+
+                  setAttachment({
+                    assetId: asset.id,
+                    storageKey: file.key,
+                    url: file.url,
+                    name: file.name ?? null,
+                  });
+
+                  toast.success("Image attached");
+                  setUploadOpen(false);
+                } catch {
+                  toast.error("Unable to attach image");
+                }
+              }}
+              onUploadError={() => {
+                toast.error("Image upload failed");
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

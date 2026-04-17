@@ -8,6 +8,26 @@ type TypingPayload = {
   userId: string;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (!isRecord(value)) return false;
+
+  return (
+    typeof value.id === "string" &&
+    typeof value.conversationId === "string" &&
+    typeof value.senderType === "string" &&
+    typeof value.content === "string" &&
+    typeof value.createdAt === "string"
+  );
+}
+
+function isTypingPayload(value: unknown): value is TypingPayload {
+  return isRecord(value) && typeof value.userId === "string";
+}
+
 export function useConversationMessages({
   conversationId,
   onMessage,
@@ -25,19 +45,37 @@ export function useConversationMessages({
     const channelName = `conversation-${conversationId}`;
     const channel = pusherClient.subscribe(channelName);
 
-    channel.bind("new-message", onMessage);
-    if (onDelivered) channel.bind("delivered", onDelivered);
-    if (onSeen) channel.bind("seen", onSeen);
+    const handleMessage = (...args: unknown[]) => {
+      const [payload] = args;
+      if (isChatMessage(payload)) onMessage(payload);
+    };
+    const handleDelivered = (...args: unknown[]) => {
+      const [payload] = args;
+      if (payload && isRecord(payload) && typeof payload.deliveredAt === "string") {
+        onDelivered?.({ deliveredAt: payload.deliveredAt });
+      }
+    };
+    const handleSeen = (...args: unknown[]) => {
+      const [payload] = args;
+      if (payload && isRecord(payload) && typeof payload.readAt === "string") {
+        onSeen?.({ readAt: payload.readAt });
+      }
+    };
+    const handleTyping = (...args: unknown[]) => {
+      const [payload] = args;
+      if (isTypingPayload(payload)) onTyping?.(payload);
+    };
 
-    if (onTyping) {
-      channel.bind("typing", onTyping);
-    }
+    channel.bind("new-message", handleMessage);
+    if (onDelivered) channel.bind("delivered", handleDelivered);
+    if (onSeen) channel.bind("seen", handleSeen);
+    if (onTyping) channel.bind("typing", handleTyping);
 
     return () => {
-      channel.unbind("new-message", onMessage);
-      if (onDelivered) channel.unbind("delivered", onDelivered);
-      if (onSeen) channel.unbind("seen", onSeen);
-      if (onTyping) channel.unbind("typing", onTyping);
+      channel.unbind("new-message", handleMessage);
+      if (onDelivered) channel.unbind("delivered", handleDelivered);
+      if (onSeen) channel.unbind("seen", handleSeen);
+      if (onTyping) channel.unbind("typing", handleTyping);
       pusherClient.unsubscribe(channelName);
     };
   }, [conversationId, onMessage, onDelivered, onSeen, onTyping]);
