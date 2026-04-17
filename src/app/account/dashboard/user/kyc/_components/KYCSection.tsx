@@ -13,6 +13,24 @@ type LatestSession = {
   updatedAt: string | Date;
 } | null;
 
+type KycStatusPayload = {
+  status?: KycStatus;
+  providerStatus?: string;
+};
+
+function isKycStatusPayload(payload: unknown): payload is KycStatusPayload {
+  if (!payload || typeof payload !== "object") return false;
+
+  const candidate = payload as KycStatusPayload;
+  return (
+    typeof candidate.status === "undefined" ||
+    candidate.status === "NOT_STARTED" ||
+    candidate.status === "PENDING_REVIEW" ||
+    candidate.status === "VERIFIED" ||
+    candidate.status === "REJECTED"
+  );
+}
+
 function isSessionStale(updatedAt: string | Date) {
   const date = new Date(updatedAt);
   return Date.now() - date.getTime() > 30 * 60 * 1000;
@@ -43,21 +61,23 @@ export default function KYCSection({
 
     const channel = pusher.subscribe(`kyc-${userId}`);
 
-    channel.bind(
-      "kyc-status-updated",
-      (payload: { status?: KycStatus; providerStatus?: string }) => {
-        if (payload?.status) {
-          setStatus(payload.status);
-        }
-        if (payload?.providerStatus) {
-          setProviderStatus(payload.providerStatus);
-        }
-      },
-    );
+    const handleStatusUpdated = (payload: unknown) => {
+      if (!isKycStatusPayload(payload)) return;
+
+      if (payload.status) {
+        setStatus(payload.status);
+      }
+      if (payload.providerStatus) {
+        setProviderStatus(payload.providerStatus);
+      }
+    };
+
+    channel.bind("kyc-status-updated", handleStatusUpdated);
 
     return () => {
+      channel.unbind("kyc-status-updated", handleStatusUpdated);
       channel.unbind_all();
-      channel.unsubscribe();
+      pusher.unsubscribe(`kyc-${userId}`);
       pusher.disconnect();
     };
   }, [userId]);
