@@ -72,7 +72,7 @@ export default function NotificationListener({
     return () => {
       channel.unbind("new-notification", handleNotification);
       channel.unbind_all();
-      channel.unsubscribe();
+      pusher.unsubscribe(`notifications-${userId}`);
       pusher.disconnect();
     };
   }, [userId]);
