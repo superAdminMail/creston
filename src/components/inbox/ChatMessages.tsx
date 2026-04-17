@@ -46,6 +46,8 @@ export default function ChatMessages({
   incomingSenderTypes,
   canReply,
   sendLabel,
+  selfUserId,
+  onSendComplete,
   sendAction,
   onOpenMenu,
   onPreviewUpdate,
@@ -110,13 +112,13 @@ export default function ChatMessages({
         subtitle={subtitle}
         forceOnline={forceOnline}
         presenceTargetRoles={presenceTargetRoles}
-      viewerSenderType={viewerSenderType}
-      incomingSenderTypes={incomingSenderTypes}
-      canReply={canReply}
-      sendLabel={sendLabel}
-      selfUserId={selfUserId}
-      onSendComplete={onSendComplete}
-      sendAction={sendAction}
+        viewerSenderType={viewerSenderType}
+        incomingSenderTypes={incomingSenderTypes}
+        canReply={canReply}
+        sendLabel={sendLabel}
+        selfUserId={selfUserId}
+        onSendComplete={onSendComplete}
+        sendAction={sendAction}
         onOpenMenu={onOpenMenu}
         onPreviewUpdate={onPreviewUpdate}
       />
