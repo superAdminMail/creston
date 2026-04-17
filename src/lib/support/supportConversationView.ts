@@ -18,6 +18,13 @@ export type SupportInboxFilter =
   | "assigned-to-me"
   | "unassigned";
 
+export type SupportIssueType =
+  | "payments"
+  | "technical_issues"
+  | "investment_inquiries"
+  | "account_issues"
+  | "other";
+
 export type SupportActorRole =
   | "USER"
   | "ADMIN"
@@ -118,6 +125,23 @@ export function getSupportPriorityLabel(priority: ConversationPriority) {
       return "Urgent";
     default:
       return priority;
+  }
+}
+
+export function getSupportIssueTypeLabel(issueType: SupportIssueType) {
+  switch (issueType) {
+    case "payments":
+      return "Payments";
+    case "technical_issues":
+      return "Technical Issues";
+    case "investment_inquiries":
+      return "Investment Inquiries";
+    case "account_issues":
+      return "Account Issues";
+    case "other":
+      return "Other";
+    default:
+      return issueType;
   }
 }
 

@@ -151,11 +151,8 @@ export default function ChatBox({
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col justify-between overflow-hidden bg-background py-4">
-      {/* { <button onClick={onOpenMenu} className="text-white">
-        Back
-      </button>} */}
-      <div className="shrink-0">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="min-h-[5.5rem] shrink-0 overflow-hidden">
         <ChatHeader
           title={title}
           subtitle={subtitle}
@@ -166,13 +163,21 @@ export default function ChatBox({
         />
       </div>
 
-      <MessageList
-        messages={messages}
-        typing={typing}
-        viewerSenderType={viewerSenderType}
-      />
+      <div
+        className={
+          canReply
+            ? "min-h-0 flex-1 overflow-hidden pb-[8.75rem]"
+            : "min-h-0 flex-1 overflow-hidden"
+        }
+      >
+        <MessageList
+          messages={messages}
+          typing={typing}
+          viewerSenderType={viewerSenderType}
+        />
+      </div>
 
-      <div className="shrink-0">
+      <div className="absolute inset-x-0 bottom-0 min-h-[8.75rem] overflow-hidden">
         {canReply ? (
           <ChatInput
             conversationId={conversationId}

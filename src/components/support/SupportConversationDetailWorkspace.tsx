@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Clock3, Users } from "lucide-react";
+import { ArrowLeft, Trash2, Users } from "lucide-react";
+import { toast } from "sonner";
 
 import ChatBox from "@/components/inbox/ChatBox";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { SenderType } from "@/generated/prisma/client";
 import { sendSupportMessageAction } from "@/actions/inbox/admin/sendSupportMessageAction";
 import { sendMessageAction } from "@/actions/inbox/sendMessageAction";
+import { deleteConversationAction } from "@/actions/inbox/deleteConversationAction";
 import {
   getSupportPriorityLabel,
   getSupportRoleLabel,
@@ -61,6 +63,7 @@ export default function SupportConversationDetailWorkspace({
     : "/account/dashboard/user/support";
 
   const sendAction = isStaffView ? sendSupportMessageAction : sendMessageAction;
+  const canDeleteConversation = !isStaffView;
 
   const senderLookup = useMemo(() => {
     const lookup: Record<
@@ -105,7 +108,7 @@ export default function SupportConversationDetailWorkspace({
       className={
         isStaffView
           ? "space-y-6"
-          : "flex min-h-[calc(100dvh-7rem)] flex-col gap-6"
+          : "flex min-h-[calc(100dvh-7rem)] flex-col gap-5"
       }
     >
       <section
@@ -131,17 +134,56 @@ export default function SupportConversationDetailWorkspace({
               Back to inbox
             </Button>
 
-            <div>
+            <div className="space-y-3">
               <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-slate-300">
                 {isStaffView ? "Support ticket" : "My support ticket"}
               </p>
               <h1 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
                 {conversation.subject}
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-                {conversation.ticketId} | opened{" "}
-                {formatDateShort(conversation.createdAt)}
-              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                <span>{conversation.ticketId}</span>
+                <span className="text-white/20">•</span>
+                <span>Opened {formatDateShort(conversation.createdAt)}</span>
+                <span className="text-white/20">•</span>
+                <span>{getSupportStatusLabel(conversation.status)}</span>
+                <span className="text-white/20">•</span>
+                <span>{conversation.messages.length} messages</span>
+              </div>
+
+              {canDeleteConversation ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      const confirmed = window.confirm(
+                        "Delete this support conversation?",
+                      );
+                      if (!confirmed) return;
+
+                      void (async () => {
+                        const result = await deleteConversationAction(
+                          conversation.id,
+                        );
+
+                        if (result?.error) {
+                          toast.error(result.error);
+                          return;
+                        }
+
+                        toast.success("Conversation deleted");
+                        router.push("/account/dashboard/user/support");
+                        router.refresh();
+                      })();
+                    }}
+                    className="h-9 rounded-full border border-red-500/20 bg-red-500/10 px-4 text-sm text-red-200 hover:bg-red-500/15 hover:text-white"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete conversation
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -324,60 +366,6 @@ export default function SupportConversationDetailWorkspace({
         </section>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col gap-6">
-          <Card className="rounded-[1.9rem] border border-sky-500/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.94),rgba(6,13,28,0.97))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
-            <CardContent className="space-y-4 p-5 sm:p-6">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05]">
-                  <Clock3 className="h-5 w-5 text-sky-300" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Support overview
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold text-white">
-                    Your private request
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-400">
-                    Keep this thread open to follow every reply from support in
-                    one secure place.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Status
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
-                    {getSupportStatusLabel(conversation.status)}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Last update
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
-                    {formatDateTime(conversation.updatedAt)}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Messages
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
-                    {conversation.messages.length}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-400">
-                Support replies will arrive in this thread. You do not need to
-                create another ticket for the same issue.
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="flex min-h-0 flex-1 overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.02] text-white shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
             <CardContent className="h-full p-0">
               <ChatBox

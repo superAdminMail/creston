@@ -75,7 +75,6 @@ export function ChatInput({
   onSendComplete,
   onPreviewUpdate,
 }: Props) {
-  const ref = useRef<HTMLTextAreaElement>(null);
   const lastTypingAtRef = useRef(0);
 
   const [text, setText] = useState("");
@@ -84,12 +83,6 @@ export function ChatInput({
   const [isRemovingAttachment, setIsRemovingAttachment] = useState(false);
   const attachmentRef = useRef<Attachment | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    ref.current.style.height = "auto";
-    ref.current.style.height = `${ref.current.scrollHeight}px`;
-  }, [text]);
 
   useEffect(() => {
     attachmentRef.current = attachment;
@@ -208,51 +201,50 @@ export function ChatInput({
           </div>
         ) : null}
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-2 shadow-[0_14px_40px_rgba(2,6,23,0.16)] backdrop-blur-xl">
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={() => setUploadOpen(true)}
-            className="h-12 w-12 shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white"
+            className="h-11 w-11 shrink-0 rounded-full border border-white/10 bg-white/[0.03] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white"
             aria-label="Add image attachment"
           >
             <Plus className="h-5 w-5" />
           </Button>
 
-          <div className="flex-1">
-            <div className="relative">
-              <Textarea
-                value={text}
-                ref={ref}
-                onChange={(e) => {
-                  setText(e.target.value);
-                  const now = Date.now();
-                  if (now - lastTypingAtRef.current > 1200) {
-                    lastTypingAtRef.current = now;
-                    void sendTypingAction({ conversationId });
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void send();
-                  }
-                }}
-                placeholder={placeholder}
-                className="h-full w-full resize-none overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.04]  text-sm leading-6 shadow-none focus:outline-none"
-              />
-            </div>
+          <div className="min-w-0 flex-1">
+            <Textarea
+              value={text}
+              rows={1}
+              onChange={(e) => {
+                setText(e.target.value);
+                const now = Date.now();
+                if (now - lastTypingAtRef.current > 1200) {
+                  lastTypingAtRef.current = now;
+                  void sendTypingAction({ conversationId });
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
+              }}
+              placeholder={placeholder}
+              className="min-h-11 max-h-40 w-full resize-none overflow-y-auto border-0 bg-transparent px-2 py-3 text-[15px] leading-6 text-foreground shadow-none placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
           </div>
 
           <Button
             onClick={() => void send()}
             disabled={isSending || (!text.trim() && !attachment)}
-            className="h-12 rounded-2xl bg-[var(--brand-blue)] px-4 text-white hover:bg-[var(--brand-blue)]/90 disabled:opacity-70"
+            className="h-11 rounded-full bg-[var(--brand-blue)] px-5 text-sm font-medium text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] hover:bg-[var(--brand-blue)]/90 disabled:opacity-70"
           >
             {isSending ? (
-              <span className="flex items-center">
+              <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4 animate-spin text-white" />
+                Sending
               </span>
             ) : (
               sendLabel

@@ -30,6 +30,7 @@ import {
 
 import { NewConversation } from "@/lib/types/chat.types";
 import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";
+import { getSupportIssueTypeLabel } from "@/lib/support/supportConversationView";
 import {
   supportFormSchema,
   SupportFormValues,
@@ -73,9 +74,10 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
 
   function onSubmit(values: SupportFormValues) {
     startTransition(async () => {
+      const issueLabel = getSupportIssueTypeLabel(values.issueType);
       const subject = values.referenceId
-        ? `${values.issueType} • ${values.referenceId}`
-        : values.issueType;
+        ? `${issueLabel} • ${values.referenceId}`
+        : issueLabel;
 
       const res = await createConversationAction({
         subject,
