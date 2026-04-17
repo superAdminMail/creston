@@ -92,6 +92,7 @@ export default function ChatBox({
         message.senderId && senderLookup?.[message.senderId]
           ? senderLookup[message.senderId]
           : null;
+
       const nextMessage = senderMeta
         ? {
             ...message,
@@ -151,8 +152,8 @@ export default function ChatBox({
   });
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <div className="min-h-[5.5rem] shrink-0 overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+      <div className="shrink-0 border-b border-border/60 bg-background">
         <ChatHeader
           title={title}
           subtitle={subtitle}
@@ -163,13 +164,7 @@ export default function ChatBox({
         />
       </div>
 
-      <div
-        className={
-          canReply
-            ? "min-h-0 flex-1 overflow-hidden pb-[8.75rem]"
-            : "min-h-0 flex-1 overflow-hidden"
-        }
-      >
+      <div className="min-h-0 flex-1 overflow-hidden">
         <MessageList
           messages={messages}
           typing={typing}
@@ -177,8 +172,8 @@ export default function ChatBox({
         />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 min-h-[8.75rem] overflow-hidden">
-        {canReply ? (
+      {canReply ? (
+        <div className="shrink-0 border-t border-border/60 bg-background">
           <ChatInput
             conversationId={conversationId}
             senderType={viewerSenderType}
@@ -189,8 +184,8 @@ export default function ChatBox({
             onSendComplete={onSendComplete}
             onPreviewUpdate={onPreviewUpdate}
           />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

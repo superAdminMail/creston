@@ -60,8 +60,8 @@ export default function ChatHeader({
   })();
 
   return (
-    <div className="sticky top-0 z-10 border-b bg-background text-white">
-      <div className="flex items-center gap-3 px-4 py-1">
+    <div className="flex h-full min-h-0 items-center bg-background text-white">
+      <div className="flex w-full items-center gap-3 px-4 py-3">
         {showMenuButton && (
           <button
             type="button"

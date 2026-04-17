@@ -1,10 +1,10 @@
 "use client";
 
+import { useRef, useEffect, useMemo, useState } from "react";
 import { ChatMessage } from "@/lib/types/chat.types";
 import { SenderType } from "@/generated/prisma/client";
 import MessageBubble from "./MessageBubble";
 import TypingIndicator from "./TypingIndicator";
-import { useRef, useEffect, useMemo, useState } from "react";
 
 type Props = {
   messages: ChatMessage[];
@@ -13,7 +13,32 @@ type Props = {
 };
 
 function isOwnMessage(message: ChatMessage, viewerSenderType?: SenderType) {
-  return message.senderType === (viewerSenderType ?? "USER");
+  return message.senderType === (viewerSenderType ?? SenderType.USER);
+}
+
+function formatDateLabel(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+
+  const toYmd = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate(),
+    ).padStart(2, "0")}`;
+
+  const today = toYmd(now);
+  const yesterday = toYmd(new Date(now.getTime() - 86_400_000));
+  const current = toYmd(date);
+
+  if (current === today) return "Today";
+  if (current === yesterday) return "Yesterday";
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
+  });
 }
 
 export default function MessageList({
@@ -23,68 +48,80 @@ export default function MessageList({
 }: Props) {
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const knownIdsRef = useRef(new Set(messages.map((m) => m.id)));
+  const knownIdsRef = useRef(new Set(messages.map((message) => message.id)));
   const [newCount, setNewCount] = useState(0);
 
-  const isAtBottom = () => {
+  const isNearBottom = () => {
     const el = listRef.current;
     if (!el) return true;
-    const threshold = 32;
+
+    const threshold = 72;
     return el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
   };
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-    bottomRef.current?.scrollIntoView({ behavior });
-  };
-
-  const formatDateLabel = (value: string) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    const now = new Date();
-    const toYmd = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-        d.getDate(),
-      ).padStart(2, "0")}`;
-    const today = toYmd(now);
-    const yesterday = toYmd(new Date(now.getTime() - 86_400_000));
-    const current = toYmd(date);
-    if (current === today) return "Today";
-    if (current === yesterday) return "Yesterday";
-    return current;
+    bottomRef.current?.scrollIntoView({
+      behavior,
+      block: "end",
+    });
   };
 
   const items = useMemo(() => {
-    const out: Array<
+    const output: Array<
       | { type: "date"; key: string; label: string }
-      | { type: "msg"; key: string; message: ChatMessage }
+      | { type: "message"; key: string; message: ChatMessage }
     > = [];
+
     let lastLabel = "";
+
     for (const message of messages) {
       const label = formatDateLabel(message.createdAt);
+
       if (label && label !== lastLabel) {
-        out.push({ type: "date", key: `date-${label}`, label });
+        output.push({
+          type: "date",
+          key: `date-${label}`,
+          label,
+        });
         lastLabel = label;
       }
-      out.push({ type: "msg", key: message.id, message });
+
+      output.push({
+        type: "message",
+        key: message.id,
+        message,
+      });
     }
-    return out;
+
+    return output;
   }, [messages]);
 
   useEffect(() => {
-    if (isAtBottom()) {
-      scrollToBottom("smooth");
+    const knownIds = knownIdsRef.current;
+    const hasNewForeignMessage = messages.some(
+      (message) =>
+        !knownIds.has(message.id) && !isOwnMessage(message, viewerSenderType),
+    );
+
+    const hasNewOwnMessage = messages.some(
+      (message) =>
+        !knownIds.has(message.id) && isOwnMessage(message, viewerSenderType),
+    );
+
+    if (hasNewOwnMessage || isNearBottom()) {
+      scrollToBottom(hasNewOwnMessage ? "smooth" : "auto");
       queueMicrotask(() => setNewCount(0));
-    } else {
-      const knownIds = knownIdsRef.current;
+    } else if (hasNewForeignMessage) {
       const incomingCount = messages.reduce((count, message) => {
         if (knownIds.has(message.id)) return count;
-        return isOwnMessage(message, viewerSenderType)
-          ? count
-          : count + 1;
+        if (isOwnMessage(message, viewerSenderType)) return count;
+        return count + 1;
       }, 0);
 
       if (incomingCount > 0) {
-        queueMicrotask(() => setNewCount((count) => count + incomingCount));
+        queueMicrotask(() =>
+          setNewCount((prev) => prev + incomingCount),
+        );
       }
     }
 
@@ -92,26 +129,37 @@ export default function MessageList({
   }, [messages, viewerSenderType]);
 
   useEffect(() => {
+    if (typing && isNearBottom()) {
+      scrollToBottom("smooth");
+    }
+  }, [typing]);
+
+  useEffect(() => {
     const el = listRef.current;
     if (!el) return;
-    const onScroll = () => {
-      if (isAtBottom()) {
+
+    const handleScroll = () => {
+      if (isNearBottom()) {
         setNewCount(0);
       }
     };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <main className="relative flex-1 min-h-0 overflow-y-auto" ref={listRef}>
-      <div className="px-4 pt-3 pb-2">
-        <div className="flex flex-col space-y-3">
+    <div className="relative h-full min-h-0">
+      <div
+        ref={listRef}
+        className="h-full overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-gutter:stable]"
+      >
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
           {items.map((item) =>
             item.type === "date" ? (
               <div
                 key={item.key}
-                className="self-center rounded-full border bg-background px-3 py-1 text-[11px] text-muted-foreground"
+                className="sticky top-3 z-10 mx-auto rounded-full border border-white/10 bg-background/85 px-3 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
               >
                 {item.label}
               </div>
@@ -124,22 +172,23 @@ export default function MessageList({
             ),
           )}
 
-          {typing && <TypingIndicator />}
-          <div ref={bottomRef} />
+          {typing ? <TypingIndicator /> : null}
+
+          <div ref={bottomRef} className="h-px w-full shrink-0" />
         </div>
       </div>
 
-      {newCount > 0 && (
-        <div className="sticky bottom-3 flex justify-center">
+      {newCount > 0 ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
           <button
             type="button"
             onClick={() => scrollToBottom("smooth")}
-            className="rounded-full bg-[var(--brand-blue)] px-3 py-1 text-xs font-medium text-white shadow-md"
+            className="pointer-events-auto rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]"
           >
             {newCount} new message{newCount > 1 ? "s" : ""}
           </button>
         </div>
-      )}
-    </main>
+      ) : null}
+    </div>
   );
 }

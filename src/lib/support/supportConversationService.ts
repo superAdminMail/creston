@@ -6,6 +6,7 @@ import {
   ConversationStatus,
   ConversationType,
   Prisma,
+  PrismaClient,
   SenderType,
   UserRole,
 } from "@/generated/prisma/client";
@@ -147,6 +148,13 @@ type ConversationThreadRecord = Prisma.ConversationGetPayload<{
   include: typeof conversationThreadInclude;
 }>;
 
+type SupportDbClient = Prisma.TransactionClient | PrismaClient;
+
+export type SupportConversationCreationResult = {
+  createdConversation: ConversationThreadRecord;
+  message: Awaited<ReturnType<typeof persistConversationMessage>>;
+};
+
 function getSupportActorRoleLabel(
   senderType: SenderType,
   role: UserRole | null | undefined,
@@ -230,7 +238,10 @@ export function getSupportIncomingSenderTypes(viewerRole: UserRole) {
   return getAllowedIncomingSenderTypes(viewerRole);
 }
 
-async function loadSenderDirectory(senderIds: string[]) {
+async function loadSenderDirectory(
+  senderIds: string[],
+  db: SupportDbClient = prisma,
+) {
   const uniqueIds = [...new Set(senderIds.filter(Boolean))];
 
   if (!uniqueIds.length) {
@@ -245,7 +256,7 @@ async function loadSenderDirectory(senderIds: string[]) {
     >();
   }
 
-  const users = await prisma.user.findMany({
+  const users = await db.user.findMany({
     where: {
       id: { in: uniqueIds },
     },
@@ -274,10 +285,11 @@ async function countUnreadMessages(
   conversationId: string,
   viewerRole: UserRole,
   lastReadAt: Date | null | undefined,
+  db: SupportDbClient = prisma,
 ) {
   const incomingSenderTypes = getAllowedIncomingSenderTypes(viewerRole);
 
-  return prisma.message.count({
+  return db.message.count({
     where: {
       conversationId,
       senderType: {
@@ -540,8 +552,11 @@ export async function getSupportConversationThread(input: {
   conversationId: string;
   viewerUserId: string;
   viewerRole: UserRole;
+  db?: SupportDbClient;
 }) {
-  const conversation = await prisma.conversation.findFirst({
+  const db = input.db ?? prisma;
+
+  const conversation = await db.conversation.findFirst({
     where: {
       id: input.conversationId,
       ...(isSupportStaffRole(input.viewerRole)
@@ -573,11 +588,13 @@ export async function getSupportConversationThread(input: {
     conversation.id,
     input.viewerRole,
     viewerMember?.lastReadAt ?? null,
+    db,
   );
   const senderDirectory = await loadSenderDirectory(
     conversation.messages
       .map((message) => message.senderId)
       .filter((senderId): senderId is string => Boolean(senderId)),
+    db,
   );
   const preview = buildPreview(
     conversation,
@@ -728,54 +745,59 @@ async function ensureConversationMember(input: {
   });
 }
 
-export async function createSupportConversation(input: {
-  creatorUserId?: string | null;
-  contactName?: string | null;
-  contactEmail?: string | null;
-  subject?: string | null;
-  message: string;
-  type?: ConversationType;
-  source?: string | null;
-  priority?: ConversationPriority;
-}) {
+async function createSupportConversationRecord(
+  db: SupportDbClient,
+  input: {
+    creatorUserId?: string | null;
+    contactName?: string | null;
+    contactEmail?: string | null;
+    subject?: string | null;
+    message: string;
+    type?: ConversationType;
+    source?: string | null;
+    priority?: ConversationPriority;
+  },
+): Promise<SupportConversationCreationResult> {
   const cleanMessage = input.message.trim();
   if (!cleanMessage) {
     throw new Error("Message cannot be empty");
   }
 
-  const created = await prisma.$transaction(async (tx) => {
-    const createdConversation = await tx.conversation.create({
-      data: {
-        type: input.type ?? ConversationType.SUPPORT,
-        status: ConversationStatus.OPEN,
-        subject: input.subject?.trim() || "Support Ticket",
-        userId: input.creatorUserId ?? null,
-        contactName: input.contactName ?? null,
-        contactEmail: input.contactEmail ?? null,
-        source: input.source ?? "support",
-        priority: input.priority ?? ConversationPriority.NORMAL,
-        members: input.creatorUserId
-          ? {
-              create: {
-                userId: input.creatorUserId,
-                role: ConversationRole.USER,
-              },
-            }
-          : undefined,
-      },
-      include: conversationThreadInclude,
-    });
-
-    const message = await persistConversationMessage(tx, {
-      conversationId: createdConversation.id,
-      senderId: input.creatorUserId ?? null,
-      senderType: SenderType.USER,
-      content: cleanMessage,
-    });
-
-    return { createdConversation, message };
+  const createdConversation = await db.conversation.create({
+    data: {
+      type: input.type ?? ConversationType.SUPPORT,
+      status: ConversationStatus.OPEN,
+      subject: input.subject?.trim() || "Support Ticket",
+      userId: input.creatorUserId ?? null,
+      contactName: input.contactName ?? null,
+      contactEmail: input.contactEmail ?? null,
+      source: input.source ?? "support",
+      priority: input.priority ?? ConversationPriority.NORMAL,
+      members: input.creatorUserId
+        ? {
+            create: {
+              userId: input.creatorUserId,
+              role: ConversationRole.USER,
+            },
+          }
+        : undefined,
+    },
+    include: conversationThreadInclude,
   });
 
+  const message = await persistConversationMessage(db, {
+    conversationId: createdConversation.id,
+    senderId: input.creatorUserId ?? null,
+    senderType: SenderType.USER,
+    content: cleanMessage,
+  });
+
+  return { createdConversation, message };
+}
+
+export async function finalizeSupportConversationCreation(
+  created: SupportConversationCreationResult,
+) {
   await processConversationMessageAfterWrite(created.message, {
     publish: true,
   });
@@ -796,6 +818,55 @@ export async function createSupportConversation(input: {
   }).catch((error) => {
     console.error("Failed to notify support staff about ticket", error);
   });
+}
+
+export async function createSupportConversation(input: {
+  creatorUserId?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  subject?: string | null;
+  message: string;
+  type?: ConversationType;
+  source?: string | null;
+  priority?: ConversationPriority;
+  db: SupportDbClient;
+  skipPostCommit: true;
+}): Promise<SupportConversationCreationResult>;
+export async function createSupportConversation(input: {
+  creatorUserId?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  subject?: string | null;
+  message: string;
+  type?: ConversationType;
+  source?: string | null;
+  priority?: ConversationPriority;
+  db?: SupportDbClient;
+  skipPostCommit?: false | undefined;
+}): Promise<ConversationThreadRecord>;
+export async function createSupportConversation(input: {
+  creatorUserId?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  subject?: string | null;
+  message: string;
+  type?: ConversationType;
+  source?: string | null;
+  priority?: ConversationPriority;
+  db?: SupportDbClient;
+  skipPostCommit?: boolean;
+}): Promise<ConversationThreadRecord | SupportConversationCreationResult> {
+  const created = input.db
+    ? await createSupportConversationRecord(input.db, input)
+    : await prisma.$transaction(async (tx) =>
+        createSupportConversationRecord(tx, input),
+      );
+
+  if (input.skipPostCommit) {
+    return created;
+  }
+
+  await finalizeSupportConversationCreation(created);
 
   return created.createdConversation;
 }

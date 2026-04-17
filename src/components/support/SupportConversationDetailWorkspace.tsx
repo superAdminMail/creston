@@ -366,8 +366,8 @@ export default function SupportConversationDetailWorkspace({
         </section>
       ) : (
         <section className="flex min-h-0 flex-1 flex-col gap-6">
-          <Card className="flex min-h-0 flex-1 overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.02] text-white shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
-            <CardContent className="h-full p-0">
+          <Card className="h-[clamp(34rem,calc(100dvh-20rem),60rem)] overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.02] text-white shadow-[0_20px_50px_rgba(0,0,0,0.16)]">
+            <CardContent className="flex min-h-0 flex-1 flex-col p-0">
               <ChatBox
                 key={conversation.id}
                 conversationId={conversation.id}

@@ -2,9 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
+import { prisma } from "@/lib/prisma";
 import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
 import {
   createSupportConversation,
+  finalizeSupportConversationCreation,
   getSupportConversationThread,
 } from "@/lib/support/supportConversationService";
 import {
@@ -34,23 +36,36 @@ export async function createConversationAction({
     };
   }
 
-  const conversation = await createSupportConversation({
-    creatorUserId: userId,
-    subject: parsed.data.subject,
-    message: parsed.data.message,
-    type: "SUPPORT",
-    source: "dashboard-support",
+  const role = await getCurrentUserRole();
+
+  const { created, thread } = await prisma.$transaction(async (tx) => {
+    const created = await createSupportConversation({
+      creatorUserId: userId,
+      subject: parsed.data.subject,
+      message: parsed.data.message,
+      type: "SUPPORT",
+      source: "dashboard-support",
+      db: tx,
+      skipPostCommit: true,
+    });
+
+    const thread =
+      role && userId
+        ? await getSupportConversationThread({
+            conversationId: created.createdConversation.id,
+            viewerUserId: userId,
+            viewerRole: role,
+            db: tx,
+          })
+        : null;
+
+    return {
+      created,
+      thread,
+    };
   });
 
-  const role = await getCurrentUserRole();
-  const thread =
-    role && userId
-      ? await getSupportConversationThread({
-          conversationId: conversation.id,
-          viewerUserId: userId,
-          viewerRole: role,
-        })
-      : null;
+  await finalizeSupportConversationCreation(created);
 
   revalidatePath("/account/dashboard/user/support");
   revalidatePath("/account/dashboard/admin/support");
@@ -59,9 +74,9 @@ export async function createConversationAction({
     return {
       ok: true,
       conversation: {
-        id: conversation.id,
-        ticketId: conversation.id,
-        subject: conversation.subject,
+        id: created.createdConversation.id,
+        ticketId: created.createdConversation.id,
+        subject: created.createdConversation.subject,
         messages: [],
       },
     };
