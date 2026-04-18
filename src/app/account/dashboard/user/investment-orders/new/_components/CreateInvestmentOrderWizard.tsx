@@ -161,6 +161,8 @@ export function CreateInvestmentOrderWizard({
     return (
       <CreateInvestmentOrderEmptyState
         hasInvestorProfile
+        canCreateInvestmentOrder={options.canCreateInvestmentOrder}
+        kycStatus={options.kycStatus}
         siteName={siteName}
       />
     );
