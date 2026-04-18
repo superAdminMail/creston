@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ import { SenderType } from "@/generated/prisma/client";
 import { sendSupportMessageAction } from "@/actions/inbox/admin/sendSupportMessageAction";
 import { sendMessageAction } from "@/actions/inbox/sendMessageAction";
 import { deleteConversationAction } from "@/actions/inbox/deleteConversationAction";
+import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
 import {
   getSupportPriorityLabel,
   getSupportRoleLabel,
@@ -57,6 +58,8 @@ export default function SupportConversationDetailWorkspace({
   conversation,
 }: Props) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const isStaffView = mode === "staff";
   const backPath = isStaffView
     ? "/account/dashboard/admin/support"
@@ -64,6 +67,21 @@ export default function SupportConversationDetailWorkspace({
 
   const sendAction = isStaffView ? sendSupportMessageAction : sendMessageAction;
   const canDeleteConversation = !isStaffView;
+  const handleDeleteConversation = () => {
+    startTransition(async () => {
+      const result = await deleteConversationAction(conversation.id);
+
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Conversation deleted");
+      setDeleteOpen(false);
+      router.push(backPath);
+      router.refresh();
+    });
+  };
 
   const senderLookup = useMemo(() => {
     const lookup: Record<
@@ -162,27 +180,7 @@ export default function SupportConversationDetailWorkspace({
                   <Button
                     type="button"
                     variant="ghost"
-                    onClick={() => {
-                      const confirmed = window.confirm(
-                        "Delete this support conversation?",
-                      );
-                      if (!confirmed) return;
-
-                      void (async () => {
-                        const result = await deleteConversationAction(
-                          conversation.id,
-                        );
-
-                        if (result?.error) {
-                          toast.error(result.error);
-                          return;
-                        }
-
-                        toast.success("Conversation deleted");
-                        router.push("/account/dashboard/user/support");
-                        router.refresh();
-                      })();
-                    }}
+                    onClick={() => setDeleteOpen(true)}
                     className="h-9 rounded-full border border-red-500/20 bg-red-500/10 px-4 text-sm text-red-200 hover:bg-red-500/15 hover:text-white"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -397,6 +395,16 @@ export default function SupportConversationDetailWorkspace({
           </Card>
         </section>
       )}
+
+      {!isStaffView ? (
+        <SupportDeleteConversationDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onConfirm={handleDeleteConversation}
+          isPending={isPending}
+          conversationCount={1}
+        />
+      ) : null}
     </div>
   );
 }
