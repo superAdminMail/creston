@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { UploadDropzone } from "@/utils/uploadthing";
+import { UploadButton } from "@/utils/uploadthing";
 import { ChatMessage } from "@/lib/types/chat.types";
 import {
   getChatMessagePreviewText,
@@ -67,7 +67,7 @@ type Attachment = {
 export function ChatInput({
   conversationId,
   senderType = SenderType.USER,
-  placeholder = "Type a message...",
+  placeholder = "Type....",
   sendLabel = "Send",
   selfUserId = null,
   senderLookup,
@@ -277,31 +277,22 @@ export function ChatInput({
               </Button>
             </div>
             <DialogDescription className="text-sm leading-6 text-slate-400">
-              Drag and drop an image here, or browse to upload it into this
-              conversation.
+              Upload payment receipts or account screenshots for a faster
+              review.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
-            <UploadDropzone
+          <div className="space-y-4 rounded-[1.75rem] border border-dashed border-sky-400/25 bg-white/[0.03] p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-white">Image upload</p>
+              <p className="text-xs leading-5 text-slate-400">
+                PNG, JPG, and WEBP up to 8MB.
+              </p>
+            </div>
+
+            <UploadButton
               endpoint="conversationImage"
-              className="ut-label:block ut-button:hidden ut-allowed-content:block"
-              appearance={{
-                container:
-                  "rounded-[1.75rem] border border-dashed border-sky-400/25 bg-white/[0.03] p-4",
-                uploadIcon:
-                  "mx-auto h-12 w-12 rounded-2xl border border-sky-400/20 bg-sky-500/10 p-3 text-sky-200",
-                label: "mt-3 text-center text-sm font-medium text-white",
-                allowedContent:
-                  "mt-2 text-center text-xs leading-5 text-slate-400",
-                button:
-                  "mx-auto mt-4 inline-flex h-10 items-center justify-center rounded-full border border-white/10 bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(2,6,23,0.42)] transition hover:-translate-y-0.5 hover:bg-slate-800",
-              }}
-              content={{
-                label: () => "Drop image to upload",
-                allowedContent: () => "PNG, JPG, WEBP up to 8MB",
-                button: () => "Browse files",
-              }}
+              className="ut-button:mx-auto ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-white/10 ut-button:bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-white ut-button:shadow-[0_12px_28px_rgba(2,6,23,0.42)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-800 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70"
               onClientUploadComplete={async (res) => {
                 try {
                   const file = res?.[0];

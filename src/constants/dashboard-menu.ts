@@ -505,19 +505,14 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/super-admin/audit-logs",
           icon: ScrollText,
         },
-        {
-          name: "KYC Documents",
-          href: "/account/dashboard/super-admin/kyc-documents",
-          icon: ShieldCheck,
-        },
       ],
     },
     {
       title: "Communication",
       links: [
         {
-          name: "Support Center",
-          href: "/account/dashboard/user/support",
+          name: "Support Inbox",
+          href: "/account/dashboard/super-admin/support",
           icon: LifeBuoy,
         },
       ],

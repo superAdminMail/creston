@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
 import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
 import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import { UserRole } from "@/generated/prisma/client";
 
 function formatNotificationTime(value: string) {
   return new Date(value).toLocaleString(undefined, {
@@ -25,6 +27,7 @@ export default async function NotificationDetailsPage({
   params: Promise<{ notificationId: string }>;
 }) {
   const userId = await getCurrentUserId();
+  const role = await getCurrentUserRole();
 
   if (!userId) {
     redirect("/auth/login");
@@ -50,6 +53,24 @@ export default async function NotificationDetailsPage({
   }
 
   const dto = toNotificationDto(notification);
+  const metadata = (dto.metadata ?? {}) as Record<string, unknown>;
+  const supportConversationId =
+    typeof metadata.conversationId === "string"
+      ? metadata.conversationId
+      : null;
+  const isSupportNotification =
+    metadata.kind === "support_ticket" || metadata.kind === "support_reply";
+  const supportBasePath =
+    role === UserRole.SUPER_ADMIN
+      ? "/account/dashboard/super-admin/support"
+      : role === UserRole.ADMIN
+        ? "/account/dashboard/admin/support"
+        : "/account/dashboard/user/support";
+  const supportLink =
+    isSupportNotification && supportConversationId
+      ? `${supportBasePath}?conversation=${supportConversationId}`
+      : null;
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
       <div className="flex items-center justify-between gap-3">
@@ -60,9 +81,9 @@ export default async function NotificationDetailsPage({
           </Link>
         </Button>
 
-        {dto.link ? (
+        {supportLink || dto.link ? (
           <Button asChild variant="outline" className="rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
-            <Link href={dto.link}>
+            <Link href={supportLink ?? dto.link!}>
               Open linked page
               <ExternalLink className="h-4 w-4" />
             </Link>

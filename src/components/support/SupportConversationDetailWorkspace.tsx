@@ -103,6 +103,12 @@ export default function SupportConversationDetailWorkspace({
     return lookup;
   }, [conversation]);
 
+  const userSubtitle = conversation.assignedTo?.name
+    ? `Support agent: ${conversation.assignedTo.name}`
+    : conversation.lastResponder?.name
+      ? `Support agent: ${conversation.lastResponder.name}`
+      : "Support agent";
+
   return (
     <div
       className={
@@ -373,7 +379,7 @@ export default function SupportConversationDetailWorkspace({
                 conversationId={conversation.id}
                 initialMessages={conversation.messages}
                 title={conversation.subject}
-                subtitle="Your private support thread"
+                subtitle={userSubtitle}
                 forceOnline={false}
                 presenceTargetRoles={["ADMIN", "MODERATOR", "SUPER_ADMIN"]}
                 viewerSenderType={SenderType.USER}

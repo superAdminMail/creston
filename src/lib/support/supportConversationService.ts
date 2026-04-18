@@ -1023,13 +1023,33 @@ export async function deleteSupportConversation(input: {
   conversationId: string;
   viewerRole: UserRole;
 }) {
+  const result = await deleteSupportConversations({
+    conversationIds: [input.conversationId],
+    viewerRole: input.viewerRole,
+  });
+
+  return { success: true, deletedCount: result.deletedCount };
+}
+
+export async function deleteSupportConversations(input: {
+  conversationIds: string[];
+  viewerRole: UserRole;
+}) {
   if (input.viewerRole !== UserRole.SUPER_ADMIN) {
     throw new Error("Not allowed");
   }
 
-  const conversation = await prisma.conversation.findFirst({
+  const uniqueConversationIds = [
+    ...new Set(input.conversationIds.map((conversationId) => conversationId.trim()).filter(Boolean)),
+  ];
+
+  if (!uniqueConversationIds.length) {
+    throw new Error("No conversations selected");
+  }
+
+  const conversations = await prisma.conversation.findMany({
     where: {
-      id: input.conversationId,
+      id: { in: uniqueConversationIds },
       type: { in: [...SUPPORT_CONVERSATION_TYPES] },
     },
     select: {
@@ -1037,23 +1057,25 @@ export async function deleteSupportConversation(input: {
     },
   });
 
-  if (!conversation) {
+  if (!conversations.length) {
     throw new Error("Conversation not found");
   }
 
+  const conversationIds = conversations.map((conversation) => conversation.id);
+
   await prisma.$transaction([
     prisma.message.deleteMany({
-      where: { conversationId: conversation.id },
+      where: { conversationId: { in: conversationIds } },
     }),
     prisma.conversationMember.deleteMany({
-      where: { conversationId: conversation.id },
+      where: { conversationId: { in: conversationIds } },
     }),
-    prisma.conversation.delete({
-      where: { id: conversation.id },
+    prisma.conversation.deleteMany({
+      where: { id: { in: conversationIds } },
     }),
   ]);
 
-  return { success: true };
+  return { success: true, deletedCount: conversationIds.length };
 }
 
 export async function markSupportConversationRead(input: {
@@ -1142,27 +1164,35 @@ async function notifySupportStaffOfTicket(conversation: {
     },
     select: {
       id: true,
+      role: true,
     },
   });
 
   await Promise.all(
     staff.map((user) =>
-      createRealtimeNotification({
-        userId: user.id,
-        event: "SYSTEM",
-        title: "New support ticket",
-        message: `${conversation.openedBy.name}: ${conversation.subject}`,
-        link: `/account/dashboard/admin/support?conversation=${conversation.id}`,
-        key: `support-ticket:${conversation.id}:${user.id}`,
-        metadata: {
-          kind: "support_ticket",
-          conversationId: conversation.id,
-          ticketId: conversation.ticketId,
-          subject: conversation.subject,
-          openedBy: conversation.openedBy.name,
-          priority: conversation.priority,
-        },
-      }),
+      {
+        const supportPath =
+          user.role === UserRole.SUPER_ADMIN
+            ? "/account/dashboard/super-admin/support"
+            : "/account/dashboard/admin/support";
+
+        return createRealtimeNotification({
+          userId: user.id,
+          event: "SYSTEM",
+          title: "New support ticket",
+          message: `${conversation.openedBy.name}: ${conversation.subject}`,
+          link: `${supportPath}?conversation=${conversation.id}`,
+          key: `support-ticket:${conversation.id}:${user.id}`,
+          metadata: {
+            kind: "support_ticket",
+            conversationId: conversation.id,
+            ticketId: conversation.ticketId,
+            subject: conversation.subject,
+            openedBy: conversation.openedBy.name,
+            priority: conversation.priority,
+          },
+        });
+      },
     ),
   );
 }

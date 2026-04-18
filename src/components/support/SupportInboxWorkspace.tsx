@@ -17,6 +17,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -47,13 +48,15 @@ import {
   type SupportInboxSort,
 } from "@/lib/support/supportConversationView";
 import { assignSupportConversationToMeAction } from "@/actions/inbox/admin/assignSupportConversationToMeAction";
-import { deleteSupportConversationAction } from "@/actions/inbox/admin/deleteSupportConversationAction";
+import { deleteSupportConversationsAction } from "@/actions/inbox/admin/deleteSupportConversationsAction";
+import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
 
 type Props = {
   mode: SupportInboxMode;
   viewerId: string;
   viewerRole: UserRole;
   initialConversations: SupportConversationPreview[];
+  detailBasePath?: string;
 };
 
 type FilterOption = {
@@ -167,6 +170,7 @@ export default function SupportInboxWorkspace({
   viewerId,
   viewerRole,
   initialConversations,
+  detailBasePath,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -176,6 +180,13 @@ export default function SupportInboxWorkspace({
   const [filter, setFilter] = useState<SupportInboxFilter>("all");
   const [sort, setSort] = useState<SupportInboxSort>("latest");
   const [createOpen, setCreateOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConversationIds, setDeleteConversationIds] = useState<
+    string[] | null
+  >(null);
+  const [selectedConversationIds, setSelectedConversationIds] = useState<
+    string[]
+  >([]);
 
   const isStaffView = mode === "staff";
   const filters = isStaffView ? ADMIN_FILTERS : USER_FILTERS;
@@ -183,10 +194,13 @@ export default function SupportInboxWorkspace({
     isStaffView &&
     (viewerRole === UserRole.ADMIN || viewerRole === UserRole.SUPER_ADMIN);
   const canDeleteTickets = isStaffView && viewerRole === UserRole.SUPER_ADMIN;
+  const selectedCount = selectedConversationIds.length;
   const detailPath = (conversationId: string) =>
-    isStaffView
-      ? `/account/dashboard/admin/support/${conversationId}`
-      : `/account/dashboard/user/support/${conversationId}`;
+    detailBasePath
+      ? `${detailBasePath}/${conversationId}`
+      : isStaffView
+        ? `/account/dashboard/admin/support/${conversationId}`
+        : `/account/dashboard/user/support/${conversationId}`;
 
   const filteredConversations = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -259,6 +273,22 @@ export default function SupportInboxWorkspace({
     };
   }, [conversations]);
 
+  const visibleConversationIds = useMemo(
+    () => filteredConversations.map((ticket) => ticket.id),
+    [filteredConversations],
+  );
+
+  const allVisibleSelected =
+    visibleConversationIds.length > 0 &&
+    visibleConversationIds.every((conversationId) =>
+      selectedConversationIds.includes(conversationId),
+    );
+
+  const someVisibleSelected =
+    visibleConversationIds.some((conversationId) =>
+      selectedConversationIds.includes(conversationId),
+    ) && !allVisibleSelected;
+
   const handleSelect = (conversationId: string) => {
     router.push(detailPath(conversationId));
   };
@@ -294,25 +324,61 @@ export default function SupportInboxWorkspace({
   };
 
   const handleDelete = (conversationId: string) => {
-    const confirmed = window.confirm(
-      "Delete this support conversation permanently?",
-    );
+    setDeleteConversationIds([conversationId]);
+    setDeleteOpen(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = () => {
+    if (!deleteConversationIds?.length) return;
 
     startTransition(async () => {
-      const response = await deleteSupportConversationAction(conversationId);
+      const conversationIds = deleteConversationIds;
+      const response = await deleteSupportConversationsAction(conversationIds);
       if (response?.error) {
         toast.error(response.error);
         return;
       }
 
       setConversations((prev) =>
-        prev.filter((ticket) => ticket.id !== conversationId),
+        prev.filter((ticket) => !conversationIds.includes(ticket.id)),
       );
 
-      toast.success("Conversation deleted");
+      const deletedCount = response?.deletedCount ?? conversationIds.length;
+      toast.success(
+        deletedCount > 1
+          ? `${deletedCount} support conversations deleted`
+          : "Conversation deleted",
+      );
+      setDeleteOpen(false);
+      setDeleteConversationIds(null);
+      setSelectedConversationIds((prev) =>
+        prev.filter((conversationId) => !conversationIds.includes(conversationId)),
+      );
     });
+  };
+
+  const toggleConversationSelection = (conversationId: string) => {
+    setSelectedConversationIds((prev) =>
+      prev.includes(conversationId)
+        ? prev.filter((id) => id !== conversationId)
+        : [...prev, conversationId],
+    );
+  };
+
+  const toggleAllVisibleSelection = () => {
+    setSelectedConversationIds((prev) =>
+      allVisibleSelected
+        ? prev.filter((conversationId) => !visibleConversationIds.includes(conversationId))
+        : Array.from(new Set([...prev, ...visibleConversationIds])),
+    );
+  };
+
+  const clearSelection = () => setSelectedConversationIds([]);
+
+  const handleBatchDelete = () => {
+    if (!selectedConversationIds.length) return;
+    setDeleteConversationIds(selectedConversationIds);
+    setDeleteOpen(true);
   };
 
   const handleCreated = (conversation: NewConversation) => {
@@ -336,12 +402,16 @@ export default function SupportInboxWorkspace({
             <div>
               <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
                 {isStaffView
-                  ? "Customer support tickets"
+                  ? viewerRole === UserRole.SUPER_ADMIN
+                    ? "Executive support tickets"
+                    : "Customer support tickets"
                   : "My support tickets"}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
                 {isStaffView
-                  ? "Track pending requests, assignment, and unread customer replies in one place."
+                  ? viewerRole === UserRole.SUPER_ADMIN
+                    ? "Track every open request, ownership, and unread reply from the platform control seat."
+                    : "Track pending requests, assignment, and unread customer replies in one place."
                   : "Review replies from the support team and keep every conversation in one secure thread."}
               </p>
             </div>
@@ -395,6 +465,52 @@ export default function SupportInboxWorkspace({
               </div>
             </div>
 
+            {canDeleteTickets ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <Checkbox
+                    checked={
+                      allVisibleSelected
+                        ? true
+                        : someVisibleSelected
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={() => toggleAllVisibleSelection()}
+                  />
+                  <span>
+                    {selectedCount
+                      ? `${selectedCount} selected`
+                      : "Select tickets for batch delete"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedCount ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSelection}
+                      className="h-8 rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                    >
+                      Clear
+                    </Button>
+                  ) : null}
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!selectedCount}
+                    onClick={handleBatchDelete}
+                    className="h-8 rounded-full bg-red-600 px-3 text-xs text-white hover:bg-red-700"
+                  >
+                    Delete selected
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex flex-wrap gap-2">
               {filters.map((item) => (
                 <button
@@ -432,16 +548,36 @@ export default function SupportInboxWorkspace({
                     className={cn(
                       "group w-full rounded-[1.5rem] border p-4 text-left transition duration-300 hover:-translate-y-0.5",
                       "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]",
+                      selectedConversationIds.includes(ticket.id) &&
+                        "border-sky-400/30 bg-sky-500/10",
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
+                      <div className="flex items-start gap-3">
+                        {canDeleteTickets ? (
+                          <div
+                            onClick={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            role="presentation"
+                            className="mt-0.5"
+                          >
+                            <Checkbox
+                              checked={selectedConversationIds.includes(ticket.id)}
+                              onCheckedChange={() =>
+                                toggleConversationSelection(ticket.id)
+                              }
+                            />
+                          </div>
+                        ) : null}
+
+                        <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-white">
                           {ticket.subject}
                         </p>
                         <p className="mt-1 text-xs text-slate-400">
                           {ticket.ticketId} | {getPreviewSubtitle(ticket)}
                         </p>
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -682,6 +818,21 @@ export default function SupportInboxWorkspace({
             />
           </DialogContent>
         </Dialog>
+      ) : null}
+
+      {canDeleteTickets ? (
+        <SupportDeleteConversationDialog
+          open={deleteOpen}
+          onOpenChange={(open) => {
+            setDeleteOpen(open);
+            if (!open) {
+              setDeleteConversationIds(null);
+            }
+          }}
+          onConfirm={confirmDelete}
+          isPending={isPending}
+          conversationCount={deleteConversationIds?.length ?? 1}
+        />
       ) : null}
     </div>
   );

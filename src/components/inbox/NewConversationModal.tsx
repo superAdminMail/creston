@@ -8,38 +8,42 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 import { createConversationAction } from "@/actions/inbox/createConversationAction";
-
+import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldLabel,
   FieldContent,
   FieldError,
+  FieldLabel,
 } from "@/components/ui/field";
-
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-
 import {
   Select,
-  SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { NewConversation } from "@/lib/types/chat.types";
-import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";
 import { getSupportIssueTypeLabel } from "@/lib/support/supportConversationView";
+import { useCurrentUserQuery } from "@/stores/useCurrentUserQuery";
 import {
   supportFormSchema,
-  SupportFormValues,
+  type SupportFormValues,
 } from "@/lib/zodValidations/support";
 
 type Props = {
   onCreated: (conversation: NewConversation) => void;
   onClose: () => void;
 };
+
+const SUPPORT_ISSUE_OPTIONS = [
+  "payments",
+  "investment_inquiries",
+  "account_issues",
+  "technical_issues",
+  "other",
+] as const;
 
 export default function NewConversationModal({ onCreated, onClose }: Props) {
   const { data: user } = useCurrentUserQuery();
@@ -102,7 +106,6 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-6 text-white/[0.85]"
       >
-        {/* NAME */}
         <Controller
           control={form.control}
           name="fullName"
@@ -114,7 +117,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   placeholder="John Doe"
                   {...field}
-                  className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -123,7 +126,6 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
           )}
         />
 
-        {/* EMAIL */}
         <Controller
           control={form.control}
           name="email"
@@ -135,7 +137,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   type="email"
                   {...field}
-                  className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -144,7 +146,6 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
           )}
         />
 
-        {/* ISSUE TYPE */}
         <Controller
           control={form.control}
           name="issueType"
@@ -154,22 +155,16 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
 
               <FieldContent>
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="bg-white/[0.04] border-white/10">
+                  <SelectTrigger className="border-white/10 bg-white/[0.04]">
                     <SelectValue placeholder="Choose issue type" />
                   </SelectTrigger>
 
                   <SelectContent className="px-2 py-2">
-                    <SelectItem value="payments">Payments</SelectItem>
-                    <SelectItem value="investment_inquiries">
-                      Investment Inquiries
-                    </SelectItem>
-                    <SelectItem value="account_issues">
-                      Account Issues
-                    </SelectItem>
-                    <SelectItem value="technical_issues">
-                      Technical Issues
-                    </SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {SUPPORT_ISSUE_OPTIONS.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {getSupportIssueTypeLabel(value)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -179,7 +174,6 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
           )}
         />
 
-        {/* REFERENCE */}
         <Controller
           control={form.control}
           name="referenceId"
@@ -193,14 +187,13 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   placeholder={ISSUE_PLACEHOLDER[role] ?? "Enter reference ID"}
                   {...field}
-                  className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
                 />
               </FieldContent>
             </Field>
           )}
         />
 
-        {/* MESSAGE */}
         <Controller
           control={form.control}
           name="message"
@@ -212,7 +205,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Textarea
                   rows={5}
                   {...field}
-                  className="bg-white/[0.04] border-white/10 focus:border-blue-400"
+                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -221,7 +214,6 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
           )}
         />
 
-        {/* ACTIONS */}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="destructive" onClick={onClose}>
             Cancel
