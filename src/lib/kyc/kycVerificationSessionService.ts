@@ -108,7 +108,10 @@ export async function markKycVerificationSessionStatus(params: {
   if (changed && finalProfileStatus) {
     await prisma.investorProfile.update({
       where: { id: session.investorProfileId },
-      data: { kycStatus: finalProfileStatus },
+      data: {
+        kycStatus: finalProfileStatus,
+        isVerified: finalProfileStatus === "VERIFIED",
+      },
     });
   }
 

@@ -15,7 +15,7 @@ import {
   cancelAdminInvestmentOrder,
 } from "@/actions/admin/investment-order/cancelAdminInvestmentOrder";
 import {
-  rejectAdminInvestmentOrder,
+  deleteAdminInvestmentOrder as rejectAdminInvestmentOrder,
 } from "@/actions/admin/investment-order/deleteAdminInvestmentOrder";
 import { createInitialFormState, type FormActionState } from "@/lib/forms/actionState";
 import { Alert, AlertTitle } from "@/components/ui/alert";
