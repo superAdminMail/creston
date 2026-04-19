@@ -26,11 +26,37 @@ type CreateDiditSessionParams = {
   workflowId?: string;
 };
 
-type DiditCreateSessionResponse = {
-  session_id: string;
-  verification_url: string;
+type RawDiditCreateSessionResponse = {
+  session_id?: string;
+  sessionId?: string;
+  id?: string;
+  verification_url?: string;
+  verificationUrl?: string;
+  url?: string;
   status?: string;
   expires_at?: string;
+  expiresAt?: string;
+  data?: {
+    session_id?: string;
+    sessionId?: string;
+    id?: string;
+    verification_url?: string;
+    verificationUrl?: string;
+    url?: string;
+    status?: string;
+    expires_at?: string;
+    expiresAt?: string;
+  };
+  [key: string]: unknown;
+};
+
+export type DiditCreateSessionResponse = {
+  session_id: string;
+  verification_url: string;
+  url: string;
+  status?: string;
+  expires_at?: string;
+  raw: RawDiditCreateSessionResponse;
 };
 
 function getDiditBaseUrl() {
@@ -91,10 +117,7 @@ export function isDiditRetryableStatus(status: string | null | undefined) {
 }
 
 export function isDiditActiveStatus(status: string | null | undefined) {
-  return (
-    isDiditResumableStatus(status) ||
-    status === DIDIT_STATUSES.IN_REVIEW
-  );
+  return isDiditResumableStatus(status) || status === DIDIT_STATUSES.IN_REVIEW;
 }
 
 export function isDiditSessionStale(
@@ -106,6 +129,10 @@ export function isDiditSessionStale(
     updatedAt instanceof Date
       ? updatedAt.getTime()
       : new Date(updatedAt).getTime();
+
+  if (Number.isNaN(timestamp)) {
+    return false;
+  }
 
   const ageMs = Date.now() - timestamp;
   return ageMs > 30 * 60 * 1000;
@@ -142,7 +169,11 @@ function shortenWholeNumberFloats<T>(value: T): T {
     ) as T;
   }
 
-  if (typeof value === "number" && !Number.isInteger(value) && value % 1 === 0) {
+  if (
+    typeof value === "number" &&
+    !Number.isInteger(value) &&
+    value % 1 === 0
+  ) {
     return Math.trunc(value) as T;
   }
 
@@ -154,7 +185,10 @@ function verifyDiditJsonSignature(
   signature: string,
   secret: string,
 ) {
-  const canonicalJson = JSON.stringify(sortKeysDeep(shortenWholeNumberFloats(body)));
+  const canonicalJson = JSON.stringify(
+    sortKeysDeep(shortenWholeNumberFloats(body)),
+  );
+
   const expected = crypto
     .createHmac("sha256", secret)
     .update(canonicalJson, "utf8")
@@ -170,7 +204,11 @@ function verifyDiditJsonSignature(
   );
 }
 
-function verifyDiditRawSignature(rawBody: string, signature: string, secret: string) {
+function verifyDiditRawSignature(
+  rawBody: string,
+  signature: string,
+  secret: string,
+) {
   const expected = crypto
     .createHmac("sha256", secret)
     .update(rawBody)
@@ -184,6 +222,48 @@ function verifyDiditRawSignature(rawBody: string, signature: string, secret: str
     Buffer.from(expected, "utf8"),
     Buffer.from(signature, "utf8"),
   );
+}
+
+function normalizeDiditCreateSessionResponse(
+  payload: RawDiditCreateSessionResponse,
+): DiditCreateSessionResponse {
+  const sessionId =
+    payload.session_id ??
+    payload.sessionId ??
+    payload.id ??
+    payload.data?.session_id ??
+    payload.data?.sessionId ??
+    payload.data?.id;
+
+  const url =
+    payload.verification_url ??
+    payload.verificationUrl ??
+    payload.url ??
+    payload.data?.verification_url ??
+    payload.data?.verificationUrl ??
+    payload.data?.url;
+
+  const status = payload.status ?? payload.data?.status;
+  const expiresAt =
+    payload.expires_at ??
+    payload.expiresAt ??
+    payload.data?.expires_at ??
+    payload.data?.expiresAt;
+
+  if (!sessionId || !url) {
+    throw new Error(
+      `Didit session response is missing session_id or url: ${JSON.stringify(payload)}`,
+    );
+  }
+
+  return {
+    session_id: sessionId,
+    verification_url: url,
+    url,
+    status,
+    expires_at: expiresAt,
+    raw: payload,
+  };
 }
 
 export async function createDiditSession({
@@ -209,12 +289,24 @@ export async function createDiditSession({
     cache: "no-store",
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Didit create session failed: ${response.status} ${text}`);
+  const text = await response.text();
+
+  let parsed: RawDiditCreateSessionResponse;
+  try {
+    parsed = JSON.parse(text) as RawDiditCreateSessionResponse;
+  } catch {
+    throw new Error(
+      `Didit create session returned non-JSON response: ${response.status} ${text}`,
+    );
   }
 
-  return response.json();
+  if (!response.ok) {
+    throw new Error(
+      `Didit create session failed: ${response.status} ${JSON.stringify(parsed)}`,
+    );
+  }
+
+  return normalizeDiditCreateSessionResponse(parsed);
 }
 
 export async function retrieveDiditSession(sessionId: string) {
@@ -260,8 +352,14 @@ export function verifyDiditWebhookSignature(params: {
     throw new Error("Missing environment variable: DIDIT_WEBHOOK_SECRET");
   }
 
-  const { rawBody, parsedBody, signatureV2, signatureSimple, signatureRaw, timestamp } =
-    params;
+  const {
+    rawBody,
+    parsedBody,
+    signatureV2,
+    signatureSimple,
+    signatureRaw,
+    timestamp,
+  } = params;
 
   if (!timestamp) {
     return false;
@@ -277,7 +375,10 @@ export function verifyDiditWebhookSignature(params: {
     return false;
   }
 
-  if (signatureV2 && verifyDiditJsonSignature(parsedBody, signatureV2, secret)) {
+  if (
+    signatureV2 &&
+    verifyDiditJsonSignature(parsedBody, signatureV2, secret)
+  ) {
     return true;
   }
 

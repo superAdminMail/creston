@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
+import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -188,6 +189,15 @@ export default function InvestmentOrderPaymentClient({
           )}
         </div>
       )}
+
+      {order.status === "PENDING_PAYMENT" ? (
+        <div className="flex justify-end">
+          <CancelPendingInvestmentOrderButton
+            orderId={order.id}
+            className="w-full sm:w-auto"
+          />
+        </div>
+      ) : null}
 
       {showModal && (
         <PaymentProofModal

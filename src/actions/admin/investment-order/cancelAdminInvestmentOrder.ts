@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import {
   createErrorFormState,
@@ -10,6 +12,10 @@ import {
 import { prisma } from "@/lib/prisma";
 
 import { assertAdminInvestmentOrderAccess } from "./adminInvestmentOrder.shared";
+import {
+  getAdminInvestmentOrderNotificationContext,
+  notifyInvestorAboutAdminInvestmentOrderCancellation,
+} from "./adminInvestmentOrderNotifications";
 
 type FieldName = "orderId" | "reason" | "adminNotes";
 
@@ -33,12 +39,7 @@ export async function cancelAdminInvestmentOrder(
     });
   }
 
-  const existingOrder = await prisma.investmentOrder.findUnique({
-    where: { id: orderId },
-    select: {
-      status: true,
-    },
-  });
+  const existingOrder = await getAdminInvestmentOrderNotificationContext(orderId);
 
   if (!existingOrder) {
     return createErrorFormState("Investment order not found.");
@@ -63,6 +64,15 @@ export async function cancelAdminInvestmentOrder(
             : null,
       },
     });
+
+    await notifyInvestorAboutAdminInvestmentOrderCancellation(existingOrder);
+
+    revalidatePath("/account/dashboard/admin/investment-orders");
+    revalidatePath(`/account/dashboard/admin/investment-orders/${orderId}`);
+    revalidatePath("/account/dashboard/user/investment-orders");
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/payment`);
+    revalidatePath("/account/dashboard/notifications");
 
     return createSuccessFormState("Investment order cancelled successfully.");
   } catch (error) {

@@ -157,10 +157,17 @@ export function AdminInvestmentOrderDetailsClient({
                 {order.adminNotes || "No admin notes recorded for this order."}
               </div>
 
-              <h3 className="text-sm font-medium text-slate-200">Cancellation reason</h3>
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
-                {order.cancellationReason || "No cancellation reason recorded."}
-              </div>
+                <h3 className="text-sm font-medium text-slate-200">
+                  {order.status === "REJECTED"
+                    ? "Rejection reason"
+                    : "Cancellation reason"}
+                </h3>
+                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
+                  {order.cancellationReason ||
+                    (order.status === "REJECTED"
+                      ? "No rejection reason recorded."
+                      : "No cancellation reason recorded.")}
+                </div>
             </CardContent>
           </Card>
         </div>

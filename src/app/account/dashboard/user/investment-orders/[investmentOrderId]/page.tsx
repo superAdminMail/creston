@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 
 type DecimalLike = {
   toNumber(): number;
@@ -75,17 +76,26 @@ export default async function Page({ params }: PageProps) {
           </p>
         </div>
 
-        <Button
-          asChild
-          disabled={!canPay}
-          className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white"
-        >
-          <Link
-            href={`/account/dashboard/user/investment-orders/${order.id}/payment`}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button
+            asChild
+            disabled={!canPay}
+            className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white"
           >
-            Make Payment
-          </Link>
-        </Button>
+            <Link
+              href={`/account/dashboard/user/investment-orders/${order.id}/payment`}
+            >
+              Make Payment
+            </Link>
+          </Button>
+
+          {order.status === "PENDING_PAYMENT" ? (
+            <CancelPendingInvestmentOrderButton
+              orderId={order.id}
+              className="rounded-2xl"
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="flex items-center justify-between rounded-xl border p-4">

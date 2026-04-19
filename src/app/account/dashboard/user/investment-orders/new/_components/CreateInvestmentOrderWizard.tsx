@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Landmark, ShieldCheck, Wallet } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import { createInvestmentOrder } from "@/actions/investment-order/createInvestmentOrder";
 import { initialCreateInvestmentOrderActionState } from "@/actions/investment-order/createInvestmentOrder.state";
@@ -11,10 +11,10 @@ import type {
   InvestmentOrderCreationTierOption,
 } from "@/actions/investment-order/getInvestmentOrderCreationOptions";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { parseInvestmentOrderAmount } from "@/lib/zodValidations/investment-order";
-import { cn } from "@/lib/utils";
 import { CreateInvestmentOrderEmptyState } from "./CreateInvestmentOrderEmptyState";
 import { InvestmentAmountStep } from "./InvestmentAmountStep";
 import { InvestmentPlanStep } from "./InvestmentPlanStep";
@@ -73,20 +73,30 @@ export function CreateInvestmentOrderWizard({
     initialCreateInvestmentOrderActionState,
   );
   const [currentStep, setCurrentStep] = useState(0);
+  const firstInvestmentId = options.investments[0]?.id ?? null;
+  const firstInvestment = options.investments[0] ?? null;
+  const firstPlan = firstInvestment?.plans[0] ?? null;
+  const firstTier = firstPlan?.tiers[0] ?? null;
+  const hasReachedActiveUnpaidOrderLimit =
+    options.activeUnpaidOrdersCount >= 3;
+
   const [selectedInvestmentId, setSelectedInvestmentId] = useState<
     string | null
-  >(null);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
-  const [amount, setAmount] = useState("");
-
-  const firstInvestmentId = options.investments[0]?.id ?? null;
-  const effectiveSelectedInvestmentId =
-    options.investments.some(
-      (investment) => investment.id === selectedInvestmentId,
-    )
-      ? selectedInvestmentId
-      : firstInvestmentId;
+  >(firstInvestmentId);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(
+    firstPlan?.id ?? null,
+  );
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(
+    firstTier?.id ?? null,
+  );
+  const [amount, setAmount] = useState(
+    firstTier ? firstTier.minAmount.toFixed(2) : "",
+  );
+  const effectiveSelectedInvestmentId = options.investments.some(
+    (investment) => investment.id === selectedInvestmentId,
+  )
+    ? selectedInvestmentId
+    : firstInvestmentId;
 
   const selectedInvestment = useMemo(
     () =>
@@ -115,7 +125,8 @@ export function CreateInvestmentOrderWizard({
     : firstPlanId;
 
   const selectedPlan = useMemo(
-    () => matchingPlans.find((plan) => plan.id === effectiveSelectedPlanId) ?? null,
+    () =>
+      matchingPlans.find((plan) => plan.id === effectiveSelectedPlanId) ?? null,
     [effectiveSelectedPlanId, matchingPlans],
   );
 
@@ -168,24 +179,8 @@ export function CreateInvestmentOrderWizard({
     );
   }
 
-  const guidanceItems = [
-    {
-      title: "Investor profile ready",
-      body: "Keep your personal details current so order review and servicing stay smooth.",
-      icon: ShieldCheck,
-    },
-    {
-      title: "Tier-led order creation",
-      body: "Each investment plan has different tiers with specific requirements. Follow the steps to find the best fit for you.",
-      icon: Landmark,
-    },
-    {
-      title: "Access your account after order confirmation",
-      body: "This process creates an investment order. Once confirmed, you can access your investment account and track its performance.",
-      icon: Wallet,
-    },
-  ];
   const progressValue = ((effectiveStep + 1) / stepTitles.length) * 100;
+  const canAdvance = !hasReachedActiveUnpaidOrderLimit;
 
   return (
     <section
@@ -193,6 +188,17 @@ export function CreateInvestmentOrderWizard({
       className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(19rem,0.85fr)]"
     >
       <div className="space-y-6">
+        {hasReachedActiveUnpaidOrderLimit ? (
+          <Alert className="rounded-[1.75rem] border border-amber-400/20 bg-amber-400/10 text-amber-100">
+            <AlertTitle>Order limit reached</AlertTitle>
+            <AlertDescription className="text-amber-100/85">
+              You already have {options.activeUnpaidOrdersCount} active unpaid
+              orders. Please complete or cancel an existing order before
+              creating a new one.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {createdOrderId ? (
           <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
             <div className="flex items-start gap-3">
@@ -231,14 +237,13 @@ export function CreateInvestmentOrderWizard({
                 {Math.round(progressValue)}%
               </span>
             </div>
-
             <Progress
               value={progressValue}
               className="h-2 rounded-full bg-white/10"
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          {/* <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             {stepTitles.map((stepTitle, index) => {
               const isActive = index === effectiveStep;
               const isComplete = index < effectiveStep;
@@ -264,7 +269,7 @@ export function CreateInvestmentOrderWizard({
                 </div>
               );
             })}
-          </div>
+          </div> */}
         </section>
 
         <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
@@ -273,13 +278,22 @@ export function CreateInvestmentOrderWizard({
               options={options.investments}
               selectedInvestmentId={selectedInvestmentId}
               onSelect={(value) => {
+                const selectedInvestment =
+                  options.investments.find(
+                    (investment) => investment.id === value,
+                  ) ?? null;
+                const nextPlan = selectedInvestment?.plans[0] ?? null;
+                const nextTier = nextPlan?.tiers[0] ?? null;
+
                 setSelectedInvestmentId(value);
-                setSelectedPlanId(null);
-                setSelectedTierId(null);
-                setAmount("");
+                setSelectedPlanId(nextPlan?.id ?? null);
+                setSelectedTierId(nextTier?.id ?? null);
+                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
               }}
               onContinue={() => setCurrentStep(1)}
-              canContinue={Boolean(effectiveSelectedInvestmentId)}
+              canContinue={
+                Boolean(effectiveSelectedInvestmentId) && canAdvance
+              }
               featuredInvestment={featuredInvestment}
               siteName={siteName}
             />
@@ -290,13 +304,17 @@ export function CreateInvestmentOrderWizard({
               plans={matchingPlans}
               selectedPlanId={selectedPlanId}
               onSelect={(value) => {
+                const nextPlan =
+                  matchingPlans.find((plan) => plan.id === value) ?? null;
+                const nextTier = nextPlan?.tiers[0] ?? null;
+
                 setSelectedPlanId(value);
-                setSelectedTierId(null);
-                setAmount("");
+                setSelectedTierId(nextTier?.id ?? null);
+                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
               }}
               onBack={() => setCurrentStep(0)}
               onContinue={() => setCurrentStep(2)}
-              canContinue={Boolean(effectiveSelectedPlanId)}
+              canContinue={Boolean(effectiveSelectedPlanId) && canAdvance}
             />
           ) : null}
 
@@ -307,11 +325,14 @@ export function CreateInvestmentOrderWizard({
               selectedTierId={selectedTierId}
               onSelect={(value) => {
                 setSelectedTierId(value);
-                setAmount("");
+                const nextTier =
+                  selectedPlan.tiers.find((tier) => tier.id === value) ?? null;
+
+                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
               }}
               onBack={() => setCurrentStep(1)}
               onContinue={() => setCurrentStep(3)}
-              canContinue={Boolean(effectiveSelectedTierId)}
+              canContinue={Boolean(effectiveSelectedTierId) && canAdvance}
             />
           ) : null}
 
@@ -325,7 +346,7 @@ export function CreateInvestmentOrderWizard({
               onAmountChange={setAmount}
               onBack={() => setCurrentStep(2)}
               onContinue={() => setCurrentStep(4)}
-              canContinue={!amountError}
+              canContinue={!amountError && canAdvance}
             />
           ) : null}
 
@@ -343,13 +364,14 @@ export function CreateInvestmentOrderWizard({
               formAction={formAction}
               actionState={actionState}
               onBack={() => setCurrentStep(3)}
+              canSubmit={canAdvance}
             />
           ) : null}
         </section>
       </div>
 
       <div className="space-y-6">
-        <section className="glass-strong rounded-[2rem] p-6">
+        {/* <section className="glass-strong rounded-[2rem] p-6">
           <h2 className="text-lg font-semibold text-white">Order guidance</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
             Here&apos;s a few things to keep in mind when creating an order.
@@ -377,9 +399,9 @@ export function CreateInvestmentOrderWizard({
               );
             })}
           </div>
-        </section>
+        </section> */}
 
-        {selectedPlan ? (
+        {/* {selectedPlan ? (
           <section className="card-premium rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">Order details</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
@@ -444,7 +466,7 @@ export function CreateInvestmentOrderWizard({
               Select an investment and plan to populate this summary.
             </div>
           </section>
-        )}
+        )} */}
 
         {createdOrderId ? (
           <div className="flex justify-end">
@@ -452,10 +474,10 @@ export function CreateInvestmentOrderWizard({
               type="button"
               variant="outline"
               onClick={() => {
-                setSelectedInvestmentId(null);
-                setSelectedPlanId(null);
-                setSelectedTierId(null);
-                setAmount("");
+                setSelectedInvestmentId(firstInvestmentId);
+                setSelectedPlanId(firstPlan?.id ?? null);
+                setSelectedTierId(firstTier?.id ?? null);
+                setAmount(firstTier ? firstTier.minAmount.toFixed(2) : "");
                 setCurrentStep(0);
               }}
               className="btn-secondary rounded-xl px-5 py-3 text-sm font-medium"

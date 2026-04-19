@@ -116,14 +116,14 @@ export function DashboardNavbarClient({
 
           <Link
             href={dashboardHome}
-            className="flex min-w-0 items-center gap-3 rounded-[1.35rem] px-1.5 py-1 transition-colors hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
+            className="flex min-w-0 flex-none items-center gap-3 rounded-[1.35rem] px-1.5 py-1 transition-colors hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
               {siteLogoUrl ? (
                 <img
                   src={siteLogoUrl}
                   alt={`${siteName} logo`}
-                  className="h-9 w-9 rounded-2xl object-cover"
+                  className="h-9 w-9 shrink-0 rounded-2xl object-contain"
                 />
               ) : (
                 <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-900 dark:text-white">

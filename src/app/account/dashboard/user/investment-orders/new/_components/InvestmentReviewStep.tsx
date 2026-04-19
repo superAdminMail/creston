@@ -19,15 +19,16 @@ type InvestmentReviewStepProps = {
   formAction: (formData: FormData) => void;
   actionState: CreateInvestmentOrderActionState;
   onBack: () => void;
+  canSubmit: boolean;
 };
 
-function SubmitButton() {
+function SubmitButton({ canSubmit }: { canSubmit: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || !canSubmit}
       className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold"
     >
       {pending ? (
@@ -52,6 +53,7 @@ export function InvestmentReviewStep({
   formAction,
   actionState,
   onBack,
+  canSubmit,
 }: InvestmentReviewStepProps) {
   return (
     <form action={formAction} className="space-y-6">
@@ -177,7 +179,7 @@ export function InvestmentReviewStep({
           Back
         </Button>
 
-        <SubmitButton />
+        <SubmitButton canSubmit={canSubmit} />
       </div>
     </form>
   );

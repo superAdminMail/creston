@@ -64,7 +64,7 @@ export function UserInvestmentsList({
       {createdOrderId ? (
         <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
             <div>
               <p className="text-sm font-semibold text-white">
                 Investment order created successfully
@@ -88,7 +88,7 @@ export function UserInvestmentsList({
               Order overview
             </div>
             <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
-              Manage your investment orders with clarity
+              Investment Order Summary
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
               Track payment, confirmation, and completed order activity across

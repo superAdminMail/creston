@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
+import { InvestmentOrderStatus } from "@/generated/prisma";
 import {
   createErrorFormState,
   createSuccessFormState,
@@ -9,10 +12,14 @@ import {
 import { prisma } from "@/lib/prisma";
 
 import { assertAdminInvestmentOrderAccess } from "./adminInvestmentOrder.shared";
+import {
+  getAdminInvestmentOrderNotificationContext,
+  notifyInvestorAboutAdminInvestmentOrderRejection,
+} from "./adminInvestmentOrderNotifications";
 
 type FieldName = "orderId" | "reason" | "adminNotes";
 
-export async function deleteAdminInvestmentOrder(
+export async function rejectAdminInvestmentOrder(
   _previousState: FormActionState<FieldName>,
   formData: FormData,
 ): Promise<FormActionState<FieldName>> {
@@ -20,46 +27,61 @@ export async function deleteAdminInvestmentOrder(
 
   const orderId = formData.get("orderId");
   const reason = formData.get("reason");
+  const adminNotes = formData.get("adminNotes");
 
   if (!orderId || typeof orderId !== "string") {
     return createErrorFormState("Invalid investment order.");
   }
 
   if (!reason || typeof reason !== "string" || !reason.trim()) {
-    return createErrorFormState("Delete reason is required.", {
-      reason: ["Delete reason is required."],
+    return createErrorFormState("Rejection reason is required.", {
+      reason: ["Rejection reason is required."],
     });
   }
 
-  const existingOrder = await prisma.investmentOrder.findUnique({
-    where: { id: orderId },
-    select: {
-      status: true,
-    },
-  });
+  const existingOrder = await getAdminInvestmentOrderNotificationContext(orderId);
 
   if (!existingOrder) {
     return createErrorFormState("Investment order not found.");
   }
 
-  if (existingOrder.status !== "PENDING_PAYMENT") {
+  if (existingOrder.status !== InvestmentOrderStatus.PENDING_PAYMENT) {
     return createErrorFormState(
-      "Only pending payment investment orders can be deleted from this screen.",
+      "Only pending payment investment orders can be rejected from this screen.",
     );
   }
 
   try {
-    await prisma.investmentOrder.delete({
+    await prisma.investmentOrder.update({
       where: { id: orderId },
+      data: {
+        status: InvestmentOrderStatus.REJECTED,
+        cancellationReason: reason.trim(),
+        adminNotes:
+          typeof adminNotes === "string" && adminNotes.trim()
+            ? adminNotes.trim()
+            : null,
+      },
     });
 
-    return createSuccessFormState("Investment order deleted successfully.");
+    await notifyInvestorAboutAdminInvestmentOrderRejection(existingOrder);
+
+    revalidatePath("/account/dashboard/admin/investment-orders");
+    revalidatePath(`/account/dashboard/admin/investment-orders/${orderId}`);
+    revalidatePath("/account/dashboard/user/investment-orders");
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/payment`);
+    revalidatePath("/account/dashboard/notifications");
+
+    return createSuccessFormState("Investment order rejected successfully.");
   } catch (error) {
     return createErrorFormState(
       getFriendlyServerError(
         error,
-        "Unable to delete this investment order right now.",
+        "Unable to reject this investment order right now.",
       ),
     );
   }
 }
+
+export { rejectAdminInvestmentOrder as deleteAdminInvestmentOrder };

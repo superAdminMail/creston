@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { Prisma } from "@/generated/prisma";
@@ -7,10 +8,12 @@ import {
   InvestmentCatalogStatus,
   InvestmentOrderStatus,
   KycStatus,
+  UserRole,
 } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import {
   createInvestmentOrderSchema,
   parseInvestmentOrderAmount,
@@ -44,6 +47,129 @@ function createErrorState(
 function toNumber(value: { toNumber(): number } | number) {
   if (typeof value === "number") return value;
   return value.toNumber();
+}
+
+async function assertUserCanCreateInvestmentOrder(input: {
+  investorProfileId: string;
+}) {
+  const activeUnpaidOrders = await prisma.investmentOrder.count({
+    where: {
+      investorProfileId: input.investorProfileId,
+      status: {
+        in: [
+          InvestmentOrderStatus.PENDING_PAYMENT,
+          InvestmentOrderStatus.PARTIALLY_PAID,
+        ],
+      },
+    },
+  });
+
+  if (activeUnpaidOrders >= 3) {
+    return createErrorState(
+      "You already have 3 active unpaid orders. Please complete or cancel an existing order before creating a new one.",
+    );
+  }
+
+  return null;
+}
+
+async function notifyAdminsAboutInvestmentOrderCreated(input: {
+  orderId: string;
+  investorName: string;
+  investorId: string;
+  investmentName: string;
+  planName: string;
+  amount: number;
+  currency: string;
+}) {
+  const admins = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
+    },
+    select: {
+      id: true,
+      role: true,
+    },
+  });
+
+  if (!admins.length) {
+    return;
+  }
+
+  const link = `/account/dashboard/admin/investment-orders/${input.orderId}`;
+  const title = "New investment order";
+  const message = `${input.investorName} created ${
+    input.planName || input.investmentName || "an investment order"
+  } for ${formatCurrency(input.amount, input.currency)}.`;
+
+  const results = await Promise.allSettled(
+    admins.map((admin) =>
+      createRealtimeNotification({
+        userId: admin.id,
+        event: "INVESTMENT_ORDER",
+        title,
+        message,
+        link,
+        key: `investment-order-created:${input.orderId}:${admin.id}`,
+        metadata: {
+          kind: "investment_order_created",
+          orderId: input.orderId,
+          investorId: input.investorId,
+          investorName: input.investorName,
+          investmentName: input.investmentName,
+          planName: input.planName,
+          amount: input.amount,
+          currency: input.currency,
+          adminRole: admin.role,
+        },
+      }),
+    ),
+  );
+
+  const failed = results.filter((result) => result.status === "rejected");
+
+  if (failed.length > 0) {
+    console.error("Failed to notify some admins about investment order", {
+      orderId: input.orderId,
+      failedCount: failed.length,
+    });
+  }
+}
+
+async function notifyInvestorAboutInvestmentOrderCreated(input: {
+  orderId: string;
+  userId: string;
+  investorName: string;
+  investmentName: string;
+  planName: string;
+  amount: number;
+  currency: string;
+}) {
+  await createRealtimeNotification({
+    userId: input.userId,
+    event: "INVESTMENT_ORDER",
+    title: "Investment order created successfully",
+    message: `Your ${input.planName || input.investmentName || "investment"} order for ${formatCurrency(
+      input.amount,
+      input.currency,
+    )} has been created successfully.`,
+    link: `/account/dashboard/user/investment-orders/${input.orderId}`,
+    key: `investment-order-user-created:${input.orderId}:${input.userId}`,
+    metadata: {
+      kind: "investment_order_created",
+      orderId: input.orderId,
+      investorId: input.userId,
+      investorName: input.investorName,
+      investmentName: input.investmentName,
+      planName: input.planName,
+      amount: input.amount,
+      currency: input.currency,
+      audience: "USER",
+    },
+  });
 }
 
 export async function createInvestmentOrder(
@@ -110,13 +236,14 @@ export async function createInvestmentOrder(
   }
 
   const selectedPlan = await prisma.investmentPlan.findUnique({
-    where: {
-      id: parsedValues.data.investmentPlanId,
-    },
-    select: {
-      id: true,
-      currency: true,
-      isActive: true,
+      where: {
+        id: parsedValues.data.investmentPlanId,
+      },
+      select: {
+        id: true,
+        name: true,
+        currency: true,
+        isActive: true,
 
       investmentModel: true,
 
@@ -185,6 +312,14 @@ export async function createInvestmentOrder(
         investmentId: `Choose a plan from ${selectedPlan.investment.name} to continue.`,
       },
     );
+  }
+
+  const orderLimitError = await assertUserCanCreateInvestmentOrder({
+    investorProfileId: investorProfile.id,
+  });
+
+  if (orderLimitError) {
+    return orderLimitError;
   }
 
   const minAmount = toNumber(selectedTier.minAmount);
@@ -315,6 +450,31 @@ export async function createInvestmentOrder(
       id: true,
     },
   });
+
+  const investorName =
+    user.name?.trim() || user.email?.trim() || "Investor";
+
+  await notifyAdminsAboutInvestmentOrderCreated({
+    orderId: order.id,
+    investorName,
+    investorId: user.id,
+    investmentName: selectedPlan.investment.name,
+    planName: selectedPlan.name,
+    amount,
+    currency: selectedPlan.currency,
+  });
+
+  await notifyInvestorAboutInvestmentOrderCreated({
+    orderId: order.id,
+    userId: user.id,
+    investorName,
+    investmentName: selectedPlan.investment.name,
+    planName: selectedPlan.name,
+    amount,
+    currency: selectedPlan.currency,
+  });
+
+  revalidatePath("/account/dashboard/notifications");
 
   redirect(`/account/dashboard/user/investment-orders?created=${order.id}`);
 }

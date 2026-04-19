@@ -61,7 +61,7 @@ export function InvestmentPlanStep({
             >
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
+                  <div className="flex h-14 w-14 px-3 py-3 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
                     {plan.icon ? (
                       <Image
                         src={plan.icon.url}
@@ -71,7 +71,7 @@ export function InvestmentPlanStep({
                         className="h-8 w-8 object-contain"
                       />
                     ) : (
-                      <ShieldCheck className="h-5 w-5 text-blue-300" />
+                      <ShieldCheck className="h-5 w-5 shrink-0 text-blue-300" />
                     )}
                   </div>
 

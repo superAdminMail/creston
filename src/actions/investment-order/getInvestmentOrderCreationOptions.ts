@@ -73,6 +73,7 @@ export type InvestmentOrderCreationOptionsData = {
   hasInvestorProfile: boolean;
   kycStatus: InvestmentOrderCreationKycStatus | null;
   canCreateInvestmentOrder: boolean;
+  activeUnpaidOrdersCount: number;
   totalActiveInvestments: number;
   totalActivePlans: number;
   totalActiveTiers: number;
@@ -119,12 +120,22 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       hasInvestorProfile: false,
       kycStatus: null,
       canCreateInvestmentOrder: false,
+      activeUnpaidOrdersCount: 0,
       totalActiveInvestments: 0,
       totalActivePlans: 0,
       totalActiveTiers: 0,
       investments: [],
     };
   }
+
+  const activeUnpaidOrdersCount = await prisma.investmentOrder.count({
+    where: {
+      investorProfileId: investorProfile.id,
+      status: {
+        in: ["PENDING_PAYMENT", "PARTIALLY_PAID"],
+      },
+    },
+  });
 
   const investments = await prisma.investment.findMany({
     where: {
@@ -263,6 +274,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
     canCreateInvestmentOrder:
       toInvestmentOrderCreationKycStatus(investorProfile.kycStatus) ===
       "VERIFIED",
+    activeUnpaidOrdersCount,
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
       (acc, inv) => acc + inv.plans.length,

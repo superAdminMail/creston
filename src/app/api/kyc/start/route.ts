@@ -48,6 +48,7 @@ export async function POST() {
     }
 
     const latestSession = await syncLatestKycSessionIfNeeded(profile.id);
+
     const refreshedProfile = await prisma.investorProfile.findUnique({
       where: { id: profile.id },
       select: {
@@ -55,6 +56,7 @@ export async function POST() {
         kycStatus: true,
       },
     });
+
     const latestSessionAgeAnchor =
       latestSession?.lastSyncedAt ?? latestSession?.updatedAt ?? null;
 
@@ -114,23 +116,17 @@ export async function POST() {
       callbackUrl,
     });
 
-    if (!diditSession.session_id || !diditSession.verification_url) {
-      throw new Error(
-        "Didit session response is missing session_id or verification_url",
-      );
-    }
-
     await createLocalKycVerificationSession({
       investorProfileId: profile.id,
       providerSessionId: diditSession.session_id,
-      sessionUrl: diditSession.verification_url,
+      sessionUrl: diditSession.url,
       callbackUrl,
       status: diditSession.status,
-      rawPayload: diditSession,
+      rawPayload: diditSession.raw,
     });
 
     return NextResponse.json({
-      url: diditSession.verification_url,
+      url: diditSession.url,
       reused: false,
     });
   } catch (error) {

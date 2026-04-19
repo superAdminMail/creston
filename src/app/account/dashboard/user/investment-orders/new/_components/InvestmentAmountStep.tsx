@@ -50,8 +50,8 @@ export function InvestmentAmountStep({
 
       <section className="card-premium rounded-[1.75rem] p-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-3xl border border-blue-400/15 bg-blue-400/10">
-            <Landmark className="h-5 w-5 text-blue-200" />
+          <div className="flex h-12 w-12 px-3 py-3 items-center justify-center rounded-3xl border border-blue-400/15 bg-blue-400/10">
+            <Landmark className="h-5 w-5 text-blue-200 shrink-0" />
           </div>
 
           <div className="min-w-0">

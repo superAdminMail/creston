@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, CircleAlert, Clock3, Wallet } from "lucide-react";
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
+import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 import type { UserInvestmentOrdersData } from "@/actions/investment-order/getUserInvestmentOrders";
@@ -148,15 +149,19 @@ export function UserInvestmentOrderCard({
           {order.status === InvestmentOrderStatus.CANCELLED ||
           order.status === InvestmentOrderStatus.REJECTED ? (
             <div className="grid gap-3 xl:grid-cols-2">
-              <div className="rounded-2xl border border-rose-400/15 bg-rose-400/8 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-rose-200/80">
-                  Cancellation note
-                </p>
-                <p className="mt-2 text-sm leading-6 text-rose-100">
-                  {order.cancellationReason ||
-                    "No cancellation reason was recorded."}
-                </p>
-              </div>
+                <div className="rounded-2xl border border-rose-400/15 bg-rose-400/8 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.14em] text-rose-200/80">
+                    {order.status === InvestmentOrderStatus.REJECTED
+                      ? "Rejection note"
+                      : "Cancellation note"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-rose-100">
+                    {order.cancellationReason ||
+                      (order.status === InvestmentOrderStatus.REJECTED
+                        ? "No rejection reason was recorded."
+                        : "No cancellation reason was recorded.")}
+                  </p>
+                </div>
 
               <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
@@ -179,6 +184,13 @@ export function UserInvestmentOrderCard({
             <ActionIcon className="h-4 w-4" />
             {order.primaryAction.label}
           </Link>
+
+          {order.status === InvestmentOrderStatus.PENDING_PAYMENT ? (
+            <CancelPendingInvestmentOrderButton
+              orderId={order.id}
+              className="w-full"
+            />
+          ) : null}
         </div>
       </div>
     </article>

@@ -15,7 +15,7 @@ import {
   cancelAdminInvestmentOrder,
 } from "@/actions/admin/investment-order/cancelAdminInvestmentOrder";
 import {
-  deleteAdminInvestmentOrder,
+  rejectAdminInvestmentOrder,
 } from "@/actions/admin/investment-order/deleteAdminInvestmentOrder";
 import { createInitialFormState, type FormActionState } from "@/lib/forms/actionState";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -99,7 +99,7 @@ function OrderActionDialog({
   reasonPlaceholder: string;
   adminNotesPlaceholder: string;
   destructive?: boolean;
-  action: typeof deleteAdminInvestmentOrder | typeof cancelAdminInvestmentOrder;
+    action: typeof rejectAdminInvestmentOrder | typeof cancelAdminInvestmentOrder;
   initialState: FormActionState<OrderActionFieldName>;
   icon: ReactNode;
 }) {
@@ -110,8 +110,12 @@ function OrderActionDialog({
 
   useEffect(() => {
     if (state.status === "success") {
-      setOpen(false);
-      router.refresh();
+      const timer = window.setTimeout(() => {
+        setOpen(false);
+        router.refresh();
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, [router, state.status]);
 
@@ -275,14 +279,14 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
         {order.canDelete ? (
           <OrderActionDialog
             orderId={order.id}
-            title="Delete investment order"
-            description="Add the delete reason and any supporting notes before permanently removing this pending-payment order."
-            submitLabel="Delete order"
-            reasonLabel="Delete reason"
-            reasonPlaceholder="Explain why this order is being deleted."
-            adminNotesPlaceholder="Add optional admin context for this deletion."
+            title="Reject investment order"
+            description="Add the rejection reason and any supporting notes before marking this pending-payment order as rejected."
+            submitLabel="Reject order"
+            reasonLabel="Rejection reason"
+            reasonPlaceholder="Explain why this order is being rejected."
+            adminNotesPlaceholder="Add optional admin context for this rejection."
             destructive
-            action={deleteAdminInvestmentOrder}
+            action={rejectAdminInvestmentOrder}
             initialState={initialOrderActionState}
             icon={<Trash2 className="h-4 w-4" />}
           />

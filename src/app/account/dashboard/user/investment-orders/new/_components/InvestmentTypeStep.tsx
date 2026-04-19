@@ -106,8 +106,8 @@ export function InvestmentTypeStep({
       {featuredInvestment ? (
         <div className="glass-strong rounded-[1.75rem] p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-blue-400/15 bg-blue-400/10">
-              <Sparkles className="h-4 w-4 text-blue-200" />
+            <div className="flex h-10 w-10 px-3 py-3 items-center justify-center rounded-2xl border border-blue-400/15 bg-blue-400/10">
+              <Sparkles className="h-4 w-4 text-blue-200 shrink-0" />
             </div>
             <div>
               <p className="text-sm font-medium text-white">
