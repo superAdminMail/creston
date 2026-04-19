@@ -1,4 +1,5 @@
 import type { NotificationDTO } from "@/lib/types/notification";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
 import {
   isInvestmentOrderBankInfoReadyNotification,
   isInvestmentOrderBankInfoRequestNotification,
@@ -8,7 +9,12 @@ function isPromotionNotification(notification?: Pick<
   NotificationDTO,
   "type" | "metadata"
 > | null) {
+  const promotionType = notification?.metadata?.promotionType;
   return (
+    promotionType === "ANNOUNCEMENT" ||
+    promotionType === "OFFER" ||
+    promotionType === "REMINDER" ||
+    promotionType === "SYSTEM" ||
     notification?.type === "PROMOTION" ||
     notification?.metadata?.campaignType === "PROMOTION"
   );
@@ -24,6 +30,12 @@ function isSupportNotification(notification?: Pick<
 export function getNotificationDisplayType(
   notification?: Pick<NotificationDTO, "type" | "metadata"> | null,
 ) {
+  const promotionType = notification?.metadata?.promotionType;
+
+  if (typeof promotionType === "string") {
+    return formatEnumLabel(promotionType);
+  }
+
   if (isPromotionNotification(notification)) {
     return "Promotion";
   }

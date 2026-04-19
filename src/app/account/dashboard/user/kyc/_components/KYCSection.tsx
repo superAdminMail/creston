@@ -4,12 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { createPusherClient } from "@/lib/pusher-client";
+import {
+  isDiditRetryableStatus,
+  isDiditResumableStatus,
+  isDiditSessionStale,
+} from "@/lib/kyc/didit";
 
 type KycStatus = "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
 
 type LatestSession = {
   status: string;
   sessionUrl: string | null;
+  lastSyncedAt: string | Date | null;
   updatedAt: string | Date;
 } | null;
 
@@ -31,11 +37,6 @@ function isKycStatusPayload(payload: unknown): payload is KycStatusPayload {
   );
 }
 
-function isSessionStale(updatedAt: string | Date) {
-  const date = new Date(updatedAt);
-  return Date.now() - date.getTime() > 30 * 60 * 1000;
-}
-
 export default function KYCSection({
   initialStatus,
   userId,
@@ -55,11 +56,16 @@ export default function KYCSection({
   );
 
   useEffect(() => {
+    setProviderStatus(latestSession?.status ?? null);
+    setSessionUrl(latestSession?.sessionUrl ?? null);
+  }, [latestSession?.sessionUrl, latestSession?.status, latestSession?.updatedAt]);
+
+  useEffect(() => {
     if (!userId) return;
 
     const pusher = createPusherClient();
 
-    const channel = pusher.subscribe(`kyc-${userId}`);
+    const channel = pusher.subscribe(`private-kyc-${userId}`);
 
     const handleStatusUpdated = (payload: unknown) => {
       if (!isKycStatusPayload(payload)) return;
@@ -76,45 +82,30 @@ export default function KYCSection({
 
     return () => {
       channel.unbind("kyc-status-updated", handleStatusUpdated);
-      channel.unbind_all();
-      pusher.unsubscribe(`kyc-${userId}`);
-      pusher.disconnect();
+      pusher.unsubscribe(`private-kyc-${userId}`);
     };
   }, [userId]);
 
   const canRetry = useMemo(() => {
     if (!latestSession) return true;
-    if (!providerStatus) return true;
-
-    const retryableProviderStatuses = [
-      "Declined",
-      "Expired",
-      "Abandoned",
-      "Kyc Expired",
-    ];
-
-    if (retryableProviderStatuses.includes(providerStatus)) {
-      return true;
-    }
-
-    if (
-      ["Not Started", "In Progress", "Resubmitted"].includes(providerStatus) &&
-      latestSession?.updatedAt &&
-      isSessionStale(latestSession.updatedAt)
-    ) {
-      return true;
-    }
-
-    return false;
+    const sessionAgeAnchor =
+      latestSession.lastSyncedAt ?? latestSession.updatedAt;
+    return (
+      isDiditRetryableStatus(providerStatus) ||
+      (isDiditResumableStatus(providerStatus) &&
+        isDiditSessionStale(sessionAgeAnchor))
+    );
   }, [latestSession, providerStatus]);
 
   const canContinue = useMemo(() => {
-    if (!sessionUrl || !providerStatus || !latestSession?.updatedAt)
+    if (!sessionUrl || !providerStatus || !latestSession)
       return false;
+    const sessionAgeAnchor =
+      latestSession.lastSyncedAt ?? latestSession.updatedAt;
 
     return (
-      ["Not Started", "In Progress", "Resubmitted"].includes(providerStatus) &&
-      !isSessionStale(latestSession.updatedAt)
+      isDiditResumableStatus(providerStatus) &&
+      !isDiditSessionStale(sessionAgeAnchor)
     );
   }, [latestSession, providerStatus, sessionUrl]);
 
@@ -135,7 +126,9 @@ export default function KYCSection({
       window.location.href = data.url;
     } catch (err) {
       console.error(err);
-      toast.error("Failed to start verification. Try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to start verification. Try again.",
+      );
     } finally {
       setLoading(false);
     }

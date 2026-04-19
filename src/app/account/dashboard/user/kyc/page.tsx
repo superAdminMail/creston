@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import KYCSection from "./_components/KYCSection";
 import KYCVerifiedCard from "./_components/KYCVerifiedCard";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { syncLatestKycSessionIfNeeded } from "@/lib/kyc/kycVerificationSessionService";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function Page() {
@@ -28,23 +29,20 @@ export default async function Page() {
 
   const profile = user.investorProfile;
 
-  const kycStatus = profile?.kycStatus ?? "NOT_STARTED";
-
   const latestSession = profile
-    ? await prisma.kycVerificationSession.findFirst({
-        where: {
-          investorProfileId: profile.id,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
+    ? await syncLatestKycSessionIfNeeded(profile.id)
+    : null;
+
+  const refreshedProfile = profile
+    ? await prisma.investorProfile.findUnique({
+        where: { id: profile.id },
         select: {
-          status: true,
-          sessionUrl: true,
-          updatedAt: true,
+          kycStatus: true,
         },
       })
     : null;
+
+  const kycStatus = refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED";
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">

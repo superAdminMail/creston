@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { PresenceChannel } from "pusher-js";
-import { pusherClient } from "@/lib/pusher-client";
+import { createPusherClient } from "@/lib/pusher-client";
 
 type Role = "ADMIN" | "MODERATOR" | "SUPER_ADMIN" | "USER";
 const DEFAULT_TARGET_ROLES: Role[] = ["ADMIN", "MODERATOR", "SUPER_ADMIN"];
@@ -32,8 +32,9 @@ export function useConversationPresence(
       return;
     }
 
+    const pusher = createPusherClient();
     const channelName = `presence-conversation-${conversationId}`;
-    const channel = pusherClient.subscribe(channelName) as PresenceChannel;
+    const channel = pusher.subscribe(channelName) as PresenceChannel;
     const targetRoles = targetRolesKey
       .split(",")
       .filter(Boolean) as Role[];
@@ -122,7 +123,7 @@ export function useConversationPresence(
 
     return () => {
       channel.unbind_all();
-      pusherClient.unsubscribe(channelName);
+      pusher.unsubscribe(channelName);
     };
   }, [conversationId, targetRolesKey, selfUserId]);
 

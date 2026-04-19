@@ -167,7 +167,7 @@ export async function createPromotionCampaignAction(
               metadata: {
                 campaignId: createdCampaign.id,
                 audienceType: input.audienceType,
-                campaignType: "PROMOTION",
+                campaignType: input.promotionType,
                 channel: createdCampaign.channel,
                 promotionType: input.promotionType,
               },

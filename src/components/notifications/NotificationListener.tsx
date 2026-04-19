@@ -25,7 +25,7 @@ export default function NotificationListener({
 
     const pusher = createPusherClient();
 
-    const channel = pusher.subscribe(`notifications-${userId}`);
+    const channel = pusher.subscribe(`private-notifications-${userId}`);
 
     const handleNotification = (payload: unknown) => {
       if (!isNotificationPayload(payload)) return;
@@ -83,9 +83,7 @@ export default function NotificationListener({
 
     return () => {
       channel.unbind("new-notification", handleNotification);
-      channel.unbind_all();
-      pusher.unsubscribe(`notifications-${userId}`);
-      pusher.disconnect();
+      pusher.unsubscribe(`private-notifications-${userId}`);
     };
   }, [userId]);
 

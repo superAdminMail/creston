@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import {
   createDiditSession,
-  isDiditActiveStatus,
   isDiditRetryableStatus,
+  isDiditResumableStatus,
   isDiditSessionStale,
 } from "@/lib/kyc/didit";
 import {
   createLocalKycVerificationSession,
-  getLatestKycVerificationSession,
+  syncLatestKycSessionIfNeeded,
 } from "@/lib/kyc/kycVerificationSessionService";
 
 function getBaseUrl() {
@@ -47,13 +47,26 @@ export async function POST() {
       return NextResponse.json({ error: "Already verified" }, { status: 400 });
     }
 
-    const latestSession = await getLatestKycVerificationSession(profile.id);
+    const latestSession = await syncLatestKycSessionIfNeeded(profile.id);
+    const refreshedProfile = await prisma.investorProfile.findUnique({
+      where: { id: profile.id },
+      select: {
+        id: true,
+        kycStatus: true,
+      },
+    });
+    const latestSessionAgeAnchor =
+      latestSession?.lastSyncedAt ?? latestSession?.updatedAt ?? null;
+
+    if (refreshedProfile?.kycStatus === "VERIFIED") {
+      return NextResponse.json({ error: "Already verified" }, { status: 400 });
+    }
 
     if (
       latestSession &&
       latestSession.sessionUrl &&
-      isDiditActiveStatus(latestSession.status) &&
-      !isDiditSessionStale(latestSession.updatedAt)
+      isDiditResumableStatus(latestSession.status) &&
+      !isDiditSessionStale(latestSessionAgeAnchor)
     ) {
       return NextResponse.json({
         url: latestSession.sessionUrl,
@@ -61,53 +74,71 @@ export async function POST() {
       });
     }
 
+    if (latestSession && latestSession.status === "In Review") {
+      return NextResponse.json(
+        { error: "Verification is currently under review" },
+        { status: 409 },
+      );
+    }
+
     if (
       latestSession &&
       (isDiditRetryableStatus(latestSession.status) ||
-        (isDiditActiveStatus(latestSession.status) &&
-          isDiditSessionStale(latestSession.updatedAt)))
+        (isDiditResumableStatus(latestSession.status) &&
+          isDiditSessionStale(latestSessionAgeAnchor)))
     ) {
-      await prisma.kycVerificationSession.update({
-        where: { id: latestSession.id },
-        data: {
-          status: isDiditSessionStale(latestSession.updatedAt)
-            ? "Abandoned"
-            : latestSession.status,
-          abandonedAt: new Date(),
-          lastSyncedAt: new Date(),
-        },
-      });
+      if (
+        isDiditResumableStatus(latestSession.status) &&
+        isDiditSessionStale(latestSessionAgeAnchor)
+      ) {
+        await prisma.kycVerificationSession.update({
+          where: { id: latestSession.id },
+          data: {
+            status: "Abandoned",
+            abandonedAt: new Date(),
+            lastSyncedAt: new Date(),
+          },
+        });
+      }
 
       await prisma.investorProfile.update({
-        where: { id: profile.id },
+        where: { id: refreshedProfile?.id ?? profile.id },
         data: { kycStatus: "NOT_STARTED" },
       });
     }
 
-    const callbackUrl = `${getBaseUrl()}/account/dashboard/verification`;
+    const callbackUrl = `${getBaseUrl()}/account/dashboard/user/kyc`;
 
     const diditSession = await createDiditSession({
       vendorData: userId,
       callbackUrl,
     });
 
+    if (!diditSession.session_id || !diditSession.verification_url) {
+      throw new Error(
+        "Didit session response is missing session_id or verification_url",
+      );
+    }
+
     await createLocalKycVerificationSession({
       investorProfileId: profile.id,
       providerSessionId: diditSession.session_id,
-      sessionUrl: diditSession.url,
+      sessionUrl: diditSession.verification_url,
       callbackUrl,
+      status: diditSession.status,
       rawPayload: diditSession,
     });
 
     return NextResponse.json({
-      url: diditSession.url,
+      url: diditSession.verification_url,
       reused: false,
     });
   } catch (error) {
     console.error("[KYC_START_ROUTE_ERROR]", error);
-    return NextResponse.json(
-      { error: "Failed to start verification" },
-      { status: 500 },
-    );
+
+    const message =
+      error instanceof Error ? error.message : "Failed to start verification";
+
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -32,7 +32,7 @@ export default function SupportDeleteConversationDialog({
     : "Delete support conversation?";
   const description = isBatch
     ? `This action permanently removes ${conversationCount} selected support tickets and their messages. The users will no longer be able to view them.`
-    : "This action permanently removes the selected support ticket and its messages. The user will no longer be able to view it.";
+    : "This action permanently removes the selected support ticket and its messages.";
   const confirmLabel = isBatch
     ? `Delete ${conversationCount} conversations`
     : "Delete conversation";

@@ -82,7 +82,7 @@ export async function createRealtimeNotification(
 
   if (result.created) {
     await pusherServer.trigger(
-      `notifications-${input.userId}`,
+      `private-notifications-${input.userId}`,
       "new-notification",
       result.notification,
     );

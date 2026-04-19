@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+
+import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
-import { submitInvestmentBankPaymentProof } from "@/actions/accounts/payments/submitInvestmentBankPaymentProof";
+import PaymentProofModal from "./PaymentProofModal";
 
 export type InvestmentOrderPaymentDetails = {
   id: string;
@@ -64,50 +65,36 @@ export default function InvestmentOrderPaymentClient({
     else toast.error(res.message);
   }
 
-  async function handleSubmitPayment() {
-    if (!order.bankMethod) return;
-
-    setLoading(true);
-
-    const res = await submitInvestmentBankPaymentProof({
-      orderId: order.id,
-      platformPaymentMethodId: order.bankMethod.id,
-      claimedAmount: amount,
-    });
-
-    setLoading(false);
-
-    if (res.ok) {
-      toast.success("Payment submitted for review");
-      setShowModal(false);
-    } else {
-      toast.error(res.message);
-    }
-  }
-
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      {/* 🔷 ORDER SUMMARY */}
-      <div className="rounded-2xl border p-6 bg-white/5 backdrop-blur">
-        <h2 className="text-xl font-semibold">{order.plan.name}</h2>
+    <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 md:px-6">
+      <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+        <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+          {order.plan.name}
+        </h2>
 
-        <div className="mt-4 space-y-2 text-sm">
+        <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
           <div>Total: {order.amountLabel}</div>
           <div>Paid: {order.amountPaidLabel}</div>
-          <div className="font-medium text-blue-500">
+          <div className="font-medium text-sky-700 dark:text-sky-300">
             Remaining: {order.remainingAmountLabel}
           </div>
         </div>
       </div>
 
-      {/* 🔷 PAYMENT MODE */}
       {canPay && (
-        <div className="rounded-2xl border p-6 space-y-4">
-          <h3 className="font-medium">Select Payment</h3>
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-6 space-y-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+          <h3 className="font-medium text-slate-950 dark:text-white">
+            Select Payment
+          </h3>
 
           <div className="flex gap-3">
             <Button
               variant={mode === "FULL" ? "default" : "outline"}
+              className={
+                mode === "FULL"
+                  ? "shadow-[0_14px_30px_rgba(14,165,233,0.18)]"
+                  : "border-slate-200/80 bg-white/65 text-slate-600 hover:border-slate-300 hover:bg-white/85 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              }
               onClick={() => {
                 setMode("FULL");
                 setAmount(order.remainingAmount);
@@ -118,6 +105,11 @@ export default function InvestmentOrderPaymentClient({
 
             <Button
               variant={mode === "PARTIAL" ? "default" : "outline"}
+              className={
+                mode === "PARTIAL"
+                  ? "shadow-[0_14px_30px_rgba(14,165,233,0.18)]"
+                  : "border-slate-200/80 bg-white/65 text-slate-600 hover:border-slate-300 hover:bg-white/85 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              }
               onClick={() => setMode("PARTIAL")}
             >
               Partial Payment
@@ -125,26 +117,34 @@ export default function InvestmentOrderPaymentClient({
           </div>
 
           {mode === "PARTIAL" && (
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              max={order.remainingAmount}
-              placeholder="Enter amount"
-            />
+            <div className="space-y-2">
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                max={order.remainingAmount}
+                placeholder="Enter amount"
+                className="border-slate-200/80 bg-white/70 text-slate-950 placeholder:text-slate-400 shadow-sm backdrop-blur-sm focus-visible:border-sky-300 focus-visible:ring-sky-200 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-sky-400/40 dark:focus-visible:ring-sky-400/20"
+              />
+              <p className="text-slate-600 px-2">
+                We only support payments in {order.currency} and two
+                installments only with an additional $10 flat fee on each
+                installment. Only partial payments are subject to this fee.
+              </p>
+            </div>
           )}
         </div>
       )}
 
-      {/* 🔷 BANK FLOW */}
       {mode && canPay && (
-        <div className="rounded-2xl border p-6 space-y-4">
-          {/* HAS BANK INFO */}
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-6 space-y-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
           {order.hasBankMethod && order.bankMethod && (
             <>
-              <h3 className="font-medium">Bank Transfer Details</h3>
+              <h3 className="font-medium text-slate-950 dark:text-white">
+                Bank Transfer Details
+              </h3>
 
-              <div className="text-sm space-y-2">
+              <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 <div>Bank: {order.bankMethod.bankName}</div>
                 <div>Account Name: {order.bankMethod.accountName}</div>
                 <div>Account Number: {order.bankMethod.accountNumber}</div>
@@ -154,21 +154,20 @@ export default function InvestmentOrderPaymentClient({
               </div>
 
               {order.bankMethod.instructions && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {order.bankMethod.instructions}
                 </p>
               )}
 
               <Button onClick={() => setShowModal(true)}>
-                I’ve made this payment
+                I&apos;ve made this payment
               </Button>
             </>
           )}
 
-          {/* NO BANK INFO */}
           {!order.hasBankMethod && (
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-3 text-center">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Bank details are not available yet.
               </p>
 
@@ -185,35 +184,16 @@ export default function InvestmentOrderPaymentClient({
         </div>
       )}
 
-      {/* 🔷 MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md space-y-4">
-            <h3 className="font-semibold">Confirm Payment</h3>
-
-            <Input
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              type="number"
-            />
-
-            <Button
-              onClick={handleSubmitPayment}
-              disabled={loading}
-              className="w-full"
-            >
-              Submit Payment Proof
-            </Button>
-
-            <Button
-              variant="ghost"
-              onClick={() => setShowModal(false)}
-              className="w-full"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
+        <PaymentProofModal
+          open={showModal}
+          onOpenChange={setShowModal}
+          orderId={order.id}
+          platformPaymentMethodId={order.bankMethod?.id ?? null}
+          currency={order.currency}
+          defaultAmount={amount}
+          maxAmount={order.remainingAmount}
+        />
       )}
     </div>
   );

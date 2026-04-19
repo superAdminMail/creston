@@ -1,34 +1,45 @@
-import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { markKycVerificationSessionStatus } from "@/lib/kyc/kycVerificationSessionService";
+import {
+  markKycVerificationSessionStatus,
+} from "@/lib/kyc/kycVerificationSessionService";
+import {
+  verifyDiditWebhookSignature,
+} from "@/lib/kyc/didit";
 import { pusherServer } from "@/lib/pusher";
-
-function verifyDiditSignature(rawBody: string, signature: string | null) {
-  const secret = process.env.DIDIT_WEBHOOK_SECRET;
-  if (!secret || !signature) return false;
-
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody)
-    .digest("hex");
-
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
-}
 
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
-    const signature =
-      req.headers.get("x-signature-v2") || req.headers.get("x-didit-signature");
-
-    if (!verifyDiditSignature(rawBody, signature)) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-
-    const payload = JSON.parse(rawBody) as {
+    let payload: {
       session_id?: string;
       status?: string;
+      webhook_type?: string;
+      timestamp?: string;
     };
+
+    try {
+      payload = JSON.parse(rawBody) as typeof payload;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const timestamp = req.headers.get("x-timestamp") ?? payload.timestamp ?? null;
+    const signatureV2 = req.headers.get("x-signature-v2");
+    const signatureSimple = req.headers.get("x-signature-simple");
+    const signatureRaw = req.headers.get("x-signature");
+
+    if (
+      !verifyDiditWebhookSignature({
+        rawBody,
+        parsedBody: payload,
+        signatureV2,
+        signatureSimple,
+        signatureRaw,
+        timestamp,
+      })
+    ) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
 
     if (!payload.session_id || !payload.status) {
       return NextResponse.json(
@@ -37,20 +48,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const session = await markKycVerificationSessionStatus({
+    const result = await markKycVerificationSessionStatus({
       providerSessionId: payload.session_id,
       status: payload.status,
       rawPayload: payload,
     });
 
-    await pusherServer.trigger(
-      `kyc-${session.investorProfile.userId}`,
-      "kyc-status-updated",
-      {
-        status: session.investorProfile.kycStatus,
-        providerStatus: payload.status,
-      },
-    );
+    if (result.changed) {
+      await pusherServer.trigger(
+        `private-kyc-${result.session.investorProfile.userId}`,
+        "kyc-status-updated",
+        {
+          status: result.session.investorProfile.kycStatus,
+          providerStatus: payload.status,
+        },
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {

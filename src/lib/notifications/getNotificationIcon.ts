@@ -10,15 +10,25 @@ import {
 export function getNotificationIcon(
   notification?: Pick<NotificationDTO, "type" | "metadata">,
 ) {
+  const promotionType = notification?.metadata?.promotionType;
   const isPromotion =
     notification?.type === "PROMOTION" ||
-    notification?.metadata?.campaignType === "PROMOTION";
+    notification?.metadata?.campaignType === "PROMOTION" ||
+    promotionType === "ANNOUNCEMENT" ||
+    promotionType === "OFFER" ||
+    promotionType === "REMINDER" ||
+    promotionType === "SYSTEM";
+
+  const isSystemPromotion = promotionType === "SYSTEM";
 
   const isInvestmentBankInfo =
     isInvestmentOrderBankInfoRequestNotification(notification) ||
     isInvestmentOrderBankInfoReadyNotification(notification);
 
   if (isPromotion) {
+    if (isSystemPromotion) {
+      return Bell;
+    }
     return Megaphone;
   }
 

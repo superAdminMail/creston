@@ -47,15 +47,6 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!channelName.startsWith("presence-conversation-")) {
-    return NextResponse.json({ error: "Unsupported channel" }, { status: 400 });
-  }
-
-  const conversationId = channelName.replace("presence-conversation-", "");
-  if (!conversationId) {
-    return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
-  }
-
   const user = await prisma.user.findUnique({
     where: { id: sessionUser.id },
     select: {
@@ -69,41 +60,98 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: conversationId },
-    select: {
-      type: true,
-      members: {
-        where: { userId: sessionUser.id },
-        select: {
-          userId: true,
+  if (channelName.startsWith("private-notifications-")) {
+    const targetUserId = channelName.replace("private-notifications-", "");
+    if (!targetUserId) {
+      return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
+    }
+
+    if (targetUserId !== sessionUser.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    return NextResponse.json(
+      pusherServer.authorizeChannel(socketId, channelName),
+    );
+  }
+
+  if (channelName.startsWith("private-kyc-")) {
+    const targetUserId = channelName.replace("private-kyc-", "");
+    if (!targetUserId) {
+      return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
+    }
+
+    if (targetUserId !== sessionUser.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    return NextResponse.json(
+      pusherServer.authorizeChannel(socketId, channelName),
+    );
+  }
+
+  if (
+    channelName.startsWith("private-conversation-") ||
+    channelName.startsWith("presence-conversation-")
+  ) {
+    const isPresenceChannel = channelName.startsWith("presence-conversation-");
+    const conversationId = channelName.replace(
+      isPresenceChannel
+        ? "presence-conversation-"
+        : "private-conversation-",
+      "",
+    );
+    if (!conversationId) {
+      return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
+    }
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      select: {
+        type: true,
+        members: {
+          where: { userId: sessionUser.id },
+          select: {
+            userId: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!conversation) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    if (!conversation) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 },
+      );
+    }
+
+    const canAccessConversation =
+      conversation.members.length > 0 ||
+      (isSupportStaffRole(user.role) &&
+        SUPPORT_CONVERSATION_TYPES.includes(conversation.type));
+
+    if (!canAccessConversation) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (isPresenceChannel) {
+      const authResponse = pusherServer.authorizeChannel(socketId, channelName, {
+        user_id: sessionUser.id,
+        user_info: {
+          name: user.name ?? sessionUser.name ?? "Support member",
+          email: user.email ?? sessionUser.email ?? null,
+          role: user.role,
+          isAgent: isSupportStaffRole(user.role),
+        },
+      });
+
+      return NextResponse.json(authResponse);
+    }
+
+    return NextResponse.json(
+      pusherServer.authorizeChannel(socketId, channelName),
+    );
   }
 
-  const canAccessConversation =
-    conversation.members.length > 0 ||
-    (isSupportStaffRole(user.role) &&
-      SUPPORT_CONVERSATION_TYPES.includes(conversation.type));
-
-  if (!canAccessConversation) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const authResponse = pusherServer.authorizeChannel(socketId, channelName, {
-    user_id: sessionUser.id,
-    user_info: {
-      name: user.name ?? sessionUser.name ?? "Support member",
-      email: user.email ?? sessionUser.email ?? null,
-      role: user.role,
-      isAgent: isSupportStaffRole(user.role),
-    },
-  });
-
-  return NextResponse.json(authResponse);
+  return NextResponse.json({ error: "Unsupported channel" }, { status: 400 });
 }

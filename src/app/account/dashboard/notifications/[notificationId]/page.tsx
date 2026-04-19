@@ -72,9 +72,13 @@ export default async function NotificationDetailsPage({
       : null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-      <div className="flex items-center justify-between gap-3">
-        <Button asChild variant="ghost" className="px-0 text-slate-300 hover:text-white">
+    <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Button
+          asChild
+          variant="ghost"
+          className="w-fit px-0 text-slate-300 hover:text-white"
+        >
           <Link href="/account/dashboard/notifications">
             <ArrowLeft className="h-4 w-4" />
             Back to notifications
@@ -82,7 +86,11 @@ export default async function NotificationDetailsPage({
         </Button>
 
         {supportLink || dto.link ? (
-          <Button asChild variant="outline" className="rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] sm:w-auto"
+          >
             <Link href={supportLink ?? dto.link!}>
               Open linked page
               <ExternalLink className="h-4 w-4" />
@@ -91,10 +99,10 @@ export default async function NotificationDetailsPage({
         ) : null}
       </div>
 
-      <article className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-300">
-            {renderNotificationIcon(dto, "h-5 w-5")}
+      <article className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.25)] sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-start">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-300 sm:h-12 sm:w-12">
+            {renderNotificationIcon(dto, "h-4 w-4 sm:h-5 sm:w-5")}
           </div>
 
           <div className="min-w-0 flex-1 space-y-4">
@@ -102,14 +110,16 @@ export default async function NotificationDetailsPage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-300/80">
                 {getNotificationDisplayType(dto)}
               </p>
-              <h1 className="text-2xl font-semibold text-white">{dto.title}</h1>
-              <p className="text-sm text-slate-400">
+              <h1 className="text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
+                {dto.title}
+              </h1>
+              <p className="text-sm text-slate-400 sm:text-[15px]">
                 {formatNotificationTime(dto.createdAt)}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-5">
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-200">
+            <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 sm:p-5">
+              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-200 sm:text-[15px] sm:leading-8">
                 {dto.message ?? "No additional notification details were provided."}
               </p>
             </div>

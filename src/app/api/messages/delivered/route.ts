@@ -66,9 +66,13 @@ export async function POST(req: Request) {
     data: { deliveredAt },
   });
 
-  await pusherServer.trigger(`conversation-${conversationId}`, "delivered", {
-    deliveredAt: deliveredAt.toISOString(),
-  });
+  await pusherServer.trigger(
+    `private-conversation-${conversationId}`,
+    "delivered",
+    {
+      deliveredAt: deliveredAt.toISOString(),
+    },
+  );
 
   return NextResponse.json({ success: true });
 }

@@ -28,6 +28,7 @@ export default async function SuperAdminSupportConversationPage({
         mode="staff"
         viewerId={userId}
         conversation={conversation}
+        backPath="/account/dashboard/super-admin/support"
       />
     </div>
   );

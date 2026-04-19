@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 export const DIDIT_STATUSES = {
   NOT_STARTED: "Not Started",
   IN_PROGRESS: "In Progress",
@@ -26,17 +28,17 @@ type CreateDiditSessionParams = {
 
 type DiditCreateSessionResponse = {
   session_id: string;
-  url: string;
+  verification_url: string;
   status?: string;
   expires_at?: string;
 };
 
 function getDiditBaseUrl() {
-  return process.env.DIDIT_BASE_URL || "https://verification.didit.me";
-}
-
-function getDiditApiBaseUrl() {
-  return process.env.DIDIT_API_BASE_URL || "https://api.didit.me";
+  return (
+    process.env.DIDIT_VERIFICATION_BASE_URL ||
+    process.env.DIDIT_BASE_URL ||
+    "https://verification.didit.me"
+  ).replace(/\/$/, "");
 }
 
 function getRequiredEnv(name: string) {
@@ -64,6 +66,14 @@ export function mapDiditStatusToAppKycStatus(
   }
 }
 
+export function isDiditResumableStatus(status: string | null | undefined) {
+  return (
+    status === DIDIT_STATUSES.NOT_STARTED ||
+    status === DIDIT_STATUSES.IN_PROGRESS ||
+    status === DIDIT_STATUSES.RESUBMITTED
+  );
+}
+
 export function isDiditInactiveStatus(status: string | null | undefined) {
   return (
     status === DIDIT_STATUSES.EXPIRED || status === DIDIT_STATUSES.ABANDONED
@@ -82,9 +92,7 @@ export function isDiditRetryableStatus(status: string | null | undefined) {
 
 export function isDiditActiveStatus(status: string | null | undefined) {
   return (
-    status === DIDIT_STATUSES.NOT_STARTED ||
-    status === DIDIT_STATUSES.IN_PROGRESS ||
-    status === DIDIT_STATUSES.RESUBMITTED ||
+    isDiditResumableStatus(status) ||
     status === DIDIT_STATUSES.IN_REVIEW
   );
 }
@@ -103,6 +111,81 @@ export function isDiditSessionStale(
   return ageMs > 30 * 60 * 1000;
 }
 
+function sortKeysDeep<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => sortKeysDeep(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    return Object.keys(value as Record<string, unknown>)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = sortKeysDeep((value as Record<string, unknown>)[key]);
+        return acc;
+      }, {}) as T;
+  }
+
+  return value;
+}
+
+function shortenWholeNumberFloats<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => shortenWholeNumberFloats(item)) as T;
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, nested]) => [
+        key,
+        shortenWholeNumberFloats(nested),
+      ]),
+    ) as T;
+  }
+
+  if (typeof value === "number" && !Number.isInteger(value) && value % 1 === 0) {
+    return Math.trunc(value) as T;
+  }
+
+  return value;
+}
+
+function verifyDiditJsonSignature(
+  body: unknown,
+  signature: string,
+  secret: string,
+) {
+  const canonicalJson = JSON.stringify(sortKeysDeep(shortenWholeNumberFloats(body)));
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(canonicalJson, "utf8")
+    .digest("hex");
+
+  if (expected.length !== signature.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, "utf8"),
+    Buffer.from(signature, "utf8"),
+  );
+}
+
+function verifyDiditRawSignature(rawBody: string, signature: string, secret: string) {
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  if (expected.length !== signature.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, "utf8"),
+    Buffer.from(signature, "utf8"),
+  );
+}
+
 export async function createDiditSession({
   vendorData,
   callbackUrl,
@@ -111,7 +194,7 @@ export async function createDiditSession({
   const apiKey = getRequiredEnv("DIDIT_API_KEY");
   const resolvedWorkflowId = workflowId || getRequiredEnv("DIDIT_WORKFLOW_ID");
 
-  const response = await fetch(`${getDiditApiBaseUrl()}/v2/session/`, {
+  const response = await fetch(`${getDiditBaseUrl()}/v3/session/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -120,6 +203,7 @@ export async function createDiditSession({
     body: JSON.stringify({
       workflow_id: resolvedWorkflowId,
       callback: callbackUrl,
+      callback_method: "both",
       vendor_data: vendorData,
     }),
     cache: "no-store",
@@ -137,7 +221,7 @@ export async function retrieveDiditSession(sessionId: string) {
   const apiKey = getRequiredEnv("DIDIT_API_KEY");
 
   const response = await fetch(
-    `${getDiditApiBaseUrl()}/v2/session/${sessionId}/`,
+    `${getDiditBaseUrl()}/v3/session/${sessionId}/decision/`,
     {
       method: "GET",
       headers: {
@@ -160,4 +244,73 @@ export async function retrieveDiditSession(sessionId: string) {
 export function buildDiditRedirectUrl(sessionIdOrUrl: string) {
   if (sessionIdOrUrl.startsWith("http")) return sessionIdOrUrl;
   return `${getDiditBaseUrl()}/session/${sessionIdOrUrl}`;
+}
+
+export function verifyDiditWebhookSignature(params: {
+  rawBody: string;
+  parsedBody: unknown;
+  signatureV2?: string | null;
+  signatureSimple?: string | null;
+  signatureRaw?: string | null;
+  timestamp?: string | null;
+}) {
+  const secret = process.env.DIDIT_WEBHOOK_SECRET;
+
+  if (!secret) {
+    throw new Error("Missing environment variable: DIDIT_WEBHOOK_SECRET");
+  }
+
+  const { rawBody, parsedBody, signatureV2, signatureSimple, signatureRaw, timestamp } =
+    params;
+
+  if (!timestamp) {
+    return false;
+  }
+
+  const parsedTimestamp = Number(timestamp);
+  if (!Number.isFinite(parsedTimestamp)) {
+    return false;
+  }
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  if (Math.abs(currentTime - parsedTimestamp) > 300) {
+    return false;
+  }
+
+  if (signatureV2 && verifyDiditJsonSignature(parsedBody, signatureV2, secret)) {
+    return true;
+  }
+
+  if (
+    signatureSimple &&
+    typeof parsedBody === "object" &&
+    parsedBody !== null &&
+    !Array.isArray(parsedBody)
+  ) {
+    const body = parsedBody as Record<string, unknown>;
+    const canonicalString = [
+      String(body.timestamp ?? timestamp ?? ""),
+      String(body.session_id ?? ""),
+      String(body.status ?? ""),
+      String(body.webhook_type ?? ""),
+    ].join(":");
+
+    const expected = crypto
+      .createHmac("sha256", secret)
+      .update(canonicalString, "utf8")
+      .digest("hex");
+
+    if (expected.length === signatureSimple.length) {
+      return crypto.timingSafeEqual(
+        Buffer.from(expected, "utf8"),
+        Buffer.from(signatureSimple, "utf8"),
+      );
+    }
+  }
+
+  if (signatureRaw) {
+    return verifyDiditRawSignature(rawBody, signatureRaw, secret);
+  }
+
+  return false;
 }

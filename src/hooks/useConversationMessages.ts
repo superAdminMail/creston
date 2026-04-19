@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { ChatMessage } from "@/lib/types/chat.types";
-import { pusherClient } from "@/lib/pusher-client";
+import { createPusherClient } from "@/lib/pusher-client";
 
 type TypingPayload = {
   userId: string;
@@ -42,8 +42,9 @@ export function useConversationMessages({
   onTyping?: (payload: TypingPayload) => void;
 }) {
   useEffect(() => {
-    const channelName = `conversation-${conversationId}`;
-    const channel = pusherClient.subscribe(channelName);
+    const pusher = createPusherClient();
+    const channelName = `private-conversation-${conversationId}`;
+    const channel = pusher.subscribe(channelName);
 
     const handleMessage = (...args: unknown[]) => {
       const [payload] = args;
@@ -76,7 +77,7 @@ export function useConversationMessages({
       if (onDelivered) channel.unbind("delivered", handleDelivered);
       if (onSeen) channel.unbind("seen", handleSeen);
       if (onTyping) channel.unbind("typing", handleTyping);
-      pusherClient.unsubscribe(channelName);
+      pusher.unsubscribe(channelName);
     };
   }, [conversationId, onMessage, onDelivered, onSeen, onTyping]);
 }

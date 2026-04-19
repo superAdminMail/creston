@@ -8,6 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import {
@@ -108,17 +115,17 @@ export default function PromotionCampaignForm({
   }, [state.campaignId, state.message, state.status]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Send promotion</CardTitle>
+    <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+      <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
+        <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
+          <CardTitle className="text-lg sm:text-xl">Send promotion</CardTitle>
           <p className="text-sm text-muted-foreground">
             Send a promotional message to one user by email or push a broadcast
             to all users in-app or by email.
           </p>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-4 py-4 sm:px-6 sm:py-6">
           <form action={formAction} className="space-y-5">
             <div className="grid gap-2">
               <label htmlFor="title" className="text-sm font-medium">
@@ -136,18 +143,18 @@ export default function PromotionCampaignForm({
               <label htmlFor="promotionType" className="text-sm font-medium">
                 Promotion type
               </label>
-              <select
-                id="promotionType"
-                name="promotionType"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                defaultValue="ANNOUNCEMENT"
-              >
-                {promotionTypeSchema.options.map((type) => (
-                  <option key={type} value={type}>
-                    {formatEnumLabel(type)}
-                  </option>
-                ))}
-              </select>
+              <Select name="promotionType" defaultValue="ANNOUNCEMENT">
+                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                  <SelectValue placeholder="Choose promotion type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {promotionTypeSchema.options.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {formatEnumLabel(type)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 This type is stored with the campaign metadata and used for
                 notification presentation.
@@ -158,53 +165,55 @@ export default function PromotionCampaignForm({
               <label htmlFor="channel" className="text-sm font-medium">
                 Channel
               </label>
-              <select
-                id="channel"
-                name="channel"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                defaultValue={PromotionChannel.IN_APP}
-              >
-                <option value={PromotionChannel.IN_APP}>In-app</option>
-                <option value={PromotionChannel.EMAIL}>Email</option>
-              </select>
+              <Select name="channel" defaultValue={PromotionChannel.IN_APP}>
+                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                  <SelectValue placeholder="Choose channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PromotionChannel.IN_APP}>In-app</SelectItem>
+                  <SelectItem value={PromotionChannel.EMAIL}>Email</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
               <label htmlFor="audienceType" className="text-sm font-medium">
                 Audience
               </label>
-              <select
-                id="audienceType"
+              <Select
                 name="audienceType"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                 defaultValue={PromotionAudienceType.SINGLE_USER}
               >
-                <option value={PromotionAudienceType.SINGLE_USER}>
-                  Single user
-                </option>
-                <option value={PromotionAudienceType.BROADCAST_ALL_USERS}>
-                  Broadcast to all users
-                </option>
-              </select>
+                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                  <SelectValue placeholder="Choose audience" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={PromotionAudienceType.SINGLE_USER}>
+                    Single user
+                  </SelectItem>
+                  <SelectItem value={PromotionAudienceType.BROADCAST_ALL_USERS}>
+                    Broadcast to all users
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
               <label htmlFor="userId" className="text-sm font-medium">
                 Select user
               </label>
-              <select
-                id="userId"
-                name="userId"
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                defaultValue=""
-              >
-                <option value="">Choose a user for single-user sends</option>
-                {userOptions.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.label}
-                  </option>
-                ))}
-              </select>
+              <Select name="userId">
+                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                  <SelectValue placeholder="Choose a user for single-user sends" />
+                </SelectTrigger>
+                <SelectContent>
+                  {userOptions.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 This field is required only when the audience is set to single
                 user.
@@ -257,15 +266,15 @@ export default function PromotionCampaignForm({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Recent campaigns</CardTitle>
+      <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
+        <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
+          <CardTitle className="text-lg sm:text-xl">Recent campaigns</CardTitle>
           <p className="text-sm text-muted-foreground">
             Monitor recently created promotional sends and their delivery scope.
           </p>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-4 py-4 sm:px-6 sm:py-6">
           {recentCampaigns.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No campaigns have been created yet.
@@ -275,17 +284,17 @@ export default function PromotionCampaignForm({
               {recentCampaigns.map((campaign) => (
                 <div
                   key={campaign.id}
-                  className="rounded-2xl border border-border/60 p-4"
+                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-1">
-                      <p className="font-semibold">{campaign.title}</p>
+                      <p className="font-semibold text-white">{campaign.title}</p>
                       {campaign.subject ? (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-slate-400">
                           {campaign.subject}
                         </p>
                       ) : null}
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-500">
                         Created by {campaign.createdBy} -{" "}
                         {formatDate(campaign.createdAt)}
                       </p>

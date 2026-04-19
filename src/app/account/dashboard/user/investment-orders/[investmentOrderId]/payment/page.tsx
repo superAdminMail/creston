@@ -1,5 +1,4 @@
-import InvestmentOrderPaymentWorkspace from "./_components/InvestmentOrderPaymentWorkspace";
-import { getInvestmentOrderPaymentDetails } from "./_lib/getInvestmentOrderPaymentDetails";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   params: Promise<{
@@ -11,7 +10,7 @@ export default async function InvestmentOrderPaymentPage({
   params,
 }: PageProps) {
   const { investmentOrderId } = await params;
-  const order = await getInvestmentOrderPaymentDetails(investmentOrderId);
-
-  return <InvestmentOrderPaymentWorkspace order={order} />;
+  redirect(
+    `/account/dashboard/checkout?targetType=INVESTMENT_ORDER&targetId=${investmentOrderId}`,
+  );
 }

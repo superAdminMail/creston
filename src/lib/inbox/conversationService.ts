@@ -137,7 +137,7 @@ export async function publishConversationMessage(message: {
   createdAt: Date;
 }) {
   await pusherServer.trigger(
-    `conversation-${message.conversationId}`,
+    `private-conversation-${message.conversationId}`,
     "new-message",
     toRealtimeMessagePayload(message),
   );

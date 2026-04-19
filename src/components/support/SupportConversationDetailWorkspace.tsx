@@ -27,6 +27,7 @@ type Props = {
   mode: SupportInboxMode;
   viewerId: string;
   conversation: SupportConversationThread;
+  backPath?: string;
 };
 
 function formatDateTime(value?: string | null) {
@@ -56,14 +57,17 @@ export default function SupportConversationDetailWorkspace({
   mode,
   viewerId,
   conversation,
+  backPath,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const isStaffView = mode === "staff";
-  const backPath = isStaffView
-    ? "/account/dashboard/admin/support"
-    : "/account/dashboard/user/support";
+  const resolvedBackPath =
+    backPath ??
+    (isStaffView
+      ? "/account/dashboard/admin/support"
+      : "/account/dashboard/user/support");
 
   const sendAction = isStaffView ? sendSupportMessageAction : sendMessageAction;
   const canDeleteConversation = !isStaffView;
@@ -78,7 +82,7 @@ export default function SupportConversationDetailWorkspace({
 
       toast.success("Conversation deleted");
       setDeleteOpen(false);
-      router.push(backPath);
+      router.push(resolvedBackPath);
       router.refresh();
     });
   };
@@ -147,7 +151,7 @@ export default function SupportConversationDetailWorkspace({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(backPath)}
+              onClick={() => router.push(resolvedBackPath)}
               className={
                 isStaffView
                   ? "w-fit rounded-full border border-white/10 bg-white/[0.04] px-4 text-slate-200 hover:bg-white/[0.08] hover:text-white"

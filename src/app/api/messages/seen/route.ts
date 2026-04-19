@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     }),
   ]);
 
-  await pusherServer.trigger(`conversation-${conversationId}`, "seen", {
+  await pusherServer.trigger(`private-conversation-${conversationId}`, "seen", {
     readAt: readAt.toISOString(),
   });
 
