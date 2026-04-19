@@ -17,8 +17,9 @@ const COMMON_CALLING_CODES = [
 ] as const;
 
 type NormalizePhoneInput = {
-  countryCallingCode: string;
+  countryCallingCode?: string | null;
   nationalNumber: string;
+  country?: string | null;
 };
 
 function digitsOnly(value: string) {
@@ -28,9 +29,26 @@ function digitsOnly(value: string) {
 export function normalizePhoneToE164({
   countryCallingCode,
   nationalNumber,
+  country,
 }: NormalizePhoneInput) {
-  const countryDigits = digitsOnly(countryCallingCode);
-  const nationalDigits = digitsOnly(nationalNumber).replace(/^0+/, "");
+  const rawNationalNumber = nationalNumber.trim();
+
+  if (!rawNationalNumber) {
+    throw new Error("Phone number is required.");
+  }
+
+  if (rawNationalNumber.startsWith("+")) {
+    const normalizedDirect = `+${digitsOnly(rawNationalNumber)}`;
+
+    if (/^\+[1-9]\d{7,14}$/.test(normalizedDirect)) {
+      return normalizedDirect;
+    }
+  }
+
+  const resolvedCountryCallingCode =
+    countryCallingCode?.trim() || getDefaultCountryCallingCode(country);
+  const countryDigits = digitsOnly(resolvedCountryCallingCode);
+  const nationalDigits = digitsOnly(rawNationalNumber).replace(/^0+/, "");
 
   if (!countryDigits) {
     throw new Error("Country calling code is required.");
@@ -54,7 +72,11 @@ export function normalizePhoneToE164({
 }
 
 export function isValidPhoneInput(
-  value: Partial<NormalizePhoneInput> | null | undefined,
+  value:
+    | Partial<NormalizePhoneInput>
+    | { countryCallingCode?: string; nationalNumber?: string; country?: string }
+    | null
+    | undefined,
 ) {
   if (!value?.nationalNumber?.trim()) {
     return true;
@@ -64,6 +86,7 @@ export function isValidPhoneInput(
     normalizePhoneToE164({
       countryCallingCode: value.countryCallingCode ?? "",
       nationalNumber: value.nationalNumber,
+      country: value.country,
     });
     return true;
   } catch {

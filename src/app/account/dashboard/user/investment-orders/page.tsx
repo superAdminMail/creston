@@ -19,10 +19,14 @@ export default async function UserInvestmentsPage({
   const siteName = site?.siteName ?? "";
   const params = searchParams ? await searchParams : undefined;
   const createdOrderId = params?.created ?? null;
+  const showNewOrderButton = data.orders.length > 0;
 
   return (
     <div className="space-y-6">
-      <UserInvestmentsHeader siteName={siteName} />
+      <UserInvestmentsHeader
+        siteName={siteName}
+        showNewOrderButton={showNewOrderButton}
+      />
       <UserInvestmentsList
         data={data}
         createdOrderId={createdOrderId}

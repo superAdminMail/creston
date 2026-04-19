@@ -56,6 +56,7 @@ export async function upsertCurrentUserInvestorProfile(
     ? normalizePhoneToE164({
         countryCallingCode: values.countryCallingCode,
         nationalNumber: values.phoneNumber,
+        country: values.country,
       })
     : null;
 

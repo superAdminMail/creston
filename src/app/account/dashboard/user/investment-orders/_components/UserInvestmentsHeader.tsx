@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { ArrowLeft, Landmark, Plus } from "lucide-react";
 
-export function UserInvestmentsHeader({ siteName }: { siteName: string }) {
+type UserInvestmentsHeaderProps = {
+  siteName: string;
+  showNewOrderButton: boolean;
+};
+
+export function UserInvestmentsHeader({
+  siteName,
+  showNewOrderButton,
+}: UserInvestmentsHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -28,13 +36,15 @@ export function UserInvestmentsHeader({ siteName }: { siteName: string }) {
         </p>
       </div>
 
-      <Link
-        href="/account/dashboard/user/investment-orders/new"
-        className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
-      >
-        <Plus className="h-4 w-4" />
-        New order
-      </Link>
+      {showNewOrderButton ? (
+        <Link
+          href="/account/dashboard/user/investment-orders/new"
+          className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
+        >
+          <Plus className="h-4 w-4" />
+          New order
+        </Link>
+      ) : null}
     </div>
   );
 }

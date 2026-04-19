@@ -346,7 +346,7 @@ export default function PaymentProofModal({
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               onClick={() => onOpenChange(false)}
               disabled={pending}
               className="w-full rounded-full border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06]"

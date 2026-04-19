@@ -36,15 +36,6 @@ async function main() {
       model: InvestmentModel.MARKET,
     },
     {
-      name: "Ethereum Growth Strategy",
-      slug: "ethereum-growth-strategy",
-      description:
-        "Participate in the digital economy through leading cryptocurrencies with high growth potential and market-driven price movements.",
-      type: InvestmentType.CRYPTO,
-      symbol: "ETH",
-      model: InvestmentModel.MARKET,
-    },
-    {
       name: "Gold Commodity Fund",
       slug: "gold-commodity-fund",
       description:

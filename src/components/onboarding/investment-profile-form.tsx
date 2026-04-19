@@ -1,14 +1,17 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AddressAutofill } from "@mapbox/search-js-react";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getAgeFromIsoDate } from "@/lib/formatters/age";
+import { getDefaultCountryCallingCode } from "@/lib/formatters/phone";
+import { mapMapboxAddressToOnboardingFields } from "@/lib/mapbox/onboarding-address";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -36,6 +39,8 @@ import {
 import { createInvestorProfileAction } from "@/actions/onboarding/create-investor-profile";
 import type { UpsertCurrentUserInvestorProfileResult } from "@/actions/profile/upsert-current-user-investor-profile";
 
+const MAPBOX_PUBLIC_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? "";
+
 type InvestmentProfileFormProps = {
   onCreateLater?: () => Promise<void>;
   initialValues?: Partial<OnboardingSchemaInput>;
@@ -59,11 +64,15 @@ export function InvestmentProfileForm({
 }: InvestmentProfileFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const initialCountry = initialValues?.country ?? "United States";
+  const previousCountryRef = useRef(initialCountry);
 
   const form = useForm<OnboardingSchemaInput, unknown, OnboardingSchemaType>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      countryCallingCode: "+1",
+      countryCallingCode:
+        initialValues?.countryCallingCode ??
+        getDefaultCountryCallingCode(initialValues?.country ?? "United States"),
       phoneNumber: "",
       dateOfBirth: "",
       confirmAdultAge: compactFields ? true : false,
@@ -75,6 +84,32 @@ export function InvestmentProfileForm({
       ...initialValues,
     },
   });
+
+  const watchedCountry = useWatch({
+    control: form.control,
+    name: "country",
+  });
+
+  useEffect(() => {
+    if (previousCountryRef.current === watchedCountry) {
+      return;
+    }
+
+    const previousDefault = getDefaultCountryCallingCode(
+      previousCountryRef.current,
+    );
+    const nextDefault = getDefaultCountryCallingCode(watchedCountry);
+    const currentCallingCode = form.getValues("countryCallingCode");
+
+    if (!currentCallingCode || currentCallingCode === previousDefault) {
+      form.setValue("countryCallingCode", nextDefault, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    previousCountryRef.current = watchedCountry;
+  }, [form, watchedCountry]);
 
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
@@ -374,12 +409,85 @@ export function InvestmentProfileForm({
             <Field data-invalid={fieldState.invalid || undefined}>
               <FieldLabel className="text-white/80">Address line 1</FieldLabel>
               <FieldContent>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="123 Main Street"
-                  className="input-premium h-11 rounded-xl"
-                />
+                {MAPBOX_PUBLIC_TOKEN ? (
+                  <AddressAutofill
+                    accessToken={MAPBOX_PUBLIC_TOKEN}
+                    options={{
+                      language: "en",
+                    }}
+                    onRetrieve={(result) => {
+                      const selectedAddress =
+                        mapMapboxAddressToOnboardingFields(result);
+
+                      if (!selectedAddress) {
+                        return;
+                      }
+
+                      if (selectedAddress.country) {
+                        form.setValue("country", selectedAddress.country, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      }
+
+                      if (selectedAddress.state) {
+                        form.setValue("state", selectedAddress.state, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      }
+
+                      if (selectedAddress.city) {
+                        form.setValue("city", selectedAddress.city, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
+                      }
+
+                      if (selectedAddress.addressLine1) {
+                        field.onChange(selectedAddress.addressLine1);
+                      }
+
+                      if (selectedAddress.addressLine2) {
+                        form.setValue(
+                          "addressLine2",
+                          selectedAddress.addressLine2,
+                          {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          },
+                        );
+                      }
+                    }}
+                    onSuggestError={() => {
+                      toast.error(
+                        "Address suggestions are temporarily unavailable.",
+                      );
+                    }}
+                  >
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      inputMode="text"
+                      autoComplete="shipping address-line1"
+                      placeholder="123 Main Street"
+                      className="input-premium h-11 rounded-xl"
+                    />
+                  </AddressAutofill>
+                ) : (
+                  <Input
+                    {...field}
+                    disabled={isPending}
+                    inputMode="text"
+                    autoComplete="shipping address-line1"
+                    placeholder="123 Main Street"
+                    className="input-premium h-11 rounded-xl"
+                  />
+                )}
+                <FieldDescription className="pt-1">
+                  Start typing your address to see Mapbox suggestions. Choosing
+                  one will prefill the rest of the address fields.
+                </FieldDescription>
                 {fieldState.error ? (
                   <FieldError errors={[fieldState.error]} />
                 ) : null}

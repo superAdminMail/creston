@@ -45,8 +45,10 @@ export type InvestmentOrderPaymentDetails = {
 
 export default function InvestmentOrderPaymentClient({
   order,
+  partialPaymentAmount,
 }: {
   order: InvestmentOrderPaymentDetails;
+  partialPaymentAmount: number;
 }) {
   const [mode, setMode] = useState<"FULL" | "PARTIAL" | null>(null);
   const [amount, setAmount] = useState(order.remainingAmount);
@@ -110,7 +112,10 @@ export default function InvestmentOrderPaymentClient({
                   ? "shadow-[0_14px_30px_rgba(14,165,233,0.18)]"
                   : "border-slate-200/80 bg-white/65 text-slate-600 hover:border-slate-300 hover:bg-white/85 hover:text-slate-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300 dark:hover:bg-white/[0.06] dark:hover:text-white"
               }
-              onClick={() => setMode("PARTIAL")}
+              onClick={() => {
+                setMode("PARTIAL");
+                setAmount(partialPaymentAmount);
+              }}
             >
               Partial Payment
             </Button>
@@ -120,10 +125,10 @@ export default function InvestmentOrderPaymentClient({
             <div className="space-y-2">
               <Input
                 type="number"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                value={amount + 10}
                 max={order.remainingAmount}
                 placeholder="Enter amount"
+                readOnly
                 className="border-slate-200/80 bg-white/70 text-slate-950 placeholder:text-slate-400 shadow-sm backdrop-blur-sm focus-visible:border-sky-300 focus-visible:ring-sky-200 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-sky-400/40 dark:focus-visible:ring-sky-400/20"
               />
               <p className="text-slate-600 px-2">

@@ -35,13 +35,14 @@ export function OnboardingDialog({
           className="top-[calc(50%+4rem)] max-h-[calc(100dvh-9.5rem)] overflow-y-auto border-white/10 bg-[var(--card)] text-[var(--foreground)] sm:top-[calc(50%+4.75rem)] sm:max-h-[calc(100dvh-11rem)] sm:max-w-2xl"
           showCloseButton={false}
         >
-          <DialogHeader>
+          <DialogHeader className="space-y-2">
             <DialogTitle className="text-2xl font-semibold tracking-[-0.03em]">
               Set up your investment profile
             </DialogTitle>
             <DialogDescription className="text-sm leading-6 text-slate-400">
               Welcome to {siteName}, {userName}. Please set up your investment
-              profile to get started.
+              profile to get started, including the structured address fields
+              that Mapbox can now prefill for you.
             </DialogDescription>
           </DialogHeader>
 

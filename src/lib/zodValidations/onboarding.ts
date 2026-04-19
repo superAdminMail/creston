@@ -8,7 +8,9 @@ export const onboardingSchema = z
     countryCallingCode: z
       .string()
       .trim()
-      .regex(/^\+\d{1,4}$/, "Enter a valid country code like +1"),
+      .regex(/^\+\d{1,4}$/, "Enter a valid country code like +1")
+      .optional()
+      .or(z.literal("")),
 
     phoneNumber: z
       .string()
