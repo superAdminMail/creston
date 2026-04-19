@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  BadgeCheck,
-  CircleAlert,
-  Clock3,
-  Wallet,
-} from "lucide-react";
+import { BadgeCheck, CircleAlert, Clock3, Wallet } from "lucide-react";
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";

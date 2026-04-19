@@ -45,15 +45,6 @@ async function main() {
       model: InvestmentModel.MARKET,
     },
     {
-      name: "OIL & Gas Commodity Fund",
-      slug: "oil-commodity-fund",
-      description:
-        "Invest in commodities like gold to hedge against inflation and maintain exposure to real asset value movements.",
-      type: InvestmentType.COMMODITIES,
-      symbol: "OIL",
-      model: InvestmentModel.MARKET,
-    },
-    {
       name: "Fixed Income Yield Plan",
       slug: "fixed-income-yield-plan",
       description:

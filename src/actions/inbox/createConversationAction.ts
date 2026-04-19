@@ -38,37 +38,37 @@ export async function createConversationAction({
 
   const role = await getCurrentUserRole();
 
-  const { created, thread } = await prisma.$transaction(async (tx) => {
-    const created = await createSupportConversation({
-      creatorUserId: userId,
-      subject: parsed.data.subject,
-      message: parsed.data.message,
-      type: "SUPPORT",
-      source: "dashboard-support",
-      db: tx,
-      skipPostCommit: true,
-    });
-
-    const thread =
-      role && userId
-        ? await getSupportConversationThread({
-            conversationId: created.createdConversation.id,
-            viewerUserId: userId,
-            viewerRole: role,
-            db: tx,
-          })
-        : null;
-
-    return {
-      created,
-      thread,
-    };
-  });
+  const created = await prisma.$transaction(
+    async (tx) =>
+      createSupportConversation({
+        creatorUserId: userId,
+        subject: parsed.data.subject,
+        message: parsed.data.message,
+        type: "SUPPORT",
+        source: "dashboard-support",
+        db: tx,
+        skipPostCommit: true,
+      }),
+    {
+      maxWait: 5_000,
+      timeout: 10_000,
+    },
+  );
 
   await finalizeSupportConversationCreation(created);
 
+  const thread =
+    role && userId
+      ? await getSupportConversationThread({
+          conversationId: created.createdConversation.id,
+          viewerUserId: userId,
+          viewerRole: role,
+        })
+      : null;
+
   revalidatePath("/account/dashboard/user/support");
   revalidatePath("/account/dashboard/admin/support");
+  revalidatePath("/account/dashboard/super-admin/support");
 
   if (!thread) {
     return {

@@ -140,6 +140,17 @@ const conversationThreadInclude = {
   },
 } satisfies Prisma.ConversationInclude;
 
+const conversationCreationInclude = {
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
+  },
+} satisfies Prisma.ConversationInclude;
+
 type ConversationListRecord = Prisma.ConversationGetPayload<{
   include: typeof conversationListInclude;
 }>;
@@ -148,10 +159,19 @@ type ConversationThreadRecord = Prisma.ConversationGetPayload<{
   include: typeof conversationThreadInclude;
 }>;
 
+type ConversationCreationRecord = Prisma.ConversationGetPayload<{
+  include: typeof conversationCreationInclude;
+}>;
+
 type SupportDbClient = Prisma.TransactionClient | PrismaClient;
 
+const SUPPORT_INTERACTIVE_TRANSACTION_OPTIONS = {
+  maxWait: 5_000,
+  timeout: 10_000,
+} as const;
+
 export type SupportConversationCreationResult = {
-  createdConversation: ConversationThreadRecord;
+  createdConversation: ConversationCreationRecord;
   message: Awaited<ReturnType<typeof persistConversationMessage>>;
 };
 
@@ -722,12 +742,15 @@ export async function getSupportConversationThread(input: {
   } satisfies SupportConversationThread;
 }
 
-async function ensureConversationMember(input: {
-  conversationId: string;
-  userId: string;
-  role: ConversationRole;
-}) {
-  await prisma.conversationMember.upsert({
+async function ensureConversationMember(
+  db: SupportDbClient,
+  input: {
+    conversationId: string;
+    userId: string;
+    role: ConversationRole;
+  },
+) {
+  await db.conversationMember.upsert({
     where: {
       conversationId_userId: {
         conversationId: input.conversationId,
@@ -782,7 +805,7 @@ async function createSupportConversationRecord(
           }
         : undefined,
     },
-    include: conversationThreadInclude,
+    include: conversationCreationInclude,
   });
 
   const message = await persistConversationMessage(db, {
@@ -843,7 +866,7 @@ export async function createSupportConversation(input: {
   priority?: ConversationPriority;
   db?: SupportDbClient;
   skipPostCommit?: false | undefined;
-}): Promise<ConversationThreadRecord>;
+}): Promise<ConversationCreationRecord>;
 export async function createSupportConversation(input: {
   creatorUserId?: string | null;
   contactName?: string | null;
@@ -855,11 +878,12 @@ export async function createSupportConversation(input: {
   priority?: ConversationPriority;
   db?: SupportDbClient;
   skipPostCommit?: boolean;
-}): Promise<ConversationThreadRecord | SupportConversationCreationResult> {
+}): Promise<ConversationCreationRecord | SupportConversationCreationResult> {
   const created = input.db
     ? await createSupportConversationRecord(input.db, input)
-    : await prisma.$transaction(async (tx) =>
-        createSupportConversationRecord(tx, input),
+    : await prisma.$transaction(
+        async (tx) => createSupportConversationRecord(tx, input),
+        SUPPORT_INTERACTIVE_TRANSACTION_OPTIONS,
       );
 
   if (input.skipPostCommit) {
@@ -910,16 +934,16 @@ export async function replyToSupportConversation(input: {
     ) {
       throw new Error("Assigned to another agent");
     }
-
-    await ensureConversationMember({
-      conversationId: input.conversationId,
-      userId: input.viewerUserId,
-      role: ConversationRole.SUPPORT,
-    });
   }
 
   const updated = await prisma.$transaction(async (tx) => {
     if (senderType === SenderType.SUPPORT) {
+      await ensureConversationMember(tx, {
+        conversationId: input.conversationId,
+        userId: input.viewerUserId,
+        role: ConversationRole.SUPPORT,
+      });
+
       await tx.conversation.update({
         where: { id: conversation.id },
         data: {
@@ -1002,7 +1026,7 @@ export async function assignSupportConversationToMe(input: {
   }
 
   await prisma.$transaction(async (tx) => {
-    await ensureConversationMember({
+    await ensureConversationMember(tx, {
       conversationId: conversation.id,
       userId: input.viewerUserId,
       role: ConversationRole.SUPPORT,
@@ -1108,39 +1132,62 @@ export async function markSupportConversationRead(input: {
     throw new Error("Conversation not found");
   }
 
-  if (isSupportStaffRole(input.viewerRole)) {
-    await ensureConversationMember({
-      conversationId: input.conversationId,
-      userId: input.viewerUserId,
-      role: ConversationRole.SUPPORT,
-    });
-  }
-
   const readAt = new Date();
   const senderTypes = getAllowedIncomingSenderTypes(input.viewerRole);
 
-  await prisma.$transaction([
-    prisma.message.updateMany({
-      where: {
-        conversationId: input.conversationId,
-        senderType: { in: [...senderTypes] },
-        deliveredAt: null,
-      },
-      data: {
-        deliveredAt: readAt,
-      },
-    }),
-    prisma.conversationMember.updateMany({
-      where: {
+  if (isSupportStaffRole(input.viewerRole)) {
+    await prisma.$transaction(async (tx) => {
+      await ensureConversationMember(tx, {
         conversationId: input.conversationId,
         userId: input.viewerUserId,
-      },
-      data: {
-        unreadCount: 0,
-        lastReadAt: readAt,
-      },
-    }),
-  ]);
+        role: ConversationRole.SUPPORT,
+      });
+
+      await tx.message.updateMany({
+        where: {
+          conversationId: input.conversationId,
+          senderType: { in: [...senderTypes] },
+          deliveredAt: null,
+        },
+        data: {
+          deliveredAt: readAt,
+        },
+      });
+      await tx.conversationMember.updateMany({
+        where: {
+          conversationId: input.conversationId,
+          userId: input.viewerUserId,
+        },
+        data: {
+          unreadCount: 0,
+          lastReadAt: readAt,
+        },
+      });
+    });
+  } else {
+    await prisma.$transaction([
+      prisma.message.updateMany({
+        where: {
+          conversationId: input.conversationId,
+          senderType: { in: [...senderTypes] },
+          deliveredAt: null,
+        },
+        data: {
+          deliveredAt: readAt,
+        },
+      }),
+      prisma.conversationMember.updateMany({
+        where: {
+          conversationId: input.conversationId,
+          userId: input.viewerUserId,
+        },
+        data: {
+          unreadCount: 0,
+          lastReadAt: readAt,
+        },
+      }),
+    ]);
+  }
 
   return readAt;
 }

@@ -65,8 +65,8 @@ export function ContactForm({
         <input
           type="email"
           name="email"
-          defaultValue={defaultEmail}
-          placeholder="you@example.com"
+          //  defaultValue={defaultEmail}
+          placeholder="yourmail@example.com"
           className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-blue-400"
         />
       </div>
