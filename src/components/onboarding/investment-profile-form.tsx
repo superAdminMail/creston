@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -68,7 +67,6 @@ export function InvestmentProfileForm({
   successMessage = "Investment profile saved.",
   compactFields = false,
 }: InvestmentProfileFormProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const initialCountry = initialValues?.country ?? "United States";
   const previousCountryRef = useRef(initialCountry);
@@ -288,8 +286,6 @@ export function InvestmentProfileForm({
       }
 
       toast.success(successMessage);
-      router.push("/account/dashboard/user/investment-profile");
-      router.refresh();
     });
   };
 
