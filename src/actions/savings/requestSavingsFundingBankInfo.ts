@@ -78,6 +78,7 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
   }
 
   const requestMessage = `Bank transfer details requested for savings account ${account.id} (${account.savingsProduct.name}) in ${account.currency}.`;
+  const adminRequestUrl = `/account/dashboard/admin/payment-methods?requestKind=SAVINGS_FUNDING_BANK_INFO&savingsAccountId=${encodeURIComponent(account.id)}&requesterId=${encodeURIComponent(user.id)}&requesterName=${encodeURIComponent(user.name ?? "")}&requesterEmail=${encodeURIComponent(user.email ?? "")}&savingsProductName=${encodeURIComponent(account.savingsProduct.name)}&currency=${encodeURIComponent(account.currency)}`;
 
   await prisma.$transaction(async (tx) => {
     await tx.notification.upsert({
@@ -124,33 +125,35 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
           type: "SYSTEM",
           key: `savings-funding-bank-info-request:${account.id}:${admin.id}`,
           link: "/account/dashboard/admin/payment-methods",
-          metadata: {
-            kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
-            savingsAccountId: account.id,
-            requesterId: user.id,
-            requesterName: user.name,
-            requesterEmail: user.email,
-            savingsProductName: account.savingsProduct.name,
-            currency: account.currency,
-          },
+        metadata: {
+          kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
+          savingsAccountId: account.id,
+          requesterId: user.id,
+          requesterName: user.name,
+          requesterEmail: user.email,
+          savingsProductName: account.savingsProduct.name,
+          currency: account.currency,
+          requestUrl: adminRequestUrl,
         },
-        update: {
+      },
+      update: {
           title: "Savings bank info request",
           message: requestMessage,
           type: "SYSTEM",
           link: "/account/dashboard/admin/payment-methods",
-          metadata: {
-            kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
-            savingsAccountId: account.id,
-            requesterId: user.id,
-            requesterName: user.name,
-            requesterEmail: user.email,
-            savingsProductName: account.savingsProduct.name,
-            currency: account.currency,
-          },
+        metadata: {
+          kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
+          savingsAccountId: account.id,
+          requesterId: user.id,
+          requesterName: user.name,
+          requesterEmail: user.email,
+          savingsProductName: account.savingsProduct.name,
+          currency: account.currency,
+          requestUrl: adminRequestUrl,
         },
-      });
-    }
+      },
+    });
+  }
   });
 
   revalidatePath("/account/dashboard/checkout");

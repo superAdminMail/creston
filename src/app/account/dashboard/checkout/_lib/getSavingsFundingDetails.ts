@@ -120,9 +120,61 @@ export async function getSavingsFundingDetails(
 
   const latestIntent = account.savingsFundingIntents[0] ?? null;
 
+  const existingBankInfoRequest = await prisma.notification.findFirst({
+    where: {
+      userId: user.id,
+      key: {
+        startsWith: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
+      },
+    },
+    select: {
+      id: true,
+      type: true,
+      metadata: true,
+    },
+  });
+
+  const existingBankInfoRequestMetadata =
+    existingBankInfoRequest &&
+    isSavingsFundingBankInfoRequestAckNotification(existingBankInfoRequest) &&
+    typeof existingBankInfoRequest.metadata === "object" &&
+    existingBankInfoRequest.metadata !== null &&
+    !Array.isArray(existingBankInfoRequest.metadata)
+      ? existingBankInfoRequest.metadata
+      : null;
+
+  const requestedPlatformPaymentMethodId =
+    existingBankInfoRequestMetadata &&
+    typeof existingBankInfoRequestMetadata.platformPaymentMethodId === "string"
+      ? existingBankInfoRequestMetadata.platformPaymentMethodId
+      : null;
+
+  const requestedBankMethod = requestedPlatformPaymentMethodId
+    ? await prisma.platformPaymentMethod.findFirst({
+        where: {
+          id: requestedPlatformPaymentMethodId,
+          isActive: true,
+          isPrivate: true,
+          type: "BANK_INFO",
+        },
+        select: {
+          id: true,
+          label: true,
+          bankName: true,
+          bankCode: true,
+          accountName: true,
+          accountNumber: true,
+          instructions: true,
+          notes: true,
+          currency: true,
+        },
+      })
+    : null;
+
   const fallbackBankMethod = latestIntent?.platformPaymentMethod
     ? null
-    : await getPublicPlatformPaymentMethods().then(
+    : requestedBankMethod ??
+      (await getPublicPlatformPaymentMethods().then(
         (methods) =>
           methods.find(
             (method) =>
@@ -130,7 +182,7 @@ export async function getSavingsFundingDetails(
               (method.currency === account.currency ||
                 method.currency === null),
           ) ?? null,
-      );
+      ));
 
   const bankMethod = latestIntent?.platformPaymentMethod ?? fallbackBankMethod;
   const balance = toNumber(account.balance);
@@ -145,20 +197,6 @@ export async function getSavingsFundingDetails(
     latestIntent?.status === "PENDING" ||
     latestIntent?.status === "SUBMITTED" ||
     latestPayment?.status === "PENDING_REVIEW";
-
-  const existingBankInfoRequest = await prisma.notification.findFirst({
-    where: {
-      userId: user.id,
-      key: {
-        startsWith: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
-      },
-    },
-    select: {
-      id: true,
-      type: true,
-      metadata: true,
-    },
-  });
 
   return {
     account: {

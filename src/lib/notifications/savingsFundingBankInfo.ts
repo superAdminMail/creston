@@ -15,12 +15,14 @@ export type SavingsFundingBankInfoRequestMetadata = {
   requesterEmail: string | null;
   savingsProductName: string;
   currency: string;
+  requestUrl: string;
 };
 
 export type SavingsFundingBankInfoRequestAckMetadata = {
   kind: typeof SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND;
   savingsAccountId: string;
   requesterId: string;
+  platformPaymentMethodId?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
