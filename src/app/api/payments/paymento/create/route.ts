@@ -5,10 +5,12 @@ import {
   CryptoNetwork,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { calculateInvestmentOrderCryptoChargeAmount } from "@/lib/payments/crypto/calculateInvestmentOrderCryptoChargeAmount";
 import { paymentoCreatePayment } from "@/lib/payments/crypto/paymento";
 
 type RequestBody = {
   investmentOrderId: string;
+  paymentMode?: "FULL" | "PARTIAL" | null;
 };
 
 export async function POST(req: Request) {
@@ -48,8 +50,33 @@ export async function POST(req: Request) {
       );
     }
 
+    const hasActiveCryptoIntent =
+      (await prisma.cryptoFundingIntent.findFirst({
+        where: {
+          investmentOrderId: order.id,
+          status: {
+            in: [
+              "PENDING",
+              "REQUIRES_ACTION",
+              "PROCESSING",
+              "AWAITING_PROVIDER_CONFIRMATION",
+            ],
+          },
+        },
+        select: {
+          id: true,
+        },
+      })) !== null;
+
+    const chargeCalculation = calculateInvestmentOrderCryptoChargeAmount({
+      totalAmount: order.amount,
+      amountPaid: order.amountPaid,
+      usePartialPayment: body.paymentMode === "PARTIAL",
+      hasActiveCryptoIntent,
+    });
+
     const created = await paymentoCreatePayment({
-      fiatAmount: order.amount.toString(),
+      fiatAmount: chargeCalculation.chargeAmount.toString(),
       fiatCurrency: order.currency,
       orderId: order.id,
       Speed: 1,
@@ -58,6 +85,10 @@ export async function POST(req: Request) {
         { key: "investmentOrderId", value: order.id },
         { key: "investorProfileId", value: order.investorProfileId },
         { key: "userId", value: order.investorProfile.user.id },
+        {
+          key: "paymentMode",
+          value: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
+        },
       ],
       EmailAddress: order.investorProfile.user.email,
     });
@@ -69,13 +100,18 @@ export async function POST(req: Request) {
         asset: CryptoAsset.BTC,
         network: CryptoNetwork.BITCOIN,
         fiatCurrency: order.currency,
-        fiatAmount: order.amount,
+        fiatAmount: chargeCalculation.chargeAmount,
         status: "REQUIRES_ACTION",
         providerSessionId: created.token,
         providerReference: order.id,
         redirectUrl: created.gatewayUrl,
         metadata: {
           createPaymentResponse: created.raw,
+          paymentMode: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
+          chargeAmount: chargeCalculation.chargeAmount.toString(),
+          remainingBeforeCharge:
+            chargeCalculation.remainingBeforeCharge.toString(),
+          splitNumber: chargeCalculation.splitNumber,
         },
         investmentOrderId: order.id,
         platformPaymentMethodId: order.platformPaymentMethodId,
@@ -91,6 +127,8 @@ export async function POST(req: Request) {
           redirectUrl: created.gatewayUrl,
           provider: "PAYMENTO",
           token: created.token,
+          paymentMode: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
+          chargeAmount: chargeCalculation.chargeAmount.toString(),
         },
       },
     });

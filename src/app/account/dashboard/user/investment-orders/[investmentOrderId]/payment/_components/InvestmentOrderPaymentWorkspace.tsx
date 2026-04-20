@@ -16,9 +16,7 @@ export default function InvestmentOrderPaymentWorkspace({
   order: InvestmentOrderPaymentDetails;
 }) {
   const [mode, setMode] = useState<"FULL" | "PARTIAL" | null>(null);
-  const [partialAmount, setPartialAmount] = useState<number>(
-    order.remainingAmount,
-  );
+  const [partialAmount] = useState<number>(order.remainingAmount);
   const [proofOpen, setProofOpen] = useState(false);
 
   const canSubmitPayment =
@@ -45,7 +43,6 @@ export default function InvestmentOrderPaymentWorkspace({
             mode={mode}
             partialAmount={partialAmount}
             onModeChange={setMode}
-            onPartialAmountChange={setPartialAmount}
           />
 
           {mode ? (

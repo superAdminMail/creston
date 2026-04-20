@@ -1,11 +1,19 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 
 import InvestmentOrderPaymentClient from "../user/investment-orders/[investmentOrderId]/payment/_components/InvestmentOrderPaymentClient";
 import { getInvestmentOrderPaymentDetails } from "../user/investment-orders/[investmentOrderId]/payment/_lib/getInvestmentOrderPaymentDetails";
+import SavingsFunding from "./_components/SavingsFunding";
 import { calculateInvestmentOrderBankChargeAmount } from "@/lib/payments/bank/calculateInvestmentOrderBankChargeAmount";
+import {
+  isCheckoutFundingMethodType,
+  isCheckoutPaymentMode,
+  type CheckoutFundingMethodType,
+  type CheckoutPaymentMode,
+} from "@/lib/types/payments/checkout.types";
 
 type CheckoutTargetType = "INVESTMENT_ORDER" | "SAVINGS_FUNDING";
-type CheckoutPaymentMode = "FULL" | "PARTIAL";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -14,6 +22,7 @@ type PageProps = {
 type CheckoutRouteInput = {
   targetType: CheckoutTargetType;
   targetId: string;
+  fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
 };
 
@@ -26,8 +35,20 @@ function parseCheckoutPaymentMode(
 ): CheckoutPaymentMode | null {
   const paymentMode = single(value);
 
-  if (paymentMode === "FULL" || paymentMode === "PARTIAL") {
+  if (isCheckoutPaymentMode(paymentMode)) {
     return paymentMode;
+  }
+
+  return null;
+}
+
+function parseCheckoutFundingMethodType(
+  value: string | string[] | undefined,
+): CheckoutFundingMethodType | null {
+  const fundingMethodType = single(value);
+
+  if (isCheckoutFundingMethodType(fundingMethodType)) {
+    return fundingMethodType;
   }
 
   return null;
@@ -41,14 +62,21 @@ function parseCheckoutRouteInput(
   if (targetType === "INVESTMENT_ORDER" || targetType === "SAVINGS_FUNDING") {
     const targetId = single(searchParams.targetId);
     const paymentMode = parseCheckoutPaymentMode(searchParams.paymentMode);
+    const fundingMethodType = parseCheckoutFundingMethodType(
+      searchParams.fundingMethodType,
+    );
 
     if (!targetId) {
       return null;
     }
 
+    if (searchParams.paymentMode !== undefined && paymentMode === null) {
+      return null;
+    }
+
     if (
-      searchParams.paymentMode !== undefined &&
-      paymentMode === null
+      searchParams.fundingMethodType !== undefined &&
+      fundingMethodType === null
     ) {
       return null;
     }
@@ -56,31 +84,12 @@ function parseCheckoutRouteInput(
     return {
       targetType,
       targetId,
+      fundingMethodType,
       paymentMode,
     };
   }
 
   return null;
-}
-
-function SavingsFundingPlaceholder() {
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-      <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-          Shared checkout
-        </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-          Savings funding coming soon
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
-          This checkout entry point is reserved for savings funding flows. The
-          investment order path remains active and unchanged while the savings
-          implementation is added later.
-        </p>
-      </div>
-    </div>
-  );
 }
 
 export default async function CheckoutPage({ searchParams }: PageProps) {
@@ -109,11 +118,19 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
         <InvestmentOrderPaymentClient
           order={order}
           partialPaymentAmount={partialPaymentAmount}
+          fundingMethodType={routeInput.fundingMethodType}
+          paymentMode={routeInput.paymentMode}
         />
       );
     }
     case "SAVINGS_FUNDING":
-      return <SavingsFundingPlaceholder />;
+      return (
+        <SavingsFunding
+          savingsAccountId={routeInput.targetId}
+          fundingMethodType={routeInput.fundingMethodType}
+          paymentMode={routeInput.paymentMode}
+        />
+      );
     default:
       notFound();
   }

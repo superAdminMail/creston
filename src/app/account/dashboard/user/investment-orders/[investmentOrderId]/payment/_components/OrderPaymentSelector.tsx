@@ -10,7 +10,6 @@ type Props = {
   mode: "FULL" | "PARTIAL" | null;
   partialAmount: number;
   onModeChange: (mode: "FULL" | "PARTIAL") => void;
-  onPartialAmountChange: (amount: number) => void;
 };
 
 export default function OrderPaymentSelector({
@@ -19,7 +18,6 @@ export default function OrderPaymentSelector({
   mode,
   partialAmount,
   onModeChange,
-  onPartialAmountChange,
 }: Props) {
   return (
     <Card className="border-border/60 shadow-sm">
@@ -34,7 +32,7 @@ export default function OrderPaymentSelector({
             variant={mode === "FULL" ? "default" : "outline"}
             onClick={() => onModeChange("FULL")}
           >
-            Full payment
+            Full Payment
           </Button>
 
           <Button
@@ -42,7 +40,7 @@ export default function OrderPaymentSelector({
             variant={mode === "PARTIAL" ? "default" : "outline"}
             onClick={() => onModeChange("PARTIAL")}
           >
-            Partial payment
+            Partial Payment
           </Button>
         </div>
 

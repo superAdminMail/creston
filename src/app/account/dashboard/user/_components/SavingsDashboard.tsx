@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, Lock, PiggyBank, Plus, ShieldAlert } from "lucide-react";
+import { Lock, PiggyBank, Plus, ShieldAlert } from "lucide-react";
 
 import type { SavingsPageData } from "@/actions/savings/getSavingsPageData";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -13,6 +13,7 @@ import {
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
+import SavingsDepositButton from "./SavingsDepositButton";
 
 type SavingsDashboardProps = {
   accounts: SavingsPageData["accounts"];
@@ -76,32 +77,50 @@ export default function SavingsDashboard({
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
-          <CardContent className="space-y-2 p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-              Accounts
-            </p>
-            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.15),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent" />
+          <CardContent className="space-y-3 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400">
+                Accounts
+              </p>
+              <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium text-slate-300">
+                Active
+              </span>
+            </div>
+            <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
               {accounts.length}
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
-          <CardContent className="space-y-2 p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-              Total balance
-            </p>
-            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
+          <CardContent className="space-y-3 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400">
+                Total balance
+              </p>
+              <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+                Portfolio
+              </span>
+            </div>
+            <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
               {formatCurrency(totalBalance)}
             </p>
           </CardContent>
         </Card>
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10">
-          <CardContent className="space-y-2 p-5 sm:p-6">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-              Locked accounts
-            </p>
-            <p className="text-2xl font-semibold text-white sm:text-[2rem]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent" />
+          <CardContent className="space-y-3 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400">
+                Locked accounts
+              </p>
+              <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-2.5 py-1 text-[11px] font-medium text-amber-300">
+                Protected
+              </span>
+            </div>
+            <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
               {accounts.filter((account) => account.isLocked).length}
             </p>
           </CardContent>
@@ -235,17 +254,11 @@ export default function SavingsDashboard({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Button
-                    asChild
+                  <SavingsDepositButton
+                    accountId={account.id}
                     className="flex-1 rounded-2xl bg-blue-500 hover:bg-blue-600"
-                  >
-                    <Link
-                      href={`/account/dashboard/user/savings/${account.id}`}
-                    >
-                      Deposit
-                    </Link>
-                  </Button>
-                </div>
+                  />
+              </div>
               </CardContent>
             </Card>
           ))}

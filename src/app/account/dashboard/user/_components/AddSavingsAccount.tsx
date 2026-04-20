@@ -34,24 +34,30 @@ function buildFeatures(product: SavingsPageData["products"][number]) {
   if (product.interestEnabled && product.interestRatePercent) {
     features.push(`${product.interestRatePercent}% annual interest`);
     if (product.interestPayoutFrequency) {
-      features.push(`${formatEnumLabel(product.interestPayoutFrequency)} payouts`);
+      features.push(
+        `${formatEnumLabel(product.interestPayoutFrequency)} payouts`,
+      );
     }
   } else {
     features.push("No interest earnings");
   }
 
   if (product.isLockable && product.minimumLockDays) {
-    features.push(`Lock from ${product.minimumLockDays} days`);
+    features.push(`Lock period up to ${product.minimumLockDays} days`);
   } else {
     features.push("No lock period");
   }
 
   features.push(
-    product.allowsWithdrawals ? "Flexible withdrawals" : "Withdrawals restricted",
+    product.allowsWithdrawals
+      ? "Flexible withdrawals"
+      : "Withdrawals restricted",
   );
 
   if (product.minBalance) {
-    features.push(`Minimum balance ${formatCurrency(product.minBalance, product.currency)}`);
+    features.push(
+      `Minimum balance ${formatCurrency(product.minBalance, product.currency)}`,
+    );
   }
 
   return features;
@@ -62,8 +68,10 @@ export default function AddSavingsAccount({
   kycStatus,
   canCreateSavingsAccount,
 }: AddSavingsAccountProps) {
-  const [selected, setSelected] = useState<string>(initialProducts[0]?.id ?? "");
-  const [state, formAction] = useActionState(createSavingsAccount, {
+  const [selected, setSelected] = useState<string>(
+    initialProducts[0]?.id ?? "",
+  );
+  const [state, formAction, isPending] = useActionState(createSavingsAccount, {
     status: "idle",
   });
 
@@ -93,9 +101,11 @@ export default function AddSavingsAccount({
           </AlertTitle>
         </Alert>
       ) : (
-        <Alert className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100">
+        <Alert className="rounded-2xl hidden border border-emerald-400/20 bg-emerald-400/10 text-emerald-100">
           <ShieldCheck className="h-4 w-4" />
-          <AlertTitle>Your identity is verified. You can open savings accounts.</AlertTitle>
+          <AlertTitle>
+            Your identity is verified. You can open savings accounts.
+          </AlertTitle>
         </Alert>
       )}
 
@@ -134,7 +144,8 @@ export default function AddSavingsAccount({
                   </div>
 
                   <p className="text-sm leading-7 text-slate-400">
-                    {product.description ?? "No description available for this product."}
+                    {product.description ??
+                      "No description available for this product."}
                   </p>
 
                   <ul className="space-y-2 text-sm text-slate-300">
@@ -168,8 +179,12 @@ export default function AddSavingsAccount({
               <input type="hidden" name="productId" value={selected} />
 
               <FieldGroup className="gap-5">
-                <Field data-invalid={Boolean(state.fieldErrors?.name) || undefined}>
-                  <FieldLabel className="text-slate-200">Account name</FieldLabel>
+                <Field
+                  data-invalid={Boolean(state.fieldErrors?.name) || undefined}
+                >
+                  <FieldLabel className="text-slate-200">
+                    Account name
+                  </FieldLabel>
                   <FieldContent>
                     <Input
                       name="name"
@@ -179,7 +194,7 @@ export default function AddSavingsAccount({
                       className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
                     />
                     <FieldDescription className="text-xs text-slate-500">
-                      This is the display name stored on your savings account.
+                      This is the name of your savings account.
                     </FieldDescription>
                     {state.fieldErrors?.name ? (
                       <FieldError
@@ -192,9 +207,13 @@ export default function AddSavingsAccount({
                 </Field>
 
                 <Field
-                  data-invalid={Boolean(state.fieldErrors?.description) || undefined}
+                  data-invalid={
+                    Boolean(state.fieldErrors?.description) || undefined
+                  }
                 >
-                  <FieldLabel className="text-slate-200">Description</FieldLabel>
+                  <FieldLabel className="text-slate-200">
+                    Description
+                  </FieldLabel>
                   <FieldContent>
                     <Textarea
                       name="description"
@@ -204,34 +223,46 @@ export default function AddSavingsAccount({
                     />
                     {state.fieldErrors?.description ? (
                       <FieldError
-                        errors={state.fieldErrors.description.map((message) => ({
-                          message,
-                        }))}
+                        errors={state.fieldErrors.description.map(
+                          (message) => ({
+                            message,
+                          }),
+                        )}
                       />
                     ) : null}
                   </FieldContent>
                 </Field>
 
                 <Field
-                  data-invalid={Boolean(state.fieldErrors?.targetAmount) || undefined}
+                  data-invalid={
+                    Boolean(state.fieldErrors?.targetAmount) || undefined
+                  }
                 >
-                  <FieldLabel className="text-slate-200">Target amount</FieldLabel>
+                  <FieldLabel className="text-slate-200">
+                    Target amount
+                  </FieldLabel>
                   <FieldContent>
                     <Input
                       name="targetAmount"
                       inputMode="decimal"
-                      placeholder={selectedProduct ? `e.g. ${selectedProduct.currency} 5000` : "e.g. 5000"}
+                      placeholder={
+                        selectedProduct
+                          ? `e.g. ${selectedProduct.currency} 5000`
+                          : "e.g. 5000"
+                      }
                       disabled={!canCreateSavingsAccount}
                       className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
                     />
                     <FieldDescription className="text-xs text-slate-500">
-                      Optional. Stored on the account as `targetAmount`.
+                      This is the target amount for your savings account.
                     </FieldDescription>
                     {state.fieldErrors?.targetAmount ? (
                       <FieldError
-                        errors={state.fieldErrors.targetAmount.map((message) => ({
-                          message,
-                        }))}
+                        errors={state.fieldErrors.targetAmount.map(
+                          (message) => ({
+                            message,
+                          }),
+                        )}
                       />
                     ) : null}
                   </FieldContent>
@@ -242,7 +273,9 @@ export default function AddSavingsAccount({
                     type="checkbox"
                     name="lockSavings"
                     value="true"
-                    disabled={!canCreateSavingsAccount || !selectedProduct?.isLockable}
+                    disabled={
+                      !canCreateSavingsAccount || !selectedProduct?.isLockable
+                    }
                     className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent"
                   />
                   <div className="space-y-1">
@@ -257,9 +290,11 @@ export default function AddSavingsAccount({
                     </p>
                     {state.fieldErrors?.lockSavings ? (
                       <FieldError
-                        errors={state.fieldErrors.lockSavings.map((message) => ({
-                          message,
-                        }))}
+                        errors={state.fieldErrors.lockSavings.map(
+                          (message) => ({
+                            message,
+                          }),
+                        )}
                       />
                     ) : null}
                   </div>
@@ -276,7 +311,9 @@ export default function AddSavingsAccount({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {!canCreateSavingsAccount ? (
                   <Button asChild variant="outline" className="rounded-2xl">
-                    <Link href="/account/dashboard/user/kyc">Complete KYC first</Link>
+                    <Link href="/account/dashboard/user/kyc">
+                      Complete KYC first
+                    </Link>
                   </Button>
                 ) : (
                   <div className="text-xs text-slate-500">
@@ -286,10 +323,10 @@ export default function AddSavingsAccount({
 
                 <Button
                   type="submit"
-                  disabled={!selected || !canCreateSavingsAccount}
+                  disabled={!selected || !canCreateSavingsAccount || isPending}
                   className="rounded-2xl bg-blue-500 px-6 hover:bg-blue-600"
                 >
-                  Open savings account
+                  {isPending ? "Opening..." : "Open savings account"}
                 </Button>
               </div>
             </form>
