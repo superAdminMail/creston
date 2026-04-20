@@ -83,28 +83,40 @@ export async function upsertCurrentUserInvestorProfile(
     addressLine2: values.addressLine2 || null,
   };
 
-  await prisma.$transaction(async (tx) => {
-    await tx.investorProfile.upsert({
+  const profileWrite = prisma.investorProfile
+    .update({
       where: {
         userId: user.id,
       },
-      update: profileWriteData,
-      create: {
-        userId: user.id,
-        ...profileWriteData,
-      },
-    });
+      data: profileWriteData,
+    })
+    .catch(async (error: unknown) => {
+      const maybePrismaError = error as { code?: string };
 
-    if (options.markOnboardingComplete) {
-      await tx.user.update({
-        where: { id: user.id },
+      if (maybePrismaError.code !== "P2025") {
+        throw error;
+      }
+
+      return prisma.investorProfile.create({
         data: {
-          hasCompletedOnboarding: true,
-          skippedOnboardingAt: null,
+          userId: user.id,
+          ...profileWriteData,
         },
       });
-    }
-  });
+    });
+
+  if (options.markOnboardingComplete) {
+    await profileWrite;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        hasCompletedOnboarding: true,
+        skippedOnboardingAt: null,
+      },
+    });
+  } else {
+    await profileWrite;
+  }
 
   return { success: true };
 }

@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AddressAutofill } from "@mapbox/search-js-react";
+import {
+  AddressAutofillCore,
+  type AddressAutofillSuggestion,
+} from "@mapbox/search-js-core";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { getAgeFromIsoDate } from "@/lib/formatters/age";
 import { getDefaultCountryCallingCode } from "@/lib/formatters/phone";
-import { mapMapboxAddressToOnboardingFields } from "@/lib/mapbox/onboarding-address";
+import {
+  mapMapboxAddressToOnboardingFields,
+  type OnboardingAddressFields,
+} from "@/lib/mapbox/onboarding-address";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -66,6 +72,32 @@ export function InvestmentProfileForm({
   const [isPending, startTransition] = useTransition();
   const initialCountry = initialValues?.country ?? "United States";
   const previousCountryRef = useRef(initialCountry);
+  const addressAutofill = useMemo(
+    () =>
+      MAPBOX_PUBLIC_TOKEN
+        ? new AddressAutofillCore({ accessToken: MAPBOX_PUBLIC_TOKEN })
+        : null,
+    [],
+  );
+  const addressSessionTokenRef = useRef(
+    globalThis.crypto?.randomUUID?.() ??
+      `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  const selectedAddressLineRef = useRef("");
+  const hasPrefilledAddressDetails = Boolean(
+    initialValues?.addressLine1?.trim() ||
+    initialValues?.country?.trim() ||
+      initialValues?.state?.trim() ||
+      initialValues?.city?.trim() ||
+      initialValues?.addressLine2?.trim(),
+  );
+  const [showAddressDetails, setShowAddressDetails] = useState(
+    hasPrefilledAddressDetails,
+  );
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    AddressAutofillSuggestion[]
+  >([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
 
   const form = useForm<OnboardingSchemaInput, unknown, OnboardingSchemaType>({
     resolver: zodResolver(onboardingSchema),
@@ -89,6 +121,87 @@ export function InvestmentProfileForm({
     control: form.control,
     name: "country",
   });
+  const watchedAddressLine1 = useWatch({
+    control: form.control,
+    name: "addressLine1",
+  });
+
+  const applySelectedAddress = (
+    selectedAddress: OnboardingAddressFields,
+    fallbackAddressLine1: string,
+  ) => {
+    setShowAddressDetails(true);
+
+    const nextAddressLine1 =
+      selectedAddress.addressLine1?.trim() || fallbackAddressLine1.trim();
+
+    if (nextAddressLine1) {
+      selectedAddressLineRef.current = nextAddressLine1;
+      form.setValue("addressLine1", nextAddressLine1, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (selectedAddress.country) {
+      form.setValue("country", selectedAddress.country, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (selectedAddress.state) {
+      form.setValue("state", selectedAddress.state, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (selectedAddress.city) {
+      form.setValue("city", selectedAddress.city, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (selectedAddress.addressLine2) {
+      form.setValue("addressLine2", selectedAddress.addressLine2, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  };
+
+  const selectAddressSuggestion = async (
+    suggestion: AddressAutofillSuggestion,
+  ) => {
+    if (!addressAutofill) {
+      return;
+    }
+
+    try {
+      const retrieved = await addressAutofill.retrieve(suggestion, {
+        sessionToken: addressSessionTokenRef.current,
+      });
+
+      const selectedAddress = mapMapboxAddressToOnboardingFields(retrieved);
+      if (!selectedAddress) {
+        return;
+      }
+
+      const fallbackAddressLine1 =
+        suggestion.place_name ??
+        suggestion.full_address ??
+        suggestion.description ??
+        "";
+
+      applySelectedAddress(selectedAddress, fallbackAddressLine1);
+      setAddressSuggestions([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("Unable to select that address. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (previousCountryRef.current === watchedCountry) {
@@ -110,6 +223,44 @@ export function InvestmentProfileForm({
 
     previousCountryRef.current = watchedCountry;
   }, [form, watchedCountry]);
+
+  useEffect(() => {
+    if (!addressAutofill || !MAPBOX_PUBLIC_TOKEN) {
+      return;
+    }
+
+    const query = watchedAddressLine1?.trim() ?? "";
+
+    if (query.length < 3) {
+      setAddressSuggestions([]);
+      setIsSearchingAddress(false);
+      return;
+    }
+
+    if (query === selectedAddressLineRef.current) {
+      setAddressSuggestions([]);
+      setIsSearchingAddress(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        setIsSearchingAddress(true);
+        const response = await addressAutofill.suggest(query, {
+          sessionToken: addressSessionTokenRef.current,
+          language: "en",
+        });
+        setAddressSuggestions(response.suggestions ?? []);
+      } catch (error) {
+        console.error(error);
+        setAddressSuggestions([]);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [addressAutofill, watchedAddressLine1]);
 
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
@@ -153,9 +304,7 @@ export function InvestmentProfileForm({
     name: "confirmAdultAge",
     defaultValue: false,
   });
-  const hasConfirmedAdultAge = compactFields
-    ? true
-    : watchedConfirmAdultAge;
+  const hasConfirmedAdultAge = compactFields ? true : watchedConfirmAdultAge;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
@@ -272,7 +421,7 @@ export function InvestmentProfileForm({
                     <Calendar
                       mode="single"
                       selected={field.value ? parseISO(field.value) : undefined}
-                        onSelect={(date) => {
+                      onSelect={(date) => {
                         const nextDate = date ? format(date, "yyyy-MM-dd") : "";
 
                         field.onChange(nextDate);
@@ -341,152 +490,74 @@ export function InvestmentProfileForm({
 
         <Controller
           control={form.control}
-          name="country"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">Country</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="United States"
-                  className="input-premium h-11 rounded-xl"
-                />
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="state"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">State</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="California"
-                  className="input-premium h-11 rounded-xl"
-                />
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="city"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">City</FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="Los Angeles"
-                  className="input-premium h-11 rounded-xl"
-                />
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
-
-        <Controller
-          control={form.control}
           name="addressLine1"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">Address line 1</FieldLabel>
-              <FieldContent>
+              <FieldLabel className="text-white/80">Address</FieldLabel>
+              <FieldContent className="relative overflow-visible">
                 {MAPBOX_PUBLIC_TOKEN ? (
-                  <AddressAutofill
-                    accessToken={MAPBOX_PUBLIC_TOKEN}
-                    options={{
-                      language: "en",
-                    }}
-                    onRetrieve={(result) => {
-                      const selectedAddress =
-                        mapMapboxAddressToOnboardingFields(result);
+                  <div className="relative z-50 overflow-visible">
+                    <div className="relative overflow-visible">
+                      <Input
+                        value={field.value ?? ""}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          selectedAddressLineRef.current = "";
+                          field.onChange(nextValue);
+                        }}
+                        disabled={isPending}
+                        inputMode="text"
+                        autoComplete="shipping address-line1"
+                        placeholder="Start typing your address"
+                        className="input-premium h-11 rounded-xl"
+                      />
+                      {(addressSuggestions.length > 0 || isSearchingAddress) && (
+                        <div className="absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] shadow-[0_24px_70px_rgba(0,0,0,0.34)]">
+                          <div className="max-h-72 overflow-auto py-1">
+                            {isSearchingAddress &&
+                            addressSuggestions.length === 0 ? (
+                              <div className="px-4 py-3 text-sm text-slate-400">
+                                Searching addresses...
+                              </div>
+                            ) : null}
 
-                      if (!selectedAddress) {
-                        return;
-                      }
-
-                      if (selectedAddress.country) {
-                        form.setValue("country", selectedAddress.country, {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        });
-                      }
-
-                      if (selectedAddress.state) {
-                        form.setValue("state", selectedAddress.state, {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        });
-                      }
-
-                      if (selectedAddress.city) {
-                        form.setValue("city", selectedAddress.city, {
-                          shouldDirty: true,
-                          shouldValidate: true,
-                        });
-                      }
-
-                      if (selectedAddress.addressLine1) {
-                        field.onChange(selectedAddress.addressLine1);
-                      }
-
-                      if (selectedAddress.addressLine2) {
-                        form.setValue(
-                          "addressLine2",
-                          selectedAddress.addressLine2,
-                          {
-                            shouldDirty: true,
-                            shouldValidate: true,
-                          },
-                        );
-                      }
-                    }}
-                    onSuggestError={() => {
-                      toast.error(
-                        "Address suggestions are temporarily unavailable.",
-                      );
-                    }}
-                  >
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      inputMode="text"
-                      autoComplete="shipping address-line1"
-                      placeholder="123 Main Street"
-                      className="input-premium h-11 rounded-xl"
-                    />
-                  </AddressAutofill>
+                            {addressSuggestions.map((suggestion, index) => (
+                              <button
+                                key={`${suggestion.mapbox_id}-${index}`}
+                                type="button"
+                                className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  void selectAddressSuggestion(suggestion);
+                                }}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-white">
+                                    {suggestion.feature_name}
+                                  </p>
+                                  <p className="mt-0.5 truncate text-xs text-slate-400">
+                                    {suggestion.description}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ) : (
                   <Input
                     {...field}
                     disabled={isPending}
                     inputMode="text"
                     autoComplete="shipping address-line1"
-                    placeholder="123 Main Street"
+                    placeholder="Start typing your address"
                     className="input-premium h-11 rounded-xl"
                   />
                 )}
                 <FieldDescription className="pt-1">
-                  Start typing your address to see Mapbox suggestions. Choosing
-                  one will prefill the rest of the address fields.
+                  Start typing your address to get suggestions.
                 </FieldDescription>
                 {fieldState.error ? (
                   <FieldError errors={[fieldState.error]} />
@@ -496,28 +567,97 @@ export function InvestmentProfileForm({
           )}
         />
 
-        <Controller
-          control={form.control}
-          name="addressLine2"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">
-                Address line 2 (optional)
-              </FieldLabel>
-              <FieldContent>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="Apartment, suite, unit"
-                  className="input-premium h-11 rounded-xl"
-                />
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
+        {showAddressDetails ? (
+          <>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Controller
+                control={form.control}
+                name="country"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid || undefined}>
+                    <FieldLabel className="text-white/80">Country</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        {...field}
+                        disabled={isPending}
+                        placeholder="United States"
+                        className="input-premium h-11 rounded-xl"
+                      />
+                      {fieldState.error ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </FieldContent>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="state"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid || undefined}>
+                    <FieldLabel className="text-white/80">State</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        {...field}
+                        disabled={isPending}
+                        placeholder="California"
+                        className="input-premium h-11 rounded-xl"
+                      />
+                      {fieldState.error ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </FieldContent>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="city"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid || undefined}>
+                    <FieldLabel className="text-white/80">City</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        {...field}
+                        disabled={isPending}
+                        placeholder="Los Angeles"
+                        className="input-premium h-11 rounded-xl"
+                      />
+                      {fieldState.error ? (
+                        <FieldError errors={[fieldState.error]} />
+                      ) : null}
+                    </FieldContent>
+                  </Field>
+                )}
+              />
+            </div>
+
+            <Controller
+              control={form.control}
+              name="addressLine2"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel className="text-white/80">
+                    Address line 2 (optional)
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      placeholder="Apartment, suite, unit"
+                      className="input-premium h-11 rounded-xl"
+                    />
+                    {fieldState.error ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : null}
+                  </FieldContent>
+                </Field>
+              )}
+            />
+          </>
+        ) : null}
       </FieldGroup>
 
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">

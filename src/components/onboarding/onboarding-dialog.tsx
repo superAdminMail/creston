@@ -41,8 +41,7 @@ export function OnboardingDialog({
             </DialogTitle>
             <DialogDescription className="text-sm leading-6 text-slate-400">
               Welcome to {siteName}, {userName}. Please set up your investment
-              profile to get started, including the structured address fields
-              that Mapbox can now prefill for you.
+              profile to get started.
             </DialogDescription>
           </DialogHeader>
 
