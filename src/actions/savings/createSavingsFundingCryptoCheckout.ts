@@ -25,7 +25,6 @@ type Input = z.infer<typeof schema>;
 const ACTIVE_INTENT_STATUSES: SavingsFundingIntentStatus[] = [
   SavingsFundingIntentStatus.PENDING,
   SavingsFundingIntentStatus.SUBMITTED,
-  SavingsFundingIntentStatus.PARTIALLY_PAID,
 ];
 
 const CREDITED_INTENT_STATUSES: SavingsFundingIntentStatus[] = [

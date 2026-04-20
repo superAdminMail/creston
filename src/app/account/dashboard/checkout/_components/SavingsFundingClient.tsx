@@ -166,9 +166,7 @@ export default function SavingsFundingClient({
         totalAmount: chargeBasis,
         amountPaid: 0,
         usePartialPayment: bankSelected && effectivePaymentMode === "PARTIAL",
-        fundingMethodType: cryptoSelected
-          ? "CRYPTO_PROVIDER"
-          : "BANK_TRANSFER",
+        fundingMethodType: cryptoSelected ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
         hasPendingSubmission: hasPendingSubmission,
         hasActiveCryptoIntent: false,
       }).chargeAmount.toNumber();
@@ -439,13 +437,13 @@ export default function SavingsFundingClient({
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <SummaryChip
-                      label="Selected amount"
+                      label="Deposit amount"
                       value={formatCurrency(
                         selectedAmount,
                         details.account.currency,
                       )}
                     />
-                <SummaryChip
+                    <SummaryChip
                       label="Payment mode"
                       value={getCheckoutPaymentModeLabel("FULL")}
                     />
@@ -496,6 +494,22 @@ export default function SavingsFundingClient({
                         selectedFundingMethod,
                       )}
                     />
+                  </div>
+
+                  <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 p-4 text-sm text-slate-700 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-sky-700/80 dark:text-sky-200/80">
+                      {selectedPaymentMode === "PARTIAL"
+                        ? "Partial payment amount"
+                        : "Payment amount"}
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-slate-950 dark:text-white">
+                      {formatCurrency(selectedAmount, details.account.currency)}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                      {selectedPaymentMode === "PARTIAL"
+                        ? "Transfer this amount now and submit proof after payment."
+                        : "Transfer this full amount and submit proof after payment."}
+                    </p>
                   </div>
 
                   {bankMethod ? (
