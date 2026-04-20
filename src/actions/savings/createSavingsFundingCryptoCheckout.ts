@@ -156,6 +156,7 @@ export async function createSavingsFundingCryptoCheckout(
   const chargeCalculation = calculateSavingsFundingChargeAmount({
     totalAmount: account.targetAmount ?? account.balance,
     amountPaid,
+    usePartialPayment: false,
     fundingMethodType: "CRYPTO_PROVIDER",
     hasPendingSubmission: false,
     hasActiveCryptoIntent: false,
