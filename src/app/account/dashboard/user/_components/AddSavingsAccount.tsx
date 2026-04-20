@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, Lock, PiggyBank, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 import { createSavingsAccount } from "@/actions/savings/createSavingsAccount";
 import type { SavingsPageData } from "@/actions/savings/getSavingsPageData";
@@ -68,6 +70,7 @@ export default function AddSavingsAccount({
   kycStatus,
   canCreateSavingsAccount,
 }: AddSavingsAccountProps) {
+  const router = useRouter();
   const [selected, setSelected] = useState<string>(
     initialProducts[0]?.id ?? "",
   );
@@ -79,6 +82,22 @@ export default function AddSavingsAccount({
     () => initialProducts.find((product) => product.id === selected) ?? null,
     [initialProducts, selected],
   );
+  const lastToastKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (state.status !== "success" || !state.message) {
+      return;
+    }
+
+    const toastKey = `${state.status}:${state.message}`;
+    if (lastToastKey.current === toastKey) {
+      return;
+    }
+
+    lastToastKey.current = toastKey;
+    toast.success(state.message);
+    router.push("/account/dashboard/user/savings");
+  }, [router, state.message, state.status]);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">

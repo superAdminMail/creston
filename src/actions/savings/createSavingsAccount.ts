@@ -1,10 +1,11 @@
 "use server";
 
 import { KycStatus, Prisma, SavingsStatus } from "@/generated/prisma";
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import {
   createErrorFormState,
+  createSuccessFormState,
   createValidationErrorState,
   getFriendlyServerError,
   type FormActionState,
@@ -143,5 +144,7 @@ export async function createSavingsAccount(
     );
   }
 
-  redirect("/account/dashboard/user/savings");
+  revalidatePath("/account/dashboard/user/savings");
+
+  return createSuccessFormState("Savings account opened successfully.");
 }
