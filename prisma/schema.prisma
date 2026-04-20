@@ -844,6 +844,8 @@ model PlatformPaymentMethod {
 
   providerName String?
   accountName  String?
+  reference    String?
+  bankAddress  String?
 
   currency String? @default("USD")
   country  String?

@@ -4,7 +4,10 @@ export type SavingsFundingBankMethod = {
   bankName: string | null;
   bankCode: string | null;
   accountName: string | null;
+  reference: string | null;
+  bankAddress: string | null;
   accountNumber: string | null;
+  routingNumber: string | null;
   instructions: string | null;
   notes: string | null;
   currency: string;

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
-import { rejectInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewInvestmentOrderPayment";
+import { rejectSavingsTransactionPaymentReview } from "@/lib/payments/bank/reviewSavingsTransactionPayment";
 
 const schema = z.object({
   paymentId: z.string().min(1),
@@ -12,7 +12,7 @@ const schema = z.object({
   reviewNote: z.string().trim().max(500).optional(),
 });
 
-export async function rejectInvestmentOrderPayment(
+export async function rejectSavingsTransactionPayment(
   input: z.infer<typeof schema>,
 ) {
   const admin = await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
@@ -27,22 +27,19 @@ export async function rejectInvestmentOrderPayment(
     return { ok: false, message: "Invalid rejection payload." };
   }
 
-  const data = parsed.data;
-
   try {
-    const result = await rejectInvestmentOrderPaymentReview({
-      paymentId: data.paymentId,
-      rejectionReason: data.rejectionReason,
-      reviewNote: data.reviewNote,
+    await rejectSavingsTransactionPaymentReview({
+      paymentId: parsed.data.paymentId,
+      rejectionReason: parsed.data.rejectionReason,
+      reviewNote: parsed.data.reviewNote,
       adminUserId: admin.userId,
     });
 
-    revalidatePath("/account/dashboard/admin/investment-payments");
-    revalidatePath(`/account/dashboard/admin/investment-payments/${data.paymentId}`);
+    revalidatePath("/account/dashboard/admin/savings-payments");
+    revalidatePath(`/account/dashboard/admin/savings-payments/${parsed.data.paymentId}`);
     revalidatePath("/account/dashboard/admin/deposits");
-    revalidatePath(
-      `/account/dashboard/user/investment-orders/${result.investmentOrderId}/payment`,
-    );
+    revalidatePath("/account/dashboard/user/savings");
+    revalidatePath("/account/dashboard/checkout");
 
     return {
       ok: true,

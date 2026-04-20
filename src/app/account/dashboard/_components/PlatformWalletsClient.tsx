@@ -57,7 +57,7 @@ type PlatformWalletsClientProps = {
 
 function maskSensitiveValue(value?: string | null) {
   if (!value) {
-    return "Not provided";
+    return null;
   }
 
   if (value.length <= 12) {
@@ -194,17 +194,23 @@ function PaymentMethodCard({
               </p>
               {method.type === "BANK_INFO" ? (
                 <div className="mt-2 space-y-1 text-sm text-slate-200">
-                  <p>{method.bankName ?? "Bank not provided"}</p>
-                  <p className="text-slate-400">
-                    {method.accountName ?? "Account name not provided"}
-                  </p>
+                  {method.bankName ? <p>{method.bankName}</p> : null}
+                  {method.accountName ? (
+                    <p className="text-slate-400">{method.accountName}</p>
+                  ) : null}
+                  {method.reference ? (
+                    <p className="text-slate-400">{method.reference}</p>
+                  ) : null}
+                  {method.bankAddress ? (
+                    <p className="text-slate-400">{method.bankAddress}</p>
+                  ) : null}
                 </div>
               ) : (
                 <div className="mt-2 space-y-1 text-sm text-slate-200">
-                  <p>{method.cryptoAsset ?? "Asset not provided"}</p>
-                  <p className="text-slate-400">
-                    {method.cryptoNetwork ?? "Network not provided"}
-                  </p>
+                  {method.cryptoAsset ? <p>{method.cryptoAsset}</p> : null}
+                  {method.cryptoNetwork ? (
+                    <p className="text-slate-400">{method.cryptoNetwork}</p>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -226,17 +232,21 @@ function PaymentMethodCard({
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Account Number
                   </p>
-                  <p className="mt-2 font-mono text-sm text-slate-200">
-                    {maskSensitiveValue(method.accountNumber)}
-                  </p>
+                  {maskSensitiveValue(method.accountNumber) ? (
+                    <p className="mt-2 font-mono text-sm text-slate-200">
+                      {maskSensitiveValue(method.accountNumber)}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Branch
                   </p>
-                  <p className="mt-2 text-sm text-slate-200">
-                    {method.branchName ?? "Not provided"}
-                  </p>
+                  {method.branchName ? (
+                    <p className="mt-2 text-sm text-slate-200">
+                      {method.branchName}
+                    </p>
+                  ) : null}
                 </div>
               </>
             ) : (
@@ -245,17 +255,21 @@ function PaymentMethodCard({
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Wallet Address
                   </p>
-                  <p className="mt-2 break-all font-mono text-sm text-slate-200">
-                    {maskSensitiveValue(method.walletAddress)}
-                  </p>
+                  {maskSensitiveValue(method.walletAddress) ? (
+                    <p className="mt-2 break-all font-mono text-sm text-slate-200">
+                      {maskSensitiveValue(method.walletAddress)}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Wallet Tag
                   </p>
-                  <p className="mt-2 text-sm text-slate-200">
-                    {method.walletTag ?? "Not provided"}
-                  </p>
+                  {method.walletTag ? (
+                    <p className="mt-2 text-sm text-slate-200">
+                      {method.walletTag}
+                    </p>
+                  ) : null}
                 </div>
               </>
             )}
@@ -395,18 +409,20 @@ export default function PlatformWalletsClient({
                     Add Payment Method
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-full rounded-[1.75rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-                  <DialogHeader className="px-6 pt-6">
-                    <DialogTitle className="text-2xl font-semibold tracking-tight text-white">
+                <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+                  <div className="max-h-[92dvh] overflow-y-auto">
+                    <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
                       Add platform payment method
                     </DialogTitle>
                     <DialogDescription className="text-sm text-slate-400">
                       Configure a new treasury destination for bank or crypto
                       funding.
                     </DialogDescription>
-                  </DialogHeader>
-                  <div className="px-6 pb-6 pt-4">
+                    </DialogHeader>
+                    <div className="px-4 pb-4 pt-4 sm:px-6 sm:pb-6">
                     <PlatformWalletForm onSuccess={() => setAddOpen(false)} />
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -499,25 +515,27 @@ export default function PlatformWalletsClient({
         open={Boolean(editWallet)}
         onOpenChange={(open) => !open && setEditWallet(null)}
       >
-        <DialogContent className="max-w-2xl rounded-[1.75rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <DialogHeader className="px-6 pt-6">
-            <DialogTitle className="text-2xl font-semibold tracking-tight text-white">
-              Edit platform payment method
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-400">
-              Update the method details and default routing.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 pb-6 pt-4">
-            {editWallet ? (
-              <PlatformWalletForm
-                key={editWallet.id}
-                mode="edit"
-                walletId={editWallet.id}
-                defaultValues={editWallet}
-                onSuccess={() => setEditWallet(null)}
-              />
-            ) : null}
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+          <div className="max-h-[92dvh] overflow-y-auto">
+            <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
+              <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                Edit platform payment method
+              </DialogTitle>
+              <DialogDescription className="text-sm text-slate-400">
+                Update the method details and default routing.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-4 pb-4 pt-4 sm:px-6 sm:pb-6">
+              {editWallet ? (
+                <PlatformWalletForm
+                  key={editWallet.id}
+                  mode="edit"
+                  walletId={editWallet.id}
+                  defaultValues={editWallet}
+                  onSuccess={() => setEditWallet(null)}
+                />
+              ) : null}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

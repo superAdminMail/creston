@@ -126,6 +126,16 @@ export default function SavingsBankInfoRequestForm({
             </div>
 
             <div className="grid gap-2">
+              <label className="text-sm font-medium">Reference</label>
+              <Input name="reference" placeholder="Optional payment reference" />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Bank address</label>
+              <Input name="bankAddress" placeholder="Optional bank address" />
+            </div>
+
+            <div className="grid gap-2">
               <label className="text-sm font-medium">Account number</label>
               <Input
                 name="accountNumber"
@@ -146,7 +156,10 @@ export default function SavingsBankInfoRequestForm({
 
             <div className="grid gap-2">
               <label className="text-sm font-medium">Routing number</label>
-              <Input name="routingNumber" placeholder="Optional routing number" />
+              <Input
+                name="routingNumber"
+                placeholder="Optional routing number"
+              />
             </div>
 
             <div className="grid gap-2">

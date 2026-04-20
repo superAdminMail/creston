@@ -65,8 +65,10 @@ export default function SavingsFundingProofModal({
 
   useEffect(() => {
     if (open) {
-      setClaimedAmount(defaultAmount);
       committedReceiptAssetIdRef.current = null;
+      queueMicrotask(() => {
+        setClaimedAmount(defaultAmount);
+      });
       return;
     }
 
@@ -276,19 +278,19 @@ export default function SavingsFundingProofModal({
             </div>
 
             {!receiptAttachment ? (
-              <div className="w-full rounded-[1.25rem] border border-dashed border-slate-300/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="w-full rounded-[1.25rem] border border-dashed border-slate-300/70 bg-slate-600/20 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/90">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  <p className="text-sm font-medium text-slate-950 dark:text-white">
                     Add receipt image
                   </p>
                   <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                    PNG, JPG, and WEBP files from Photo Manager are supported.
+                    PNG, JPG, and WEBP files are supported.
                   </p>
                 </div>
 
                 <UploadButton
                   endpoint="photoManager"
-                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-300/80 ut-button:bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-white ut-button:shadow-[0_12px_28px_rgba(2,6,23,0.42)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-800 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:border-white/10"
+                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:!border ut-button:!border-white/10 ut-button:!bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:!text-white ut-button:shadow-[0_14px_34px_rgba(2,6,23,0.48)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:!bg-slate-900 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:!border-white/10 dark:ut-button:!bg-slate-950 dark:ut-button:!text-white dark:ut-button:hover:!bg-slate-900"
                   onClientUploadComplete={async (res) => {
                     try {
                       const file = res?.[0];
@@ -324,8 +326,8 @@ export default function SavingsFundingProofModal({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-slate-200/80 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center dark:border-white/10 dark:bg-white/[0.04]">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-slate-200/90 bg-white p-4 shadow-[0_14px_32px_rgba(15,23,42,0.08)] sm:flex-row sm:items-center dark:border-white/10 dark:bg-white/[0.045]">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-100 dark:border-white/10 dark:bg-white/[0.03]">
                   <Image
                     src={receiptAttachment.url}
                     alt={receiptAttachment.name ?? "Receipt preview"}
@@ -336,7 +338,7 @@ export default function SavingsFundingProofModal({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
+                  <p className="truncate text-sm font-medium text-slate-950 dark:text-white">
                     {receiptAttachment.name ?? "Receipt image"}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">

@@ -286,6 +286,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/investment-payments",
           icon: CircleDollarSign,
         },
+        {
+          name: "Savings Payments",
+          href: "/account/dashboard/admin/savings-payments",
+          icon: CircleDollarSign,
+        },
       ],
     },
     {

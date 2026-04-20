@@ -12,6 +12,13 @@ import {
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -20,6 +27,8 @@ export type PlatformPaymentMethodFormDefaults = {
   label?: string;
   providerName?: string | null;
   accountName?: string | null;
+  reference?: string | null;
+  bankAddress?: string | null;
   currency?: string | null;
   country?: string | null;
   instructions?: string | null;
@@ -36,8 +45,8 @@ export type PlatformPaymentMethodFormDefaults = {
   swiftCode?: string | null;
   routingNumber?: string | null;
   branchName?: string | null;
-  cryptoAsset?: "BTC" | "ETH" | null;
-  cryptoNetwork?: "BITCOIN" | "ETHEREUM" | null;
+  cryptoAsset?: "BTC" | null;
+  cryptoNetwork?: "BITCOIN" | null;
   walletAddress?: string | null;
   walletTag?: string | null;
 };
@@ -61,6 +70,10 @@ function PlatformPaymentMethodFields({
   defaultValues?: PlatformPaymentMethodFormDefaults;
   type: "BANK_INFO" | "WALLET_ADDRESS";
 }) {
+  const [verificationStatus, setVerificationStatus] = useState(
+    defaultValues?.verificationStatus ?? "UNVERIFIED",
+  );
+
   return (
     <div className="space-y-5">
       {state.status === "error" && state.message ? (
@@ -70,6 +83,11 @@ function PlatformPaymentMethodFields({
       ) : null}
 
       <input type="hidden" name="type" value={type} />
+      <input
+        type="hidden"
+        name="verificationStatus"
+        value={verificationStatus}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -135,15 +153,23 @@ function PlatformPaymentMethodFields({
 
         <div className="space-y-2">
           <FieldLabel>Verification Status</FieldLabel>
-          <select
-            name="verificationStatus"
-            defaultValue={defaultValues?.verificationStatus ?? "UNVERIFIED"}
-            className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-white outline-none"
+          <Select
+            value={verificationStatus}
+            onValueChange={(value) =>
+              setVerificationStatus(
+                value as "UNVERIFIED" | "VERIFIED" | "SUSPENDED",
+              )
+            }
           >
-            <option value="UNVERIFIED">Unverified</option>
-            <option value="VERIFIED">Verified</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
+            <SelectTrigger className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-white">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="UNVERIFIED">Unverified</SelectItem>
+              <SelectItem value="VERIFIED">Verified</SelectItem>
+              <SelectItem value="SUSPENDED">Suspended</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -170,12 +196,12 @@ function PlatformPaymentMethodFields({
       </div>
 
       {type === "BANK_INFO" ? (
-        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:space-y-5 sm:p-5 lg:p-6">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
             Bank Details
           </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2 min-w-0">
               <FieldLabel>Bank Name</FieldLabel>
               <Input
                 name="bankName"
@@ -183,7 +209,7 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <FieldLabel>Bank Code</FieldLabel>
               <Input
                 name="bankCode"
@@ -191,7 +217,7 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <FieldLabel>Account Number</FieldLabel>
               <Input
                 name="accountNumber"
@@ -199,7 +225,25 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
+              <FieldLabel>Reference</FieldLabel>
+              <Input
+                name="reference"
+                defaultValue={defaultValues?.reference ?? ""}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                placeholder="Optional payment reference"
+              />
+            </div>
+            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-2">
+              <FieldLabel>Bank Address</FieldLabel>
+              <Input
+                name="bankAddress"
+                defaultValue={defaultValues?.bankAddress ?? ""}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                placeholder="Optional bank address"
+              />
+            </div>
+            <div className="space-y-2 min-w-0">
               <FieldLabel>IBAN</FieldLabel>
               <Input
                 name="iban"
@@ -207,7 +251,7 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <FieldLabel>Swift Code</FieldLabel>
               <Input
                 name="swiftCode"
@@ -215,7 +259,7 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0">
               <FieldLabel>Routing Number</FieldLabel>
               <Input
                 name="routingNumber"
@@ -223,7 +267,7 @@ function PlatformPaymentMethodFields({
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
               />
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <FieldLabel>Branch Name</FieldLabel>
               <Input
                 name="branchName"
@@ -234,34 +278,37 @@ function PlatformPaymentMethodFields({
           </div>
         </div>
       ) : (
-        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:space-y-5 sm:p-5 lg:p-6">
           <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
             Wallet Details
           </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <FieldLabel>Crypto Asset</FieldLabel>
-              <select
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2 min-w-0">
+              <FieldLabel>Asset</FieldLabel>
+              <input
+                type="hidden"
                 name="cryptoAsset"
-                defaultValue={defaultValues?.cryptoAsset ?? "ETH"}
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-white outline-none"
-              >
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
-              </select>
+                value={defaultValues?.cryptoAsset ?? "BTC"}
+              />
+              <div className="flex h-12 items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white">
+                {defaultValues?.cryptoAsset ?? "BTC"}
+              </div>
             </div>
-            <div className="space-y-2">
-              <FieldLabel>Crypto Network</FieldLabel>
-              <select
+            <div className="space-y-2 min-w-0">
+              <FieldLabel>Network</FieldLabel>
+              <input
+                type="hidden"
                 name="cryptoNetwork"
-                defaultValue={defaultValues?.cryptoNetwork ?? "ETHEREUM"}
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-white outline-none"
-              >
-                <option value="BITCOIN">Bitcoin</option>
-                <option value="ETHEREUM">Ethereum</option>
-              </select>
+                value={defaultValues?.cryptoNetwork ?? "BITCOIN"}
+              />
+              <div className="flex h-12 items-center rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white">
+                {defaultValues?.cryptoNetwork === "BITCOIN" ||
+                !defaultValues?.cryptoNetwork
+                  ? "Bitcoin"
+                  : defaultValues.cryptoNetwork}
+              </div>
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <FieldLabel>Wallet Address</FieldLabel>
               <Textarea
                 name="walletAddress"
@@ -271,7 +318,7 @@ function PlatformPaymentMethodFields({
                 placeholder="0x..."
               />
             </div>
-            <div className="space-y-2 sm:col-span-2">
+            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <FieldLabel>Wallet Tag</FieldLabel>
               <Input
                 name="walletTag"

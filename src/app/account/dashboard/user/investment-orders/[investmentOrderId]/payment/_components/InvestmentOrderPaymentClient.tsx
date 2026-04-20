@@ -39,15 +39,17 @@ export type InvestmentOrderPaymentDetails = {
     level: string;
   };
 
-  bankMethod: {
-    id: string;
-    label: string;
-    bankName: string | null;
-    bankCode: string | null;
-    accountName: string | null;
-    accountNumber: string | null;
-    instructions: string | null;
-    notes: string | null;
+    bankMethod: {
+      id: string;
+      label: string;
+      bankName: string | null;
+      bankCode: string | null;
+      accountName: string | null;
+      reference: string | null;
+      bankAddress: string | null;
+      accountNumber: string | null;
+      instructions: string | null;
+      notes: string | null;
     currency: string;
   } | null;
 

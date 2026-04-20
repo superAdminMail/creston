@@ -55,7 +55,17 @@ function SummaryChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null | undefined;
+}) {
+  if (!value) {
+    return null;
+  }
+
   return (
     <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 py-3 last:border-b-0 dark:border-white/10">
       <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
@@ -342,19 +352,31 @@ export default function SavingsFundingClient({
                 <div className="grid gap-3">
                   <DetailRow
                     label="Bank name"
-                    value={bankMethod.bankName ?? "Not set"}
+                    value={bankMethod.bankName}
                   />
                   <DetailRow
                     label="Account name"
-                    value={bankMethod.accountName ?? "Not set"}
+                    value={bankMethod.accountName}
+                  />
+                  <DetailRow
+                    label="Reference"
+                    value={bankMethod.reference}
+                  />
+                  <DetailRow
+                    label="Bank address"
+                    value={bankMethod.bankAddress}
                   />
                   <DetailRow
                     label="Account number"
-                    value={bankMethod.accountNumber ?? "Not set"}
+                    value={bankMethod.accountNumber}
                   />
                   <DetailRow
                     label="Bank code"
-                    value={bankMethod.bankCode ?? "Not set"}
+                    value={bankMethod.bankCode}
+                  />
+                  <DetailRow
+                    label="Wire routing number"
+                    value={bankMethod.routingNumber}
                   />
 
                   {bankMethod.instructions ? (

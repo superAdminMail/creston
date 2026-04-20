@@ -53,6 +53,8 @@ export default async function PlatformWalletsAdminPage({
           type: wallet.type,
           providerName: wallet.providerName,
           accountName: wallet.accountName,
+          reference: wallet.reference,
+          bankAddress: wallet.bankAddress,
           currency: wallet.currency,
           country: wallet.country,
           instructions: wallet.instructions,

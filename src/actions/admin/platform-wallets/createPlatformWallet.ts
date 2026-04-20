@@ -22,6 +22,8 @@ type PlatformPaymentMethodField =
   | "label"
   | "providerName"
   | "accountName"
+  | "reference"
+  | "bankAddress"
   | "currency"
   | "country"
   | "instructions"
@@ -75,6 +77,8 @@ export async function createPlatformPaymentMethod(
     label: getStringValue(formData, "label"),
     providerName: getStringValue(formData, "providerName"),
     accountName: getStringValue(formData, "accountName"),
+    reference: getStringValue(formData, "reference"),
+    bankAddress: getStringValue(formData, "bankAddress"),
     currency: getStringValue(formData, "currency"),
     country: getStringValue(formData, "country"),
     instructions: getStringValue(formData, "instructions"),
@@ -131,6 +135,8 @@ export async function createPlatformPaymentMethod(
           label: values.label,
           providerName: values.providerName,
           accountName: values.accountName,
+          reference: values.reference,
+          bankAddress: values.bankAddress,
           currency: values.currency,
           country: values.country,
           instructions: values.instructions,

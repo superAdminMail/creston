@@ -31,6 +31,8 @@ export type InvestmentOrderPaymentDetails = {
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
+    reference: string | null;
+    bankAddress: string | null;
     accountNumber: string | null;
     instructions: string | null;
     notes: string | null;

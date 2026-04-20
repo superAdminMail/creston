@@ -10,6 +10,8 @@ type Props = {
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
+    reference: string | null;
+    bankAddress: string | null;
     accountNumber: string | null;
     instructions: string | null;
     notes: string | null;
@@ -26,6 +28,15 @@ export default function BankTransferInstructionsCard({
   currency,
   onConfirmPaid,
 }: Props) {
+  const rows = [
+    { label: "Bank", value: bankMethod.bankName },
+    { label: "Account name", value: bankMethod.accountName },
+    { label: "Reference", value: bankMethod.reference },
+    { label: "Bank address", value: bankMethod.bankAddress },
+    { label: "Account number", value: bankMethod.accountNumber },
+    { label: "Bank code", value: bankMethod.bankCode },
+  ].filter((row) => Boolean(row.value));
+
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader>
@@ -50,37 +61,14 @@ export default function BankTransferInstructionsCard({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-border/60 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Bank
-            </p>
-            <p className="mt-2 font-semibold">{bankMethod.bankName ?? "—"}</p>
-          </div>
-
-          <div className="rounded-2xl border border-border/60 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Account name
-            </p>
-            <p className="mt-2 font-semibold">
-              {bankMethod.accountName ?? "—"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/60 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Account number
-            </p>
-            <p className="mt-2 font-semibold">
-              {bankMethod.accountNumber ?? "—"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/60 p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Bank code
-            </p>
-            <p className="mt-2 font-semibold">{bankMethod.bankCode ?? "—"}</p>
-          </div>
+          {rows.map((row) => (
+            <div key={row.label} className="rounded-2xl border border-border/60 p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                {row.label}
+              </p>
+              <p className="mt-2 font-semibold">{row.value}</p>
+            </div>
+          ))}
         </div>
 
         {bankMethod.instructions ? (

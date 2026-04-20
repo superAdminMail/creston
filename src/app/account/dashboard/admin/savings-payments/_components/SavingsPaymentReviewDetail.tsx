@@ -4,27 +4,25 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { approveSavingsTransactionPayment } from "@/actions/admin/savings-payments/approveSavingsTransactionPayment";
+import { rejectSavingsTransactionPayment } from "@/actions/admin/savings-payments/rejectSavingsTransactionPayment";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
-import type { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
-
-import InvestmentOrderConfirmationCard from "./InvestmentOrderPaymentConfirmationCard";
-import { approveInvestmentOrderPayment } from "@/actions/admin/investment-payments/approveInvestmentOrderPayment";
-import { rejectInvestmentOrderPayment } from "@/actions/admin/investment-payments/rejectInvestmentOrderPayment";
+import type { SavingsPaymentReviewDetails } from "@/lib/types/payments/savingsPaymentReview.types";
 
 function formatDate(value: string | null) {
   if (!value) return "-";
   return new Date(value).toLocaleString();
 }
 
-export default function InvestmentPaymentReviewDetail({
+export default function SavingsPaymentReviewDetail({
   payment,
 }: {
-  payment: InvestmentPaymentReviewDetails;
+  payment: SavingsPaymentReviewDetails;
 }) {
   const router = useRouter();
   const [approvedAmount, setApprovedAmount] = useState(
@@ -40,7 +38,7 @@ export default function InvestmentPaymentReviewDetail({
 
   function handleApprove() {
     startTransition(async () => {
-      const result = await approveInvestmentOrderPayment({
+      const result = await approveSavingsTransactionPayment({
         paymentId: payment.id,
         approvedAmount,
         reviewNote,
@@ -58,7 +56,7 @@ export default function InvestmentPaymentReviewDetail({
 
   function handleReject() {
     startTransition(async () => {
-      const result = await rejectInvestmentOrderPayment({
+      const result = await rejectSavingsTransactionPayment({
         paymentId: payment.id,
         rejectionReason,
         reviewNote,
@@ -78,7 +76,7 @@ export default function InvestmentPaymentReviewDetail({
     <div className="space-y-6 px-4 py-6 md:px-6">
       <Card className="border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-xl">Payment review</CardTitle>
+          <CardTitle className="text-xl">Savings payment review</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -86,7 +84,10 @@ export default function InvestmentPaymentReviewDetail({
             <Badge variant="secondary">{formatEnumLabel(payment.status)}</Badge>
             <Badge variant="outline">{formatEnumLabel(payment.type)}</Badge>
             <Badge variant="outline">
-              {formatEnumLabel(payment.order.status)}
+              {formatEnumLabel(payment.fundingIntent.status)}
+            </Badge>
+            <Badge variant="outline">
+              {formatEnumLabel(payment.fundingIntent.account.status)}
             </Badge>
           </div>
 
@@ -96,20 +97,20 @@ export default function InvestmentPaymentReviewDetail({
                 Investor
               </p>
               <p className="mt-2 font-semibold">
-                {payment.order.investor.name ?? "-"}
+                {payment.submittedBy.name ?? "-"}
               </p>
               <p className="text-sm text-muted-foreground">
-                {payment.order.investor.email ?? "-"}
+                {payment.submittedBy.email ?? "-"}
               </p>
             </div>
 
             <div className="rounded-2xl border border-border/60 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Order
+                Savings account
               </p>
-              <p className="mt-2 font-semibold">{payment.order.plan.name}</p>
+              <p className="mt-2 font-semibold">{payment.fundingIntent.account.name}</p>
               <p className="text-sm text-muted-foreground">
-                Order status: {formatEnumLabel(payment.order.status)}
+                {payment.fundingIntent.account.product.name}
               </p>
             </div>
 
@@ -124,15 +125,17 @@ export default function InvestmentPaymentReviewDetail({
 
             <div className="rounded-2xl border border-border/60 p-4">
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Order progress
+                Balance progress
               </p>
               <p className="mt-2 font-semibold">
-                Paid: {payment.order.amountPaid.toLocaleString()} /{" "}
-                {payment.order.amount.toLocaleString()} {payment.order.currency}
+                Balance: {payment.fundingIntent.account.balance.toLocaleString()} /{" "}
+                {payment.fundingIntent.account.targetAmount?.toLocaleString() ?? "Not set"}{" "}
+                {payment.fundingIntent.account.currency}
               </p>
               <p className="text-sm text-muted-foreground">
-                Remaining: {payment.order.remainingAmount.toLocaleString()}{" "}
-                {payment.order.currency}
+                Funding intent credited:{" "}
+                {payment.fundingIntent.creditedAmount.toLocaleString()}{" "}
+                {payment.currency}
               </p>
             </div>
           </div>
@@ -171,6 +174,50 @@ export default function InvestmentPaymentReviewDetail({
           </div>
         </CardContent>
       </Card>
+
+      {payment.bankMethod ? (
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Bank method</CardTitle>
+          </CardHeader>
+
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            <div>
+              <span className="font-medium">Label:</span> {payment.bankMethod.label}
+            </div>
+            <div>
+              <span className="font-medium">Bank name:</span>{" "}
+              {payment.bankMethod.bankName ?? "-"}
+            </div>
+            <div>
+              <span className="font-medium">Account name:</span>{" "}
+              {payment.bankMethod.accountName ?? "-"}
+            </div>
+            <div>
+              <span className="font-medium">Account number:</span>{" "}
+              {payment.bankMethod.accountNumber ?? "-"}
+            </div>
+            <div>
+              <span className="font-medium">Routing number:</span>{" "}
+              {payment.bankMethod.routingNumber ?? "-"}
+            </div>
+            <div>
+              <span className="font-medium">Reference:</span>{" "}
+              {payment.bankMethod.reference ?? "-"}
+            </div>
+            <div className="md:col-span-2">
+              <span className="font-medium">Bank address:</span>{" "}
+              {payment.bankMethod.bankAddress ?? "-"}
+            </div>
+            {payment.bankMethod.instructions ? (
+              <div className="md:col-span-2">
+                <span className="font-medium">Instructions:</span>{" "}
+                {payment.bankMethod.instructions}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {payment.receipt?.url ? (
         <Card className="border-border/60 shadow-sm">
@@ -248,8 +295,6 @@ export default function InvestmentPaymentReviewDetail({
           )}
         </CardContent>
       </Card>
-
-      <InvestmentOrderConfirmationCard order={payment.order} />
     </div>
   );
 }

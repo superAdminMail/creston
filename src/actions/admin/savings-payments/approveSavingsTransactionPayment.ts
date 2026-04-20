@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
-import { approveInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewInvestmentOrderPayment";
+import { approveSavingsTransactionPaymentReview } from "@/lib/payments/bank/reviewSavingsTransactionPayment";
 
 const schema = z.object({
   paymentId: z.string().min(1),
@@ -12,7 +12,7 @@ const schema = z.object({
   reviewNote: z.string().trim().max(500).optional(),
 });
 
-export async function approveInvestmentOrderPayment(
+export async function approveSavingsTransactionPayment(
   input: z.infer<typeof schema>,
 ) {
   const admin = await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
@@ -28,20 +28,18 @@ export async function approveInvestmentOrderPayment(
   }
 
   try {
-    const data = parsed.data;
-    const result = await approveInvestmentOrderPaymentReview({
-      paymentId: data.paymentId,
-      approvedAmount: data.approvedAmount,
-      reviewNote: data.reviewNote,
+    await approveSavingsTransactionPaymentReview({
+      paymentId: parsed.data.paymentId,
+      approvedAmount: parsed.data.approvedAmount,
+      reviewNote: parsed.data.reviewNote,
       adminUserId: admin.userId,
     });
 
-    revalidatePath("/account/dashboard/admin/investment-payments");
-    revalidatePath(`/account/dashboard/admin/investment-payments/${data.paymentId}`);
+    revalidatePath("/account/dashboard/admin/savings-payments");
+    revalidatePath(`/account/dashboard/admin/savings-payments/${parsed.data.paymentId}`);
     revalidatePath("/account/dashboard/admin/deposits");
-    revalidatePath(
-      `/account/dashboard/user/investment-orders/${result.investmentOrderId}/payment`,
-    );
+    revalidatePath("/account/dashboard/user/savings");
+    revalidatePath("/account/dashboard/checkout");
 
     return {
       ok: true,

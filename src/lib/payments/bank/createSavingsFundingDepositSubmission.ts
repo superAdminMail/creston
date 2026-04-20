@@ -8,6 +8,7 @@ import {
   SavingsTransactionPaymentStatus,
   SavingsTransactionPaymentType,
 } from "@/generated/prisma";
+import { isSavingsFundingBankInfoRequestAckNotification } from "@/lib/notifications/savingsFundingBankInfo";
 import { prisma } from "@/lib/prisma";
 
 type CreateSavingsFundingDepositSubmissionInput = {
@@ -78,13 +79,57 @@ export async function createSavingsFundingDepositSubmission({
     throw new Error("This savings product does not accept deposits");
   }
 
+  const requestedPrivateMethodAck = await prisma.notification.findFirst({
+    where: {
+      userId,
+      key: {
+        startsWith: `savings-funding-bank-info-request-ack:${account.id}:${userId}`,
+      },
+    },
+    select: {
+      id: true,
+      type: true,
+      metadata: true,
+    },
+  });
+
+  const requestedPrivateMethodId =
+    requestedPrivateMethodAck &&
+    isSavingsFundingBankInfoRequestAckNotification(requestedPrivateMethodAck) &&
+    typeof requestedPrivateMethodAck.metadata === "object" &&
+    requestedPrivateMethodAck.metadata !== null &&
+    !Array.isArray(requestedPrivateMethodAck.metadata) &&
+    typeof requestedPrivateMethodAck.metadata.platformPaymentMethodId ===
+      "string"
+      ? requestedPrivateMethodAck.metadata.platformPaymentMethodId
+      : null;
+
+  const privateMethodAllowed =
+    requestedPrivateMethodId !== null &&
+    requestedPrivateMethodId === platformPaymentMethodId;
+
   const paymentMethod = await prisma.platformPaymentMethod.findFirst({
     where: {
       id: platformPaymentMethodId,
       isActive: true,
       type: PlatformPaymentMethodType.BANK_INFO,
-      isPrivate: false,
-      OR: [{ currency: account.currency }, { currency: null }],
+      OR: privateMethodAllowed
+        ? [
+            {
+              isPrivate: false,
+              OR: [{ currency: account.currency }, { currency: null }],
+            },
+            {
+              isPrivate: true,
+              OR: [{ currency: account.currency }, { currency: null }],
+            },
+          ]
+        : [
+            {
+              isPrivate: false,
+              OR: [{ currency: account.currency }, { currency: null }],
+            },
+          ],
     },
     select: {
       id: true,
