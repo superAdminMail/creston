@@ -177,7 +177,14 @@ export async function markKycVerificationSessionStatus(params: {
   };
 }
 
-export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
+function canRemoteReconcileDiditStatus(status: string | null | undefined) {
+  return isDiditResumableStatus(status) || status === "In Review";
+}
+
+export async function syncLatestKycSessionIfNeeded(
+  investorProfileId: string,
+  options: { forceRemote?: boolean } = {},
+) {
   const session = await getLatestKycVerificationSession(investorProfileId);
   if (!session) return null;
 
@@ -195,12 +202,11 @@ export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
     !!profile &&
     (profile.kycStatus !== finalState.appStatus ||
       profile.isVerified !== finalState.isVerified);
+  const shouldAttemptRemoteSync =
+    canRemoteReconcileDiditStatus(session.status) &&
+    (options.forceRemote || isDiditSessionStale(sessionAgeAnchor));
 
-  if (
-    (isDiditResumableStatus(session.status) ||
-      session.status === "In Review") &&
-    isDiditSessionStale(sessionAgeAnchor)
-  ) {
+  if (shouldAttemptRemoteSync) {
     try {
       const diditSession = await retrieveDiditSession(session.providerSessionId);
       const remoteStatus =
@@ -227,7 +233,11 @@ export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
     }
   }
 
-  if (profileNeedsSync && finalState.appStatus !== "NOT_STARTED") {
+  if (
+    profileNeedsSync &&
+    finalState.appStatus !== "NOT_STARTED" &&
+    !canRemoteReconcileDiditStatus(session.status)
+  ) {
     try {
       const refreshed = await markKycVerificationSessionStatus({
         providerSessionId: session.providerSessionId,
@@ -253,8 +263,14 @@ export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
   return session;
 }
 
-export async function getLatestKycSessionState(investorProfileId: string) {
-  const session = await syncLatestKycSessionIfNeeded(investorProfileId);
+export async function getLatestKycSessionState(
+  investorProfileId: string,
+  options: { forceRemote?: boolean } = {},
+) {
+  const session = await syncLatestKycSessionIfNeeded(
+    investorProfileId,
+    options,
+  );
   if (!session) return null;
 
   const sessionAgeAnchor = session.lastSyncedAt ?? session.updatedAt;

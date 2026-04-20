@@ -3,7 +3,9 @@ import KYCSection from "./_components/KYCSection";
 import KYCVerifiedCard from "./_components/KYCVerifiedCard";
 import { DiditCallbackToast } from "./_components/DiditCallbackToast";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { isDiditActiveStatus } from "@/lib/kyc/didit";
 import {
+  getLatestKycVerificationSession,
   markKycVerificationSessionStatus,
   syncLatestKycSessionIfNeeded,
 } from "@/lib/kyc/kycVerificationSessionService";
@@ -111,9 +113,17 @@ export default async function Page({
   if (!user) return null;
 
   const profile = user.investorProfile;
+  const latestSessionProbe = profile
+    ? await getLatestKycVerificationSession(profile.id)
+    : null;
+  const shouldForceRemoteSync =
+    Boolean(diditCallback) ||
+    Boolean(latestSessionProbe && isDiditActiveStatus(latestSessionProbe.status));
 
   const latestSession = profile
-    ? await syncLatestKycSessionIfNeeded(profile.id)
+    ? await syncLatestKycSessionIfNeeded(profile.id, {
+        forceRemote: shouldForceRemoteSync,
+      })
     : null;
 
   const refreshedProfile = profile
