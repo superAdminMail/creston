@@ -77,7 +77,6 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
 
   const paymentMethod = await prisma.platformPaymentMethod.findFirst({
     where: {
-      id: data.platformPaymentMethodId,
       isActive: true,
       type: "BANK_INFO",
       ...(order.platformPaymentMethodId
@@ -85,6 +84,7 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
             id: order.platformPaymentMethodId,
           }
         : {
+            id: data.platformPaymentMethodId,
             isPrivate: false,
           }),
     },

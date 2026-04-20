@@ -187,9 +187,7 @@ export default function SavingsFundingClient({
         totalAmount: chargeBasis,
         amountPaid: 0,
         usePartialPayment: selectedPaymentMode === "PARTIAL",
-        fundingMethodType: cryptoSelected
-          ? "CRYPTO_PROVIDER"
-          : "BANK_TRANSFER",
+        fundingMethodType: cryptoSelected ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
         hasPendingSubmission: hasPendingSubmission,
         hasActiveCryptoIntent: false,
       }).chargeAmount.toNumber();
@@ -321,7 +319,7 @@ export default function SavingsFundingClient({
                 {cryptoSelected ? (
                   <>
                     <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
-                    <span className="truncate">Crypto wallet</span>
+                    <span className="truncate">Bitcoin</span>
                   </>
                 ) : (
                   <>
@@ -399,8 +397,8 @@ export default function SavingsFundingClient({
                     Bank details are not available yet.
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    A public bank method must be available before you can submit
-                    a bank transfer proof.
+                    A platform bank method must be available before you can
+                    submit a bank transfer proof.
                   </p>
 
                   <div className="mt-4 flex justify-start">
@@ -442,7 +440,7 @@ export default function SavingsFundingClient({
                           Crypto wallet selected
                         </p>
                         <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                          Bank details are hidden for crypto funding.
+                          Pay from your crypto wallet
                         </p>
                       </div>
                     </div>
@@ -469,7 +467,9 @@ export default function SavingsFundingClient({
                     </p>
                   </div>
 
-                  <div className="flex justify-start">{cryptoCheckoutButton}</div>
+                  <div className="flex justify-start">
+                    {cryptoCheckoutButton}
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4">
