@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bitcoin, Landmark, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -91,31 +91,7 @@ export default function SavingsFundingClient({
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
   const [proofOpen, setProofOpen] = useState(false);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
-  const [bankInfoRequested, setBankInfoRequested] = useState(
-    details.hasExistingBankInfoRequest,
-  );
-
-  useEffect(() => {
-    setSelectedFundingMethod(
-      normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
-        fundingMethodType ??
-        "BANK_TRANSFER",
-    );
-  }, [details.latestIntent?.fundingMethodType, fundingMethodType]);
-
-  useEffect(() => {
-    setSelectedPaymentMode(normalizePaymentMode(paymentMode));
-  }, [paymentMode]);
-
-  useEffect(() => {
-    setBankInfoRequested(details.hasExistingBankInfoRequest);
-  }, [details.hasExistingBankInfoRequest]);
-
-  useEffect(() => {
-    if (selectedFundingMethod === "CRYPTO_PROVIDER") {
-      setProofOpen(false);
-    }
-  }, [selectedFundingMethod]);
+  const [bankInfoRequestedLocal, setBankInfoRequestedLocal] = useState(false);
 
   async function handleRequestBankInfo() {
     if (isRequestingBankInfo || bankInfoRequested) return;
@@ -130,7 +106,7 @@ export default function SavingsFundingClient({
         return;
       }
 
-      setBankInfoRequested(true);
+      setBankInfoRequestedLocal(true);
       toast.success(result.message);
       router.refresh();
     } finally {
@@ -170,7 +146,10 @@ export default function SavingsFundingClient({
 
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const canOpenProof = bankSelected && selectedPaymentMode !== null;
+  const effectivePaymentMode = cryptoSelected ? "FULL" : selectedPaymentMode;
+  const bankInfoRequested =
+    details.hasExistingBankInfoRequest || bankInfoRequestedLocal;
+  const canOpenProof = bankSelected && effectivePaymentMode !== null;
 
   const selectedAmount = useMemo(() => {
     const chargeBasis =
@@ -178,7 +157,7 @@ export default function SavingsFundingClient({
       details.fundingAmountSuggestion ??
       details.account.balance;
 
-    if (!selectedPaymentMode) {
+    if (!effectivePaymentMode) {
       return details.remainingToTargetAmount ?? chargeBasis;
     }
 
@@ -186,8 +165,10 @@ export default function SavingsFundingClient({
       return calculateSavingsFundingChargeAmount({
         totalAmount: chargeBasis,
         amountPaid: 0,
-        usePartialPayment: selectedPaymentMode === "PARTIAL",
-        fundingMethodType: cryptoSelected ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
+        usePartialPayment: bankSelected && effectivePaymentMode === "PARTIAL",
+        fundingMethodType: cryptoSelected
+          ? "CRYPTO_PROVIDER"
+          : "BANK_TRANSFER",
         hasPendingSubmission: hasPendingSubmission,
         hasActiveCryptoIntent: false,
       }).chargeAmount.toNumber();
@@ -200,8 +181,9 @@ export default function SavingsFundingClient({
     details.account.targetAmount,
     details.fundingAmountSuggestion,
     details.remainingToTargetAmount,
+    bankSelected,
     hasPendingSubmission,
-    selectedPaymentMode,
+    effectivePaymentMode,
   ]);
 
   return (
@@ -216,8 +198,8 @@ export default function SavingsFundingClient({
               {details.account.product.name}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-              Choose a funding method, then decide whether to settle the full
-              amount now or continue with a partial payment.
+              Choose a funding method, then continue with a full payment for
+              crypto wallet or a full or partial payment for bank transfer.
             </p>
           </div>
         </div>
@@ -229,7 +211,7 @@ export default function SavingsFundingClient({
           />
           <SummaryChip
             label="Payment mode"
-            value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+            value={getCheckoutPaymentModeLabel(effectivePaymentMode)}
           />
           <SummaryChip
             label="Selected amount"
@@ -251,11 +233,20 @@ export default function SavingsFundingClient({
         value={selectedFundingMethod}
         onChange={(next) => {
           setSelectedFundingMethod(next);
+          if (next === "CRYPTO_PROVIDER") {
+            setSelectedPaymentMode("FULL");
+            updateCheckoutParams({
+              nextFundingMethod: next,
+              nextPaymentMode: "FULL",
+            });
+            return;
+          }
+
           updateCheckoutParams({ nextFundingMethod: next });
         }}
       />
 
-      {selectedFundingMethod ? (
+      {bankSelected ? (
         <CheckoutPaymentModeSelector
           value={selectedPaymentMode}
           onChange={(next) => {
@@ -346,7 +337,7 @@ export default function SavingsFundingClient({
                       Payment mode
                     </p>
                     <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
-                      {getCheckoutPaymentModeLabel(selectedPaymentMode)}
+                      {getCheckoutPaymentModeLabel(effectivePaymentMode)}
                     </p>
                   </div>
                 </div>
@@ -454,9 +445,9 @@ export default function SavingsFundingClient({
                         details.account.currency,
                       )}
                     />
-                    <SummaryChip
+                <SummaryChip
                       label="Payment mode"
-                      value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+                      value={getCheckoutPaymentModeLabel("FULL")}
                     />
                   </div>
 

@@ -62,10 +62,8 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
   const currentAmountPaid = new Prisma.Decimal(
     fundingIntent.investmentOrder.amountPaid,
   );
-  const orderAmount = new Prisma.Decimal(fundingIntent.investmentOrder.amount);
 
   const newAmountPaid = currentAmountPaid.plus(creditedAmountDecimal);
-  const isFullyPaid = newAmountPaid.gte(orderAmount);
 
   const updatedFundingIntent = await tx.cryptoFundingIntent.update({
     where: { id: fundingIntent.id },
@@ -99,13 +97,9 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
     where: { id: fundingIntent.investmentOrderId },
     data: {
       amountPaid: newAmountPaid,
-      status: isFullyPaid
-        ? InvestmentOrderStatus.PAID
-        : InvestmentOrderStatus.PARTIALLY_PAID,
+      status: InvestmentOrderStatus.PAID,
       paymentReference: providerReference,
-      paidAt: isFullyPaid
-        ? (fundingIntent.investmentOrder.paidAt ?? creditedAt ?? new Date())
-        : fundingIntent.investmentOrder.paidAt,
+      paidAt: fundingIntent.investmentOrder.paidAt ?? creditedAt ?? new Date(),
       paymentMetadata: {
         ...existingPaymentMetadata,
         provider: fundingIntent.provider,
@@ -123,6 +117,6 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
     fundingIntent: updatedFundingIntent,
     investmentOrder: updatedInvestmentOrder,
     alreadyApplied: false,
-    isFullyPaid,
+    isFullyPaid: true,
   };
 }

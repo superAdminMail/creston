@@ -130,14 +130,17 @@ export default function InvestmentOrderPaymentClient({
 
   const canPay =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
+  const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
+  const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
+  const effectivePaymentMode = cryptoSelected ? "FULL" : mode;
 
   const selectedAmount = useMemo(() => {
-    if (mode === "FULL") return order.remainingAmount;
-    if (mode === "PARTIAL") {
+    if (cryptoSelected || effectivePaymentMode === "FULL") return order.remainingAmount;
+    if (effectivePaymentMode === "PARTIAL") {
       return Math.min(Math.max(partialAmount || 0, 0), order.remainingAmount);
     }
     return 0;
-  }, [mode, order.remainingAmount, partialAmount]);
+  }, [cryptoSelected, effectivePaymentMode, order.remainingAmount, partialAmount]);
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -170,6 +173,15 @@ export default function InvestmentOrderPaymentClient({
   ) => {
     setSelectedFundingMethod(nextFundingMethod);
     setShowModal(false);
+    if (nextFundingMethod === "CRYPTO_PROVIDER") {
+      setMode("FULL");
+      updateCheckoutParams({
+        nextFundingMethod,
+        nextPaymentMode: "FULL",
+      });
+      return;
+    }
+
     updateCheckoutParams({ nextFundingMethod });
   };
 
@@ -189,7 +201,13 @@ export default function InvestmentOrderPaymentClient({
     }
 
     if (!mode) {
-      toast.error("Choose full or partial payment first.");
+      toast.error("Choose a payment mode first.");
+      return;
+    }
+
+    if (cryptoSelected && mode !== "FULL") {
+      setMode("FULL");
+      updateCheckoutParams({ nextPaymentMode: "FULL" });
       return;
     }
 
@@ -204,7 +222,7 @@ export default function InvestmentOrderPaymentClient({
         },
         body: JSON.stringify({
           investmentOrderId: order.id,
-          paymentMode: mode,
+          paymentMode: "FULL",
         }),
       });
 
@@ -241,19 +259,27 @@ export default function InvestmentOrderPaymentClient({
               {order.plan.name}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Choose a funding method, then decide whether to pay the full
-              amount or split it.
+              Choose a funding method, then pay the full amount with crypto
+              wallet or split it with bank transfer.
             </p>
           </div>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <SummaryChip label="Funding method" value={getCheckoutFundingMethodLabel(selectedFundingMethod)} />
-          <SummaryChip label="Payment mode" value={getCheckoutPaymentModeLabel(mode)} />
+          <SummaryChip
+            label="Funding method"
+            value={getCheckoutFundingMethodLabel(selectedFundingMethod)}
+          />
+          <SummaryChip
+            label="Payment mode"
+            value={getCheckoutPaymentModeLabel(effectivePaymentMode)}
+          />
           <SummaryChip
             label="Selected amount"
             value={
-              mode ? formatCurrency(selectedAmount, order.currency) : order.remainingAmountLabel
+              cryptoSelected || mode
+                ? formatCurrency(selectedAmount, order.currency)
+                : order.remainingAmountLabel
             }
           />
         </div>
@@ -310,7 +336,7 @@ export default function InvestmentOrderPaymentClient({
         </CardContent>
       </Card>
 
-      {selectedFundingMethod ? (
+      {bankSelected ? (
         <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle className="text-lg text-slate-950 dark:text-white">
@@ -360,7 +386,7 @@ export default function InvestmentOrderPaymentClient({
               )
             ) : null
           ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-            mode ? (
+            cryptoSelected ? (
               <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
                 <CardHeader>
                   <CardTitle className="text-lg text-slate-950 dark:text-white">
@@ -375,13 +401,13 @@ export default function InvestmentOrderPaymentClient({
                     />
                     <SummaryChip
                       label="Payment mode"
-                      value={getCheckoutPaymentModeLabel(mode)}
+                      value={getCheckoutPaymentModeLabel("FULL")}
                     />
                   </div>
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Continue to the crypto payment gateway using the amount
-                    selected above.
+                    Continue to the crypto payment gateway using the full
+                    amount selected above.
                   </p>
 
                   <div className="flex justify-end">

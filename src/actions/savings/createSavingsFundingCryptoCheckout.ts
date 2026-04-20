@@ -17,7 +17,7 @@ import { calculateSavingsFundingChargeAmount } from "@/lib/payments/savings/calc
 
 const schema = z.object({
   savingsAccountId: z.string().min(1),
-  paymentMode: z.enum(["FULL", "PARTIAL"]),
+  paymentMode: z.literal("FULL"),
 });
 
 type Input = z.infer<typeof schema>;
@@ -156,11 +156,11 @@ export async function createSavingsFundingCryptoCheckout(
   const chargeCalculation = calculateSavingsFundingChargeAmount({
     totalAmount: account.targetAmount ?? account.balance,
     amountPaid,
-    usePartialPayment: parsed.data.paymentMode === "PARTIAL",
     fundingMethodType: "CRYPTO_PROVIDER",
     hasPendingSubmission: false,
     hasActiveCryptoIntent: false,
   });
+  const paymentMode = "FULL" as const;
 
   const appBaseUrl = getAppBaseUrl();
   const returnUrl = new URL(
@@ -170,7 +170,7 @@ export async function createSavingsFundingCryptoCheckout(
   returnUrl.searchParams.set("targetType", "SAVINGS_FUNDING");
   returnUrl.searchParams.set("targetId", account.id);
   returnUrl.searchParams.set("fundingMethodType", "CRYPTO_PROVIDER");
-  returnUrl.searchParams.set("paymentMode", parsed.data.paymentMode);
+  returnUrl.searchParams.set("paymentMode", paymentMode);
   returnUrl.searchParams.set("provider", "PAYMENTO");
 
   try {
@@ -188,7 +188,7 @@ export async function createSavingsFundingCryptoCheckout(
         },
         {
           key: "paymentMode",
-          value: parsed.data.paymentMode,
+          value: paymentMode,
         },
         {
           key: "fundingMethodType",
@@ -215,7 +215,7 @@ export async function createSavingsFundingCryptoCheckout(
         submittedAt: new Date(),
         metadata: {
           createPaymentResponse: created.raw,
-          paymentMode: parsed.data.paymentMode,
+          paymentMode,
           chargeAmount: chargeCalculation.chargeAmount.toString(),
           remainingBeforeCharge:
             chargeCalculation.remainingBeforeCharge.toString(),

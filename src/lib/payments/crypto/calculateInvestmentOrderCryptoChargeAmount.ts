@@ -3,7 +3,6 @@ import { Prisma, CryptoFundingIntentStatus } from "@/generated/prisma";
 type CalculateInvestmentOrderCryptoChargeAmountInput = {
   totalAmount: Prisma.Decimal | string | number;
   amountPaid: Prisma.Decimal | string | number;
-  usePartialPayment: boolean;
   hasActiveCryptoIntent: boolean;
 };
 
@@ -17,7 +16,6 @@ export type CalculateInvestmentOrderCryptoChargeAmountResult = {
 export function calculateInvestmentOrderCryptoChargeAmount({
   totalAmount,
   amountPaid,
-  usePartialPayment,
   hasActiveCryptoIntent,
 }: CalculateInvestmentOrderCryptoChargeAmountInput): CalculateInvestmentOrderCryptoChargeAmountResult {
   const total = new Prisma.Decimal(totalAmount);
@@ -42,43 +40,12 @@ export function calculateInvestmentOrderCryptoChargeAmount({
   }
 
   const remaining = total.minus(paid);
-
-  if (!usePartialPayment) {
-    return {
-      chargeAmount: remaining,
-      remainingBeforeCharge: remaining,
-      isPartialPayment: false,
-      splitNumber: null,
-    };
-  }
-
-  if (paid.eq(0)) {
-    const half = total
-      .dividedBy(2)
-      .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
-
-    if (half.lte(0)) {
-      throw new Error("Unable to calculate the first partial payment amount");
-    }
-
-    return {
-      chargeAmount: half,
-      remainingBeforeCharge: remaining,
-      isPartialPayment: true,
-      splitNumber: 1,
-    };
-  }
-
-  if (paid.gt(0) && paid.lt(total)) {
-    return {
-      chargeAmount: remaining,
-      remainingBeforeCharge: remaining,
-      isPartialPayment: true,
-      splitNumber: 2,
-    };
-  }
-
-  throw new Error("Partial payment is no longer available for this order");
+  return {
+    chargeAmount: remaining,
+    remainingBeforeCharge: remaining,
+    isPartialPayment: false,
+    splitNumber: null,
+  };
 }
 
 export function isActiveCryptoFundingIntentStatus(

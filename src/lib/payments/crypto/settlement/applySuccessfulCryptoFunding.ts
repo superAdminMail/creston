@@ -167,7 +167,6 @@ async function applyInvestmentCryptoFunding({
 
   const safeCreditedAmount = clampToUpperBound(creditedAmount, remaining);
   const newAmountPaid = currentAmountPaid.plus(safeCreditedAmount);
-  const isFullyPaid = newAmountPaid.gte(orderAmount);
 
   const existingOrderPaymentMetadata = asObject(order.paymentMetadata);
   const existingFundingMetadata = asObject(fundingIntent.metadata);
@@ -232,16 +231,12 @@ async function applyInvestmentCryptoFunding({
     where: { id: order.id },
     data: {
       paymentMethodType: "CRYPTO_PROVIDER",
-      status: isFullyPaid
-        ? InvestmentOrderStatus.PAID
-        : InvestmentOrderStatus.PARTIALLY_PAID,
+      status: InvestmentOrderStatus.PAID,
       amountPaid: newAmountPaid,
       paymentReference:
         providerExternalId ?? providerReference ?? fundingIntent.id,
-      paidAt: isFullyPaid ? (order.paidAt ?? processedAt) : order.paidAt,
-      confirmedAt: isFullyPaid
-        ? (order.confirmedAt ?? processedAt)
-        : order.confirmedAt,
+      paidAt: order.paidAt ?? processedAt,
+      confirmedAt: order.confirmedAt ?? processedAt,
       lastPaymentSubmittedAt: processedAt,
       lastPaymentReviewedAt: processedAt,
       paymentMetadata: toNullableJsonValue({
@@ -260,12 +255,8 @@ async function applyInvestmentCryptoFunding({
   await tx.notification.create({
     data: {
       userId: fundingIntent.userId,
-      title: isFullyPaid
-        ? "Investment payment confirmed"
-        : "Investment payment partially confirmed",
-      message: isFullyPaid
-        ? "Your crypto payment was confirmed successfully."
-        : "Your crypto payment was confirmed and applied partially.",
+      title: "Investment payment confirmed",
+      message: "Your crypto payment was confirmed successfully.",
       type: "INVESTMENT_PAYMENT_CONFIRMED",
       link: `/account/dashboard/user/investment-orders/${order.id}`,
       key: `investment-payment-confirmed:${order.id}:${providerExternalId ?? providerReference ?? fundingIntent.id}`,
@@ -282,9 +273,7 @@ async function applyInvestmentCryptoFunding({
     targetType: "INVESTMENT_ORDER",
     fundingIntentId: fundingIntent.id,
     targetId: order.id,
-    orderStatus: isFullyPaid
-      ? InvestmentOrderStatus.PAID
-      : InvestmentOrderStatus.PARTIALLY_PAID,
+    orderStatus: InvestmentOrderStatus.PAID,
     creditedAmount: safeCreditedAmount.toString(),
   };
 }

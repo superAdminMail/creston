@@ -10,7 +10,6 @@ export type PaymentoNormalizedStatus =
   | "PROCESSING"
   | "REQUIRES_ACTION"
   | "AWAITING_PROVIDER_CONFIRMATION"
-  | "PARTIALLY_PAID"
   | "PAID"
   | "FAILED"
   | "EXPIRED"
@@ -26,7 +25,6 @@ export type PaymentoStatusResolution = {
   isFailed: boolean;
   isCancelled: boolean;
   isPending: boolean;
-  isPartialPaid: boolean;
 };
 
 function normalizeStatusText(value: string) {
@@ -44,7 +42,7 @@ function mapNumericStatus(statusCode: number | null): PaymentoNormalizedStatus {
     case 1:
       return "PROCESSING";
     case 2:
-      return "PARTIALLY_PAID";
+      return "PROCESSING";
     case 3:
       return "AWAITING_PROVIDER_CONFIRMATION";
     case 4:
@@ -69,7 +67,6 @@ function mapTextStatus(value: string): PaymentoNormalizedStatus {
     case "PROCESSING":
     case "REQUIRES_ACTION":
     case "AWAITING_PROVIDER_CONFIRMATION":
-    case "PARTIALLY_PAID":
     case "PAID":
     case "FAILED":
     case "EXPIRED":
@@ -106,9 +103,7 @@ export function resolvePaymentoStatus(
       status === "PROCESSING" ||
       status === "REQUIRES_ACTION" ||
       status === "AWAITING_PROVIDER_CONFIRMATION" ||
-      status === "PARTIALLY_PAID" ||
       status === "UNKNOWN",
-    isPartialPaid: status === "PARTIALLY_PAID",
   };
 }
 
@@ -128,7 +123,6 @@ export function mapPaymentoStatusToCryptoFundingIntentStatus(
     case "AWAITING_PROVIDER_CONFIRMATION":
       return CryptoFundingIntentStatus.AWAITING_PROVIDER_CONFIRMATION;
     case "PROCESSING":
-    case "PARTIALLY_PAID":
       return CryptoFundingIntentStatus.PROCESSING;
     case "PENDING":
     case "UNKNOWN":
@@ -143,8 +137,6 @@ export function mapPaymentoStatusToInvestmentOrderStatus(
   switch (status) {
     case "PAID":
       return InvestmentOrderStatus.PAID;
-    case "PARTIALLY_PAID":
-      return InvestmentOrderStatus.PARTIALLY_PAID;
     case "CANCELLED":
       return InvestmentOrderStatus.CANCELLED;
     default:
@@ -158,8 +150,6 @@ export function mapPaymentoStatusToSavingsFundingIntentStatus(
   switch (status) {
     case "PAID":
       return SavingsFundingIntentStatus.PAID;
-    case "PARTIALLY_PAID":
-      return SavingsFundingIntentStatus.PARTIALLY_PAID;
     case "FAILED":
       return SavingsFundingIntentStatus.FAILED;
     case "CANCELLED":

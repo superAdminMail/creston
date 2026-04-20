@@ -11,7 +11,7 @@ import { paymentoCreatePayment } from "@/lib/payments/crypto/paymento";
 
 type RequestBody = {
   investmentOrderId: string;
-  paymentMode?: "FULL" | "PARTIAL" | null;
+  paymentMode?: "FULL" | null;
 };
 
 export async function POST(req: Request) {
@@ -51,6 +51,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (body.paymentMode && body.paymentMode !== "FULL") {
+      return NextResponse.json(
+        { error: "Crypto funding only supports full payment" },
+        { status: 400 },
+      );
+    }
+
     const hasActiveCryptoIntent =
       (await prisma.cryptoFundingIntent.findFirst({
         where: {
@@ -72,9 +79,9 @@ export async function POST(req: Request) {
     const chargeCalculation = calculateInvestmentOrderCryptoChargeAmount({
       totalAmount: order.amount,
       amountPaid: order.amountPaid,
-      usePartialPayment: body.paymentMode === "PARTIAL",
       hasActiveCryptoIntent,
     });
+    const paymentMode = "FULL" as const;
 
     const appBaseUrl = getAppBaseUrl();
     const returnUrl = new URL(
@@ -84,7 +91,7 @@ export async function POST(req: Request) {
     returnUrl.searchParams.set("targetType", "INVESTMENT_ORDER");
     returnUrl.searchParams.set("targetId", order.id);
     returnUrl.searchParams.set("fundingMethodType", "CRYPTO_PROVIDER");
-    returnUrl.searchParams.set("paymentMode", body.paymentMode ?? "FULL");
+    returnUrl.searchParams.set("paymentMode", paymentMode);
     returnUrl.searchParams.set("provider", "PAYMENTO");
 
     const created = await paymentoCreatePayment({
@@ -97,10 +104,7 @@ export async function POST(req: Request) {
         { key: "investmentOrderId", value: order.id },
         { key: "investorProfileId", value: order.investorProfileId },
         { key: "userId", value: order.investorProfile.user.id },
-        {
-          key: "paymentMode",
-          value: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
-        },
+        { key: "paymentMode", value: paymentMode },
       ],
       EmailAddress: order.investorProfile.user.email,
     });
@@ -120,7 +124,7 @@ export async function POST(req: Request) {
         redirectUrl: created.gatewayUrl,
         metadata: {
           createPaymentResponse: created.raw,
-          paymentMode: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
+          paymentMode,
           chargeAmount: chargeCalculation.chargeAmount.toString(),
           remainingBeforeCharge:
             chargeCalculation.remainingBeforeCharge.toString(),
@@ -141,7 +145,7 @@ export async function POST(req: Request) {
           provider: "PAYMENTO",
           token: created.token,
           paymentReference: created.token,
-          paymentMode: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
+          paymentMode,
           chargeAmount: chargeCalculation.chargeAmount.toString(),
         },
       },

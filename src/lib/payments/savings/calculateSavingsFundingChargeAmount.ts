@@ -32,7 +32,6 @@ export function calculateSavingsFundingChargeAmount({
     return calculateInvestmentOrderCryptoChargeAmount({
       totalAmount,
       amountPaid,
-      usePartialPayment,
       hasActiveCryptoIntent,
     });
   }

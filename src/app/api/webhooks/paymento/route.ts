@@ -266,14 +266,13 @@ export async function POST(req: Request) {
           },
         });
 
-        if (mappedOrderStatus === "PARTIALLY_PAID") {
+        if (mappedOrderStatus === "CANCELLED") {
           await tx.investmentOrder.update({
             where: { id: target.fundingIntent.investmentOrderId },
             data: {
-              paymentMethodType: "CRYPTO_PROVIDER",
-              status: "PARTIALLY_PAID",
+              status: "CANCELLED",
+              cancelledAt: now,
               paymentReference: providerReference,
-              lastPaymentSubmittedAt: now,
               paymentMetadata: toNullableJsonValue({
                 ...existingOrderPaymentMetadata,
                 provider: "PAYMENTO",
@@ -285,15 +284,14 @@ export async function POST(req: Request) {
               }),
             },
           });
-        }
-
-        if (mappedOrderStatus === "CANCELLED") {
+        } else {
           await tx.investmentOrder.update({
             where: { id: target.fundingIntent.investmentOrderId },
             data: {
-              status: "CANCELLED",
-              cancelledAt: now,
+              paymentMethodType: "CRYPTO_PROVIDER",
+              status: mappedOrderStatus,
               paymentReference: providerReference,
+              lastPaymentSubmittedAt: now,
               paymentMetadata: toNullableJsonValue({
                 ...existingOrderPaymentMetadata,
                 provider: "PAYMENTO",
@@ -327,10 +325,7 @@ export async function POST(req: Request) {
               providerReference,
             }),
             status: mappedFundingStatus,
-            paidAt:
-              paymentoStatus.status === "PARTIALLY_PAID"
-                ? now
-                : target.fundingIntent.paidAt,
+            paidAt: target.fundingIntent.paidAt,
             creditedAt: target.fundingIntent.creditedAt,
             failedAt:
               paymentoStatus.isFailed ? now : target.fundingIntent.failedAt,
