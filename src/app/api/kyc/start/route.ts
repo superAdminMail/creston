@@ -33,6 +33,7 @@ export async function POST() {
       select: {
         id: true,
         kycStatus: true,
+        isVerified: true,
       },
     });
 
@@ -43,7 +44,7 @@ export async function POST() {
       );
     }
 
-    if (profile.kycStatus === "VERIFIED") {
+    if (profile.isVerified || profile.kycStatus === "VERIFIED") {
       return NextResponse.json({ error: "Already verified" }, { status: 400 });
     }
 
@@ -54,13 +55,14 @@ export async function POST() {
       select: {
         id: true,
         kycStatus: true,
+        isVerified: true,
       },
     });
 
     const latestSessionAgeAnchor =
       latestSession?.lastSyncedAt ?? latestSession?.updatedAt ?? null;
 
-    if (refreshedProfile?.kycStatus === "VERIFIED") {
+    if (refreshedProfile?.isVerified || refreshedProfile?.kycStatus === "VERIFIED") {
       return NextResponse.json({ error: "Already verified" }, { status: 400 });
     }
 
@@ -105,7 +107,7 @@ export async function POST() {
 
       await prisma.investorProfile.update({
         where: { id: refreshedProfile?.id ?? profile.id },
-        data: { kycStatus: "NOT_STARTED" },
+        data: { kycStatus: "NOT_STARTED", isVerified: false },
       });
     }
 

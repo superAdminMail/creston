@@ -92,6 +92,28 @@ export function mapDiditStatusToAppKycStatus(
   }
 }
 
+export function resolveDiditKycFinalState(
+  diditStatus: string | null | undefined,
+): {
+  providerStatus: string | null;
+  appStatus: AppKycStatus;
+  isVerified: boolean;
+} {
+  const providerStatus =
+    typeof diditStatus === "string" && diditStatus.trim()
+      ? diditStatus.trim()
+      : null;
+
+  const appStatus =
+    mapDiditStatusToAppKycStatus(providerStatus) ?? "NOT_STARTED";
+
+  return {
+    providerStatus,
+    appStatus,
+    isVerified: appStatus === "VERIFIED",
+  };
+}
+
 export function isDiditResumableStatus(status: string | null | undefined) {
   return (
     status === DIDIT_STATUSES.NOT_STARTED ||

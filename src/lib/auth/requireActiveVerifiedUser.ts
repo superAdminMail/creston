@@ -23,6 +23,7 @@ type RequireActiveVerifiedUserResult = {
   investorProfile: {
     id: string;
     kycStatus: KycStatus;
+    isVerified: boolean;
   } | null;
 };
 
@@ -53,6 +54,7 @@ export async function requireActiveVerifiedUser(): Promise<RequireActiveVerified
         select: {
           id: true,
           kycStatus: true,
+          isVerified: true,
         },
       },
     },

@@ -48,10 +48,25 @@ export async function POST(req: Request) {
       );
     }
 
+    console.log("[DIDIT_WEBHOOK_RECEIVED]", {
+      sessionId: payload.session_id,
+      status: payload.status,
+      webhookType: payload.webhook_type ?? null,
+    });
+
     const result = await markKycVerificationSessionStatus({
       providerSessionId: payload.session_id,
       status: payload.status,
       rawPayload: payload,
+    });
+
+    console.log("[DIDIT_WEBHOOK_FINALIZED]", {
+      sessionId: payload.session_id,
+      providerStatus: result.providerStatus,
+      appStatus: result.appStatus,
+      sessionUpdated: result.sessionUpdated,
+      profileUpdated: result.profileUpdated,
+      changed: result.changed,
     });
 
     if (result.changed) {
@@ -60,6 +75,7 @@ export async function POST(req: Request) {
         "kyc-status-updated",
         {
           status: result.session.investorProfile.kycStatus,
+          profileIsVerified: result.session.investorProfile.isVerified,
           providerStatus: payload.status,
         },
       );

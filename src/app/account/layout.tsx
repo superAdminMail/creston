@@ -60,7 +60,11 @@ export default async function AccountLayout({
     emailVerified: dbUser.emailVerified,
     profileAvatarFileAsset: dbUser.profileAvatarFileAsset ?? undefined,
     investorProfile: dbUser.investorProfile
-      ? { kycStatus: dbUser.investorProfile.kycStatus }
+      ? {
+          kycStatus: dbUser.investorProfile.isVerified
+            ? "VERIFIED"
+            : dbUser.investorProfile.kycStatus,
+        }
       : null,
   });
 

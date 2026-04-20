@@ -3,7 +3,10 @@ import KYCSection from "./_components/KYCSection";
 import KYCVerifiedCard from "./_components/KYCVerifiedCard";
 import { DiditCallbackToast } from "./_components/DiditCallbackToast";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
-import { syncLatestKycSessionIfNeeded } from "@/lib/kyc/kycVerificationSessionService";
+import {
+  markKycVerificationSessionStatus,
+  syncLatestKycSessionIfNeeded,
+} from "@/lib/kyc/kycVerificationSessionService";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 type DiditCallbackStatus = "Approved" | "Declined" | "In Review";
@@ -62,6 +65,32 @@ export default async function Page({
 
   const userId = await getCurrentUserId();
   if (!userId) return null;
+
+  if (diditCallback) {
+    try {
+      const finalized = await markKycVerificationSessionStatus({
+        providerSessionId: diditCallback.verificationSessionId,
+        status: diditCallback.status,
+        rawPayload: {
+          verificationSessionId: diditCallback.verificationSessionId,
+          status: diditCallback.status,
+          source: "didit-callback",
+        },
+      });
+
+      console.log("[DIDIT_CALLBACK_FINALIZED]", {
+        sessionId: diditCallback.verificationSessionId,
+        providerStatus: finalized.providerStatus,
+        appStatus: finalized.appStatus,
+        sessionUpdated: finalized.sessionUpdated,
+        profileUpdated: finalized.profileUpdated,
+        changed: finalized.changed,
+      });
+    } catch (error) {
+      console.error("[DIDIT_CALLBACK_FINALIZATION_ERROR]", error);
+    }
+  }
+
   const site = await getSiteConfigurationCached();
   const siteName = site?.siteName ?? "";
 
@@ -92,11 +121,14 @@ export default async function Page({
         where: { id: profile.id },
         select: {
           kycStatus: true,
+          isVerified: true,
         },
       })
     : null;
 
-  const kycStatus = refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED";
+  const kycStatus = refreshedProfile?.isVerified
+    ? "VERIFIED"
+    : refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED";
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">

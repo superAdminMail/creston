@@ -2,12 +2,11 @@ import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import {
   isDiditActiveStatus,
-  isDiditInactiveStatus,
   isDiditRetryableStatus,
   isDiditResumableStatus,
   isDiditSessionStale,
-  mapDiditStatusToAppKycStatus,
   retrieveDiditSession,
+  resolveDiditKycFinalState,
 } from "@/lib/kyc/didit";
 
 export async function getLatestKycVerificationSession(
@@ -68,10 +67,20 @@ export async function markKycVerificationSessionStatus(params: {
   status: string;
   rawPayload?: unknown;
 }) {
+  const normalized = resolveDiditKycFinalState(params.status);
+  const now = new Date();
+
   const currentSession = await prisma.kycVerificationSession.findUnique({
     where: { providerSessionId: params.providerSessionId },
     include: {
-      investorProfile: true,
+      investorProfile: {
+        select: {
+          id: true,
+          kycStatus: true,
+          isVerified: true,
+          userId: true,
+        },
+      },
     },
   });
 
@@ -81,43 +90,90 @@ export async function markKycVerificationSessionStatus(params: {
     );
   }
 
-  const changed = currentSession.status !== params.status;
+  const shouldSetCompletedAt =
+    normalized.providerStatus === "Approved" ||
+    normalized.providerStatus === "Declined";
+  const shouldSetAbandonedAt = normalized.providerStatus === "Abandoned";
+  const shouldSetExpiredAt = normalized.providerStatus === "Expired";
 
-  const session = await prisma.kycVerificationSession.update({
-    where: { providerSessionId: params.providerSessionId },
-    data: {
-      status: params.status,
-      lastSyncedAt: new Date(),
-      rawPayload: toOptionalJsonValue(params.rawPayload),
-      completedAt:
-        params.status === "Approved" || params.status === "Declined"
-          ? new Date()
-          : undefined,
-      abandonedAt: params.status === "Abandoned" ? new Date() : undefined,
-      expiredAt: params.status === "Expired" ? new Date() : undefined,
-    },
+  const currentAppStatus = currentSession.investorProfile?.kycStatus ?? null;
+  const currentVerified = currentSession.investorProfile?.isVerified ?? false;
+  const sessionStatusChanged =
+    currentSession.status !== normalized.providerStatus;
+  const profileChanged =
+    currentAppStatus !== normalized.appStatus ||
+    currentVerified !== normalized.isVerified;
+  const changed = sessionStatusChanged || profileChanged;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.kycVerificationSession.update({
+      where: { id: currentSession.id },
+      data: {
+        status: normalized.providerStatus ?? currentSession.status,
+        lastSyncedAt: now,
+        rawPayload:
+          params.rawPayload === undefined
+            ? undefined
+            : toOptionalJsonValue(params.rawPayload),
+        completedAt: shouldSetCompletedAt
+          ? currentSession.completedAt ?? now
+          : currentSession.completedAt,
+        abandonedAt: shouldSetAbandonedAt
+          ? currentSession.abandonedAt ?? now
+          : currentSession.abandonedAt,
+        expiredAt: shouldSetExpiredAt
+          ? currentSession.expiredAt ?? now
+          : currentSession.expiredAt,
+      },
+    });
+
+    if (profileChanged) {
+      await tx.investorProfile.update({
+        where: { id: currentSession.investorProfileId },
+        data: {
+          kycStatus: normalized.appStatus,
+          isVerified: normalized.isVerified,
+        },
+      });
+    }
+  });
+
+  const session = await prisma.kycVerificationSession.findUnique({
+    where: { id: currentSession.id },
     include: {
-      investorProfile: true,
+      investorProfile: {
+        select: {
+          id: true,
+          userId: true,
+          kycStatus: true,
+          isVerified: true,
+        },
+      },
     },
   });
 
-  const finalProfileStatus =
-    mapDiditStatusToAppKycStatus(params.status) ??
-    (isDiditInactiveStatus(params.status) ? "NOT_STARTED" : null);
-
-  if (changed && finalProfileStatus) {
-    await prisma.investorProfile.update({
-      where: { id: session.investorProfileId },
-      data: {
-        kycStatus: finalProfileStatus,
-        isVerified: finalProfileStatus === "VERIFIED",
-      },
-    });
+  if (!session) {
+    throw new Error(
+      `KYC verification session not found after update: ${params.providerSessionId}`,
+    );
   }
+
+  console.log("[KYC_FINALIZED]", {
+    providerSessionId: params.providerSessionId,
+    providerStatus: normalized.providerStatus,
+    appStatus: normalized.appStatus,
+    sessionUpdated: true,
+    profileUpdated: profileChanged,
+    changed,
+  });
 
   return {
     changed,
     session,
+    sessionUpdated: true,
+    profileUpdated: profileChanged,
+    appStatus: normalized.appStatus,
+    providerStatus: normalized.providerStatus,
   };
 }
 
@@ -126,8 +182,25 @@ export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
   if (!session) return null;
 
   const sessionAgeAnchor = session.lastSyncedAt ?? session.updatedAt;
+  const finalState = resolveDiditKycFinalState(session.status);
+  const profile = await prisma.investorProfile.findUnique({
+    where: { id: investorProfileId },
+    select: {
+      kycStatus: true,
+      isVerified: true,
+    },
+  });
 
-  if (isDiditResumableStatus(session.status) && isDiditSessionStale(sessionAgeAnchor)) {
+  const profileNeedsSync =
+    !!profile &&
+    (profile.kycStatus !== finalState.appStatus ||
+      profile.isVerified !== finalState.isVerified);
+
+  if (
+    (isDiditResumableStatus(session.status) ||
+      session.status === "In Review") &&
+    isDiditSessionStale(sessionAgeAnchor)
+  ) {
     try {
       const diditSession = await retrieveDiditSession(session.providerSessionId);
       const remoteStatus =
@@ -139,9 +212,41 @@ export async function syncLatestKycSessionIfNeeded(investorProfileId: string) {
         rawPayload: diditSession,
       });
 
+      console.log("[KYC_SESSION_SYNC]", {
+        providerSessionId: session.providerSessionId,
+        remoteStatus,
+        appStatus: refreshed.appStatus,
+        profileUpdated: refreshed.profileUpdated,
+        sessionUpdated: refreshed.sessionUpdated,
+        changed: refreshed.changed,
+      });
+
       return refreshed.session;
     } catch (error) {
       console.error("[KYC_SESSION_SYNC_ERROR]", error);
+    }
+  }
+
+  if (profileNeedsSync && finalState.appStatus !== "NOT_STARTED") {
+    try {
+      const refreshed = await markKycVerificationSessionStatus({
+        providerSessionId: session.providerSessionId,
+        status: session.status,
+        rawPayload: session.rawPayload ?? undefined,
+      });
+
+      console.log("[KYC_SESSION_PROFILE_SYNC]", {
+        providerSessionId: session.providerSessionId,
+        providerStatus: session.status,
+        appStatus: refreshed.appStatus,
+        profileUpdated: refreshed.profileUpdated,
+        sessionUpdated: refreshed.sessionUpdated,
+        changed: refreshed.changed,
+      });
+
+      return refreshed.session;
+    } catch (error) {
+      console.error("[KYC_SESSION_PROFILE_SYNC_ERROR]", error);
     }
   }
 

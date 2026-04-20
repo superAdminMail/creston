@@ -56,8 +56,20 @@ export default function KYCSection({
   );
 
   useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
+
+  useEffect(() => {
     setProviderStatus(latestSession?.status ?? null);
     setSessionUrl(latestSession?.sessionUrl ?? null);
+
+    if (latestSession?.status === "Approved") {
+      setStatus("VERIFIED");
+    } else if (latestSession?.status === "Declined") {
+      setStatus("REJECTED");
+    } else if (latestSession?.status === "In Review") {
+      setStatus("PENDING_REVIEW");
+    }
   }, [latestSession?.sessionUrl, latestSession?.status, latestSession?.updatedAt]);
 
   useEffect(() => {
@@ -98,7 +110,14 @@ export default function KYCSection({
   }, [latestSession, providerStatus]);
 
   const canContinue = useMemo(() => {
-    if (!sessionUrl || !providerStatus || !latestSession)
+    if (
+      !sessionUrl ||
+      !providerStatus ||
+      !latestSession ||
+      status === "VERIFIED" ||
+      initialStatus === "VERIFIED" ||
+      providerStatus === "Approved"
+    )
       return false;
     const sessionAgeAnchor =
       latestSession.lastSyncedAt ?? latestSession.updatedAt;
@@ -107,7 +126,7 @@ export default function KYCSection({
       isDiditResumableStatus(providerStatus) &&
       !isDiditSessionStale(sessionAgeAnchor)
     );
-  }, [latestSession, providerStatus, sessionUrl]);
+  }, [initialStatus, latestSession, providerStatus, sessionUrl, status]);
 
   const startKYC = async () => {
     try {
