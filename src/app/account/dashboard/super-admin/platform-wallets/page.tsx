@@ -18,6 +18,7 @@ export default async function PlatformWalletsSuperAdminPage() {
         instructions: wallet.instructions,
         notes: wallet.notes,
         isActive: wallet.isActive,
+        isPrivate: wallet.isPrivate,
         isDefault: wallet.isDefault,
         sortOrder: wallet.sortOrder,
         verificationStatus: wallet.verificationStatus,

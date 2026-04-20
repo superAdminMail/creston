@@ -31,7 +31,7 @@ export default function SavingsDepositButton({ accountId, className }: Props) {
       {isPending ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          Opening...
+          Processing...
         </>
       ) : (
         "Deposit"

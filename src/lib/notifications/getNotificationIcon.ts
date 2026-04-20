@@ -6,6 +6,10 @@ import {
   isInvestmentOrderBankInfoReadyNotification,
   isInvestmentOrderBankInfoRequestNotification,
 } from "@/lib/notifications/investmentOrderBankInfo";
+import {
+  isSavingsFundingBankInfoRequestAckNotification,
+  isSavingsFundingBankInfoRequestNotification,
+} from "@/lib/notifications/savingsFundingBankInfo";
 
 export function getNotificationIcon(
   notification?: Pick<NotificationDTO, "type" | "metadata">,
@@ -24,6 +28,9 @@ export function getNotificationIcon(
   const isInvestmentBankInfo =
     isInvestmentOrderBankInfoRequestNotification(notification) ||
     isInvestmentOrderBankInfoReadyNotification(notification);
+  const isSavingsBankInfo =
+    isSavingsFundingBankInfoRequestNotification(notification) ||
+    isSavingsFundingBankInfoRequestAckNotification(notification);
 
   if (isPromotion) {
     if (isSystemPromotion) {
@@ -32,7 +39,7 @@ export function getNotificationIcon(
     return Megaphone;
   }
 
-  if (isInvestmentBankInfo) {
+  if (isInvestmentBankInfo || isSavingsBankInfo) {
     return CreditCard;
   }
 

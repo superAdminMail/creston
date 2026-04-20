@@ -26,6 +26,7 @@ type PlatformPaymentMethodField =
   | "country"
   | "instructions"
   | "notes"
+  | "isPrivate"
   | "isActive"
   | "isDefault"
   | "sortOrder"
@@ -78,6 +79,7 @@ export async function createPlatformPaymentMethod(
     country: getStringValue(formData, "country"),
     instructions: getStringValue(formData, "instructions"),
     notes: getStringValue(formData, "notes"),
+    isPrivate: getBooleanValue(formData, "isPrivate", false),
     isActive: getBooleanValue(formData, "isActive", true),
     isDefault: getBooleanValue(formData, "isDefault", false),
     sortOrder: getNumberValue(formData, "sortOrder"),
@@ -133,6 +135,7 @@ export async function createPlatformPaymentMethod(
           country: values.country,
           instructions: values.instructions,
           notes: values.notes,
+          isPrivate: values.isPrivate,
           isActive: values.isActive,
           isDefault: values.isDefault,
           sortOrder: values.sortOrder,

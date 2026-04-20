@@ -851,6 +851,8 @@ model PlatformPaymentMethod {
   instructions String?
   notes        String?
 
+  isPrivate Boolean @default(false)
+
   isActive  Boolean @default(true)
   isDefault Boolean @default(false)
   sortOrder Int     @default(0)

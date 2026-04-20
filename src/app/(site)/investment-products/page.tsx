@@ -10,8 +10,7 @@ export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
     title: "Investment Products",
-    description:
-      `Explore ${site.siteName} investment products across fixed and market-led strategies, structured for long-term growth and financial confidence.`,
+    description: `Explore ${site.siteName} investment products across fixed and market-led strategies, structured for long-term growth and financial confidence.`,
     keywords: ["investment products", "wealth platform", "portfolio options"],
   });
 
@@ -31,9 +30,11 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-async function resolveModel(searchParams?: Promise<{
-  model?: string | string[];
-}>) {
+async function resolveModel(
+  searchParams?: Promise<{
+    model?: string | string[];
+  }>,
+) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const raw = Array.isArray(resolvedSearchParams?.model)
     ? resolvedSearchParams?.model[0]
@@ -64,7 +65,7 @@ export default async function InvestmentProductsPage({
       ? "Fixed investment products"
       : model === "MARKET"
         ? "Market investment products"
-        : "Investment products designed around clear long-term strategies";
+        : "Active investment products";
 
   const description =
     model === "FIXED"

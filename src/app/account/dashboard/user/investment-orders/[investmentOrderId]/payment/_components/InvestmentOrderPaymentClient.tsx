@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bitcoin, Landmark, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -114,39 +114,13 @@ export default function InvestmentOrderPaymentClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedFundingMethod, setSelectedFundingMethod] = useState<
-    CheckoutFundingMethodType | null
-  >(normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType);
-  const [mode, setMode] = useState<CheckoutPaymentMode | null>(
-    normalizePaymentMode(paymentMode),
-  );
-  const [partialAmount, setPartialAmount] = useState<number>(
-    partialPaymentAmount,
-  );
+  const selectedFundingMethod =
+    normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType;
+  const mode = normalizePaymentMode(paymentMode);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    setSelectedFundingMethod(
-      normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType,
-    );
-  }, [fundingMethodType, order.paymentMethodType]);
-
-  useEffect(() => {
-    setMode(normalizePaymentMode(paymentMode));
-  }, [paymentMode]);
-
-  useEffect(() => {
-    setPartialAmount(partialPaymentAmount);
-  }, [partialPaymentAmount]);
-
-  useEffect(() => {
-    if (selectedFundingMethod === "CRYPTO_PROVIDER") {
-      setShowModal(false);
-    }
-  }, [selectedFundingMethod]);
 
   const canPay =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
@@ -154,10 +128,13 @@ export default function InvestmentOrderPaymentClient({
   const selectedAmount = useMemo(() => {
     if (mode === "FULL") return order.remainingAmount;
     if (mode === "PARTIAL") {
-      return Math.min(Math.max(partialAmount || 0, 0), order.remainingAmount);
+      return Math.min(
+        Math.max(partialPaymentAmount || 0, 0),
+        order.remainingAmount,
+      );
     }
     return 0;
-  }, [mode, order.remainingAmount, partialAmount]);
+  }, [mode, order.remainingAmount, partialPaymentAmount]);
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -205,6 +182,8 @@ export default function InvestmentOrderPaymentClient({
       return;
     }
 
+    if (isCreatingCryptoCheckout) return;
+
     setIsCreatingCryptoCheckout(true);
     try {
       const response = await fetch("/api/payments/paymento/create", {
@@ -227,7 +206,13 @@ export default function InvestmentOrderPaymentClient({
         return;
       }
 
-      window.location.href = data.redirectUrl;
+      window.location.assign(data.redirectUrl);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to open crypto checkout.",
+      );
     } finally {
       setIsCreatingCryptoCheckout(false);
     }
@@ -335,16 +320,9 @@ export default function InvestmentOrderPaymentClient({
               remainingAmount={order.remainingAmount}
               currency={order.currency}
               mode={mode}
-              partialAmount={partialAmount}
+              partialAmount={partialPaymentAmount}
               onModeChange={(nextMode) => {
-                setMode(nextMode);
                 updateCheckoutParams({ nextPaymentMode: nextMode });
-                if (nextMode === "FULL") {
-                  setPartialAmount(order.remainingAmount);
-                }
-                if (nextMode === "PARTIAL") {
-                  setPartialAmount(partialPaymentAmount);
-                }
               }}
             />
           </CardContent>
@@ -399,12 +377,13 @@ export default function InvestmentOrderPaymentClient({
                       type="button"
                       onClick={() => void handleCryptoCheckout()}
                       disabled={isCreatingCryptoCheckout}
+                      aria-busy={isCreatingCryptoCheckout}
                       className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                     >
                       {isCreatingCryptoCheckout ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Opening...
+                          Opening secure checkout...
                         </span>
                       ) : (
                         "Continue to crypto wallet"

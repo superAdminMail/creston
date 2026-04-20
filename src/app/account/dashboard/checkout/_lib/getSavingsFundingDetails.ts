@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { isSavingsFundingBankInfoRequestAckNotification } from "@/lib/notifications/savingsFundingBankInfo";
+import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
@@ -120,33 +122,21 @@ export async function getSavingsFundingDetails(
 
   const fallbackBankMethod = latestIntent?.platformPaymentMethod
     ? null
-    : await prisma.platformPaymentMethod.findFirst({
-        where: {
-          isActive: true,
-          type: "BANK_INFO",
-          OR: [{ currency: account.currency }, { currency: null }],
-        },
-        orderBy: [
-          { isDefault: "desc" },
-          { sortOrder: "asc" },
-          { createdAt: "asc" },
-        ],
-        select: {
-          id: true,
-          label: true,
-          bankName: true,
-          bankCode: true,
-          accountName: true,
-          accountNumber: true,
-          instructions: true,
-          notes: true,
-          currency: true,
-        },
-      });
+    : await getPublicPlatformPaymentMethods().then(
+        (methods) =>
+          methods.find(
+            (method) =>
+              method.type === "BANK_INFO" &&
+              (method.currency === account.currency ||
+                method.currency === null),
+          ) ?? null,
+      );
 
   const bankMethod = latestIntent?.platformPaymentMethod ?? fallbackBankMethod;
   const balance = toNumber(account.balance);
-  const targetAmount = account.targetAmount ? toNumber(account.targetAmount) : null;
+  const targetAmount = account.targetAmount
+    ? toNumber(account.targetAmount)
+    : null;
   const remainingToTargetAmount =
     targetAmount === null ? null : Math.max(targetAmount - balance, 0);
 
@@ -155,6 +145,20 @@ export async function getSavingsFundingDetails(
     latestIntent?.status === "PENDING" ||
     latestIntent?.status === "SUBMITTED" ||
     latestPayment?.status === "PENDING_REVIEW";
+
+  const existingBankInfoRequest = await prisma.notification.findFirst({
+    where: {
+      userId: user.id,
+      key: {
+        startsWith: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
+      },
+    },
+    select: {
+      id: true,
+      type: true,
+      metadata: true,
+    },
+  });
 
   return {
     account: {
@@ -176,8 +180,7 @@ export async function getSavingsFundingDetails(
         interestRatePercent: account.savingsProduct.interestRatePercent
           ? toNumber(account.savingsProduct.interestRatePercent)
           : null,
-        interestPayoutFrequency:
-          account.savingsProduct.interestPayoutFrequency,
+        interestPayoutFrequency: account.savingsProduct.interestPayoutFrequency,
         allowsDeposits: account.savingsProduct.allowsDeposits,
         allowsWithdrawals: account.savingsProduct.allowsWithdrawals,
         isLockable: account.savingsProduct.isLockable,
@@ -238,6 +241,9 @@ export async function getSavingsFundingDetails(
         }
       : null,
     hasPendingSubmission,
+    hasExistingBankInfoRequest:
+      existingBankInfoRequest !== null &&
+      isSavingsFundingBankInfoRequestAckNotification(existingBankInfoRequest),
     canSubmitFundingProof: Boolean(bankMethod) && !hasPendingSubmission,
     fundingAmountSuggestion:
       remainingToTargetAmount && remainingToTargetAmount > 0

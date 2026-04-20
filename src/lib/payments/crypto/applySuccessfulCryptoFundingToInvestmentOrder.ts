@@ -71,6 +71,7 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
     where: { id: fundingIntent.id },
     data: {
       status: CryptoFundingIntentStatus.FUNDED,
+      providerExternalId: providerReference,
       providerReference,
       fundedAt: fundingIntent.fundedAt ?? creditedAt ?? new Date(),
       creditedAt: fundingIntent.creditedAt ?? creditedAt ?? new Date(),

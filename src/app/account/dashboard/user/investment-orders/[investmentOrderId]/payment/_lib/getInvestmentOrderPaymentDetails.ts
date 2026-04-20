@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
@@ -104,30 +105,14 @@ export async function getInvestmentOrderPaymentDetails(
     notFound();
   }
 
-  const fallbackBankMethod = await prisma.platformPaymentMethod.findFirst({
-    where: {
-      isActive: true,
-      type: "BANK_INFO",
-      OR: [{ currency: order.currency }, { currency: null }],
-    },
-    orderBy: [
-      { isDefault: "desc" },
-      { sortOrder: "asc" },
-      { createdAt: "asc" },
-    ],
-    select: {
-      id: true,
-      label: true,
-      type: true,
-      bankName: true,
-      bankCode: true,
-      accountName: true,
-      accountNumber: true,
-      instructions: true,
-      notes: true,
-      currency: true,
-    },
-  });
+  const fallbackBankMethod = await getPublicPlatformPaymentMethods().then(
+    (methods) =>
+      methods.find(
+        (method) =>
+          method.type === "BANK_INFO" &&
+          (method.currency === order.currency || method.currency === null),
+      ) ?? null,
+  );
 
   const existingBankInfoRequest = await prisma.notification.findFirst({
     where: {

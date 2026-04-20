@@ -4,6 +4,10 @@ import {
   isInvestmentOrderBankInfoReadyNotification,
   isInvestmentOrderBankInfoRequestNotification,
 } from "@/lib/notifications/investmentOrderBankInfo";
+import {
+  isSavingsFundingBankInfoRequestAckNotification,
+  isSavingsFundingBankInfoRequestNotification,
+} from "@/lib/notifications/savingsFundingBankInfo";
 
 function isPromotionNotification(notification?: Pick<
   NotificationDTO,
@@ -47,6 +51,13 @@ export function getNotificationDisplayType(
   }
 
   if (isInvestmentOrderBankInfoRequestNotification(notification)) {
+    return "Bank Info Request";
+  }
+
+  if (
+    isSavingsFundingBankInfoRequestNotification(notification) ||
+    isSavingsFundingBankInfoRequestAckNotification(notification)
+  ) {
     return "Bank Info Request";
   }
 

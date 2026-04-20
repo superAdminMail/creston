@@ -83,6 +83,7 @@ export async function createSavingsFundingDepositSubmission({
       id: platformPaymentMethodId,
       isActive: true,
       type: PlatformPaymentMethodType.BANK_INFO,
+      isPrivate: false,
       OR: [{ currency: account.currency }, { currency: null }],
     },
     select: {

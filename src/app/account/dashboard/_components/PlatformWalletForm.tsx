@@ -24,6 +24,7 @@ export type PlatformPaymentMethodFormDefaults = {
   country?: string | null;
   instructions?: string | null;
   notes?: string | null;
+  isPrivate?: boolean;
   isActive?: boolean;
   isDefault?: boolean;
   sortOrder?: number;
@@ -287,6 +288,25 @@ function PlatformPaymentMethodFields({
         <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
           <span>
             <span className="block text-sm font-medium text-white">
+              Private method
+            </span>
+            <span className="block text-xs text-slate-400">
+              Keep this method hidden from all users unless it is attached to a
+              specific request.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            name="isPrivate"
+            value="true"
+            defaultChecked={defaultValues?.isPrivate ?? false}
+            className="h-5 w-5 rounded border-white/20 bg-transparent"
+          />
+        </label>
+
+        <label className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+          <span>
+            <span className="block text-sm font-medium text-white">
               Set as active
             </span>
             <span className="block text-xs text-slate-400">
@@ -350,12 +370,6 @@ export default function PlatformWalletForm({
     mode === "edit" ? updatePlatformPaymentMethod : createPlatformPaymentMethod,
     initialPlatformPaymentMethodFormState,
   );
-
-  useEffect(() => {
-    if (defaultValues?.type) {
-      setType(defaultValues.type);
-    }
-  }, [defaultValues?.type]);
 
   useEffect(() => {
     if (state.status === "success") {

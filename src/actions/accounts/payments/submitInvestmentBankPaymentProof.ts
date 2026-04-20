@@ -48,6 +48,7 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
       currency: true,
       amount: true,
       amountPaid: true,
+      platformPaymentMethodId: true,
     },
   });
 
@@ -79,6 +80,13 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
       id: data.platformPaymentMethodId,
       isActive: true,
       type: "BANK_INFO",
+      ...(order.platformPaymentMethodId
+        ? {
+            id: order.platformPaymentMethodId,
+          }
+        : {
+            isPrivate: false,
+          }),
     },
     select: {
       id: true,

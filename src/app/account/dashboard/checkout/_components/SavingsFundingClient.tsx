@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Banknote, Clock3, PiggyBank, ShieldCheck, Wallet } from "lucide-react";
+import { Bitcoin, Landmark, Shield, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
+import { requestSavingsFundingBankInfo } from "@/actions/savings/requestSavingsFundingBankInfo";
 import { Button } from "@/components/ui/button";
-import {
-  formatCurrency,
-  formatDateLabel,
-  formatEnumLabel,
-} from "@/lib/formatters/formatters";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/formatters/formatters";
+import { calculateSavingsFundingChargeAmount } from "@/lib/payments/savings/calculateSavingsFundingChargeAmount";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
 import {
   getCheckoutFundingMethodLabel,
@@ -23,19 +21,6 @@ import {
 import CheckoutFundingMethodSelector from "./CheckoutFundingMethodSelector";
 import CheckoutPaymentModeSelector from "./CheckoutPaymentModeSelector";
 import SavingsFundingProofModal from "./SavingsFundingProofModal";
-
-function SmallLabel({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
-      <p className="text-sm font-medium text-slate-950 dark:text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
 
 function normalizeFundingMethodType(
   value: string | null | undefined,
@@ -57,533 +42,513 @@ function normalizePaymentMode(
   return null;
 }
 
+function SummaryChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+        {label}
+      </p>
+      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 py-3 last:border-b-0 dark:border-white/10">
+      <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-right text-sm font-medium text-slate-950 dark:text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export default function SavingsFundingClient({
   details,
   fundingMethodType,
   paymentMode,
+  cryptoCheckoutButton,
 }: {
   details: SavingsFundingDetails;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
+  cryptoCheckoutButton?: ReactNode;
 }) {
-  const [proofOpen, setProofOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [selectedFundingMethod, setSelectedFundingMethod] =
+    useState<CheckoutFundingMethodType | null>(
+      normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
+        fundingMethodType ??
+        "BANK_TRANSFER",
+    );
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
-
-  const bankMethod = details.bankMethod;
-  const pendingSubmission = details.hasPendingSubmission;
-  const latestIntent = details.latestIntent;
-  const persistedFundingMethod = normalizeFundingMethodType(
-    latestIntent?.fundingMethodType,
+  const [proofOpen, setProofOpen] = useState(false);
+  const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
+  const [bankInfoRequested, setBankInfoRequested] = useState(
+    details.hasExistingBankInfoRequest,
   );
-  const selectedFundingMethod =
-    fundingMethodType ?? persistedFundingMethod ?? null;
+
+  useEffect(() => {
+    setSelectedFundingMethod(
+      normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
+        fundingMethodType ??
+        "BANK_TRANSFER",
+    );
+  }, [details.latestIntent?.fundingMethodType, fundingMethodType]);
 
   useEffect(() => {
     setSelectedPaymentMode(normalizePaymentMode(paymentMode));
   }, [paymentMode]);
 
-  const fundingMethodLabel = useMemo(() => {
-    return getCheckoutFundingMethodLabel(selectedFundingMethod);
+  useEffect(() => {
+    setBankInfoRequested(details.hasExistingBankInfoRequest);
+  }, [details.hasExistingBankInfoRequest]);
+
+  useEffect(() => {
+    if (selectedFundingMethod === "CRYPTO_PROVIDER") {
+      setProofOpen(false);
+    }
   }, [selectedFundingMethod]);
 
-  const paymentModeLabel = useMemo(() => {
-    return getCheckoutPaymentModeLabel(selectedPaymentMode);
-  }, [selectedPaymentMode]);
+  async function handleRequestBankInfo() {
+    if (isRequestingBankInfo || bankInfoRequested) return;
 
-  const selectedAmount = useMemo(() => {
-    const baseAmount =
-      details.remainingToTargetAmount && details.remainingToTargetAmount > 0
-        ? details.remainingToTargetAmount
-        : details.fundingAmountSuggestion;
+    setIsRequestingBankInfo(true);
 
-    if (selectedPaymentMode === "PARTIAL") {
-      return Math.max(Math.round((baseAmount / 2) * 100) / 100, 0.01);
+    try {
+      const result = await requestSavingsFundingBankInfo(details.account.id);
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      setBankInfoRequested(true);
+      toast.success(result.message);
+      router.refresh();
+    } finally {
+      setIsRequestingBankInfo(false);
+    }
+  }
+
+  const updateCheckoutParams = ({
+    nextFundingMethod,
+    nextPaymentMode,
+  }: {
+    nextFundingMethod?: CheckoutFundingMethodType | null;
+    nextPaymentMode?: CheckoutPaymentMode | null;
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (nextFundingMethod === null) {
+      params.delete("fundingMethodType");
+    } else if (nextFundingMethod) {
+      params.set("fundingMethodType", nextFundingMethod);
     }
 
-    return baseAmount;
+    if (nextPaymentMode === null) {
+      params.delete("paymentMode");
+    } else if (nextPaymentMode) {
+      params.set("paymentMode", nextPaymentMode);
+    }
+
+    const nextUrl = params.toString()
+      ? `${pathname}?${params.toString()}`
+      : pathname;
+    router.replace(nextUrl, { scroll: false });
+  };
+
+  const bankMethod = details.bankMethod;
+  const hasPendingSubmission = details.hasPendingSubmission;
+
+  const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
+  const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
+  const canOpenProof = bankSelected && selectedPaymentMode !== null;
+
+  const selectedAmount = useMemo(() => {
+    const chargeBasis =
+      details.account.targetAmount ??
+      details.fundingAmountSuggestion ??
+      details.account.balance;
+
+    if (!selectedPaymentMode) {
+      return details.remainingToTargetAmount ?? chargeBasis;
+    }
+
+    try {
+      return calculateSavingsFundingChargeAmount({
+        totalAmount: chargeBasis,
+        amountPaid: 0,
+        usePartialPayment: selectedPaymentMode === "PARTIAL",
+        fundingMethodType: cryptoSelected
+          ? "CRYPTO_PROVIDER"
+          : "BANK_TRANSFER",
+        hasPendingSubmission: hasPendingSubmission,
+        hasActiveCryptoIntent: false,
+      }).chargeAmount.toNumber();
+    } catch {
+      return details.remainingToTargetAmount ?? chargeBasis;
+    }
   }, [
+    cryptoSelected,
+    details.account.balance,
+    details.account.targetAmount,
     details.fundingAmountSuggestion,
     details.remainingToTargetAmount,
+    hasPendingSubmission,
     selectedPaymentMode,
   ]);
 
-  const transferMethodLabel =
-    selectedFundingMethod === null
-      ? "Choose funding method"
-      : selectedFundingMethod === "CRYPTO_PROVIDER"
-      ? "Crypto wallet"
-      : bankMethod
-        ? bankMethod.label
-        : "Bank transfer";
-
-  const updateFundingMethod = (nextFundingMethod: CheckoutFundingMethodType) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("fundingMethodType", nextFundingMethod);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    if (nextFundingMethod === "CRYPTO_PROVIDER") {
-      setProofOpen(false);
-    }
-  };
-
-  const updatePaymentMode = (nextPaymentMode: CheckoutPaymentMode) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("paymentMode", nextPaymentMode);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    setSelectedPaymentMode(nextPaymentMode);
-  };
-
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 md:px-6">
+    <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
+      <div className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] sm:p-6 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Savings funding
+            </p>
+            <h2 className="mt-2 text-lg font-semibold text-slate-950 sm:text-xl dark:text-white">
+              {details.account.product.name}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+              Choose a funding method, then decide whether to settle the full
+              amount now or continue with a partial payment.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3">
+          <SummaryChip
+            label="Funding method"
+            value={getCheckoutFundingMethodLabel(selectedFundingMethod)}
+          />
+          <SummaryChip
+            label="Payment mode"
+            value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+          />
+          <SummaryChip
+            label="Selected amount"
+            value={formatCurrency(selectedAmount, details.account.currency)}
+          />
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <SummaryChip label="Balance" value={details.balanceLabel} />
+          <SummaryChip label="Target" value={details.targetAmountLabel} />
+          <SummaryChip
+            label="Remaining"
+            value={details.remainingToTargetAmountLabel ?? "Not set"}
+          />
+        </div>
+      </div>
+
       <CheckoutFundingMethodSelector
         value={selectedFundingMethod}
-        onChange={updateFundingMethod}
-        description="Pick how this savings checkout should be handled. Your choice stays in the current URL, so it won't affect anyone else."
+        onChange={(next) => {
+          setSelectedFundingMethod(next);
+          updateCheckoutParams({ nextFundingMethod: next });
+        }}
       />
 
       {selectedFundingMethod ? (
         <CheckoutPaymentModeSelector
           value={selectedPaymentMode}
-          onChange={updatePaymentMode}
-          title="Choose payment mode"
-          description="Pick whether to fund the full amount now or make a partial payment for this savings checkout."
+          onChange={(next) => {
+            setSelectedPaymentMode(next);
+            updateCheckoutParams({ nextPaymentMode: next });
+          }}
         />
       ) : null}
 
-      <section className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Savings funding
+      {selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Bank details unavailable
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+              Bank details are not available yet. Request them from the admin
+              team so they can set up the transfer method for this checkout.
             </p>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-3xl">
-              Fund {details.account.name}
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Make a one-time or recurring payment to your savings account.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200"
+
+            <div className="flex justify-start">
+              <Button
+                type="button"
+                onClick={() => void handleRequestBankInfo()}
+                disabled={isRequestingBankInfo || bankInfoRequested}
+                className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
               >
-                {fundingMethodLabel}
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200"
-              >
-                {paymentModeLabel}
-              </Badge>
-              {selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-                <Badge
-                  variant="secondary"
-                  className="rounded-full bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200"
-                >
-                  Bank transfer remains available
-                </Badge>
-              ) : null}
+                {isRequestingBankInfo
+                  ? "Sending..."
+                  : bankInfoRequested
+                    ? "Request Sent"
+                    : "Request Bank Info"}
+              </Button>
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              variant="secondary"
-              className="rounded-full bg-sky-500/10 text-sky-700 dark:bg-sky-400/10 dark:text-sky-200"
-            >
-              {formatEnumLabel(details.account.status)}
-            </Badge>
-            {details.account.isLocked ? (
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200"
-              >
-                Locked
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                className="rounded-full bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200"
-              >
-                Active
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Current balance
-              </p>
-              <PiggyBank className="h-4 w-4 text-sky-600 dark:text-sky-300" />
-            </div>
-            <p className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">
-              {details.balanceLabel}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Goal target
-              </p>
-              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
-            </div>
-            <p className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">
-              {details.targetAmountLabel}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Remaining to goal
-              </p>
-              <Clock3 className="h-4 w-4 text-amber-600 dark:text-amber-300" />
-            </div>
-            <p className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">
-              {details.remainingToTargetAmountLabel ?? "Not set"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Funding method
-                </p>
-              <Wallet className="h-4 w-4 text-sky-600 dark:text-sky-300" />
-            </div>
-            <p className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">
-              {transferMethodLabel}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-        <section className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                Crypto funding preview
-              </p>
-              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-                Crypto is available as a checkout choice, but this savings
-                funding flow is still completed through bank transfer proof for
-                now.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => updateFundingMethod("BANK_TRANSFER")}
-              className="rounded-full border-slate-200/80 bg-white/70 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06]"
-            >
-              Switch to bank transfer
-            </Button>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       ) : null}
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.95fr)]">
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Account details
-            </h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <SmallLabel label="Account name" value={details.account.name} />
-              <SmallLabel label="Currency" value={details.account.currency} />
-              <SmallLabel
-                label="Opened"
-                value={formatDateLabel(details.account.createdAt)}
-              />
-              <SmallLabel
-                label="Lock status"
-                value={
-                  details.account.isLocked
-                    ? details.account.lockedUntil
-                      ? `Locked until ${formatDateLabel(details.account.lockedUntil)}`
-                      : "Locked"
-                    : "Flexible"
-                }
-              />
-            </div>
-
-            {details.account.description ? (
-              <p className="mt-5 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                {details.account.description}
-              </p>
-            ) : null}
-
-            <div className="mt-5 rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Product
-              </p>
-              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                {details.account.product.name}
-              </p>
-              {details.account.product.description ? (
-                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  {details.account.product.description}
+      {selectedFundingMethod &&
+      selectedPaymentMode &&
+      (cryptoSelected || bankMethod) ? (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
+          <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+            <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+              <div className="min-w-0">
+                <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                  {cryptoSelected
+                    ? "Crypto wallet funding"
+                    : "Bank transfer funding"}
+                </CardTitle>
+                <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+                  {cryptoSelected
+                    ? "This checkout is set to Bitcoin wallet funding."
+                    : "Use the bank details below to send your transfer, then submit your funding proof for review."}
                 </p>
-              ) : null}
-            </div>
-          </div>
+              </div>
 
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Funding history
-            </h2>
+              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                {cryptoSelected ? (
+                  <>
+                    <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
+                    <span className="truncate">Crypto wallet</span>
+                  </>
+                ) : (
+                  <>
+                    <Landmark className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Bank transfer</span>
+                  </>
+                )}
+              </div>
+            </CardHeader>
 
-            {latestIntent ? (
-              <div className="mt-5 space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "rounded-full",
-                      pendingSubmission
-                        ? "bg-amber-500/10 text-amber-700 dark:bg-amber-400/10 dark:text-amber-200"
-                        : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200",
-                    )}
-                  >
-                    {pendingSubmission
-                      ? "Awaiting review"
-                      : formatEnumLabel(latestIntent.status)}
-                  </Badge>
-                  <Badge variant="outline" className="rounded-full">
-                    {formatEnumLabel(latestIntent.fundingMethodType)}
-                  </Badge>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      Requested
+            <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+              {cryptoSelected ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                    <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
+                      Funding method
                     </p>
-                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                      {latestIntent.submittedAt
-                        ? formatDateLabel(latestIntent.submittedAt)
-                        : "Not submitted"}
+                    <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                      Crypto wallet
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      Target amount
-                    </p>
-                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                      {formatCurrency(
-                        latestIntent.targetAmount,
-                        details.account.currency,
-                      )}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                    <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                       Payment mode
                     </p>
-                    <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                      {paymentModeLabel}
+                    <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                      {getCheckoutPaymentModeLabel(selectedPaymentMode)}
                     </p>
                   </div>
                 </div>
-
-                {latestIntent.latestPayment ? (
-                  <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      Latest payment submission
-                    </p>
-                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                      <SmallLabel
-                        label="Status"
-                        value={formatEnumLabel(
-                          latestIntent.latestPayment.status,
-                        )}
-                      />
-                      <SmallLabel
-                        label="Reference"
-                        value={latestIntent.latestPayment.transferReference ?? "—"}
-                      />
-                      <SmallLabel
-                        label="Amount"
-                        value={formatCurrency(
-                          latestIntent.latestPayment.claimedAmount,
-                          latestIntent.latestPayment.currency,
-                        )}
-                      />
-                      <SmallLabel
-                        label="Submitted"
-                        value={formatDateLabel(
-                          latestIntent.latestPayment.submittedAt,
-                        )}
-                      />
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="mt-5 rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-8 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                No funding submissions yet. Your first transfer will appear here
-                once proof is submitted.
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-                  Transfer details
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  Send the deposit using the shared bank details below.
-                </p>
-              </div>
-              <Banknote className="h-5 w-5 text-sky-600 dark:text-sky-300" />
-            </div>
-
-            {selectedFundingMethod === "BANK_TRANSFER" ? (
-              bankMethod ? (
-                <div className="mt-5 space-y-4">
-                  <div className="grid gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <SmallLabel
-                      label="Bank"
-                      value={bankMethod.bankName ?? bankMethod.label}
-                    />
-                    <SmallLabel
-                      label="Account name"
-                      value={bankMethod.accountName ?? "—"}
-                    />
-                    <SmallLabel
-                      label="Account number"
-                      value={bankMethod.accountNumber ?? "—"}
-                    />
-                    <SmallLabel
-                      label="Bank code"
-                      value={bankMethod.bankCode ?? "—"}
-                    />
-                  </div>
+              ) : bankMethod ? (
+                <div className="grid gap-3">
+                  <DetailRow
+                    label="Bank name"
+                    value={bankMethod.bankName ?? "Not set"}
+                  />
+                  <DetailRow
+                    label="Account name"
+                    value={bankMethod.accountName ?? "Not set"}
+                  />
+                  <DetailRow
+                    label="Account number"
+                    value={bankMethod.accountNumber ?? "Not set"}
+                  />
+                  <DetailRow
+                    label="Bank code"
+                    value={bankMethod.bankCode ?? "Not set"}
+                  />
 
                   {bankMethod.instructions ? (
-                    <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
-                      {bankMethod.instructions}
+                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:rounded-[1.25rem]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Instructions
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        {bankMethod.instructions}
+                      </p>
                     </div>
                   ) : null}
 
                   {bankMethod.notes ? (
-                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-4 text-sm leading-6 text-amber-800 dark:text-amber-200">
-                      {bankMethod.notes}
+                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:rounded-[1.25rem]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                        Notes
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        {bankMethod.notes}
+                      </p>
                     </div>
                   ) : null}
                 </div>
               ) : (
-                <div className="mt-5 rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-6 text-sm leading-6 text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                  Bank instructions are not available yet for this savings
-                  account.
+                <div className="w-full rounded-[1.15rem] border border-dashed border-slate-300/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:rounded-[1.25rem]">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    Bank details are not available yet.
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    A public bank method must be available before you can submit
+                    a bank transfer proof.
+                  </p>
+
+                  <div className="mt-4 flex justify-start">
+                    <Button
+                      type="button"
+                      onClick={() => void handleRequestBankInfo()}
+                      disabled={isRequestingBankInfo || bankInfoRequested}
+                      className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                    >
+                      {isRequestingBankInfo
+                        ? "Sending..."
+                        : bankInfoRequested
+                          ? "Request Sent"
+                          : "Request Bank Info"}
+                    </Button>
+                  </div>
                 </div>
-              )
-            ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-              <div className="mt-5 rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-6 text-sm leading-6 text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                Crypto funding is selected for this checkout. Switch back to
-                bank transfer to continue with the current savings funding
-                proof flow.
-              </div>
-            ) : (
-              <div className="mt-5 rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-6 text-sm leading-6 text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
-                Choose a funding method above to see the transfer details for
-                this savings checkout.
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Submit proof
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Once your transfer is complete, attach the receipt and payment
-              reference for review.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Suggested amount
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                  {formatCurrency(selectedAmount, details.account.currency)}
-                </p>
-              </div>
-
-              {selectedFundingMethod === "BANK_TRANSFER" ? (
-                <>
-                  <Button
-                    type="button"
-                    className="h-11 w-full rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                    disabled={!details.canSubmitFundingProof || !selectedPaymentMode}
-                    onClick={() => setProofOpen(true)}
-                  >
-                    {pendingSubmission
-                      ? "Proof already submitted"
-                      : selectedPaymentMode === "PARTIAL"
-                        ? "I've made this partial transfer"
-                        : "I've made this transfer"}
-                  </Button>
-
-                  {!details.canSubmitFundingProof ? (
-                    <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      {pendingSubmission
-                        ? "A previous funding proof is already waiting for review."
-                      : "Bank instructions are required before you can submit proof."}
-                    </p>
-                  ) : null}
-                  {!selectedPaymentMode ? (
-                    <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      Choose full or partial payment above before submitting
-                      proof.
-                    </p>
-                  ) : null}
-                </>
-              ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-                selectedPaymentMode ? (
-                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                    Crypto funding does not use receipt upload here. Switch to
-                    bank transfer to submit proof for this savings checkout.
-                  </p>
-                ) : (
-                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                    Choose full or partial payment above to continue with this
-                    savings checkout.
-                  </p>
-                )
-              ) : (
-                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                  Choose bank transfer above to unlock receipt upload and
-                  transfer proof submission.
-                </p>
               )}
-            </div>
-          </div>
-        </div>
-      </section>
+            </CardContent>
+          </Card>
 
-      <SavingsFundingProofModal
-        open={proofOpen}
-        onOpenChange={setProofOpen}
-        savingsAccountId={details.account.id}
-        platformPaymentMethodId={bankMethod?.id ?? ""}
-        currency={details.account.currency}
-        defaultAmount={selectedAmount}
-        maxAmount={details.remainingToTargetAmount}
-      />
+          <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                {cryptoSelected ? "Crypto wallet preview" : "Funding proof"}
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+              {cryptoSelected ? (
+                <div className="space-y-4">
+                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="flex items-start gap-3 sm:items-center">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/15 text-amber-500 dark:text-amber-200">
+                        <Bitcoin className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                          Crypto wallet selected
+                        </p>
+                        <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                          Bank details are hidden for crypto funding.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <SummaryChip
+                      label="Selected amount"
+                      value={formatCurrency(
+                        selectedAmount,
+                        details.account.currency,
+                      )}
+                    />
+                    <SummaryChip
+                      label="Payment mode"
+                      value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+                    />
+                  </div>
+
+                  <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-white/85 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-sm leading-6 text-slate-700 dark:text-slate-300">
+                      Continue with the crypto checkout flow using the amount
+                      selected above.
+                    </p>
+                  </div>
+
+                  <div className="flex justify-start">{cryptoCheckoutButton}</div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="w-full rounded-[1.15rem] border border-emerald-200/30 bg-emerald-50/90 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04]">
+                    <div className="flex items-start gap-3 sm:items-center">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300">
+                        <ShieldCheck className="h-5 w-5 shrink-0" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                          Ready for bank proof
+                        </p>
+                        <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                          {hasPendingSubmission
+                            ? "A submission is already waiting for review."
+                            : "Submit your transfer proof after sending the bank payment."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <SummaryChip
+                      label="Selected amount"
+                      value={formatCurrency(
+                        selectedAmount,
+                        details.account.currency,
+                      )}
+                    />
+                    <SummaryChip
+                      label="Bank method"
+                      value={getCheckoutFundingMethodLabel(
+                        selectedFundingMethod,
+                      )}
+                    />
+                  </div>
+
+                  {bankMethod ? (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        onClick={() => setProofOpen(true)}
+                        disabled={!canOpenProof || hasPendingSubmission}
+                        className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                      >
+                        {hasPendingSubmission
+                          ? "Submission pending"
+                          : "I've paid"}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
+
+      {proofOpen &&
+      selectedFundingMethod === "BANK_TRANSFER" &&
+      selectedPaymentMode &&
+      bankMethod ? (
+        <SavingsFundingProofModal
+          open={proofOpen}
+          onOpenChange={setProofOpen}
+          savingsAccountId={details.account.id}
+          platformPaymentMethodId={bankMethod.id}
+          currency={details.account.currency}
+          defaultAmount={selectedAmount}
+          maxAmount={details.remainingToTargetAmount}
+        />
+      ) : null}
+
+      <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+        <Shield className="h-4 w-4 text-sky-500" />
+        <span className="max-w-[32rem] text-center sm:text-left">
+          Secure and encrypted payment flow
+        </span>
+      </div>
     </div>
   );
 }

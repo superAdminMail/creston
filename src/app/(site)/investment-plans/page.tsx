@@ -9,8 +9,7 @@ export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
     title: "Investment Plans",
-    description:
-      `Explore ${site.siteName} investment plans built for long-term wealth growth, personal savings, and financial confidence.`,
+    description: `Explore ${site.siteName} investment plans built for long-term wealth growth, personal savings, and financial confidence.`,
     keywords: [
       "investment plans",
       "personal savings",
@@ -38,7 +37,7 @@ export default async function InvestmentPlansPage() {
             {site.siteName} plans
           </span>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Investment plans built for disciplined long-term growth
+            Available Investment Plans
           </h1>
           <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
             Review active {site.siteName} plans across structured savings and
@@ -95,10 +94,10 @@ export default async function InvestmentPlansPage() {
                 ) : null}
               </div>
 
-                <p className="mt-5 flex-1 text-sm leading-7 text-slate-300">
-                  {plan.description ||
+              <p className="mt-5 flex-1 text-sm leading-7 text-slate-300">
+                {plan.description ||
                   `${plan.name} offers a structured ${plan.durationLabel.toLowerCase()} approach for investors seeking disciplined capital growth on ${site.siteName}.`}
-                </p>
+              </p>
 
               <dl className="mt-6 grid gap-4 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
                 <div>

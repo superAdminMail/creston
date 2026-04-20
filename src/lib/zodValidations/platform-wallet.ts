@@ -33,6 +33,7 @@ const basePlatformPaymentMethodSchema = z.object({
   country: optionalText,
   instructions: optionalText,
   notes: optionalText,
+  isPrivate: z.boolean().default(false),
   isActive: z.boolean().default(true),
   isDefault: z.boolean().default(false),
   sortOrder: z.coerce
@@ -138,6 +139,7 @@ export function normalizePlatformPaymentMethodValues(
     country: values.country,
     instructions: values.instructions,
     notes: values.notes,
+    isPrivate: values.isPrivate ?? false,
     isActive: values.isActive ?? true,
     isDefault: values.isDefault ?? false,
     sortOrder: values.sortOrder ?? 0,

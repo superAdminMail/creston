@@ -72,6 +72,7 @@ export type SavingsFundingDetails = {
   bankMethod: SavingsFundingBankMethod | null;
   latestIntent: SavingsFundingIntentView | null;
   hasPendingSubmission: boolean;
+  hasExistingBankInfoRequest: boolean;
   canSubmitFundingProof: boolean;
   fundingAmountSuggestion: number;
   remainingToTargetAmount: number | null;

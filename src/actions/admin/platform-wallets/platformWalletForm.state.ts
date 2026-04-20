@@ -9,6 +9,7 @@ export type PlatformPaymentMethodFieldName =
   | "country"
   | "instructions"
   | "notes"
+  | "isPrivate"
   | "isActive"
   | "isDefault"
   | "sortOrder"

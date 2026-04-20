@@ -43,6 +43,7 @@ export type PlatformPaymentMethodItem = PlatformPaymentMethodFormDefaults & {
   id: string;
   type: "BANK_INFO" | "WALLET_ADDRESS";
   isActive: boolean;
+  isPrivate: boolean;
   isDefault: boolean;
   createdAt: string;
   sortOrder: number;
@@ -136,9 +137,11 @@ function PaymentMethodCard({
 
   useEffect(() => {
     if (deleteState.status === "success") {
-      setRemoveOpen(false);
-      router.refresh();
-      toast.success("Platform payment method removed.");
+      queueMicrotask(() => {
+        setRemoveOpen(false);
+        router.refresh();
+        toast.success("Platform payment method removed.");
+      });
     }
   }, [deleteState.status, router]);
 
@@ -171,6 +174,10 @@ function PaymentMethodCard({
                   }`}
                 >
                   {method.isActive ? "Active" : "Inactive"}
+                </span>
+
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-slate-300">
+                  {method.isPrivate ? "Private" : "Public"}
                 </span>
               </div>
 
@@ -504,6 +511,7 @@ export default function PlatformWalletsClient({
           <div className="px-6 pb-6 pt-4">
             {editWallet ? (
               <PlatformWalletForm
+                key={editWallet.id}
                 mode="edit"
                 walletId={editWallet.id}
                 defaultValues={editWallet}

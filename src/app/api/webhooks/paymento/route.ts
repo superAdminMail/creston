@@ -5,15 +5,19 @@ import {
   Prisma,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { applySuccessfulCryptoFunding } from "@/lib/payments/crypto/settlement/applySuccessfulCryptoFunding";
 import {
   getPaymentoSignature,
-  mapPaymentoIntentStatus,
-  mapPaymentoInvestmentOrderStatus,
-  parsePaymentoStatus,
   paymentoVerifyPayment,
   verifyPaymentoSignature,
   type PaymentoCallbackBody,
 } from "@/lib/payments/crypto/paymento";
+import {
+  mapPaymentoStatusToCryptoFundingIntentStatus,
+  mapPaymentoStatusToInvestmentOrderStatus,
+  mapPaymentoStatusToSavingsFundingIntentStatus,
+  resolvePaymentoStatus,
+} from "@/lib/payments/crypto/paymentoStatus";
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -33,7 +37,80 @@ function asPlainObject(
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
   }
+
   return value as Record<string, unknown>;
+}
+
+type ResolvedTarget =
+  | {
+      kind: "INVESTMENT_ORDER";
+      fundingIntent: Awaited<
+        ReturnType<typeof prisma.cryptoFundingIntent.findFirst>
+      > extends infer T
+        ? NonNullable<T>
+        : never;
+    }
+  | {
+      kind: "SAVINGS_FUNDING";
+      fundingIntent: Awaited<
+        ReturnType<typeof prisma.savingsFundingIntent.findFirst>
+      > extends infer T
+        ? NonNullable<T>
+        : never;
+    };
+
+async function resolvePaymentoTarget(token: string, orderId: string) {
+  const [investmentFundingIntent, savingsFundingIntent] = await Promise.all([
+    prisma.cryptoFundingIntent.findFirst({
+      where: {
+        provider: CryptoFundingProvider.PAYMENTO,
+        providerSessionId: token,
+        investmentOrderId: orderId,
+      },
+      include: {
+        investmentOrder: {
+          select: {
+            id: true,
+            paymentMetadata: true,
+          },
+        },
+      },
+    }),
+    prisma.savingsFundingIntent.findFirst({
+      where: {
+        provider: CryptoFundingProvider.PAYMENTO,
+        providerSessionId: token,
+        savingsAccountId: orderId,
+      },
+      include: {
+        savingsAccount: {
+          include: {
+            savingsProduct: {
+              select: {
+                maxBalance: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  if (investmentFundingIntent) {
+    return {
+      kind: "INVESTMENT_ORDER" as const,
+      fundingIntent: investmentFundingIntent,
+    } satisfies ResolvedTarget;
+  }
+
+  if (savingsFundingIntent) {
+    return {
+      kind: "SAVINGS_FUNDING" as const,
+      fundingIntent: savingsFundingIntent,
+    } satisfies ResolvedTarget;
+  }
+
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -59,7 +136,7 @@ export async function POST(req: Request) {
   const token = String(payload.Token ?? "").trim();
   const paymentId = String(payload.PaymentId ?? "").trim() || null;
   const orderId = String(payload.OrderId ?? "").trim();
-  const statusCode = parsePaymentoStatus(payload.OrderStatus);
+  const paymentoStatus = resolvePaymentoStatus(payload.OrderStatus);
 
   if (!token || !orderId) {
     return NextResponse.json(
@@ -68,7 +145,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const idempotencyKey = `paymento:${paymentId ?? token}:${statusCode ?? "unknown"}`;
+  const idempotencyKey = `paymento:${paymentId ?? token}:${paymentoStatus.status}`;
 
   const existingEvent = await prisma.cryptoWebhookEvent.findUnique({
     where: { idempotencyKey },
@@ -78,15 +155,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
-  const fundingIntent = await prisma.cryptoFundingIntent.findFirst({
-    where: {
-      provider: CryptoFundingProvider.PAYMENTO,
-      providerSessionId: token,
-      investmentOrderId: orderId,
-    },
-  });
+  const target = await resolvePaymentoTarget(token, orderId);
 
-  if (!fundingIntent) {
+  if (!target) {
     await prisma.cryptoWebhookEvent.create({
       data: {
         source: CryptoWebhookSource.PAYMENTO,
@@ -109,29 +180,18 @@ export async function POST(req: Request) {
   }
 
   const verified = await paymentoVerifyPayment(token);
+  const providerReference = paymentId ?? token;
 
   try {
     await prisma.$transaction(async (tx) => {
       const now = new Date();
-
-      const mappedIntentStatus = mapPaymentoIntentStatus(statusCode);
-      const mappedOrderStatus = mapPaymentoInvestmentOrderStatus(statusCode);
-
-      const existingOrder = await tx.investmentOrder.findUnique({
-        where: { id: fundingIntent.investmentOrderId },
-        select: { paymentMetadata: true },
-      });
-
-      const existingOrderPaymentMetadata = asPlainObject(
-        existingOrder?.paymentMetadata,
-      );
 
       const event = await tx.cryptoWebhookEvent.create({
         data: {
           source: CryptoWebhookSource.PAYMENTO,
           eventType: "payment.callback",
           processingStatus: "RECEIVED",
-          fundingIntentId: fundingIntent.id,
+          fundingIntentId: target.fundingIntent.id,
           providerEventId: paymentId,
           providerObjectId: token,
           idempotencyKey,
@@ -139,141 +199,145 @@ export async function POST(req: Request) {
           payload: toJsonValue({
             callback: payload,
             verify: verified,
+            targetType: target.kind,
+            paymentoStatus: paymentoStatus.status,
+            providerReference,
           }),
         },
       });
 
-      const existingMetadata = asPlainObject(fundingIntent.metadata);
+      if (paymentoStatus.shouldSettle) {
+        const settled = await applySuccessfulCryptoFunding({
+          tx,
+          provider: CryptoFundingProvider.PAYMENTO,
+          providerSessionId: token,
+          providerExternalId: providerReference,
+          providerReference,
+          callbackPayload: payload,
+          verifiedPayload: verified.body,
+          statusCode: paymentoStatus.status,
+          processedAt: now,
+        });
 
-      await tx.cryptoFundingIntent.update({
-        where: { id: fundingIntent.id },
-        data: {
-          status: mappedIntentStatus,
-          providerExternalId: paymentId ?? fundingIntent.providerExternalId,
-          providerReference: orderId,
-          fundedAt:
-            mappedIntentStatus === "FUNDED" ? now : fundingIntent.fundedAt,
-          failedAt:
-            mappedIntentStatus === "FAILED" ? now : fundingIntent.failedAt,
-          canceledAt:
-            mappedIntentStatus === "CANCELED" ? now : fundingIntent.canceledAt,
-          metadata: toNullableJsonValue({
-            ...existingMetadata,
-            lastCallback: payload,
-            lastVerify: verified,
-            lastWebhookAt: now.toISOString(),
-          }),
-        },
-      });
+        console.log("[paymento.webhook.settled]", {
+          targetType: settled.targetType,
+          providerReference,
+          creditedAmount: settled.creditedAmount,
+          paymentoStatus: paymentoStatus.status,
+        });
+      } else if (target.kind === "INVESTMENT_ORDER") {
+        const mappedIntentStatus = mapPaymentoStatusToCryptoFundingIntentStatus(
+          paymentoStatus.status,
+        );
+        const mappedOrderStatus = mapPaymentoStatusToInvestmentOrderStatus(
+          paymentoStatus.status,
+        );
+        const existingOrderPaymentMetadata = asPlainObject(
+          target.fundingIntent.investmentOrder.paymentMetadata,
+        );
+        const existingMetadata = asPlainObject(target.fundingIntent.metadata);
 
-      if (mappedOrderStatus === "PARTIALLY_PAID") {
-        await tx.investmentOrder.update({
-          where: { id: fundingIntent.investmentOrderId },
+        await tx.cryptoFundingIntent.update({
+          where: { id: target.fundingIntent.id },
           data: {
-            paymentMethodType: "CRYPTO_PROVIDER",
-            status: "PARTIALLY_PAID",
-            paymentReference: paymentId ?? token,
-            lastPaymentSubmittedAt: now,
-            paymentMetadata: toNullableJsonValue({
-              ...existingOrderPaymentMetadata,
-              provider: "PAYMENTO",
-              token,
-              paymentId,
-              callbackStatus: statusCode,
+            providerExternalId: providerReference,
+            providerReference,
+            metadata: toNullableJsonValue({
+              ...existingMetadata,
+              lastCallback: payload,
+              lastVerify: verified,
               lastWebhookAt: now.toISOString(),
+              paymentoStatus: paymentoStatus.status,
+              providerReference,
             }),
+            status: mappedIntentStatus,
+            fundedAt:
+              mappedIntentStatus === "FUNDED"
+                ? now
+                : target.fundingIntent.fundedAt,
+            failedAt:
+              mappedIntentStatus === "FAILED"
+                ? now
+                : target.fundingIntent.failedAt,
+            canceledAt:
+              mappedIntentStatus === "CANCELED"
+                ? now
+                : target.fundingIntent.canceledAt,
           },
         });
-      }
 
-      if (mappedOrderStatus === "PAID") {
-        const existingApprovedPayment =
-          await tx.investmentOrderPayment.findFirst({
-            where: {
-              investmentOrderId: fundingIntent.investmentOrderId,
-              type: "CRYPTO_PROVIDER",
-              providerReference: paymentId ?? token,
-              status: "APPROVED",
-            },
-          });
-
-        if (!existingApprovedPayment) {
-          await tx.investmentOrderPayment.create({
+        if (mappedOrderStatus === "PARTIALLY_PAID") {
+          await tx.investmentOrder.update({
+            where: { id: target.fundingIntent.investmentOrderId },
             data: {
-              investmentOrderId: fundingIntent.investmentOrderId,
-              type: "CRYPTO_PROVIDER",
-              status: "APPROVED",
-              platformPaymentMethodId: fundingIntent.platformPaymentMethodId,
-              submittedByUserId: fundingIntent.userId,
-              claimedAmount: fundingIntent.fiatAmount,
-              approvedAmount: fundingIntent.fiatAmount,
-              currency: fundingIntent.fiatCurrency,
-              providerReference: paymentId ?? token,
-              providerPayload: toJsonValue({
-                callback: payload,
-                verify: verified,
+              paymentMethodType: "CRYPTO_PROVIDER",
+              status: "PARTIALLY_PAID",
+              paymentReference: providerReference,
+              lastPaymentSubmittedAt: now,
+              paymentMetadata: toNullableJsonValue({
+                ...existingOrderPaymentMetadata,
+                provider: "PAYMENTO",
+                token,
+                paymentId,
+                providerReference,
+                callbackStatus: paymentoStatus.status,
+                lastWebhookAt: now.toISOString(),
               }),
-              submittedAt: fundingIntent.createdAt,
-              reviewedAt: now,
             },
           });
         }
 
-        await tx.investmentOrder.update({
-          where: { id: fundingIntent.investmentOrderId },
-          data: {
-            paymentMethodType: "CRYPTO_PROVIDER",
-            status: "PAID",
-            amountPaid: fundingIntent.fiatAmount,
-            paymentReference: paymentId ?? token,
-            paidAt: now,
-            confirmedAt: now,
-            lastPaymentSubmittedAt: now,
-            lastPaymentReviewedAt: now,
-            paymentMetadata: toNullableJsonValue({
-              ...existingOrderPaymentMetadata,
-              provider: "PAYMENTO",
-              token,
-              paymentId,
-              callbackStatus: statusCode,
-              verified: true,
-              lastWebhookAt: now.toISOString(),
-            }),
-          },
-        });
+        if (mappedOrderStatus === "CANCELLED") {
+          await tx.investmentOrder.update({
+            where: { id: target.fundingIntent.investmentOrderId },
+            data: {
+              status: "CANCELLED",
+              cancelledAt: now,
+              paymentReference: providerReference,
+              paymentMetadata: toNullableJsonValue({
+                ...existingOrderPaymentMetadata,
+                provider: "PAYMENTO",
+                token,
+                paymentId,
+                providerReference,
+                callbackStatus: paymentoStatus.status,
+                lastWebhookAt: now.toISOString(),
+              }),
+            },
+          });
+        }
+      } else if (target.kind === "SAVINGS_FUNDING") {
+        const existingMetadata = asPlainObject(target.fundingIntent.metadata);
+        const mappedFundingStatus = mapPaymentoStatusToSavingsFundingIntentStatus(
+          paymentoStatus.status,
+        );
 
-        await tx.notification.create({
+        await tx.savingsFundingIntent.update({
+          where: { id: target.fundingIntent.id },
           data: {
-            userId: fundingIntent.userId,
-            title: "Investment payment confirmed",
-            message: "Your crypto payment was confirmed successfully.",
-            type: "INVESTMENT_PAYMENT_CONFIRMED",
-            link: `/account/investments/orders/${fundingIntent.investmentOrderId}`,
-            key: `investment-payment-confirmed:${fundingIntent.investmentOrderId}`,
+            providerExternalId: providerReference,
+            providerReference,
+            paymentReference: providerReference,
             metadata: toNullableJsonValue({
-              investmentOrderId: fundingIntent.investmentOrderId,
-              fundingIntentId: fundingIntent.id,
-              provider: "PAYMENTO",
-            }),
-          },
-        });
-      }
-
-      if (mappedOrderStatus === "CANCELLED") {
-        await tx.investmentOrder.update({
-          where: { id: fundingIntent.investmentOrderId },
-          data: {
-            status: "CANCELLED",
-            cancelledAt: now,
-            paymentReference: paymentId ?? token,
-            paymentMetadata: toNullableJsonValue({
-              ...existingOrderPaymentMetadata,
-              provider: "PAYMENTO",
-              token,
-              paymentId,
-              callbackStatus: statusCode,
+              ...existingMetadata,
+              lastCallback: payload,
+              lastVerify: verified,
               lastWebhookAt: now.toISOString(),
+              paymentoStatus: paymentoStatus.status,
+              providerReference,
             }),
+            status: mappedFundingStatus,
+            paidAt:
+              paymentoStatus.status === "PARTIALLY_PAID"
+                ? now
+                : target.fundingIntent.paidAt,
+            creditedAt: target.fundingIntent.creditedAt,
+            failedAt:
+              paymentoStatus.isFailed ? now : target.fundingIntent.failedAt,
+            cancelledAt:
+              paymentoStatus.isCancelled
+                ? now
+                : target.fundingIntent.canceledAt,
           },
         });
       }
@@ -296,7 +360,7 @@ export async function POST(req: Request) {
         source: CryptoWebhookSource.PAYMENTO,
         eventType: "payment.callback",
         processingStatus: "FAILED",
-        fundingIntentId: fundingIntent.id,
+        fundingIntentId: target.fundingIntent.id,
         providerEventId: paymentId,
         providerObjectId: token,
         idempotencyKey: `${idempotencyKey}:error`,
@@ -304,6 +368,9 @@ export async function POST(req: Request) {
         payload: toJsonValue({
           callback: payload,
           verify: verified,
+          targetType: target.kind,
+          paymentoStatus: paymentoStatus.status,
+          providerReference,
         }),
         failedAt: new Date(),
         errorMessage:

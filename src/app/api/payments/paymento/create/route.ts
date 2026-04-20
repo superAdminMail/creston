@@ -4,6 +4,7 @@ import {
   CryptoFundingProvider,
   CryptoNetwork,
 } from "@/generated/prisma";
+import { getAppBaseUrl } from "@/lib/config/appUrl";
 import { prisma } from "@/lib/prisma";
 import { calculateInvestmentOrderCryptoChargeAmount } from "@/lib/payments/crypto/calculateInvestmentOrderCryptoChargeAmount";
 import { paymentoCreatePayment } from "@/lib/payments/crypto/paymento";
@@ -75,12 +76,23 @@ export async function POST(req: Request) {
       hasActiveCryptoIntent,
     });
 
+    const appBaseUrl = getAppBaseUrl();
+    const returnUrl = new URL(
+      "/account/dashboard/checkout/crypto/callback",
+      appBaseUrl,
+    );
+    returnUrl.searchParams.set("targetType", "INVESTMENT_ORDER");
+    returnUrl.searchParams.set("targetId", order.id);
+    returnUrl.searchParams.set("fundingMethodType", "CRYPTO_PROVIDER");
+    returnUrl.searchParams.set("paymentMode", body.paymentMode ?? "FULL");
+    returnUrl.searchParams.set("provider", "PAYMENTO");
+
     const created = await paymentoCreatePayment({
       fiatAmount: chargeCalculation.chargeAmount.toString(),
       fiatCurrency: order.currency,
       orderId: order.id,
       Speed: 1,
-      ReturnUrl: `${process.env.APP_BASE_URL}/account/investments/${order.id}/crypto-return`,
+      ReturnUrl: returnUrl.toString(),
       additionalData: [
         { key: "investmentOrderId", value: order.id },
         { key: "investorProfileId", value: order.investorProfileId },
@@ -103,7 +115,8 @@ export async function POST(req: Request) {
         fiatAmount: chargeCalculation.chargeAmount,
         status: "REQUIRES_ACTION",
         providerSessionId: created.token,
-        providerReference: order.id,
+        providerReference: created.token,
+        providerExternalId: created.token,
         redirectUrl: created.gatewayUrl,
         metadata: {
           createPaymentResponse: created.raw,
@@ -127,6 +140,7 @@ export async function POST(req: Request) {
           redirectUrl: created.gatewayUrl,
           provider: "PAYMENTO",
           token: created.token,
+          paymentReference: created.token,
           paymentMode: chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL",
           chargeAmount: chargeCalculation.chargeAmount.toString(),
         },

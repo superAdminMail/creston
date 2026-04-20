@@ -76,6 +76,7 @@ export default function InvestmentBankInfoRequestForm({
           <input type="hidden" name="orderId" value={request.orderId} />
           <input type="hidden" name="type" value="BANK_INFO" />
           <input type="hidden" name="currency" value={request.order.currency} />
+          <input type="hidden" name="isPrivate" value="true" />
           <input type="hidden" name="isActive" value="true" />
           <input type="hidden" name="isDefault" value="false" />
           <input type="hidden" name="sortOrder" value="0" />
