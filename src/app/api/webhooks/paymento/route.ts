@@ -337,7 +337,7 @@ export async function POST(req: Request) {
             cancelledAt:
               paymentoStatus.isCancelled
                 ? now
-                : target.fundingIntent.canceledAt,
+                : target.fundingIntent.cancelledAt,
           },
         });
       }

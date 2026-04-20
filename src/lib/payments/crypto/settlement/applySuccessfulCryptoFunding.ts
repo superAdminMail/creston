@@ -62,32 +62,26 @@ function toNullableJsonValue(
   return value as Prisma.InputJsonValue;
 }
 
-function decimalFromUnknown(value: unknown): Prisma.Decimal | null {
-  if (value === null || value === undefined || value === "") return null;
-
-  try {
-    return new Prisma.Decimal(value as string | number);
-  } catch {
-    return null;
+function minDecimal(
+  first: Prisma.Decimal,
+  second: Prisma.Decimal | null,
+): Prisma.Decimal {
+  if (!second || first.lte(second)) {
+    return first;
   }
+
+  return second;
 }
 
-function extractVerifiedPaidAmount(
-  verifiedPayload: PaymentoVerifiedLike,
-): Prisma.Decimal | null {
-  if (!verifiedPayload || typeof verifiedPayload !== "object") {
-    return null;
+function clampToUpperBound(
+  value: Prisma.Decimal,
+  upperBound: Prisma.Decimal | null,
+): Prisma.Decimal {
+  if (!upperBound || value.lte(upperBound)) {
+    return value;
   }
 
-  const record = verifiedPayload as Record<string, unknown>;
-
-  return (
-    decimalFromUnknown(record.PaidAmount) ??
-    decimalFromUnknown(record.AmountPaid) ??
-    decimalFromUnknown(record.Amount) ??
-    decimalFromUnknown(record.OrderAmount) ??
-    null
-  );
+  return upperBound;
 }
 
 async function applyInvestmentCryptoFunding({
@@ -163,18 +157,15 @@ async function applyInvestmentCryptoFunding({
     throw new Error("Investment order has no remaining payable balance");
   }
 
-  const verifiedPaidAmount = extractVerifiedPaidAmount(verifiedPayload);
-  const intendedAmount =
-    fundingIntent.creditedFiatAmount ?? fundingIntent.fiatAmount;
-  const creditedAmount = verifiedPaidAmount ?? intendedAmount;
+  const creditedAmount = new Prisma.Decimal(
+    fundingIntent.creditedFiatAmount ?? fundingIntent.fiatAmount,
+  );
 
   if (creditedAmount.lte(0)) {
     throw new Error("Invalid credited amount for investment crypto funding");
   }
 
-  const safeCreditedAmount = creditedAmount.gt(remaining)
-    ? remaining
-    : creditedAmount;
+  const safeCreditedAmount = clampToUpperBound(creditedAmount, remaining);
   const newAmountPaid = currentAmountPaid.plus(safeCreditedAmount);
   const isFullyPaid = newAmountPaid.gte(orderAmount);
 
@@ -319,6 +310,14 @@ async function applySavingsCryptoFunding({
     status: SavingsFundingIntentStatus;
     metadata: Prisma.JsonValue | null;
     providerExternalId: string | null;
+    savingsAccount: {
+      balance: Prisma.Decimal;
+      metadata: Prisma.JsonValue | null;
+      targetAmount: Prisma.Decimal | null;
+      savingsProduct: {
+        maxBalance: Prisma.Decimal | null;
+      };
+    };
   };
   providerExternalId?: string | null;
   providerReference?: string | null;
@@ -327,19 +326,6 @@ async function applySavingsCryptoFunding({
   statusCode?: string | null;
   processedAt: Date;
 }): Promise<ApplySuccessfulCryptoFundingResult> {
-  const savingsAccount = await tx.savingsAccount.findUnique({
-    where: { id: fundingIntent.savingsAccountId },
-    select: {
-      id: true,
-      balance: true,
-      metadata: true,
-    },
-  });
-
-  if (!savingsAccount) {
-    throw new Error("Savings account not found for crypto funding settlement");
-  }
-
   if (
     fundingIntent.status === SavingsFundingIntentStatus.CREDITED ||
     fundingIntent.status === SavingsFundingIntentStatus.PAID
@@ -347,25 +333,49 @@ async function applySavingsCryptoFunding({
     return {
       targetType: "SAVINGS_FUNDING",
       fundingIntentId: fundingIntent.id,
-      targetId: savingsAccount.id,
+      targetId: fundingIntent.savingsAccountId,
       fundingStatus: fundingIntent.status,
       creditedAmount: fundingIntent.creditedAmount.toString(),
     };
   }
 
-  const verifiedPaidAmount = extractVerifiedPaidAmount(verifiedPayload);
-  const intendedAmount = fundingIntent.targetAmount;
-  const creditedAmount = verifiedPaidAmount ?? intendedAmount;
+  const creditedAmount = new Prisma.Decimal(fundingIntent.targetAmount);
 
   if (creditedAmount.lte(0)) {
     throw new Error("Invalid credited amount for savings crypto funding");
   }
 
-  const currentBalance = new Prisma.Decimal(savingsAccount.balance);
-  const newBalance = currentBalance.plus(creditedAmount);
+  const currentBalance = new Prisma.Decimal(fundingIntent.savingsAccount.balance);
+  const maxBalance = fundingIntent.savingsAccount.savingsProduct.maxBalance
+    ? new Prisma.Decimal(fundingIntent.savingsAccount.savingsProduct.maxBalance)
+    : null;
+  const targetAmount = fundingIntent.savingsAccount.targetAmount
+    ? new Prisma.Decimal(fundingIntent.savingsAccount.targetAmount)
+    : null;
+  const remainingToMaxBalance = maxBalance
+    ? maxBalance.minus(currentBalance)
+    : null;
+  const remainingToTargetAmount = targetAmount
+    ? targetAmount.minus(currentBalance)
+    : null;
+  if (
+    (remainingToTargetAmount !== null && remainingToTargetAmount.lte(0)) ||
+    (remainingToMaxBalance !== null && remainingToMaxBalance.lte(0))
+  ) {
+    throw new Error("Savings account has no remaining payable balance");
+  }
+  const upperBound = minDecimal(
+    remainingToTargetAmount ?? remainingToMaxBalance ?? creditedAmount,
+    remainingToMaxBalance,
+  );
+  const safeCreditedAmount = clampToUpperBound(creditedAmount, upperBound);
+  if (safeCreditedAmount.lte(0)) {
+    throw new Error("Invalid credited amount for savings crypto funding");
+  }
+  const newBalance = currentBalance.plus(safeCreditedAmount);
 
   const existingFundingMetadata = asObject(fundingIntent.metadata);
-  const existingAccountMetadata = asObject(savingsAccount.metadata);
+  const existingAccountMetadata = asObject(fundingIntent.savingsAccount.metadata);
 
   await tx.savingsFundingIntent.update({
     where: { id: fundingIntent.id },
@@ -374,7 +384,7 @@ async function applySavingsCryptoFunding({
       providerExternalId:
         providerExternalId ?? fundingIntent.providerExternalId,
       providerReference: providerReference ?? fundingIntent.id,
-      creditedAmount,
+      creditedAmount: safeCreditedAmount,
       paidAt: processedAt,
       creditedAt: processedAt,
       failedAt: null,
@@ -391,7 +401,7 @@ async function applySavingsCryptoFunding({
   });
 
   await tx.savingsAccount.update({
-    where: { id: savingsAccount.id },
+    where: { id: fundingIntent.savingsAccountId },
     data: {
       balance: newBalance,
       metadata: toNullableJsonValue({
@@ -405,10 +415,10 @@ async function applySavingsCryptoFunding({
 
   await tx.savingsTransaction.create({
     data: {
-      savingsAccountId: savingsAccount.id,
+      savingsAccountId: fundingIntent.savingsAccountId,
       savingsFundingIntentId: fundingIntent.id,
       type: SavingsTransactionType.DEPOSIT,
-      amount: creditedAmount,
+      amount: safeCreditedAmount,
       currency: fundingIntent.currency,
       balanceBefore: currentBalance,
       balanceAfter: newBalance,
@@ -425,9 +435,9 @@ async function applySavingsCryptoFunding({
   return {
     targetType: "SAVINGS_FUNDING",
     fundingIntentId: fundingIntent.id,
-    targetId: savingsAccount.id,
+    targetId: fundingIntent.savingsAccountId,
     fundingStatus: SavingsFundingIntentStatus.CREDITED,
-    creditedAmount: creditedAmount.toString(),
+    creditedAmount: safeCreditedAmount.toString(),
   };
 }
 
@@ -491,6 +501,18 @@ export async function applySuccessfulCryptoFunding({
       status: true,
       metadata: true,
       providerExternalId: true,
+      savingsAccount: {
+        select: {
+          balance: true,
+          metadata: true,
+          targetAmount: true,
+          savingsProduct: {
+            select: {
+              maxBalance: true,
+            },
+          },
+        },
+      },
     },
   });
 
