@@ -208,7 +208,6 @@ export async function createSavingsFundingCryptoCheckout(
         providerSessionId: created.token,
         providerReference: created.token,
         providerExternalId: created.token,
-        redirectUrl: created.gatewayUrl,
         paymentReference: created.token,
         currency: account.currency,
         targetAmount: chargeCalculation.chargeAmount,
