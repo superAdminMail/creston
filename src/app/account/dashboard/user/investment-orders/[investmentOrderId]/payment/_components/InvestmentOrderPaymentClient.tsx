@@ -114,9 +114,15 @@ export default function InvestmentOrderPaymentClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedFundingMethod =
-    normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType;
-  const mode = normalizePaymentMode(paymentMode);
+  const [selectedFundingMethod, setSelectedFundingMethod] = useState<
+    CheckoutFundingMethodType | null
+  >(normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType);
+  const [mode, setMode] = useState<CheckoutPaymentMode | null>(
+    normalizePaymentMode(paymentMode),
+  );
+  const [partialAmount, setPartialAmount] = useState<number>(
+    partialPaymentAmount,
+  );
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
@@ -128,13 +134,10 @@ export default function InvestmentOrderPaymentClient({
   const selectedAmount = useMemo(() => {
     if (mode === "FULL") return order.remainingAmount;
     if (mode === "PARTIAL") {
-      return Math.min(
-        Math.max(partialPaymentAmount || 0, 0),
-        order.remainingAmount,
-      );
+      return Math.min(Math.max(partialAmount || 0, 0), order.remainingAmount);
     }
     return 0;
-  }, [mode, order.remainingAmount, partialPaymentAmount]);
+  }, [mode, order.remainingAmount, partialAmount]);
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -160,6 +163,14 @@ export default function InvestmentOrderPaymentClient({
       ? `${pathname}?${params.toString()}`
       : pathname;
     router.replace(nextUrl, { scroll: false });
+  };
+
+  const handleFundingMethodChange = (
+    nextFundingMethod: CheckoutFundingMethodType,
+  ) => {
+    setSelectedFundingMethod(nextFundingMethod);
+    setShowModal(false);
+    updateCheckoutParams({ nextFundingMethod });
   };
 
   async function handleRequestBankInfo() {
@@ -282,10 +293,7 @@ export default function InvestmentOrderPaymentClient({
             <Button
               type="button"
               variant={selectedFundingMethod === "BANK_TRANSFER" ? "default" : "outline"}
-              onClick={() => {
-                setSelectedFundingMethod("BANK_TRANSFER");
-                updateCheckoutParams({ nextFundingMethod: "BANK_TRANSFER" });
-              }}
+              onClick={() => handleFundingMethodChange("BANK_TRANSFER")}
               className="rounded-2xl"
             >
               Bank Transfer
@@ -293,10 +301,7 @@ export default function InvestmentOrderPaymentClient({
             <Button
               type="button"
               variant={selectedFundingMethod === "CRYPTO_PROVIDER" ? "default" : "outline"}
-              onClick={() => {
-                setSelectedFundingMethod("CRYPTO_PROVIDER");
-                updateCheckoutParams({ nextFundingMethod: "CRYPTO_PROVIDER" });
-              }}
+              onClick={() => handleFundingMethodChange("CRYPTO_PROVIDER")}
               className="rounded-2xl"
             >
               Crypto wallet
@@ -320,9 +325,16 @@ export default function InvestmentOrderPaymentClient({
               remainingAmount={order.remainingAmount}
               currency={order.currency}
               mode={mode}
-              partialAmount={partialPaymentAmount}
+              partialAmount={partialAmount}
               onModeChange={(nextMode) => {
+                setMode(nextMode);
                 updateCheckoutParams({ nextPaymentMode: nextMode });
+                if (nextMode === "FULL") {
+                  setPartialAmount(order.remainingAmount);
+                }
+                if (nextMode === "PARTIAL") {
+                  setPartialAmount(partialPaymentAmount);
+                }
               }}
             />
           </CardContent>
