@@ -108,7 +108,6 @@ export default function SavingsFundingClient({
 
       setBankInfoRequestedLocal(true);
       toast.success(result.message);
-      router.refresh();
     } finally {
       setIsRequestingBankInfo(false);
     }
