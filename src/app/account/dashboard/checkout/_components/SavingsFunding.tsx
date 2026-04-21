@@ -14,6 +14,10 @@ export default async function SavingsFunding({
   paymentMode: CheckoutPaymentMode | null;
 }) {
   const details = await getSavingsFundingDetails(savingsAccountId);
+  const cryptoCheckoutLabel =
+    details.latestIntent?.status === "PARTIALLY_PAID"
+      ? "Complete Payment"
+      : "Pay with crypto";
 
   return (
     <SavingsFundingClient
@@ -23,6 +27,7 @@ export default async function SavingsFunding({
       cryptoCheckoutButton={
         <SavingsCryptoCheckoutButton
           savingsAccountId={savingsAccountId}
+          label={cryptoCheckoutLabel}
           className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
         />
       }

@@ -36,11 +36,16 @@ export default function SavingsPaymentReviewDetail({
 
   const canReview = payment.status === "PENDING_REVIEW";
 
-  function submitReview(approvedAmountValue: number, successMessage: string) {
+  function submitReview(
+    approvedAmountValue: number,
+    approvalMode: "FULL" | "PARTIAL",
+    successMessage: string,
+  ) {
     startTransition(async () => {
       const result = await approveSavingsTransactionPayment({
         paymentId: payment.id,
         approvedAmount: approvedAmountValue,
+        approvalMode,
         reviewNote,
       });
 
@@ -57,6 +62,7 @@ export default function SavingsPaymentReviewDetail({
   function handleApproveFull() {
     submitReview(
       payment.claimedAmount,
+      "FULL",
       "Payment submission marked as fully paid.",
     );
   }
@@ -64,6 +70,7 @@ export default function SavingsPaymentReviewDetail({
   function handleMarkPartiallyPaid() {
     submitReview(
       approvedAmount,
+      "PARTIAL",
       "Payment submission marked as partially paid.",
     );
   }

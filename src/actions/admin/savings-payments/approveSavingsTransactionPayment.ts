@@ -9,6 +9,7 @@ import { approveSavingsTransactionPaymentReview } from "@/lib/payments/bank/revi
 const schema = z.object({
   paymentId: z.string().min(1),
   approvedAmount: z.number().positive(),
+  approvalMode: z.enum(["FULL", "PARTIAL"]),
   reviewNote: z.string().trim().max(500).optional(),
 });
 
@@ -31,6 +32,7 @@ export async function approveSavingsTransactionPayment(
     await approveSavingsTransactionPaymentReview({
       paymentId: parsed.data.paymentId,
       approvedAmount: parsed.data.approvedAmount,
+      approvalMode: parsed.data.approvalMode,
       reviewNote: parsed.data.reviewNote,
       adminUserId: admin.userId,
     });

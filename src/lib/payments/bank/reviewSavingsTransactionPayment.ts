@@ -14,13 +14,17 @@ type ReviewSavingsTransactionPaymentBase = {
   reviewNote?: string | null;
 };
 
+type SavingsApprovalMode = "FULL" | "PARTIAL";
+
 export async function approveSavingsTransactionPaymentReview({
   paymentId,
   adminUserId,
   approvedAmount,
   reviewNote,
+  approvalMode,
 }: ReviewSavingsTransactionPaymentBase & {
   approvedAmount: number;
+  approvalMode: SavingsApprovalMode;
 }): Promise<{ ok: true }> {
   const payment = await prisma.savingsTransactionPayment.findUnique({
     where: { id: paymentId },
@@ -73,6 +77,14 @@ export async function approveSavingsTransactionPaymentReview({
 
   if (approvedAmount > claimedAmount) {
     throw new Error("Approved amount cannot be greater than claimed amount.");
+  }
+
+  if (approvalMode === "FULL" && approvedAmount !== claimedAmount) {
+    throw new Error("Full approval amount must match the claimed amount.");
+  }
+
+  if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
+    throw new Error("Partial approval amount must be less than the claimed amount.");
   }
 
   const currentBalance = new Prisma.Decimal(
@@ -132,11 +144,10 @@ export async function approveSavingsTransactionPaymentReview({
     throw new Error("Savings account balance would exceed the configured maximum.");
   }
 
-  const fullySettled =
-    remainingCapacity !== null && approvedAmountDecimal.gte(remainingCapacity);
-  const nextStatus = fullySettled
-    ? SavingsFundingIntentStatus.CREDITED
-    : SavingsFundingIntentStatus.PARTIALLY_PAID;
+  const nextStatus =
+    approvalMode === "FULL"
+      ? SavingsFundingIntentStatus.CREDITED
+      : SavingsFundingIntentStatus.PARTIALLY_PAID;
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.savingsTransactionPayment.updateMany({
@@ -162,9 +173,10 @@ export async function approveSavingsTransactionPaymentReview({
     const creditReference =
       payment.transferReference?.trim() ||
       payment.id;
-    const creditedAt = fullySettled
-      ? payment.savingsFundingIntent.creditedAt ?? now
-      : payment.savingsFundingIntent.creditedAt;
+    const creditedAt =
+      approvalMode === "FULL"
+        ? payment.savingsFundingIntent.creditedAt ?? now
+        : payment.savingsFundingIntent.creditedAt;
 
     await tx.savingsFundingIntent.update({
       where: { id: payment.savingsFundingIntent.id },

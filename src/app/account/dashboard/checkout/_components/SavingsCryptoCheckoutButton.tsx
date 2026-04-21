@@ -9,11 +9,13 @@ import { createSavingsFundingCryptoCheckout } from "@/actions/savings/createSavi
 
 type Props = {
   savingsAccountId: string;
+  label?: string;
   className?: string;
 };
 
 export default function SavingsCryptoCheckoutButton({
   savingsAccountId,
+  label = "Pay with crypto",
   className,
 }: Props) {
   const [pending, setPending] = useState(false);
@@ -59,7 +61,7 @@ export default function SavingsCryptoCheckoutButton({
           Processing...
         </span>
       ) : (
-        "Pay with crypto"
+        label
       )}
     </Button>
   );

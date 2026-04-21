@@ -151,11 +151,21 @@ export default function SavingsFundingClient({
   };
 
   const bankMethod = details.bankMethod;
+  const latestIntent = details.latestIntent;
+  const latestPaidAmount = latestIntent?.creditedAmount ?? 0;
+  const hasExistingIntent = latestIntent !== null;
+  const isCompletingPayment = latestIntent?.status === "PARTIALLY_PAID";
   const hasPendingSubmission = details.hasPendingSubmission;
 
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const effectivePaymentMode = cryptoSelected ? "FULL" : selectedPaymentMode;
+  const effectivePaymentMode = hasExistingIntent
+    ? isCompletingPayment
+      ? "PARTIAL"
+      : "FULL"
+    : cryptoSelected
+      ? "FULL"
+      : selectedPaymentMode;
   const bankInfoRequested =
     details.hasExistingBankInfoRequest || bankInfoRequestedLocal;
   const canOpenProof = bankSelected && effectivePaymentMode !== null;
@@ -173,7 +183,7 @@ export default function SavingsFundingClient({
     try {
       return calculateSavingsFundingChargeAmount({
         totalAmount: chargeBasis,
-        amountPaid: 0,
+        amountPaid: latestPaidAmount,
         usePartialPayment: bankSelected && effectivePaymentMode === "PARTIAL",
         fundingMethodType: cryptoSelected ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
         hasPendingSubmission: hasPendingSubmission,
@@ -189,6 +199,7 @@ export default function SavingsFundingClient({
     details.fundingAmountSuggestion,
     details.remainingToTargetAmount,
     bankSelected,
+    latestPaidAmount,
     hasPendingSubmission,
     effectivePaymentMode,
   ]);
@@ -253,7 +264,7 @@ export default function SavingsFundingClient({
         }}
       />
 
-      {bankSelected ? (
+      {bankSelected && !hasExistingIntent ? (
         <CheckoutPaymentModeSelector
           value={selectedPaymentMode}
           onChange={(next) => {
@@ -295,7 +306,7 @@ export default function SavingsFundingClient({
       ) : null}
 
       {selectedFundingMethod &&
-      selectedPaymentMode &&
+      effectivePaymentMode &&
       (cryptoSelected || bankMethod) ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
           <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
@@ -543,7 +554,9 @@ export default function SavingsFundingClient({
                       >
                         {hasPendingSubmission
                           ? "Submission pending"
-                          : "I've paid"}
+                          : isCompletingPayment
+                            ? "Complete Payment"
+                            : "I've paid"}
                       </Button>
                     </div>
                   ) : null}
@@ -556,7 +569,7 @@ export default function SavingsFundingClient({
 
       {proofOpen &&
       selectedFundingMethod === "BANK_TRANSFER" &&
-      selectedPaymentMode &&
+      effectivePaymentMode &&
       bankMethod ? (
         <SavingsFundingProofModal
           open={proofOpen}

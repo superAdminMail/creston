@@ -152,7 +152,6 @@ export async function createSavingsFundingDepositSubmission({
           in: [
             SavingsFundingIntentStatus.PENDING,
             SavingsFundingIntentStatus.SUBMITTED,
-            SavingsFundingIntentStatus.PARTIALLY_PAID,
           ],
         },
       },
