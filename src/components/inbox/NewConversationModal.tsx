@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -61,6 +61,19 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
       message: "",
     },
   });
+
+  useEffect(() => {
+    form.setValue("fullName", user?.name ?? "", {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    form.setValue("email", user?.email ?? "", {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+  }, [form, user?.email, user?.name]);
 
   const ISSUE_LABEL: Record<string, string> = {
     user: "Inv Order ID (optional)",

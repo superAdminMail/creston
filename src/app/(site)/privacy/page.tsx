@@ -51,6 +51,7 @@ export default async function PrivacyPage() {
   const siteName = site?.siteName?.trim() || "";
   const supportEmail = site?.supportEmail?.trim() || "support@example.com";
   const supportPhone = site?.supportPhone?.trim() || "+234 800 000 0000";
+  const supportPhoneSecondary = site?.supportPhoneSecondary?.trim() || "";
   const effectiveDate = getEffectiveDate();
 
   return (
@@ -257,7 +258,8 @@ export default async function PrivacyPage() {
             >
               {supportEmail}
             </a>{" "}
-            or {supportPhone}.
+            or {supportPhone}
+            {supportPhoneSecondary ? ` / ${supportPhoneSecondary}` : ""}.
           </p>
         </Section>
       </div>

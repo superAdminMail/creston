@@ -8,10 +8,15 @@ import { Button } from "@/components/ui/button";
 
 type Props = {
   accountId: string;
+  label?: string;
   className?: string;
 };
 
-export default function SavingsDepositButton({ accountId, className }: Props) {
+export default function SavingsDepositButton({
+  accountId,
+  label = "Deposit",
+  className,
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -34,7 +39,7 @@ export default function SavingsDepositButton({ accountId, className }: Props) {
           Processing...
         </>
       ) : (
-        "Deposit"
+        label
       )}
     </Button>
   );

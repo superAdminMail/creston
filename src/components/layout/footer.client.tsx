@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Building2, Mail, MapPin, Phone, PhoneIcon } from "lucide-react";
 
@@ -15,8 +16,10 @@ export type FooterClientProps = {
   siteTagline: string;
   supportEmail: string | null;
   supportPhone: string | null;
+  supportPhoneSecondary: string | null;
   siteAddress: string | null;
-  siteLLC: string | null;
+  siteCRN: string | null;
+  siteFRN: string | null;
   footerLinkGroups: FooterGroup[];
   year: number;
 };
@@ -31,10 +34,12 @@ function SiteMark({
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
       {logoUrl ? (
-        <img
+        <Image
           src={logoUrl}
           alt={`${siteName} logo`}
-          className="h-9 w-9 rounded-2xl object-cover"
+          width={36}
+          height={36}
+          className="rounded-2xl object-cover"
         />
       ) : (
         <span className="text-sm font-semibold text-white">
@@ -52,15 +57,27 @@ export function FooterClient({
   siteTagline,
   supportEmail,
   supportPhone,
+  supportPhoneSecondary,
   siteAddress,
-  siteLLC,
+  siteCRN,
+  siteFRN,
   footerLinkGroups,
   year,
 }: FooterClientProps) {
   const safeSupportEmail = supportEmail ?? "";
   const safeSupportPhone = supportPhone ?? "";
+  const safeSupportPhoneSecondary = supportPhoneSecondary ?? "";
   const safeSiteAddress = siteAddress ?? "";
-  const safeSiteLLC = siteLLC ?? "";
+  const safeSiteCRN = siteCRN ?? "";
+  const safeSiteFRN = siteFRN ?? "";
+  const phoneEntries = [
+    safeSupportPhone ? { label: "US", value: safeSupportPhone } : null,
+    safeSupportPhoneSecondary
+      ? { label: "local", value: safeSupportPhoneSecondary }
+      : null,
+  ].filter((entry): entry is { label: string; value: string } =>
+    Boolean(entry),
+  );
 
   return (
     <footer className="relative mt-auto border-t border-white/8 bg-[linear-gradient(180deg,rgba(5,11,31,0.85),rgba(5,11,31,0.98))]">
@@ -90,10 +107,21 @@ export function FooterClient({
                     <Mail className="h-4 w-4 text-blue-300" />
                     {safeSupportEmail}
                   </p>
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-blue-300" />
-                    {safeSupportPhone}
-                  </p>
+                  {phoneEntries.length > 0 ? (
+                    <div className="mt-2 space-y-2">
+                      {phoneEntries.map((entry) => (
+                        <p key={entry.label} className="flex items-start gap-2">
+                          <Phone className="mt-0.5 h-4 w-4 text-blue-300" />
+                          <span className="flex flex-wrap gap-2">
+                            <span className="uppercase tracking-[0.12em] text-slate-500">
+                              {entry.label}
+                            </span>
+                            <span>{entry.value}</span>
+                          </span>
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div>
@@ -102,9 +130,13 @@ export function FooterClient({
                     <span>{safeSiteAddress}</span>
                   </p>
 
-                  <p className="flex items-center gap-2">
+                  <p className="flex items-start gap-2 leading-6">
                     <Building2 className="h-4 w-4 text-blue-300" />
-                    {safeSiteLLC}
+                    <span>
+                      {siteName} is authorised and regulated by the FCA (FRN:{" "}
+                      {safeSiteFRN}). Registered in England & Wales (Company No.{" "}
+                      {safeSiteCRN})
+                    </span>
                   </p>
                 </div>
               </div>
@@ -117,12 +149,14 @@ export function FooterClient({
                   <Mail className="h-4 w-4 text-white" />
                 </Link>
 
-                <Link
-                  href={safeSupportPhone ? `tel:${safeSupportPhone.replace(/\s+/g, "")}` : "#"}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] transition hover:bg-white/[0.08]"
-                >
-                  <PhoneIcon className="h-4 w-4 text-white" />
-                </Link>
+                {phoneEntries.length > 0 ? (
+                  <Link
+                    href={`tel:${phoneEntries[0].value.replace(/\s+/g, "")}`}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] transition hover:bg-white/[0.08]"
+                  >
+                    <PhoneIcon className="h-4 w-4 text-white" />
+                  </Link>
+                ) : null}
               </div>
             </div>
           </div>

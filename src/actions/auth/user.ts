@@ -1,8 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
+
 import { prisma } from "@/lib/prisma";
 import type { FormFieldErrors } from "@/lib/forms/actionState";
 import { getFriendlyServerError } from "@/lib/forms/actionState";
+import { auth } from "@/lib/auth";
 
 import { revalidatePath } from "next/cache";
 import { UTApi } from "uploadthing/server";
@@ -151,6 +154,19 @@ export async function updateUserProfile(
       //   await touchOrMarkFileAssetOrphaned(tx, previousProfileAvatarFileAssetId);
       // }
     });
+
+    if (typeof name === "string") {
+      try {
+        await auth.api.updateUser({
+          headers: await headers(),
+          body: {
+            name,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to sync auth session after profile update:", error);
+      }
+    }
 
     revalidatePath("/account/dashboard/profile/update");
     revalidatePath("/account/dashboard/profile");

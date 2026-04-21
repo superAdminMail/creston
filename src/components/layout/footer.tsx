@@ -45,9 +45,12 @@ export async function Footer() {
 
   const supportEmail = config?.supportEmail?.trim() || "support@example.com";
   const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
+  const supportPhoneSecondary =
+    config?.supportPhoneSecondary?.trim() || "";
   const siteAddress =
     config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
-  const siteLLC = config?.siteLLC?.trim() || `${site.siteName} LLC`;
+  const siteCRN = config?.siteCRN?.trim() || "";
+  const siteFRN = config?.siteFRN?.trim() || "";
   const siteTagline = config?.siteTagline?.trim() || site.siteTagline;
 
   return (
@@ -58,8 +61,10 @@ export async function Footer() {
       siteTagline={siteTagline}
       supportEmail={supportEmail}
       supportPhone={supportPhone}
+      supportPhoneSecondary={supportPhoneSecondary}
       siteAddress={siteAddress}
-      siteLLC={siteLLC}
+      siteCRN={siteCRN}
+      siteFRN={siteFRN}
       footerLinkGroups={footerLinkGroups}
       year={year}
     />

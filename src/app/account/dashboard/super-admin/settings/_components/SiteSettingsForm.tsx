@@ -37,7 +37,7 @@ type SiteSettingsFormProps = {
   };
 };
 
-type PhoneFieldKey = "supportPhone";
+type PhoneFieldKey = "supportPhone" | "supportPhoneSecondary";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -106,7 +106,8 @@ export function SiteSettingsForm({
     defaultValues.siteDescription,
   );
   const [siteAddress, setSiteAddress] = useState(defaultValues.siteAddress);
-  const [siteLLC, setSiteLLC] = useState(defaultValues.siteLLC);
+  const [siteCRN, setSiteCRN] = useState(defaultValues.siteCRN);
+  const [siteFRN, setSiteFRN] = useState(defaultValues.siteFRN);
   const [supportEmail, setSupportEmail] = useState(defaultValues.supportEmail);
   const [locale, setLocale] = useState(defaultValues.locale);
   const [seoTitle, setSeoTitle] = useState(defaultValues.seoTitle);
@@ -123,6 +124,9 @@ export function SiteSettingsForm({
     Record<PhoneFieldKey, { countryCode: string; localNumber: string }>
   >({
     supportPhone: splitNormalizedPhone(defaultValues.supportPhone),
+    supportPhoneSecondary: splitNormalizedPhone(
+      defaultValues.supportPhoneSecondary,
+    ),
   });
 
   const [siteLogoFileAssetId, setSiteLogoFileAssetId] = useState(
@@ -245,7 +249,8 @@ export function SiteSettingsForm({
       <input type="hidden" name="keywords" value={serializedKeywords} />
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="siteAddress" value={siteAddress} />
-      <input type="hidden" name="siteLLC" value={siteLLC} />
+      <input type="hidden" name="siteCRN" value={siteCRN} />
+      <input type="hidden" name="siteFRN" value={siteFRN} />
       <input type="hidden" name="seoTitle" value={seoTitle} />
       <input type="hidden" name="seoDescription" value={seoDescription} />
       <input
@@ -261,6 +266,17 @@ export function SiteSettingsForm({
         value={(() => {
           try {
             return normalizePhoneToE164(phoneFields.supportPhone);
+          } catch {
+            return "";
+          }
+        })()}
+      />
+      <input
+        type="hidden"
+        name="supportPhoneSecondary"
+        value={(() => {
+          try {
+            return normalizePhoneToE164(phoneFields.supportPhoneSecondary);
           } catch {
             return "";
           }
@@ -317,22 +333,34 @@ export function SiteSettingsForm({
                 </Field>
 
                 <Field>
-                  <FieldLabel>Site address</FieldLabel>
-                  <Input
+                  <FieldLabel>Company address</FieldLabel>
+                  <textarea
                     name="siteAddress"
+                    rows={3}
                     value={siteAddress}
                     onChange={(e) => setSiteAddress(e.target.value)}
                     placeholder="123 Main St, Anytown, USA"
+                    className="w-full rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-sm text-slate-400 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
                   />
                 </Field>
 
                 <Field>
-                  <FieldLabel>LLC name</FieldLabel>
+                  <FieldLabel>Company registration number</FieldLabel>
                   <Input
-                    name="siteLLC"
-                    value={siteLLC}
-                    onChange={(e) => setSiteLLC(e.target.value)}
-                    placeholder="Havenstone LLC"
+                    name="siteCRN"
+                    value={siteCRN}
+                    onChange={(e) => setSiteCRN(e.target.value)}
+                    placeholder="12345678"
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>FRN</FieldLabel>
+                  <Input
+                    name="siteFRN"
+                    value={siteFRN}
+                    onChange={(e) => setSiteFRN(e.target.value)}
+                    placeholder="123456"
                   />
                 </Field>
 
@@ -611,6 +639,11 @@ export function SiteSettingsForm({
                 field: "supportPhone",
                 label: "Phone",
                 error: state.fieldErrors?.supportPhone,
+              })}
+              {renderPhoneField({
+                field: "supportPhoneSecondary",
+                label: "Secondary phone",
+                error: state.fieldErrors?.supportPhoneSecondary,
               })}
             </CardContent>
           </Card>

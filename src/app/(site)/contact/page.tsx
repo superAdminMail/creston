@@ -28,8 +28,9 @@ export default async function ContactPage() {
 
   const supportEmail = config?.supportEmail?.trim() || "support@example.com";
   const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
+  const supportPhoneSecondary = config?.supportPhoneSecondary?.trim() || "";
   const officeLine = config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
-  const siteLLC = config?.siteLLC?.trim() || `${site.siteName} LLC`;
+  const siteCRN = config?.siteCRN?.trim() || "";
   const availability = "24/7";
 
   return (
@@ -73,6 +74,11 @@ export default async function ContactPage() {
                   Phone
                 </p>
                 <p className="mt-1 text-white">{supportPhone}</p>
+                {supportPhoneSecondary ? (
+                  <p className="mt-1 text-sm text-slate-300">
+                    Secondary: {supportPhoneSecondary}
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -84,9 +90,9 @@ export default async function ContactPage() {
 
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">
-                  LLC
+                  Company No.
                 </p>
-                <p className="mt-1 text-white">{siteLLC}</p>
+                <p className="mt-1 text-white">{siteCRN}</p>
               </div>
 
               <div>

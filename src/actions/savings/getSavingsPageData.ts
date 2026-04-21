@@ -16,6 +16,7 @@ type SavingsAccountViewModel = {
   isLocked: boolean;
   lockedUntil: Date | null;
   createdAt: Date;
+  latestFundingIntentStatus: string | null;
   product: {
     id: string;
     name: string;
@@ -79,6 +80,13 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
             isLocked: true,
             lockedUntil: true,
             createdAt: true,
+            savingsFundingIntents: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: {
+                status: true,
+              },
+            },
             savingsProduct: {
               select: {
                 id: true,
@@ -136,6 +144,8 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
         isLocked: account.isLocked,
         lockedUntil: account.lockedUntil,
         createdAt: account.createdAt,
+        latestFundingIntentStatus:
+          account.savingsFundingIntents[0]?.status ?? null,
         product: {
           id: account.savingsProduct.id,
           name: account.savingsProduct.name,

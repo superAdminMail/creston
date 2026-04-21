@@ -15,8 +15,10 @@ export type SiteLayoutClientProps = {
   siteDescription: string;
   supportEmail: string;
   supportPhone: string;
+  supportPhoneSecondary: string;
   siteAddress: string;
-  siteLLC: string;
+  siteCRN: string;
+  siteFRN: string;
   footerLinkGroups: FooterGroup[];
   year: number;
   children: React.ReactNode;
@@ -29,8 +31,10 @@ export default function SiteLayoutClient({
   siteDescription,
   supportEmail,
   supportPhone,
+  supportPhoneSecondary,
   siteAddress,
-  siteLLC,
+  siteCRN,
+  siteFRN,
   footerLinkGroups,
   year,
   children,
@@ -52,8 +56,10 @@ export default function SiteLayoutClient({
         siteTagline={siteTagline}
         supportEmail={supportEmail}
         supportPhone={supportPhone}
+        supportPhoneSecondary={supportPhoneSecondary}
         siteAddress={siteAddress}
-        siteLLC={siteLLC}
+        siteCRN={siteCRN}
+        siteFRN={siteFRN}
         footerLinkGroups={footerLinkGroups}
         year={year}
       />

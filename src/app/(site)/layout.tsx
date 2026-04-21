@@ -22,8 +22,10 @@ export default async function SiteLayout({
         siteDescription={site.siteDescription ?? ""}
         supportEmail={config?.supportEmail ?? ""}
         supportPhone={config?.supportPhone ?? ""}
+        supportPhoneSecondary={config?.supportPhoneSecondary ?? ""}
         siteAddress={site.siteAddress ?? ""}
-        siteLLC={site.siteLLC ?? ""}
+        siteCRN={site.siteCRN ?? ""}
+        siteFRN={site.siteFRN ?? ""}
         footerLinkGroups={[
           {
             title: "Platform",

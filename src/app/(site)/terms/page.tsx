@@ -42,6 +42,7 @@ export default async function TermsPage() {
   const siteName = site?.siteName?.trim() || "";
   const supportEmail = site?.supportEmail?.trim() || "support@example.com";
   const supportPhone = site?.supportPhone?.trim() || "+234 800 000 0000";
+  const supportPhoneSecondary = site?.supportPhoneSecondary?.trim() || "";
   const effectiveDate = new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
@@ -269,7 +270,8 @@ export default async function TermsPage() {
             >
               {supportEmail}
             </a>{" "}
-            or {supportPhone}.
+            or {supportPhone}
+            {supportPhoneSecondary ? ` / ${supportPhoneSecondary}` : ""}.
           </p>
         </Section>
       </div>

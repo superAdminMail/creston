@@ -13,7 +13,7 @@ export function ComplianceStrip() {
           {/* REGISTRATION */}
           <div className="flex items-center gap-2">
             <Landmark className="h-4 w-4 text-blue-300" />
-            <span>Registered in the United Kingdom</span>
+            <span>Registered in England & Wales</span>
           </div>
 
           {/* KYC */}

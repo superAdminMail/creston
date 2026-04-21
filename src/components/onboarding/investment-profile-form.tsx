@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   AddressAutofillCore,
   type AddressAutofillSuggestion,
@@ -43,6 +44,7 @@ import {
 } from "@/lib/zodValidations/onboarding";
 import { createInvestorProfileAction } from "@/actions/onboarding/create-investor-profile";
 import type { UpsertCurrentUserInvestorProfileResult } from "@/actions/profile/upsert-current-user-investor-profile";
+import { CURRENT_USER_QUERY_KEY } from "@/stores/useCurrentUserQuery";
 
 const MAPBOX_PUBLIC_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? "";
 
@@ -68,6 +70,7 @@ export function InvestmentProfileForm({
   compactFields = false,
 }: InvestmentProfileFormProps) {
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
   const initialCountry = initialValues?.country ?? "United States";
   const previousCountryRef = useRef(initialCountry);
   const addressAutofill = useMemo(
@@ -283,6 +286,13 @@ export function InvestmentProfileForm({
       if (result.error) {
         toast.error(result.error);
         return;
+      }
+
+      if (result.currentUser !== undefined) {
+        queryClient.setQueryData(CURRENT_USER_QUERY_KEY, result.currentUser);
+        void queryClient.invalidateQueries({
+          queryKey: CURRENT_USER_QUERY_KEY,
+        });
       }
 
       toast.success(successMessage);

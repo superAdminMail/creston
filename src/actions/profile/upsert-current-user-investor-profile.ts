@@ -1,6 +1,7 @@
 "use server";
 
 import { getAgeFromIsoDate } from "@/lib/formatters/age";
+import { getCurrentUser } from "@/lib/getCurrentUser";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { normalizePhoneToE164 } from "@/lib/formatters/phone";
 import type { FormFieldErrors } from "@/lib/forms/actionState";
@@ -29,6 +30,7 @@ export type UpsertCurrentUserInvestorProfileResult = {
   success?: true;
   error?: string;
   fieldErrors?: FormFieldErrors<OnboardingFieldName>;
+  currentUser?: Awaited<ReturnType<typeof getCurrentUser>>;
 };
 
 export async function upsertCurrentUserInvestorProfile(
@@ -118,7 +120,10 @@ export async function upsertCurrentUserInvestorProfile(
     await profileWrite;
   }
 
-  return { success: true };
+  return {
+    success: true,
+    currentUser: await getCurrentUser(),
+  };
 }
 
 export async function updateCurrentUserInvestorProfileAction(

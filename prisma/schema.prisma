@@ -1260,14 +1260,16 @@ model Notification {
 model SiteConfiguration {
   id String @id @default("default")
 
-  siteName     String
-  supportEmail String?
-  supportPhone String?
+  siteName              String
+  supportEmail          String?
+  supportPhone          String?
+  supportPhoneSecondary String?
 
   siteDescription String?
   siteTagline     String?
   siteAddress     String?
-  siteLLC         String?
+  siteCRN         String?
+  siteFRN         String?
 
   siteLogoFileAssetId String?    @unique
   siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)

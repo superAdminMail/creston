@@ -4,7 +4,8 @@ export type SiteSeoConfig = {
   siteDescription: string;
   siteTagline: string;
   siteAddress: string;
-  siteLLC: string;
+  siteCRN: string;
+  siteFRN: string;
   defaultOgImageUrl: string;
   defaultTwitterHandle?: string;
   locale: string;

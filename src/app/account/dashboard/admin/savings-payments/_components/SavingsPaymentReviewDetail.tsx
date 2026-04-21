@@ -36,11 +36,11 @@ export default function SavingsPaymentReviewDetail({
 
   const canReview = payment.status === "PENDING_REVIEW";
 
-  function handleApprove() {
+  function submitReview(approvedAmountValue: number, successMessage: string) {
     startTransition(async () => {
       const result = await approveSavingsTransactionPayment({
         paymentId: payment.id,
-        approvedAmount,
+        approvedAmount: approvedAmountValue,
         reviewNote,
       });
 
@@ -49,9 +49,23 @@ export default function SavingsPaymentReviewDetail({
         return;
       }
 
-      toast.success(result.message);
+      toast.success(successMessage);
       router.refresh();
     });
+  }
+
+  function handleApproveFull() {
+    submitReview(
+      payment.claimedAmount,
+      "Payment submission marked as fully paid.",
+    );
+  }
+
+  function handleMarkPartiallyPaid() {
+    submitReview(
+      approvedAmount,
+      "Payment submission marked as partially paid.",
+    );
   }
 
   function handleReject() {
@@ -253,6 +267,9 @@ export default function SavingsPaymentReviewDetail({
               onChange={(e) => setApprovedAmount(Number(e.target.value))}
               disabled={!canReview || pending}
             />
+            <p className="text-xs text-muted-foreground">
+              Use this amount when marking a payment as partially paid.
+            </p>
           </div>
 
           <div className="grid gap-2">
@@ -277,8 +294,11 @@ export default function SavingsPaymentReviewDetail({
 
           {canReview ? (
             <div className="flex flex-wrap gap-3">
-              <Button onClick={handleApprove} disabled={pending}>
-                Approve payment
+              <Button onClick={handleApproveFull} disabled={pending}>
+                Approve full payment
+              </Button>
+              <Button variant="secondary" onClick={handleMarkPartiallyPaid} disabled={pending}>
+                Mark partially paid
               </Button>
               <Button
                 variant="destructive"

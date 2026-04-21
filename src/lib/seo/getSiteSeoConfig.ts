@@ -10,7 +10,6 @@ const DEFAULT_SITE_DESCRIPTION =
 const DEFAULT_SITE_TAGLINE =
   "Invest for the long term, achieve financial security.";
 const DEFAULT_SITE_ADDRESS = "123 Main St, Anytown, USA";
-const DEFAULT_SITE_LLC = "Company LLC";
 const DEFAULT_KEYWORDS = [
   "wealth platform",
   "investment platform",
@@ -67,8 +66,8 @@ export const getSiteSeoConfig = cache(async (): Promise<SiteSeoConfig> => {
     siteAddress:
       firstNonEmpty(config?.siteAddress, DEFAULT_SITE_ADDRESS) ??
       DEFAULT_SITE_ADDRESS,
-    siteLLC:
-      firstNonEmpty(config?.siteLLC, DEFAULT_SITE_LLC) ?? DEFAULT_SITE_LLC,
+    siteCRN: firstNonEmpty(config?.siteCRN) ?? "",
+    siteFRN: firstNonEmpty(config?.siteFRN) ?? "",
     defaultOgImageUrl,
     defaultTwitterHandle: firstNonEmpty(config?.defaultTwitterHandle),
     locale: firstNonEmpty(config?.locale, "en_US") ?? "en_US",

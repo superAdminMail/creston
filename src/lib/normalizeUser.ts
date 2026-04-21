@@ -9,6 +9,7 @@ export type NormalizedAvatarAsset = {
 
 type NormalizableUser =
   | (SessionUser & {
+      username?: string | null;
       role?: UserRole | string | null;
       emailVerified?: boolean;
       hasPassword?: boolean | null;
@@ -36,6 +37,7 @@ export function normalizeUser(user: NormalizableUser): ProfileDTO | null {
     role: user.role as UserRole,
     isEmailVerified: user.emailVerified ?? false,
     name: user.name ?? null,
+    username: user.username ?? null,
     image: profileAvatar?.url || user.image || null,
     profileAvatar,
 

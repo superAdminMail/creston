@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ import {
 } from "@/lib/zodValidations/user";
 import { deleteProfileAvatarAction, updateUserProfile } from "@/actions/auth/user";
 import { type UserDTO } from "@/lib/types";
+import { CURRENT_USER_QUERY_KEY } from "@/stores/useCurrentUserQuery";
 
 type Props = {
   userData: UserDTO;
@@ -28,6 +30,7 @@ export default function ProfileForm({ userData }: Props) {
   const [isPending, startTransition] = useTransition();
   const [deletingKeys, setDeletingKeys] = useState<Set<string>>(new Set());
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const form = useForm<updateUserSchemaType>({
     resolver: zodResolver(updateUserSchema),
@@ -65,6 +68,28 @@ export default function ProfileForm({ userData }: Props) {
         return;
       }
 
+      const nextProfileAvatar = form.getValues("profileAvatar");
+
+      queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
+        const base = current ?? userData;
+
+        return {
+          ...base,
+          name: values.name ?? base?.name ?? null,
+          username: values.username ?? base?.username ?? null,
+          image: base?.image ?? null,
+          profileAvatar: nextProfileAvatar
+            ? {
+                url: nextProfileAvatar.url,
+                key: nextProfileAvatar.key,
+              }
+            : base?.profileAvatar ?? null,
+        };
+      });
+      void queryClient.invalidateQueries({
+        queryKey: CURRENT_USER_QUERY_KEY,
+      });
+
       toast.success("Profile updated");
       router.refresh();
       router.push("/account/dashboard/profile");
@@ -81,6 +106,20 @@ export default function ProfileForm({ userData }: Props) {
     try {
       await deleteProfileAvatarAction();
       setValue("profileAvatar", null, { shouldDirty: true });
+
+      queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
+        const base = current ?? userData;
+
+        return {
+          ...base,
+          image: base?.image ?? null,
+          profileAvatar: null,
+        };
+      });
+      void queryClient.invalidateQueries({
+        queryKey: CURRENT_USER_QUERY_KEY,
+      });
+
       toast.success("Profile image removed");
       router.refresh();
     } catch {
@@ -154,6 +193,22 @@ export default function ProfileForm({ userData }: Props) {
                       toast.error(result.error);
                       return;
                     }
+
+                    queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
+                      const base = current ?? userData;
+
+                      return {
+                        ...base,
+                        image: base?.image ?? null,
+                        profileAvatar: {
+                          url: file.url,
+                          key: file.key,
+                        },
+                      };
+                    });
+                    void queryClient.invalidateQueries({
+                      queryKey: CURRENT_USER_QUERY_KEY,
+                    });
 
                     toast.success("Profile image updated");
                     router.refresh();

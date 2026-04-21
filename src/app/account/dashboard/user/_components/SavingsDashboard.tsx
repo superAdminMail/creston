@@ -21,6 +21,14 @@ type SavingsDashboardProps = {
   canCreateSavingsAccount: boolean;
 };
 
+function getSavingsDepositButtonLabel(
+  latestFundingIntentStatus: SavingsPageData["accounts"][number]["latestFundingIntentStatus"],
+) {
+  return latestFundingIntentStatus === "PARTIALLY_PAID"
+    ? "Complete Deposit"
+    : "Deposit";
+}
+
 export default function SavingsDashboard({
   accounts,
   kycStatus,
@@ -256,9 +264,12 @@ export default function SavingsDashboard({
                 <div className="flex items-center gap-3">
                   <SavingsDepositButton
                     accountId={account.id}
+                    label={getSavingsDepositButtonLabel(
+                      account.latestFundingIntentStatus,
+                    )}
                     className="flex-1 rounded-2xl bg-blue-500 hover:bg-blue-600"
                   />
-              </div>
+                </div>
               </CardContent>
             </Card>
           ))}

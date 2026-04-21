@@ -13,6 +13,7 @@ export const getCurrentUser = cache(async () => {
     select: {
       role: true,
       emailVerified: true,
+      username: true,
       profileAvatarFileAsset: {
         select: {
           storageKey: true,
@@ -35,6 +36,7 @@ export const getCurrentUser = cache(async () => {
     email: sessionUser.email,
     name: sessionUser.name,
     image: sessionUser.image,
+    username: user.username,
     role: user.role,
     emailVerified: user.emailVerified,
     profileAvatarFileAsset: user.profileAvatarFileAsset,

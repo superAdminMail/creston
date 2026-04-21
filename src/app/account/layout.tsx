@@ -56,6 +56,7 @@ export default async function AccountLayout({
     email: sessionUser.email,
     name: sessionUser.name,
     image: sessionUser.image,
+    username: dbUser.username,
     role: dbUser.role,
     emailVerified: dbUser.emailVerified,
     profileAvatarFileAsset: dbUser.profileAvatarFileAsset ?? undefined,
