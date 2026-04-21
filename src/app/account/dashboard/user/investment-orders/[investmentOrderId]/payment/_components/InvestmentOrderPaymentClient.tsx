@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bitcoin, Landmark, Loader2 } from "lucide-react";
+import { Bitcoin, Landmark, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
@@ -543,6 +543,12 @@ export default function InvestmentOrderPaymentClient({
           maxAmount={order.remainingAmount}
         />
       ) : null}
+      <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+        <Shield className="h-4 w-4 text-sky-500" />
+        <span className="max-w-[32rem] text-center sm:text-left">
+          Secure and encrypted payment flow
+        </span>
+      </div>
     </div>
   );
 }
