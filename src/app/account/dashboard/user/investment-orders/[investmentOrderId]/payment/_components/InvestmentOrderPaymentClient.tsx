@@ -18,7 +18,6 @@ import {
 } from "@/lib/types/payments/checkout.types";
 
 import BankTransferInstructionsCard from "./BankTransferInstructionsCard";
-import MissingBankInfoCard from "./MissingBankInfoCard";
 import OrderPaymentSelector from "./OrderPaymentSelector";
 import PaymentProofModal from "./PaymentProofModal";
 
@@ -29,34 +28,29 @@ export type InvestmentOrderPaymentDetails = {
   remainingAmount: number;
   currency: string;
   status: string;
-
   plan: {
     name: string;
     period: string;
   };
-
   tier: {
     level: string;
   };
-
-    bankMethod: {
-      id: string;
-      label: string;
-      bankName: string | null;
-      bankCode: string | null;
-      accountName: string | null;
-      reference: string | null;
-      bankAddress: string | null;
-      accountNumber: string | null;
-      instructions: string | null;
-      notes: string | null;
+  bankMethod: {
+    id: string;
+    label: string;
+    bankName: string | null;
+    bankCode: string | null;
+    accountName: string | null;
+    reference: string | null;
+    bankAddress: string | null;
+    accountNumber: string | null;
+    instructions: string | null;
+    notes: string | null;
     currency: string;
   } | null;
-
   hasBankMethod: boolean;
   hasExistingBankInfoRequest: boolean;
   paymentMethodType: string | null;
-
   amountLabel: string;
   amountPaidLabel: string;
   remainingAmountLabel: string;
@@ -116,12 +110,12 @@ export default function InvestmentOrderPaymentClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [selectedFundingMethod, setSelectedFundingMethod] = useState<
-    CheckoutFundingMethodType | null
-  >(normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType);
-  const [mode, setMode] = useState<CheckoutPaymentMode | null>(
-    normalizePaymentMode(paymentMode),
-  );
+  const [selectedFundingMethod, setSelectedFundingMethod] =
+    useState<CheckoutFundingMethodType | null>(
+      normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType,
+    );
+  const [selectedPaymentMode, setSelectedPaymentMode] =
+    useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
   const [partialAmount, setPartialAmount] = useState<number>(
     partialPaymentAmount,
   );
@@ -129,20 +123,29 @@ export default function InvestmentOrderPaymentClient({
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
   const [showModal, setShowModal] = useState(false);
-
+  const bankMethod = order.bankMethod;
   const canPay =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
-  const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
-  const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const effectivePaymentMode = cryptoSelected ? "FULL" : mode;
+  const isCryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
+  const isBankSelected = selectedFundingMethod === "BANK_TRANSFER";
+  const effectivePaymentMode = isCryptoSelected ? "FULL" : selectedPaymentMode;
 
   const selectedAmount = useMemo(() => {
-    if (cryptoSelected || effectivePaymentMode === "FULL") return order.remainingAmount;
+    if (isCryptoSelected || effectivePaymentMode === "FULL") {
+      return order.remainingAmount;
+    }
+
     if (effectivePaymentMode === "PARTIAL") {
       return Math.min(Math.max(partialAmount || 0, 0), order.remainingAmount);
     }
+
     return 0;
-  }, [cryptoSelected, effectivePaymentMode, order.remainingAmount, partialAmount]);
+  }, [
+    effectivePaymentMode,
+    isCryptoSelected,
+    order.remainingAmount,
+    partialAmount,
+  ]);
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -152,6 +155,7 @@ export default function InvestmentOrderPaymentClient({
     nextPaymentMode?: CheckoutPaymentMode | null;
   }) => {
     const params = new URLSearchParams(searchParams.toString());
+
     if (nextFundingMethod === null) {
       params.delete("fundingMethodType");
     } else if (nextFundingMethod) {
@@ -175,8 +179,9 @@ export default function InvestmentOrderPaymentClient({
   ) => {
     setSelectedFundingMethod(nextFundingMethod);
     setShowModal(false);
+
     if (nextFundingMethod === "CRYPTO_PROVIDER") {
-      setMode("FULL");
+      setSelectedPaymentMode("FULL");
       updateCheckoutParams({
         nextFundingMethod,
         nextPaymentMode: "FULL",
@@ -202,13 +207,13 @@ export default function InvestmentOrderPaymentClient({
       return;
     }
 
-    if (!mode) {
+    if (!selectedPaymentMode) {
       toast.error("Choose a payment mode first.");
       return;
     }
 
-    if (cryptoSelected && mode !== "FULL") {
-      setMode("FULL");
+    if (isCryptoSelected && selectedPaymentMode !== "FULL") {
+      setSelectedPaymentMode("FULL");
       updateCheckoutParams({ nextPaymentMode: "FULL" });
       return;
     }
@@ -250,24 +255,24 @@ export default function InvestmentOrderPaymentClient({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 md:px-6">
-      <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+    <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
+      <div className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] sm:p-6 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Investment checkout
             </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-950 dark:text-white">
+            <h2 className="mt-2 text-lg font-semibold text-slate-950 sm:text-xl dark:text-white">
               {order.plan.name}
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
               Choose a funding method, then pay the full amount with crypto
               wallet or split it with bank transfer.
             </p>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryChip
             label="Funding method"
             value={getCheckoutFundingMethodLabel(selectedFundingMethod)}
@@ -279,7 +284,7 @@ export default function InvestmentOrderPaymentClient({
           <SummaryChip
             label="Selected amount"
             value={
-              cryptoSelected || mode
+              isCryptoSelected || selectedPaymentMode
                 ? formatCurrency(selectedAmount, order.currency)
                 : order.remainingAmountLabel
             }
@@ -295,40 +300,52 @@ export default function InvestmentOrderPaymentClient({
         </div>
       </div>
 
-      <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-lg text-slate-950 dark:text-white">
+      <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+        <CardHeader className="space-y-2 p-4 sm:p-6">
+          <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
             Funding method
           </CardTitle>
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
             {selectedFundingMethod === "BANK_TRANSFER" ? (
               <>
-                <Landmark className="h-4 w-4" />
-                Bank transfer
+                <Landmark className="h-4 w-4 shrink-0" />
+                <span>Bank transfer</span>
               </>
             ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
               <>
-                <Bitcoin className="h-4 w-4" />
-                Crypto wallet
+                <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
+                <span>Crypto wallet</span>
               </>
             ) : (
-              "Choose one"
+              <span>Choose one</span>
             )}
           </div>
+          <p className="text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+            Choose a funding method, then pay the full amount with crypto
+            wallet or split it with bank transfer.
+          </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="grid gap-3 md:grid-cols-2">
             <Button
               type="button"
-              variant={selectedFundingMethod === "BANK_TRANSFER" ? "default" : "outline"}
+              variant={
+                selectedFundingMethod === "BANK_TRANSFER"
+                  ? "default"
+                  : "outline"
+              }
               onClick={() => handleFundingMethodChange("BANK_TRANSFER")}
               className="rounded-2xl"
             >
-              Bank Transfer
+              Bank transfer
             </Button>
             <Button
               type="button"
-              variant={selectedFundingMethod === "CRYPTO_PROVIDER" ? "default" : "outline"}
+              variant={
+                selectedFundingMethod === "CRYPTO_PROVIDER"
+                  ? "default"
+                  : "outline"
+              }
               onClick={() => handleFundingMethodChange("CRYPTO_PROVIDER")}
               className="rounded-2xl"
             >
@@ -338,64 +355,129 @@ export default function InvestmentOrderPaymentClient({
         </CardContent>
       </Card>
 
-      {bankSelected ? (
-        <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
-          <CardHeader className="flex flex-row items-center justify-between gap-3">
-            <CardTitle className="text-lg text-slate-950 dark:text-white">
-              Payment mode
+      {isBankSelected ? (
+        <OrderPaymentSelector
+          remainingAmount={order.remainingAmount}
+          currency={order.currency}
+          mode={selectedPaymentMode}
+          partialAmount={partialAmount}
+          onModeChange={(nextMode) => {
+            setSelectedPaymentMode(nextMode);
+            updateCheckoutParams({ nextPaymentMode: nextMode });
+            if (nextMode === "FULL") {
+              setPartialAmount(order.remainingAmount);
+            }
+            if (nextMode === "PARTIAL") {
+              setPartialAmount(partialPaymentAmount);
+            }
+          }}
+        />
+      ) : null}
+
+      {selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Bank details unavailable
             </CardTitle>
-            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-              {mode ? getCheckoutPaymentModeLabel(mode) : "Choose one"}
-            </div>
           </CardHeader>
-          <CardContent>
-            <OrderPaymentSelector
-              remainingAmount={order.remainingAmount}
-              currency={order.currency}
-              mode={mode}
-              partialAmount={partialAmount}
-              onModeChange={(nextMode) => {
-                setMode(nextMode);
-                updateCheckoutParams({ nextPaymentMode: nextMode });
-                if (nextMode === "FULL") {
-                  setPartialAmount(order.remainingAmount);
-                }
-                if (nextMode === "PARTIAL") {
-                  setPartialAmount(partialPaymentAmount);
-                }
-              }}
-            />
+          <CardContent className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+              Bank details are not available yet. Request them from the admin
+              team so they can set up the transfer method for this checkout.
+            </p>
+
+            <div className="flex justify-start">
+              <Button
+                type="button"
+                onClick={() => void handleRequestBankInfo()}
+                disabled={isRequestingBankInfo || order.hasExistingBankInfoRequest}
+                className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                {isRequestingBankInfo ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </span>
+                ) : order.hasExistingBankInfoRequest ? (
+                  "Request Sent"
+                ) : (
+                  "Request Bank Info"
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : null}
 
       {canPay && selectedFundingMethod ? (
-        <>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
           {selectedFundingMethod === "BANK_TRANSFER" ? (
-            mode ? (
+            selectedPaymentMode ? (
               order.hasBankMethod && order.bankMethod ? (
-                <BankTransferInstructionsCard
-                  bankMethod={order.bankMethod}
-                  selectedAmount={selectedAmount}
-                  currency={order.currency}
-                  onConfirmPaid={() => setShowModal(true)}
-                />
-              ) : (
-                <MissingBankInfoCard
-                  orderId={order.id}
-                  hasExistingRequest={order.hasExistingBankInfoRequest}
-                />
-              )
+                <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+                  <CardHeader className="p-4 sm:p-6">
+                    <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                      Bank transfer funding
+                    </CardTitle>
+                    <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+                      Use the bank details below to send your transfer, then
+                      submit your funding proof for review.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <SummaryChip
+                        label="Selected amount"
+                        value={formatCurrency(selectedAmount, order.currency)}
+                      />
+                      <SummaryChip
+                        label="Payment mode"
+                        value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+                      />
+                    </div>
+
+                    <BankTransferInstructionsCard
+                      bankMethod={bankMethod!}
+                      selectedAmount={selectedAmount}
+                      currency={order.currency}
+                      onConfirmPaid={() => setShowModal(true)}
+                    />
+                  </CardContent>
+                </Card>
+              ) : null
             ) : null
           ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
-            cryptoSelected ? (
-              <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-                <CardHeader>
-                  <CardTitle className="text-lg text-slate-950 dark:text-white">
-                    Crypto wallet checkout
+            isCryptoSelected ? (
+              <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                    Crypto wallet funding
                   </CardTitle>
+                  <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+                    This checkout is set to Bitcoin wallet funding.
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
+                        Funding method
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                        Crypto wallet
+                      </p>
+                    </div>
+                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
+                        Payment mode
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-white">
+                        {getCheckoutPaymentModeLabel(effectivePaymentMode)}
+                      </p>
+                    </div>
+                  </div>
+
                   <div className="grid gap-3 sm:grid-cols-2">
                     <SummaryChip
                       label="Selected amount"
@@ -408,8 +490,8 @@ export default function InvestmentOrderPaymentClient({
                   </div>
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Continue to the crypto payment gateway using the full
-                    amount selected above.
+                    Continue to the crypto payment gateway using the full amount
+                    selected above.
                   </p>
 
                   <div className="flex justify-end">
@@ -434,7 +516,7 @@ export default function InvestmentOrderPaymentClient({
               </Card>
             ) : null
           ) : null}
-        </>
+        </div>
       ) : null}
 
       {order.status === "PENDING_PAYMENT" ? (
@@ -448,7 +530,7 @@ export default function InvestmentOrderPaymentClient({
 
       {showModal &&
       selectedFundingMethod === "BANK_TRANSFER" &&
-      mode &&
+      selectedPaymentMode &&
       order.hasBankMethod &&
       order.bankMethod ? (
         <PaymentProofModal
@@ -460,34 +542,6 @@ export default function InvestmentOrderPaymentClient({
           defaultAmount={selectedAmount}
           maxAmount={order.remainingAmount}
         />
-      ) : null}
-
-      {selectedFundingMethod === "BANK_TRANSFER" &&
-      !mode &&
-      !order.hasBankMethod ? (
-        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/78 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
-          <div className="space-y-3 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Bank details are not available yet.
-            </p>
-
-            <Button
-              disabled={isRequestingBankInfo || order.hasExistingBankInfoRequest}
-              onClick={() => void handleRequestBankInfo()}
-            >
-              {isRequestingBankInfo ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending...
-                </span>
-              ) : order.hasExistingBankInfoRequest ? (
-                "Request Sent"
-              ) : (
-                "Request Bank Info"
-              )}
-            </Button>
-          </div>
-        </div>
       ) : null}
     </div>
   );
