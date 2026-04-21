@@ -9,6 +9,7 @@ import { approveInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewI
 const schema = z.object({
   paymentId: z.string().min(1),
   approvedAmount: z.number().positive(),
+  approvalMode: z.enum(["FULL", "PARTIAL"]),
   reviewNote: z.string().trim().max(500).optional(),
 });
 
@@ -32,6 +33,7 @@ export async function approveInvestmentOrderPayment(
     const result = await approveInvestmentOrderPaymentReview({
       paymentId: data.paymentId,
       approvedAmount: data.approvedAmount,
+      approvalMode: data.approvalMode,
       reviewNote: data.reviewNote,
       adminUserId: admin.userId,
     });
@@ -42,6 +44,7 @@ export async function approveInvestmentOrderPayment(
     revalidatePath(
       `/account/dashboard/user/investment-orders/${result.investmentOrderId}/payment`,
     );
+    revalidatePath("/account/dashboard/notifications");
 
     return {
       ok: true,

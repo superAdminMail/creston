@@ -11,6 +11,7 @@ import type {
 type RequireActiveVerifiedUserResult = {
   id: string;
   role: UserRole;
+  username: string | null;
   emailVerified: boolean;
   accountStatus: UserAccountStatus;
   emailVerifiedAt: Date | null;
@@ -39,6 +40,7 @@ export async function requireActiveVerifiedUser(): Promise<RequireActiveVerified
     select: {
       id: true,
       role: true,
+      username: true,
       emailVerified: true,
       accountStatus: true,
       emailVerifiedAt: true,

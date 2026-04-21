@@ -6,6 +6,7 @@ import {
   SavingsTransactionPaymentStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
+import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { prisma } from "@/lib/prisma";
 
 type ReviewSavingsTransactionPaymentBase = {
@@ -43,12 +44,18 @@ export async function approveSavingsTransactionPaymentReview({
           paidAt: true,
           creditedAt: true,
           paymentReference: true,
+          savingsAccountId: true,
           savingsAccount: {
             select: {
               id: true,
               balance: true,
               targetAmount: true,
               currency: true,
+              investorProfile: {
+                select: {
+                  userId: true,
+                },
+              },
               savingsProduct: {
                 select: {
                   maxBalance: true,
@@ -212,7 +219,32 @@ export async function approveSavingsTransactionPaymentReview({
           paymentId: payment.id,
           approvedAmount: approvedAmountDecimal.toString(),
           reviewedByUserId: adminUserId,
+          approvalMode,
         },
+      },
+    });
+
+    await createReviewNotification({
+      tx,
+      userId:
+        payment.savingsFundingIntent.savingsAccount.investorProfile.userId,
+      key: `savings-payment-review:${payment.id}:${approvalMode}`,
+      title:
+        approvalMode === "FULL"
+          ? "Savings payment approved"
+          : "Savings payment partially approved",
+      message:
+        approvalMode === "FULL"
+          ? "Your savings deposit proof was approved and credited."
+          : "Your savings deposit proof was partially approved and credited.",
+      link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}`,
+      metadata: {
+        paymentId: payment.id,
+        savingsAccountId: payment.savingsFundingIntent.savingsAccount.id,
+        fundingIntentId: payment.savingsFundingIntent.id,
+        approvalMode,
+        approvedAmount: approvedAmountDecimal.toString(),
+        reviewedByUserId: adminUserId,
       },
     });
   });
@@ -274,6 +306,40 @@ export async function rejectSavingsTransactionPaymentReview({
         failureMessage: rejectionReason,
       },
     });
+
+    const intent = await tx.savingsFundingIntent.findUnique({
+      where: { id: payment.savingsFundingIntentId },
+      select: {
+        savingsAccountId: true,
+        savingsAccount: {
+          select: {
+            investorProfile: {
+              select: {
+                userId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (intent) {
+      await createReviewNotification({
+        tx,
+        userId: intent.savingsAccount.investorProfile.userId,
+        key: `savings-payment-review:${payment.id}:REJECTED`,
+        title: "Savings payment rejected",
+        message: "Your savings deposit proof was rejected by the admin team.",
+        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${intent.savingsAccountId}`,
+        metadata: {
+          paymentId: payment.id,
+          savingsAccountId: intent.savingsAccountId,
+          fundingIntentId: payment.savingsFundingIntentId,
+          rejectionReason,
+          reviewedByUserId: adminUserId,
+        },
+      });
+    }
   });
 
   return { ok: true };

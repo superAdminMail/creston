@@ -40,6 +40,7 @@ export async function rejectSavingsTransactionPayment(
     revalidatePath("/account/dashboard/admin/deposits");
     revalidatePath("/account/dashboard/user/savings");
     revalidatePath("/account/dashboard/checkout");
+    revalidatePath("/account/dashboard/notifications");
 
     return {
       ok: true,

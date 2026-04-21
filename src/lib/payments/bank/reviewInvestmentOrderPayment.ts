@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { reconcileInvestmentOrderPaymentState } from "@/app/account/dashboard/admin/investment-payments/_lib/reconcileInvestmentOrderPaymentState";
 
 type ReviewInvestmentOrderPaymentBase = {
@@ -9,13 +10,17 @@ type ReviewInvestmentOrderPaymentBase = {
   reviewNote?: string | null;
 };
 
+type InvestmentApprovalMode = "FULL" | "PARTIAL";
+
 export async function approveInvestmentOrderPaymentReview({
   paymentId,
   adminUserId,
   approvedAmount,
   reviewNote,
+  approvalMode,
 }: ReviewInvestmentOrderPaymentBase & {
   approvedAmount: number;
+  approvalMode: InvestmentApprovalMode;
 }): Promise<{ ok: true; investmentOrderId: string }> {
   const payment = await prisma.investmentOrderPayment.findUnique({
     where: { id: paymentId },
@@ -30,6 +35,11 @@ export async function approveInvestmentOrderPaymentReview({
           amount: true,
           amountPaid: true,
           status: true,
+          investorProfile: {
+            select: {
+              userId: true,
+            },
+          },
         },
       },
     },
@@ -80,6 +90,28 @@ export async function approveInvestmentOrderPaymentReview({
     }
 
     await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+
+    await createReviewNotification({
+      tx,
+      userId: payment.investmentOrder.investorProfile.userId,
+      key: `investment-payment-review:${payment.id}:${approvalMode}`,
+      title:
+        approvalMode === "FULL"
+          ? "Investment payment approved"
+          : "Investment payment partially approved",
+      message:
+        approvalMode === "FULL"
+          ? "Your investment payment proof was approved."
+          : "Your investment payment proof was partially approved.",
+      link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
+      metadata: {
+        paymentId: payment.id,
+        investmentOrderId: payment.investmentOrderId,
+        approvalMode,
+        approvedAmount,
+        reviewedByUserId: adminUserId,
+      },
+    });
   });
 
   return { ok: true, investmentOrderId: payment.investmentOrderId };
@@ -98,6 +130,15 @@ export async function rejectInvestmentOrderPaymentReview({
     select: {
       id: true,
       investmentOrderId: true,
+      investmentOrder: {
+        select: {
+          investorProfile: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -126,6 +167,21 @@ export async function rejectInvestmentOrderPaymentReview({
     }
 
     await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+
+    await createReviewNotification({
+      tx,
+      userId: payment.investmentOrder.investorProfile.userId,
+      key: `investment-payment-review:${payment.id}:REJECTED`,
+      title: "Investment payment rejected",
+      message: "Your investment payment proof was rejected by the admin team.",
+      link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
+      metadata: {
+        paymentId: payment.id,
+        investmentOrderId: payment.investmentOrderId,
+        rejectionReason,
+        reviewedByUserId: adminUserId,
+      },
+    });
   });
 
   return { ok: true, investmentOrderId: payment.investmentOrderId };

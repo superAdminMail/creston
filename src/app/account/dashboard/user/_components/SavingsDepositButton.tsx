@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 type Props = {
   accountId: string;
   label?: string;
+  disabled?: boolean;
   className?: string;
 };
 
 export default function SavingsDepositButton({
   accountId,
   label = "Deposit",
+  disabled = false,
   className,
 }: Props) {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function SavingsDepositButton({
   return (
     <Button
       type="button"
-      disabled={isPending}
+      disabled={disabled || isPending}
       onClick={() =>
         startTransition(() => {
           router.push(
@@ -38,6 +40,8 @@ export default function SavingsDepositButton({
           <Loader2 className="h-4 w-4 animate-spin" />
           Processing...
         </>
+      ) : disabled ? (
+        "Target reached"
       ) : (
         label
       )}

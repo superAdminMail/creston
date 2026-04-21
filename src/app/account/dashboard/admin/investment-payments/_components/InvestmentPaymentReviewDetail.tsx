@@ -38,11 +38,16 @@ export default function InvestmentPaymentReviewDetail({
 
   const canReview = payment.status === "PENDING_REVIEW";
 
-  function submitReview(approvedAmountValue: number, successMessage: string) {
+  function submitReview(
+    approvedAmountValue: number,
+    approvalMode: "FULL" | "PARTIAL",
+    successMessage: string,
+  ) {
     startTransition(async () => {
       const result = await approveInvestmentOrderPayment({
         paymentId: payment.id,
         approvedAmount: approvedAmountValue,
+        approvalMode,
         reviewNote,
       });
 
@@ -59,6 +64,7 @@ export default function InvestmentPaymentReviewDetail({
   function handleApproveFull() {
     submitReview(
       payment.claimedAmount,
+      "FULL",
       "Payment submission marked as fully paid.",
     );
   }
@@ -66,6 +72,7 @@ export default function InvestmentPaymentReviewDetail({
   function handleMarkPartiallyPaid() {
     submitReview(
       approvedAmount,
+      "PARTIAL",
       "Payment submission marked as partially paid.",
     );
   }
