@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import type { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
 
-import InvestmentOrderConfirmationCard from "./InvestmentOrderPaymentConfirmationCard";
 import { approveInvestmentOrderPayment } from "@/actions/admin/investment-payments/approveInvestmentOrderPayment";
 import { rejectInvestmentOrderPayment } from "@/actions/admin/investment-payments/rejectInvestmentOrderPayment";
 
@@ -34,6 +33,7 @@ export default function InvestmentPaymentReviewDetail({
   const [rejectionReason, setRejectionReason] = useState(
     payment.rejectionReason ?? "",
   );
+  const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [pending, startTransition] = useTransition();
 
   const canReview = payment.status === "PENDING_REVIEW";
@@ -78,6 +78,14 @@ export default function InvestmentPaymentReviewDetail({
   }
 
   function handleReject() {
+    if (!rejectionReason.trim()) {
+      setRejectionReasonError("Rejection reason is required.");
+      toast.error("Rejection reason is required.");
+      return;
+    }
+
+    setRejectionReasonError("");
+
     startTransition(async () => {
       const result = await rejectInvestmentOrderPayment({
         paymentId: payment.id,
@@ -247,9 +255,18 @@ export default function InvestmentPaymentReviewDetail({
             <Textarea
               rows={4}
               value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              onChange={(e) => {
+                setRejectionReason(e.target.value);
+                if (rejectionReasonError) {
+                  setRejectionReasonError("");
+                }
+              }}
+              aria-invalid={Boolean(rejectionReasonError)}
               disabled={!canReview || pending}
             />
+            {rejectionReasonError ? (
+              <p className="text-xs text-destructive">{rejectionReasonError}</p>
+            ) : null}
           </div>
 
           {canReview ? (
@@ -276,7 +293,6 @@ export default function InvestmentPaymentReviewDetail({
         </CardContent>
       </Card>
 
-      <InvestmentOrderConfirmationCard order={payment.order} />
     </div>
   );
 }

@@ -32,6 +32,7 @@ export default function SavingsPaymentReviewDetail({
   const [rejectionReason, setRejectionReason] = useState(
     payment.rejectionReason ?? "",
   );
+  const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [pending, startTransition] = useTransition();
 
   const canReview = payment.status === "PENDING_REVIEW";
@@ -76,6 +77,14 @@ export default function SavingsPaymentReviewDetail({
   }
 
   function handleReject() {
+    if (!rejectionReason.trim()) {
+      setRejectionReasonError("Rejection reason is required.");
+      toast.error("Rejection reason is required.");
+      return;
+    }
+
+    setRejectionReasonError("");
+
     startTransition(async () => {
       const result = await rejectSavingsTransactionPayment({
         paymentId: payment.id,
@@ -294,9 +303,18 @@ export default function SavingsPaymentReviewDetail({
             <Textarea
               rows={4}
               value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
+              onChange={(e) => {
+                setRejectionReason(e.target.value);
+                if (rejectionReasonError) {
+                  setRejectionReasonError("");
+                }
+              }}
+              aria-invalid={Boolean(rejectionReasonError)}
               disabled={!canReview || pending}
             />
+            {rejectionReasonError ? (
+              <p className="text-xs text-destructive">{rejectionReasonError}</p>
+            ) : null}
           </div>
 
           {canReview ? (

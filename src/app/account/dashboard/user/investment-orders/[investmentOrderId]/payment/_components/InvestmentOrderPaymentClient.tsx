@@ -76,13 +76,7 @@ function normalizePaymentMode(
   return null;
 }
 
-function SummaryChip({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -116,9 +110,8 @@ export default function InvestmentOrderPaymentClient({
     );
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
-  const [partialAmount, setPartialAmount] = useState<number>(
-    partialPaymentAmount,
-  );
+  const [partialAmount, setPartialAmount] =
+    useState<number>(partialPaymentAmount);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
@@ -233,9 +226,10 @@ export default function InvestmentOrderPaymentClient({
         }),
       });
 
-      const data = (await response.json().catch(() => null)) as
-        | { redirectUrl?: string; error?: string }
-        | null;
+      const data = (await response.json().catch(() => null)) as {
+        redirectUrl?: string;
+        error?: string;
+      } | null;
 
       if (!response.ok || !data?.redirectUrl) {
         toast.error(data?.error ?? "Unable to open crypto checkout.");
@@ -395,7 +389,9 @@ export default function InvestmentOrderPaymentClient({
               <Button
                 type="button"
                 onClick={() => void handleRequestBankInfo()}
-                disabled={isRequestingBankInfo || order.hasExistingBankInfoRequest}
+                disabled={
+                  isRequestingBankInfo || order.hasExistingBankInfoRequest
+                }
                 className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
               >
                 {isRequestingBankInfo ? (
@@ -494,8 +490,8 @@ export default function InvestmentOrderPaymentClient({
                   </div>
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Continue to the crypto payment gateway using the full amount
-                    selected above.
+                    You will be redirected to a secure checkout to complete the
+                    payment.
                   </p>
 
                   <div className="flex justify-end">
@@ -512,7 +508,7 @@ export default function InvestmentOrderPaymentClient({
                           Opening secure checkout...
                         </span>
                       ) : (
-                        "Continue to crypto wallet"
+                        "Continue"
                       )}
                     </Button>
                   </div>

@@ -2,15 +2,16 @@ import {
   InvestmentOrderPaymentStatus,
   InvestmentOrderPaymentType,
   InvestmentOrderStatus,
-  InvestmentPaymentMethodType,
   PlatformPaymentMethodType,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 
 type CreateInvestmentOrderBankDepositSubmissionInput = {
   investmentOrderId: string;
   userId: string;
+  platformPaymentMethodId?: string | null;
   usePartialPayment?: boolean;
   depositorName?: string | null;
   depositorAccountName?: string | null;
@@ -34,6 +35,7 @@ export type CreateInvestmentOrderBankDepositSubmissionResult = {
 export async function createInvestmentOrderBankDepositSubmission({
   investmentOrderId,
   userId,
+  platformPaymentMethodId,
   usePartialPayment = false,
   depositorName,
   depositorAccountName,
@@ -97,26 +99,55 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("This investment order can no longer be paid");
   }
 
-  if (order.paymentMethodType !== InvestmentPaymentMethodType.BANK_TRANSFER) {
-    throw new Error(
-      "This investment order is not configured for bank transfer",
-    );
-  }
+  const privateBankMethod = await getUserPrivateBankInfo(userId, order.currency);
+  const selectedPlatformPaymentMethodId =
+    platformPaymentMethodId?.trim() ||
+    order.platformPaymentMethodId ||
+    privateBankMethod?.id ||
+    null;
 
-  if (!order.platformPaymentMethodId || !order.platformPaymentMethod) {
+  if (!selectedPlatformPaymentMethodId) {
     throw new Error("No bank payment method is configured for this order");
   }
 
-  const platformPaymentMethod = order.platformPaymentMethod;
+  const allowPrivateMethod =
+    selectedPlatformPaymentMethodId === order.platformPaymentMethodId ||
+    selectedPlatformPaymentMethodId === privateBankMethod?.id;
 
-  if (platformPaymentMethod.type !== PlatformPaymentMethodType.BANK_INFO) {
-    throw new Error(
-      "Selected platform payment method is not a bank payment method",
-    );
-  }
+  const platformPaymentMethod = await prisma.platformPaymentMethod.findFirst({
+    where: {
+      id: selectedPlatformPaymentMethodId,
+      isActive: true,
+      type: PlatformPaymentMethodType.BANK_INFO,
+      OR: allowPrivateMethod
+        ? [
+            {
+              isPrivate: false,
+              OR: [{ currency: order.currency }, { currency: null }],
+            },
+            {
+              isPrivate: true,
+              OR: [{ currency: order.currency }, { currency: null }],
+            },
+          ]
+        : [
+            {
+              isPrivate: false,
+              OR: [{ currency: order.currency }, { currency: null }],
+            },
+          ],
+    },
+    select: {
+      id: true,
+      label: true,
+      type: true,
+      isPrivate: true,
+      currency: true,
+    },
+  });
 
-  if (!platformPaymentMethod.isActive) {
-    throw new Error("Selected bank payment method is inactive");
+  if (!platformPaymentMethod) {
+    throw new Error("Selected bank transfer method is not available");
   }
 
   const chargeCalculation = calculateInvestmentOrderBankChargeAmount({
@@ -134,7 +165,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         investmentOrderId: order.id,
         type: InvestmentOrderPaymentType.BANK_DEPOSIT,
         status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
-        platformPaymentMethodId: order.platformPaymentMethodId,
+        platformPaymentMethodId: platformPaymentMethod.id,
         submittedByUserId: userId,
         claimedAmount: chargeCalculation.chargeAmount,
         currency: order.currency,

@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { Prisma } from "@/generated/prisma";
+import { getFriendlyServerError } from "@/lib/forms/actionState";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { rejectInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewInvestmentOrderPayment";
 
 const schema = z.object({
   paymentId: z.string().min(1),
-  rejectionReason: z.string().trim().min(3).max(500),
+  rejectionReason: z.string().trim().min(1).max(500),
   reviewNote: z.string().trim().max(500).optional(),
 });
 
@@ -24,7 +26,10 @@ export async function rejectInvestmentOrderPayment(
   const parsed = schema.safeParse(input);
 
   if (!parsed.success) {
-    return { ok: false, message: "Invalid rejection payload." };
+    return {
+      ok: false,
+      message: "Rejection reason is required.",
+    };
   }
 
   const data = parsed.data;
@@ -53,9 +58,14 @@ export async function rejectInvestmentOrderPayment(
     return {
       ok: false,
       message:
-        error instanceof Error
-          ? error.message
-          : "Unable to reject this payment right now.",
+        error instanceof Prisma.PrismaClientKnownRequestError
+          ? getFriendlyServerError(
+              error,
+              "Unable to reject this payment right now.",
+            )
+          : error instanceof Error
+            ? error.message
+            : "Unable to reject this payment right now.",
     };
   }
 }

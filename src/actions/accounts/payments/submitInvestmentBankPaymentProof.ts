@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { createInvestmentOrderBankDepositSubmission } from "@/lib/payments/bank/createInvestmentOrderBankDepositSubmission";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -34,107 +34,34 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
   }
 
   const data = parsed.data;
-
-  const order = await prisma.investmentOrder.findFirst({
-    where: {
-      id: data.orderId,
-      investorProfile: {
-        userId: user.id,
-      },
-    },
-    select: {
-      id: true,
-      status: true,
-      currency: true,
-      amount: true,
-      amountPaid: true,
-      platformPaymentMethodId: true,
-    },
-  });
-
-  if (!order) {
-    return { ok: false, message: "Investment order not found." };
-  }
-
-  if (!["PENDING_PAYMENT", "PARTIALLY_PAID"].includes(order.status)) {
-    return {
-      ok: false,
-      message: "This order is no longer accepting payment submissions.",
-    };
-  }
-
-  const remainingAmount = Math.max(
-    order.amount.toNumber() - order.amountPaid.toNumber(),
-    0,
-  );
-
-  if (data.claimedAmount > remainingAmount) {
-    return {
-      ok: false,
-      message: "Claimed amount cannot be greater than the remaining balance.",
-    };
-  }
-
-  const paymentMethod = await prisma.platformPaymentMethod.findFirst({
-    where: {
-      isActive: true,
-      type: "BANK_INFO",
-      ...(order.platformPaymentMethodId
-        ? {
-            id: order.platformPaymentMethodId,
-          }
-        : {
-            id: data.platformPaymentMethodId,
-            isPrivate: false,
-          }),
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!paymentMethod) {
-    return {
-      ok: false,
-      message: "Selected bank transfer method is not available.",
-    };
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.investmentOrderPayment.create({
-      data: {
-        investmentOrderId: order.id,
-        type: "BANK_DEPOSIT",
-        status: "PENDING_REVIEW",
-        platformPaymentMethodId: data.platformPaymentMethodId,
-        submittedByUserId: user.id,
-        claimedAmount: data.claimedAmount,
-        currency: order.currency,
-        depositorName: data.depositorName || null,
-        depositorAccountName: data.depositorAccountName || null,
-        depositorAccountNo: data.depositorAccountNo || null,
-        transferReference: data.transferReference || null,
-        note: data.note || null,
-        receiptFileId: data.receiptFileId || null,
-      },
+  try {
+    const result = await createInvestmentOrderBankDepositSubmission({
+      investmentOrderId: data.orderId,
+      userId: user.id,
+      platformPaymentMethodId: data.platformPaymentMethodId,
+      depositorName: data.depositorName,
+      depositorAccountName: data.depositorAccountName,
+      depositorAccountNo: data.depositorAccountNo,
+      transferReference: data.transferReference,
+      note: data.note,
+      receiptFileId: data.receiptFileId,
     });
 
-    await tx.investmentOrder.update({
-      where: { id: order.id },
-      data: {
-        paymentMethodType: "BANK_TRANSFER",
-        platformPaymentMethodId: data.platformPaymentMethodId,
-        lastPaymentSubmittedAt: new Date(),
-      },
-    });
-  });
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${result.orderId}/payment`,
+    );
 
-  revalidatePath(
-    `/account/dashboard/user/investment-orders/${order.id}/payment`,
-  );
-
-  return {
-    ok: true,
-    message: "Payment proof submitted for admin review.",
-  };
+    return {
+      ok: true,
+      message: "Payment proof submitted for admin review.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to submit payment proof.",
+    };
+  }
 }
