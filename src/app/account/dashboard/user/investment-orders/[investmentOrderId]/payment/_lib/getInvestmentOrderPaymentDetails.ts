@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
@@ -107,15 +108,6 @@ export async function getInvestmentOrderPaymentDetails(
     notFound();
   }
 
-  const fallbackBankMethod = await getPublicPlatformPaymentMethods().then(
-    (methods) =>
-      methods.find(
-        (method) =>
-          method.type === "BANK_INFO" &&
-          (method.currency === order.currency || method.currency === null),
-      ) ?? null,
-  );
-
   const existingBankInfoRequest = await prisma.notification.findFirst({
     where: {
       userId: user.id,
@@ -128,7 +120,21 @@ export async function getInvestmentOrderPaymentDetails(
     },
   });
 
-  const resolvedBankMethod = order.platformPaymentMethod ?? fallbackBankMethod;
+  const privateBankMethod = order.platformPaymentMethod
+    ? null
+    : await getUserPrivateBankInfo(user.id, order.currency);
+
+  const fallbackBankMethod = await getPublicPlatformPaymentMethods().then(
+    (methods) =>
+      methods.find(
+        (method) =>
+          method.type === "BANK_INFO" &&
+          (method.currency === order.currency || method.currency === null),
+      ) ?? null,
+  );
+
+  const resolvedBankMethod =
+    order.platformPaymentMethod ?? privateBankMethod ?? fallbackBankMethod;
 
   const amount = toNumber(order.amount);
   const amountPaid = toNumber(order.amountPaid);

@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { isSavingsFundingBankInfoRequestAckNotification } from "@/lib/notifications/savingsFundingBankInfo";
+import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
 
@@ -177,9 +178,14 @@ export async function getSavingsFundingDetails(
       })
     : null;
 
+  const privateBankMethod = latestIntent?.platformPaymentMethod
+    ? null
+    : await getUserPrivateBankInfo(user.id, account.currency);
+
   const fallbackBankMethod = latestIntent?.platformPaymentMethod
     ? null
     : requestedBankMethod ??
+      privateBankMethod ??
       (await getPublicPlatformPaymentMethods().then(
         (methods) =>
           methods.find(

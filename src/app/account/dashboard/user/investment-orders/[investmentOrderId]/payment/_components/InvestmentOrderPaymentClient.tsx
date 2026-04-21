@@ -301,29 +301,33 @@ export default function InvestmentOrderPaymentClient({
       </div>
 
       <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-        <CardHeader className="space-y-2 p-4 sm:p-6">
-          <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
-            Funding method
-          </CardTitle>
-          <div className="flex items-center gap-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-            {selectedFundingMethod === "BANK_TRANSFER" ? (
-              <>
-                <Landmark className="h-4 w-4 shrink-0" />
-                <span>Bank transfer</span>
-              </>
-            ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
+        <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+          <div className="min-w-0">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              {isCryptoSelected
+                ? "Crypto wallet funding"
+                : "Bank transfer funding"}
+            </CardTitle>
+            <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+              {isCryptoSelected
+                ? "This checkout is set to Bitcoin wallet funding."
+                : "Use the bank details below to send your transfer, then submit your funding proof for review."}
+            </p>
+          </div>
+
+          <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+            {isCryptoSelected ? (
               <>
                 <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
-                <span>Crypto wallet</span>
+                <span className="truncate">Bitcoin</span>
               </>
             ) : (
-              <span>Choose one</span>
+              <>
+                <Landmark className="h-4 w-4 shrink-0" />
+                <span className="truncate">Bank transfer</span>
+              </>
             )}
           </div>
-          <p className="text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-            Choose a funding method, then pay the full amount with crypto
-            wallet or split it with bank transfer.
-          </p>
         </CardHeader>
         <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="grid gap-3 md:grid-cols-2">

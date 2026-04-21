@@ -9,6 +9,7 @@ import {
   SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
   SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
 } from "@/lib/notifications/savingsFundingBankInfo";
+import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 
 export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
   const user = await getCurrentSessionUser();
@@ -37,6 +38,18 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
 
   if (!account) {
     return { ok: false, message: "Savings account not found." };
+  }
+
+  const existingPrivateBankMethod = await getUserPrivateBankInfo(
+    user.id,
+    account.currency,
+  );
+
+  if (existingPrivateBankMethod) {
+    return {
+      ok: true,
+      message: "Bank details are already available for you.",
+    };
   }
 
   const existingRequest = await prisma.notification.findFirst({

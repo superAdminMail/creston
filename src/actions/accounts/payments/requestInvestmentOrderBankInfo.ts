@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import {
   INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
   INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
@@ -40,7 +41,12 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
     return { ok: false, message: "Investment order not found." };
   }
 
-  if (order.platformPaymentMethodId) {
+  const existingPrivateBankMethod = await getUserPrivateBankInfo(
+    user.id,
+    order.currency,
+  );
+
+  if (order.platformPaymentMethodId || existingPrivateBankMethod) {
     return {
       ok: true,
       message: "Bank details are already available for this order.",
