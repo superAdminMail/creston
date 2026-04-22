@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { deleteInvestmentPlan } from "@/actions/super-admin/investment-plans/deleteInvestmentPlan";
 import { toggleInvestmentPlanActive } from "@/actions/super-admin/investment-plans/toggleInvestmentPlanActive";
@@ -16,6 +17,14 @@ export function InvestmentPlanDetailsCard({
   return (
     <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
       <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+        <Link
+          href="/account/dashboard/super-admin/investment-plans"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          View list
+        </Link>
+
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold text-white sm:text-3xl">
             {plan.name}
@@ -131,7 +140,9 @@ export function InvestmentPlanDetailsCard({
             <form action={toggleInvestmentPlanActive.bind(null, plan.id)}>
               <SuperAdminActionSubmitButton
                 idleLabel={plan.isActive ? "Deactivate plan" : "Activate plan"}
-                pendingLabel={plan.isActive ? "Deactivating..." : "Activating..."}
+                pendingLabel={
+                  plan.isActive ? "Deactivating..." : "Activating..."
+                }
                 variant="outline"
                 className="h-11 w-full rounded-xl border-white/10 bg-white/[0.03] text-slate-100 hover:border-white/15 hover:bg-white/[0.06] hover:text-white"
               />
