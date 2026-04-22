@@ -376,7 +376,9 @@ model InvestmentPlanTier {
   minAmount Decimal @db.Decimal(18, 2)
   maxAmount Decimal @db.Decimal(18, 2)
 
-  roiPercent Decimal? @db.Decimal(5, 2)
+  fixedRoiPercent Decimal? @db.Decimal(5, 2)
+  projectedRoiMin Decimal? @db.Decimal(5, 2)
+  projectedRoiMax Decimal? @db.Decimal(5, 2)
 
   isActive Boolean @default(true)
 

@@ -32,7 +32,7 @@ export default function OrderPaymentSummaryCard({
             {formatEnumLabel(order.tier.level)}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            ROI {order.tier.roiPercent}%
+            {order.tier.returnLabel ?? `ROI ${order.tier.roiPercent}%`}
           </p>
         </div>
 

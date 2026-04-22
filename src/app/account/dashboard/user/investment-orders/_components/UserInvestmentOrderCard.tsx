@@ -116,10 +116,10 @@ export function UserInvestmentOrderCard({
 
             <div>
               <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                Target ROI
+                Target return
               </p>
               <p className="mt-2 text-sm font-medium text-white">
-                {order.tier.roiPercent.toFixed(2)}%
+                {order.tier.returnLabel ?? `${order.tier.roiPercent.toFixed(2)}%`}
               </p>
             </div>
 

@@ -108,7 +108,7 @@ export function InvestmentPlanDetailsCard({
                   </span>
                 </div>
                 <p className="mt-3 text-base font-semibold text-white">
-                  {tier.roiPercent.toFixed(2)}% ROI
+                  {tier.returnLabel ?? "ROI unavailable"}
                 </p>
                 <p className="mt-2 text-sm text-slate-300">
                   {tier.minAmountLabel} - {tier.maxAmountLabel}

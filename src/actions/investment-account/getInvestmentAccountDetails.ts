@@ -13,6 +13,10 @@ import {
   formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
+import {
+  formatInvestmentTierReturnLabel,
+  resolveInvestmentTierRoiPercentValue,
+} from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 
@@ -53,7 +57,9 @@ const investmentAccountDetailsSelect =
             level: true,
             minAmount: true,
             maxAmount: true,
-            roiPercent: true,
+            fixedRoiPercent: true,
+            projectedRoiMin: true,
+            projectedRoiMax: true,
             isActive: true,
           },
         },
@@ -113,6 +119,7 @@ export type InvestmentAccountDetailsViewModel = {
       minAmount: number;
       maxAmount: number;
       roiPercent: number;
+      returnLabel: string | null;
       isActive: boolean;
     }>;
   };
@@ -166,7 +173,19 @@ function mapInvestmentAccountDetails(
     levelLabel: formatEnumLabel(tier.level),
     minAmount: toNumber(tier.minAmount),
     maxAmount: toNumber(tier.maxAmount),
-    roiPercent: toNumber(tier.roiPercent),
+    roiPercent:
+      resolveInvestmentTierRoiPercentValue({
+        investmentModel: account.investmentPlan.investmentModel,
+        fixedRoiPercent: tier.fixedRoiPercent ? toNumber(tier.fixedRoiPercent) : null,
+        projectedRoiMin: tier.projectedRoiMin ? toNumber(tier.projectedRoiMin) : null,
+        projectedRoiMax: tier.projectedRoiMax ? toNumber(tier.projectedRoiMax) : null,
+        }) ?? 0,
+    returnLabel: formatInvestmentTierReturnLabel({
+      investmentModel: account.investmentPlan.investmentModel,
+      fixedRoiPercent: tier.fixedRoiPercent ? toNumber(tier.fixedRoiPercent) : null,
+      projectedRoiMin: tier.projectedRoiMin ? toNumber(tier.projectedRoiMin) : null,
+      projectedRoiMax: tier.projectedRoiMax ? toNumber(tier.projectedRoiMax) : null,
+    }),
     isActive: tier.isActive,
   }));
   const tierRangeLabel =

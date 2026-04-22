@@ -122,10 +122,10 @@ export function InvestmentReviewStep({
 
           <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-4">
             <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-              Tier ROI
+              Tier return
             </p>
             <p className="mt-2 text-sm font-medium text-white">
-              {tier.roiPercent.toFixed(2)}%
+              {tier.returnLabel ?? `${tier.roiPercent.toFixed(2)}% ROI`}
             </p>
           </div>
 

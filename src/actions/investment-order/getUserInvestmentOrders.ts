@@ -2,6 +2,10 @@
 
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import {
+  formatInvestmentTierReturnLabel,
+  resolveInvestmentTierRoiPercentValue,
+} from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
@@ -33,6 +37,7 @@ type UserInvestmentOrderListItem = {
     id: string;
     levelLabel: string;
     roiPercent: number;
+    returnLabel: string | null;
   };
   investment: {
     id: string;
@@ -132,6 +137,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
               name: true,
               slug: true,
               period: true,
+              investmentModel: true,
               investment: {
                 select: {
                   id: true,
@@ -150,7 +156,9 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
             select: {
               id: true,
               level: true,
-              roiPercent: true,
+              fixedRoiPercent: true,
+              projectedRoiMin: true,
+              projectedRoiMax: true,
             },
           },
         },
@@ -199,7 +207,31 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       tier: {
         id: order.investmentPlanTier.id,
         levelLabel: formatEnumLabel(order.investmentPlanTier.level),
-        roiPercent: safeToNumber(order.investmentPlanTier.roiPercent),
+        roiPercent:
+          resolveInvestmentTierRoiPercentValue({
+            investmentModel: order.investmentPlan.investmentModel,
+            fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+              ? safeToNumber(order.investmentPlanTier.fixedRoiPercent)
+              : null,
+            projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+              ? safeToNumber(order.investmentPlanTier.projectedRoiMin)
+              : null,
+            projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+              ? safeToNumber(order.investmentPlanTier.projectedRoiMax)
+              : null,
+            }) ?? 0,
+        returnLabel: formatInvestmentTierReturnLabel({
+          investmentModel: order.investmentPlan.investmentModel,
+          fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+            ? safeToNumber(order.investmentPlanTier.fixedRoiPercent)
+            : null,
+          projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+            ? safeToNumber(order.investmentPlanTier.projectedRoiMin)
+            : null,
+          projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+            ? safeToNumber(order.investmentPlanTier.projectedRoiMax)
+            : null,
+        }),
       },
       investment: {
         id: order.investmentPlan.investment.id,

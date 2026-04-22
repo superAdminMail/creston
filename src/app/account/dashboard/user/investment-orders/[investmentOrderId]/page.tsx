@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 
 type DecimalLike = {
@@ -52,7 +53,18 @@ export default async function Page({ params }: PageProps) {
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
 
-  const roiPercent = toNumber(order.investmentPlanTier.roiPercent);
+  const returnLabel = formatInvestmentTierReturnLabel({
+    investmentModel: order.investmentModel,
+    fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+      ? toNumber(order.investmentPlanTier.fixedRoiPercent)
+      : null,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+      ? toNumber(order.investmentPlanTier.projectedRoiMin)
+      : null,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+      ? toNumber(order.investmentPlanTier.projectedRoiMax)
+      : null,
+  });
   const paymentMethodLabel = order.paymentMethodType
     ? formatEnumLabel(order.paymentMethodType)
     : "Not set";
@@ -118,8 +130,10 @@ export default async function Page({ params }: PageProps) {
         </div>
 
         <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">ROI</p>
-          <p className="text-lg font-semibold">{roiPercent}%</p>
+          <p className="text-xs text-muted-foreground">Return</p>
+          <p className="text-lg font-semibold">
+            {returnLabel ?? "Not configured"}
+          </p>
         </div>
 
         <div className="rounded-xl border p-4">

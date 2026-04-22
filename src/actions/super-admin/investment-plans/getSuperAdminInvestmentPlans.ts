@@ -8,6 +8,7 @@ import {
   formatEnumLabel,
   formatTierLevel,
 } from "@/lib/formatters/formatters";
+import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 
 export type SuperAdminInvestmentPlanFilters = {
   investmentId?: string;
@@ -22,7 +23,10 @@ export type SuperAdminInvestmentPlanTierSummary = {
   levelLabel: string;
   minAmount: number;
   maxAmount: number;
-  roiPercent: number;
+  fixedRoiPercent: number | null;
+  projectedRoiMin: number | null;
+  projectedRoiMax: number | null;
+  returnLabel: string | null;
   isActive: boolean;
 };
 
@@ -88,6 +92,7 @@ export async function getSuperAdminInvestmentPlans(
         name: true,
         slug: true,
         period: true,
+        investmentModel: true,
         currency: true,
         isActive: true,
         updatedAt: true,
@@ -106,7 +111,9 @@ export async function getSuperAdminInvestmentPlans(
             level: true,
             minAmount: true,
             maxAmount: true,
-            roiPercent: true,
+            fixedRoiPercent: true,
+            projectedRoiMin: true,
+            projectedRoiMax: true,
             isActive: true,
           },
         },
@@ -144,7 +151,27 @@ export async function getSuperAdminInvestmentPlans(
         levelLabel: formatTierLevel(tier.level),
         minAmount: Number(tier.minAmount),
         maxAmount: Number(tier.maxAmount),
-        roiPercent: Number(tier.roiPercent),
+        fixedRoiPercent: tier.fixedRoiPercent
+          ? Number(tier.fixedRoiPercent)
+          : null,
+        projectedRoiMin: tier.projectedRoiMin
+          ? Number(tier.projectedRoiMin)
+          : null,
+        projectedRoiMax: tier.projectedRoiMax
+          ? Number(tier.projectedRoiMax)
+          : null,
+        returnLabel: formatInvestmentTierReturnLabel({
+          investmentModel: plan.investmentModel,
+          fixedRoiPercent: tier.fixedRoiPercent
+            ? Number(tier.fixedRoiPercent)
+            : null,
+          projectedRoiMin: tier.projectedRoiMin
+            ? Number(tier.projectedRoiMin)
+            : null,
+          projectedRoiMax: tier.projectedRoiMax
+            ? Number(tier.projectedRoiMax)
+            : null,
+        }),
         isActive: tier.isActive,
       }));
       const activeTiers = tiers.filter((tier) => tier.isActive);

@@ -7,6 +7,10 @@ import {
   formatEnumLabel,
   formatTierLevel,
 } from "@/lib/formatters/formatters";
+import {
+  formatInvestmentTierReturnLabel,
+  resolveInvestmentTierRoiPercentValue,
+} from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
 
 const publicInvestmentProductSelect = Prisma.validator<Prisma.InvestmentSelect>()({
@@ -52,7 +56,9 @@ const publicInvestmentProductSelect = Prisma.validator<Prisma.InvestmentSelect>(
           id: true,
           minAmount: true,
           maxAmount: true,
-          roiPercent: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
           level: true,
         },
       },
@@ -91,7 +97,9 @@ const publicInvestmentPlanSelect =
         level: true,
         minAmount: true,
         maxAmount: true,
-        roiPercent: true,
+        fixedRoiPercent: true,
+        projectedRoiMin: true,
+        projectedRoiMax: true,
       },
     },
     investment: {
@@ -175,6 +183,7 @@ export type PublicInvestmentPlanViewModel = {
     minAmount: number;
     maxAmount: number;
     roiPercent: number | null;
+    returnLabel: string | null;
   }>;
   updatedAt: Date;
   investment: {
@@ -303,7 +312,31 @@ function mapPublicInvestmentPlan(
     levelLabel: formatTierLevel(tier.level),
     minAmount: Number(tier.minAmount),
     maxAmount: Number(tier.maxAmount),
-    roiPercent: tier.roiPercent === null ? null : Number(tier.roiPercent),
+    roiPercent:
+      resolveInvestmentTierRoiPercentValue({
+        investmentModel: plan.investmentModel,
+        fixedRoiPercent: tier.fixedRoiPercent
+          ? Number(tier.fixedRoiPercent)
+          : null,
+        projectedRoiMin: tier.projectedRoiMin
+          ? Number(tier.projectedRoiMin)
+          : null,
+        projectedRoiMax: tier.projectedRoiMax
+          ? Number(tier.projectedRoiMax)
+          : null,
+      }) ?? null,
+    returnLabel: formatInvestmentTierReturnLabel({
+      investmentModel: plan.investmentModel,
+      fixedRoiPercent: tier.fixedRoiPercent
+        ? Number(tier.fixedRoiPercent)
+        : null,
+      projectedRoiMin: tier.projectedRoiMin
+        ? Number(tier.projectedRoiMin)
+        : null,
+      projectedRoiMax: tier.projectedRoiMax
+        ? Number(tier.projectedRoiMax)
+        : null,
+    }),
   }));
 
   const startingAmount =

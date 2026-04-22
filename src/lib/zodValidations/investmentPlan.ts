@@ -1,9 +1,15 @@
 import { z } from "zod";
 
-import { InvestmentPeriod, InvestmentTierLevel } from "@/generated/prisma";
+import {
+  InvestmentModel,
+  InvestmentPeriod,
+  InvestmentTierLevel,
+  PenaltyType,
+} from "@/generated/prisma";
 import { slugify } from "@/lib/slugs/slugify";
 
 const decimalPattern = /^\d+(?:\.\d{1,2})?$/;
+const integerPattern = /^\d+$/;
 const tierLevelOrder: Record<InvestmentTierLevel, number> = {
   CORE: 0,
   ADVANCED: 1,
@@ -24,11 +30,33 @@ const investmentPlanTierInputSchema = z.object({
     .trim()
     .min(1, "Maximum amount is required.")
     .refine((value) => decimalPattern.test(value), "Enter a valid amount."),
-  roiPercent: z
+  fixedRoiPercent: z
     .string()
     .trim()
-    .min(1, "ROI is required.")
-    .refine((value) => decimalPattern.test(value), "Enter a valid ROI."),
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => value === undefined || value === "" || decimalPattern.test(value),
+      "Enter a valid ROI.",
+    ),
+  projectedRoiMin: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => value === undefined || value === "" || decimalPattern.test(value),
+      "Enter a valid ROI.",
+    ),
+  projectedRoiMax: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (value) => value === undefined || value === "" || decimalPattern.test(value),
+      "Enter a valid ROI.",
+    ),
   isActive: z.boolean(),
 });
 
@@ -42,9 +70,72 @@ export const investmentPlanFormSchema = z
       message: "Select a valid investment period.",
     }),
 
-    investmentModel: z.enum(["FIXED", "MARKET"]),
+    investmentModel: z.nativeEnum(InvestmentModel, {
+      message: "Select a valid investment model.",
+    }),
+
+    penaltyFreePeriodDays: z
+      .string()
+      .trim()
+      .min(1, "Penalty-free period is required.")
+      .refine((value) => integerPattern.test(value), "Enter a valid number."),
+
+    penaltyType: z.union([z.nativeEnum(PenaltyType), z.literal("")]),
+
+    earlyWithdrawalPenaltyValue: z
+      .union([z.literal(""), z.string().trim()])
+      .refine(
+        (value) => value === "" || decimalPattern.test(value),
+        "Enter a valid amount.",
+      ),
+
+    maxPenaltyAmount: z
+      .union([z.literal(""), z.string().trim()])
+      .refine(
+        (value) => value === "" || decimalPattern.test(value),
+        "Enter a valid amount.",
+      ),
+
+    expectedReturnMin: z
+      .union([z.literal(""), z.string().trim()])
+      .refine(
+        (value) => value === "" || decimalPattern.test(value),
+        "Enter a valid return value.",
+      ),
+
+    expectedReturnMax: z
+      .union([z.literal(""), z.string().trim()])
+      .refine(
+        (value) => value === "" || decimalPattern.test(value),
+        "Enter a valid return value.",
+      ),
+
+    isLocked: z
+      .union([z.literal("true"), z.literal("false")])
+      .transform((value) => value === "true"),
+
+    allowWithdrawal: z
+      .union([z.literal("true"), z.literal("false")])
+      .transform((value) => value === "true"),
 
     currency: z.string().trim().min(1, "Currency is required."),
+
+    seoTitle: z.string().trim().optional().or(z.literal("")),
+    seoDescription: z.string().trim().optional().or(z.literal("")),
+    seoImageFileId: z.string().trim().optional().or(z.literal("")),
+
+    sortOrder: z
+      .string()
+      .trim()
+      .min(1, "Sort order is required.")
+      .refine((value) => integerPattern.test(value), "Enter a valid number."),
+
+    durationDays: z
+      .string()
+      .trim()
+      .min(1, "Duration is required.")
+      .refine((value) => integerPattern.test(value), "Enter a valid number."),
+
     tiers: z.array(investmentPlanTierInputSchema),
     isActive: z
       .union([z.literal("true"), z.literal("false")])
@@ -79,6 +170,43 @@ export const investmentPlanFormSchema = z
       }
 
       seenLevels.add(tier.level);
+
+      const fixedRoiPercent =
+        tier.fixedRoiPercent === undefined || tier.fixedRoiPercent === ""
+          ? null
+          : Number(tier.fixedRoiPercent);
+      const projectedRoiMin =
+        tier.projectedRoiMin === undefined || tier.projectedRoiMin === ""
+          ? null
+          : Number(tier.projectedRoiMin);
+      const projectedRoiMax =
+        tier.projectedRoiMax === undefined || tier.projectedRoiMax === ""
+          ? null
+          : Number(tier.projectedRoiMax);
+
+      if (values.investmentModel === InvestmentModel.FIXED) {
+        if (fixedRoiPercent === null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["tiers"],
+            message: `${slugify(tier.level).replaceAll("-", " ")} fixed ROI is required.`,
+          });
+        }
+      } else if (values.investmentModel === InvestmentModel.MARKET) {
+        if (projectedRoiMin === null || projectedRoiMax === null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["tiers"],
+            message: `${slugify(tier.level).replaceAll("-", " ")} projected ROI range is required.`,
+          });
+        } else if (projectedRoiMax < projectedRoiMin) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["tiers"],
+            message: `${slugify(tier.level).replaceAll("-", " ")} projected ROI maximum must be greater than or equal to its minimum.`,
+          });
+        }
+      }
 
       const minAmount = Number(tier.minAmount);
       const maxAmount = Number(tier.maxAmount);
@@ -147,14 +275,50 @@ export function normalizeInvestmentPlanFormValues(
     description: values.description?.trim() || null,
     period: values.period,
     investmentModel: values.investmentModel,
+    penaltyFreePeriodDays: Number(values.penaltyFreePeriodDays),
+    penaltyType: values.penaltyType || null,
+    earlyWithdrawalPenaltyValue:
+      values.earlyWithdrawalPenaltyValue === ""
+        ? null
+        : Number(values.earlyWithdrawalPenaltyValue),
+    maxPenaltyAmount:
+      values.maxPenaltyAmount === "" ? null : Number(values.maxPenaltyAmount),
+    expectedReturnMin:
+      values.expectedReturnMin === "" ? null : Number(values.expectedReturnMin),
+    expectedReturnMax:
+      values.expectedReturnMax === "" ? null : Number(values.expectedReturnMax),
+    isLocked: values.isLocked,
+    allowWithdrawal: values.allowWithdrawal,
     currency: values.currency.trim().toUpperCase(),
+    seoTitle: values.seoTitle?.trim() || null,
+    seoDescription: values.seoDescription?.trim() || null,
+    seoImageFileId: values.seoImageFileId?.trim() || null,
+    sortOrder: Number(values.sortOrder),
+    durationDays: Number(values.durationDays),
     tiers: values.tiers
       .filter((tier) => tier.isActive)
       .map((tier) => ({
         level: tier.level,
         minAmount: Number(tier.minAmount),
         maxAmount: Number(tier.maxAmount),
-        roiPercent: Number(tier.roiPercent),
+        fixedRoiPercent:
+          values.investmentModel === InvestmentModel.FIXED &&
+          tier.fixedRoiPercent !== undefined &&
+          tier.fixedRoiPercent !== ""
+            ? Number(tier.fixedRoiPercent)
+            : null,
+        projectedRoiMin:
+          values.investmentModel === InvestmentModel.MARKET &&
+          tier.projectedRoiMin !== undefined &&
+          tier.projectedRoiMin !== ""
+            ? Number(tier.projectedRoiMin)
+            : null,
+        projectedRoiMax:
+          values.investmentModel === InvestmentModel.MARKET &&
+          tier.projectedRoiMax !== undefined &&
+          tier.projectedRoiMax !== ""
+            ? Number(tier.projectedRoiMax)
+            : null,
         isActive: tier.isActive,
       }))
       .sort(

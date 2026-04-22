@@ -1,6 +1,7 @@
 "use server";
 
 import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
 
 import {
@@ -102,7 +103,9 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
       investmentPlanTier: {
         select: {
           level: true,
-          roiPercent: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
         },
       },
     },
@@ -137,10 +140,22 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     investmentName: order.investmentPlan.investment.name,
     investmentTypeLabel: formatEnumLabel(order.investmentPlan.investment.type),
     tierLabel: formatEnumLabel(order.investmentPlanTier.level),
-    roiPercentLabel:
-      order.investmentPlanTier.roiPercent !== null
-        ? `${order.investmentPlanTier.roiPercent.toNumber().toFixed(2)}%`
-        : "Not configured",
+    roiPercentLabel: (() => {
+      const roiPercent = resolveInvestmentTierRoiPercentValue({
+        investmentModel: order.investmentModel,
+        fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+          ? order.investmentPlanTier.fixedRoiPercent.toNumber()
+          : null,
+        projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+          ? order.investmentPlanTier.projectedRoiMin.toNumber()
+          : null,
+        projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+          ? order.investmentPlanTier.projectedRoiMax.toNumber()
+          : null,
+      });
+
+      return roiPercent !== null ? `${roiPercent.toFixed(2)}%` : "Not configured";
+    })(),
     expectedReturn: formatCurrency(order.expectedReturn?.toNumber() ?? 0, order.currency),
     accruedProfit: formatCurrency(order.accruedProfit.toNumber(), order.currency),
     startDate: formatDateLabel(order.startDate, "Not started"),

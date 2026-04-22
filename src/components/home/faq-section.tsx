@@ -1,7 +1,13 @@
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
 function buildFaqs(siteName: string) {
@@ -31,8 +37,7 @@ function buildFaqs(siteName: string) {
 export async function FaqSection() {
   const site = await getSiteSeoConfig();
   const faqs = buildFaqs(site.siteName);
-  const featured = faqs.find((f) => f.featured);
-  const others = faqs.filter((f) => !f.featured);
+  const defaultValue = faqs[0]?.question ? [faqs[0].question] : [];
 
   return (
     <SectionShell id="faq" className="py-20 sm:py-24">
@@ -46,51 +51,52 @@ export async function FaqSection() {
 
         {/* RIGHT */}
         <div className="space-y-6">
-          {/* FEATURED FAQ */}
-          {featured && (
-            <details
-              open
-              className="group rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(37,99,235,0.18),rgba(15,23,42,0.96))] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
-            >
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
-                <span className="text-lg font-semibold text-white">
-                  {featured.question}
-                </span>
-                <ChevronRight className="mt-1 h-5 w-5 text-blue-200 transition group-open:rotate-90" />
-              </summary>
+          <Accordion
+            type="multiple"
+            defaultValue={defaultValue}
+            className="grid gap-4"
+          >
+            {faqs.map((faq) => {
+              const isFeatured = faq.featured;
 
-              <p className="mt-4 text-sm leading-7 text-slate-300">
-                {featured.answer}
-              </p>
-            </details>
-          )}
-
-          {/* OTHER FAQS */}
-          <div className="grid gap-4">
-            {others.map((faq) => (
-              <details
-                key={faq.question}
-                className="group rounded-[1.7rem] border border-white/8 bg-white/[0.04] p-5 transition hover:border-white/12"
-              >
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
-                  <span className="text-base font-semibold text-white">
+              return (
+                <AccordionItem
+                  key={faq.question}
+                  value={faq.question}
+                  className={
+                    isFeatured
+                      ? "rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,rgba(37,99,235,0.18),rgba(15,23,42,0.96))] px-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
+                      : "rounded-[1.7rem] border border-white/8 bg-white/[0.04] px-5 transition hover:border-white/12"
+                  }
+                >
+                  <AccordionTrigger
+                    className={
+                      isFeatured
+                        ? "py-0 text-lg font-semibold text-white hover:no-underline"
+                        : "py-0 text-base font-semibold text-white hover:no-underline"
+                    }
+                  >
                     {faq.question}
-                  </span>
-                  <ChevronRight className="mt-1 h-5 w-5 text-blue-200 transition group-open:rotate-90" />
-                </summary>
-
-                <p className="mt-3 text-sm leading-7 text-slate-400">
-                  {faq.answer}
-                </p>
-              </details>
-            ))}
-          </div>
+                  </AccordionTrigger>
+                  <AccordionContent
+                    className={
+                      isFeatured
+                        ? "mt-4 text-sm leading-7 text-slate-300"
+                        : "mt-3 text-sm leading-7 text-slate-400"
+                    }
+                  >
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
 
           {/* SUPPORT PANEL */}
           <div className="rounded-[2rem] border border-white/8 bg-white/[0.03] p-6">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.22),rgba(59,130,246,0.06))]">
-                <ShieldCheck className="h-5 w-5 text-blue-200" />
+              <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(37,99,235,0.22),rgba(59,130,246,0.06))]">
+                <ShieldCheck className="h-5 w-5 text-blue-200 shrink-0" />
               </div>
 
               <div>

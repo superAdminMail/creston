@@ -2,6 +2,7 @@
 
 import {
   InvestmentCatalogStatus,
+  type InvestmentModel,
   type InvestmentTierLevel,
   type InvestmentPeriod,
   type InvestmentType,
@@ -11,6 +12,10 @@ import {
   formatEnumLabel,
   formatTierLevel,
 } from "@/lib/formatters/formatters";
+import {
+  formatInvestmentTierReturnLabel,
+  resolveInvestmentTierRoiPercentValue,
+} from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
@@ -27,6 +32,7 @@ export type InvestmentOrderCreationTierOption = {
   minAmount: number;
   maxAmount: number;
   roiPercent: number;
+  returnLabel: string | null;
   isActive: boolean;
 };
 
@@ -41,6 +47,7 @@ export type InvestmentOrderCreationPlanOption = {
   period: InvestmentPeriod;
   periodLabel: string;
   durationDays: number;
+  investmentModel: InvestmentModel;
 
   currency: string;
   isActive: boolean;
@@ -172,15 +179,16 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           },
         },
         orderBy: { name: "asc" },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          period: true,
-          durationDays: true,
-          currency: true,
-          isActive: true,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            period: true,
+            durationDays: true,
+            currency: true,
+            investmentModel: true,
+            isActive: true,
 
           tiers: {
             where: { isActive: true },
@@ -190,7 +198,9 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
               level: true,
               minAmount: true,
               maxAmount: true,
-              roiPercent: true,
+              fixedRoiPercent: true,
+              projectedRoiMin: true,
+              projectedRoiMax: true,
               isActive: true,
             },
           },
@@ -235,6 +245,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         period: plan.period,
         periodLabel: formatEnumLabel(plan.period),
         durationDays: plan.durationDays,
+        investmentModel: plan.investmentModel,
 
         currency: plan.currency,
         isActive: plan.isActive,
@@ -245,7 +256,31 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           levelLabel: formatTierLevel(tier.level),
           minAmount: toNumber(tier.minAmount),
           maxAmount: toNumber(tier.maxAmount),
-          roiPercent: toNumber(tier.roiPercent),
+          roiPercent:
+            resolveInvestmentTierRoiPercentValue({
+              investmentModel: plan.investmentModel,
+              fixedRoiPercent: tier.fixedRoiPercent
+                ? toNumber(tier.fixedRoiPercent)
+                : null,
+              projectedRoiMin: tier.projectedRoiMin
+                ? toNumber(tier.projectedRoiMin)
+                : null,
+              projectedRoiMax: tier.projectedRoiMax
+                ? toNumber(tier.projectedRoiMax)
+                : null,
+            }) ?? 0,
+          returnLabel: formatInvestmentTierReturnLabel({
+            investmentModel: plan.investmentModel,
+            fixedRoiPercent: tier.fixedRoiPercent
+              ? toNumber(tier.fixedRoiPercent)
+              : null,
+            projectedRoiMin: tier.projectedRoiMin
+              ? toNumber(tier.projectedRoiMin)
+              : null,
+            projectedRoiMax: tier.projectedRoiMax
+              ? toNumber(tier.projectedRoiMax)
+              : null,
+          }),
           isActive: tier.isActive,
         })),
 

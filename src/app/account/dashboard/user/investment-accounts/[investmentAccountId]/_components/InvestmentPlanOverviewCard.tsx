@@ -82,7 +82,7 @@ export function InvestmentPlanOverviewCard({
               {tier.levelLabel}
             </p>
             <p className="mt-3 text-base font-semibold text-white">
-              {tier.roiPercent.toFixed(2)}% ROI
+              {tier.returnLabel ?? `${tier.roiPercent.toFixed(2)}% ROI`}
             </p>
             <p className="mt-2 text-sm text-slate-300">
               {account.plan.currency} tier option

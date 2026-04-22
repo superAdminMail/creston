@@ -7,12 +7,28 @@ export type InvestmentPlanFieldName =
   | "slug"
   | "description"
   | "period"
+  | "investmentModel"
+  | "penaltyFreePeriodDays"
+  | "penaltyType"
+  | "earlyWithdrawalPenaltyValue"
+  | "maxPenaltyAmount"
+  | "expectedReturnMin"
+  | "expectedReturnMax"
+  | "isLocked"
+  | "allowWithdrawal"
   | "currency"
+  | "seoTitle"
+  | "seoDescription"
+  | "seoImageFileId"
+  | "sortOrder"
+  | "durationDays"
   | "tiers"
   | "isActive";
 
 export type InvestmentPlanFormActionState =
-  FormActionState<InvestmentPlanFieldName>;
+  FormActionState<InvestmentPlanFieldName> & {
+    redirectHref?: string;
+  };
 
 export const initialInvestmentPlanFormActionState: InvestmentPlanFormActionState =
   createInitialFormState();

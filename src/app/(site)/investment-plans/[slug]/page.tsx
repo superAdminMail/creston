@@ -186,9 +186,10 @@ export default async function InvestmentPlanDetailsPage(
                         {tier.levelLabel}
                       </p>
                       <p className="mt-1 text-sm text-slate-400">
-                        {tier.roiPercent !== null
-                          ? `${tier.roiPercent.toFixed(2)}% ROI target`
-                          : "ROI varies by allocation"}
+                        {tier.returnLabel ??
+                          (tier.roiPercent !== null
+                            ? `${tier.roiPercent.toFixed(2)}% ROI target`
+                            : "ROI varies by allocation")}
                       </p>
                     </div>
                     <p className="text-sm font-medium text-slate-200">

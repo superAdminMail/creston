@@ -23,6 +23,7 @@ export type InvestmentOrderPaymentDetails = {
     minAmount: number;
     maxAmount: number;
     roiPercent: number;
+    returnLabel: string | null;
   };
 
   bankMethod: {

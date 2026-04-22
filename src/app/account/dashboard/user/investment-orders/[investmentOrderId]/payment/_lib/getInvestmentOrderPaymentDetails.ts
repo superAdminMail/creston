@@ -3,6 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import {
+  formatInvestmentTierReturnLabel,
+  resolveInvestmentTierRoiPercentValue,
+} from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
@@ -45,6 +49,7 @@ export async function getInvestmentOrderPaymentDetails(
           id: true,
           name: true,
           period: true,
+          investmentModel: true,
         },
       },
       investmentPlanTier: {
@@ -53,7 +58,9 @@ export async function getInvestmentOrderPaymentDetails(
           level: true,
           minAmount: true,
           maxAmount: true,
-          roiPercent: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
         },
       },
       platformPaymentMethod: {
@@ -162,7 +169,31 @@ export async function getInvestmentOrderPaymentDetails(
       level: order.investmentPlanTier.level,
       minAmount: toNumber(order.investmentPlanTier.minAmount),
       maxAmount: toNumber(order.investmentPlanTier.maxAmount),
-      roiPercent: toNumber(order.investmentPlanTier.roiPercent),
+      roiPercent:
+        resolveInvestmentTierRoiPercentValue({
+          investmentModel: order.investmentPlan.investmentModel,
+          fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+            ? toNumber(order.investmentPlanTier.fixedRoiPercent)
+            : null,
+          projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+            ? toNumber(order.investmentPlanTier.projectedRoiMin)
+            : null,
+          projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+            ? toNumber(order.investmentPlanTier.projectedRoiMax)
+            : null,
+          }) ?? 0,
+      returnLabel: formatInvestmentTierReturnLabel({
+        investmentModel: order.investmentPlan.investmentModel,
+        fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
+          ? toNumber(order.investmentPlanTier.fixedRoiPercent)
+          : null,
+        projectedRoiMin: order.investmentPlanTier.projectedRoiMin
+          ? toNumber(order.investmentPlanTier.projectedRoiMin)
+          : null,
+        projectedRoiMax: order.investmentPlanTier.projectedRoiMax
+          ? toNumber(order.investmentPlanTier.projectedRoiMax)
+          : null,
+      }),
     },
     bankMethod: resolvedBankMethod
       ? {

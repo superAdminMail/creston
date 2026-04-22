@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { InvestmentCatalogStatus } from "@/generated/prisma";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
 
 import { CreateInvestmentAccountForm } from "../../_components/CreateInvestmentAccountForm";
@@ -48,7 +49,9 @@ export default async function Page() {
         where: { isActive: true },
         orderBy: { level: "asc" },
         select: {
-          roiPercent: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
           minAmount: true,
           maxAmount: true,
         },
@@ -68,7 +71,19 @@ export default async function Page() {
     investmentName: plan.investment.name,
     investmentTypeLabel: formatEnumLabel(plan.investment.type),
     tiers: plan.tiers.map((tier) => ({
-      roiPercent: tier.roiPercent?.toNumber() ?? 0,
+      roiPercent:
+        resolveInvestmentTierRoiPercentValue({
+          investmentModel: plan.investmentModel,
+          fixedRoiPercent: tier.fixedRoiPercent
+            ? tier.fixedRoiPercent.toNumber()
+            : null,
+          projectedRoiMin: tier.projectedRoiMin
+            ? tier.projectedRoiMin.toNumber()
+            : null,
+          projectedRoiMax: tier.projectedRoiMax
+            ? tier.projectedRoiMax.toNumber()
+            : null,
+        }) ?? 0,
       minAmount: tier.minAmount.toNumber(),
       maxAmount: tier.maxAmount.toNumber(),
     })),

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
+import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
   if (typeof value === "number") return value;
@@ -75,20 +76,23 @@ export async function getInvestmentPaymentReviewDetails(
           paymentReference: true,
           paidAt: true,
           confirmedAt: true,
-          investmentPlan: {
-            select: {
-              id: true,
-              name: true,
-              period: true,
-            },
-          },
-          investmentPlanTier: {
-            select: {
-              id: true,
-              level: true,
-              roiPercent: true,
-            },
-          },
+      investmentPlan: {
+        select: {
+          id: true,
+          name: true,
+          period: true,
+          investmentModel: true,
+        },
+      },
+      investmentPlanTier: {
+        select: {
+          id: true,
+          level: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
+        },
+      },
           investorProfile: {
             select: {
               user: {
@@ -179,9 +183,19 @@ export async function getInvestmentPaymentReviewDetails(
       tier: {
         id: payment.investmentOrder.investmentPlanTier.id,
         level: payment.investmentOrder.investmentPlanTier.level,
-        roiPercent: toNumber(
-          payment.investmentOrder.investmentPlanTier.roiPercent,
-        ),
+        roiPercent:
+          resolveInvestmentTierRoiPercentValue({
+            investmentModel: payment.investmentOrder.investmentPlan.investmentModel,
+            fixedRoiPercent: payment.investmentOrder.investmentPlanTier.fixedRoiPercent
+              ? toNumber(payment.investmentOrder.investmentPlanTier.fixedRoiPercent)
+              : null,
+            projectedRoiMin: payment.investmentOrder.investmentPlanTier.projectedRoiMin
+              ? toNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMin)
+              : null,
+            projectedRoiMax: payment.investmentOrder.investmentPlanTier.projectedRoiMax
+              ? toNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMax)
+              : null,
+          }) ?? 0,
       },
       investor: {
         id: payment.investmentOrder.investorProfile.user.id,

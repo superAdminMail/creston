@@ -84,11 +84,11 @@ export function InvestmentTierStep({
               <div className="mt-5 grid gap-4">
                 <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    ROI
+                    Return
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
                     <Percent className="h-4 w-4 text-blue-300" />
-                    {tier.roiPercent.toFixed(2)}%
+                    {tier.returnLabel ?? `${tier.roiPercent.toFixed(2)}% ROI`}
                   </p>
                 </div>
 

@@ -73,7 +73,7 @@ export async function confirmInvestmentOrder(
   const startDate = now;
   const maturityDate = addDays(startDate, order.investmentPlan.durationDays);
   const amount = order.amount.toNumber();
-  const roiPercent = order.investmentPlanTier.roiPercent;
+  const roiPercent = order.investmentPlanTier.fixedRoiPercent;
 
   if (order.investmentModel === "FIXED" && !roiPercent) {
     return errorState(

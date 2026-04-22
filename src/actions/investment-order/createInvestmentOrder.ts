@@ -244,33 +244,33 @@ export async function createInvestmentOrder(
         name: true,
         currency: true,
         isActive: true,
-
-      investmentModel: true,
-
-      investment: {
-        select: {
-          id: true,
-          name: true,
-          isActive: true,
-          status: true,
-          symbol: true,
+        investmentModel: true,
+        investment: {
+          select: {
+            id: true,
+            name: true,
+            isActive: true,
+            status: true,
+            symbol: true,
+          },
+        },
+        tiers: {
+          where: {
+            id: parsedValues.data.investmentPlanTierId,
+          },
+          select: {
+            id: true,
+            level: true,
+            minAmount: true,
+            maxAmount: true,
+            fixedRoiPercent: true,
+            projectedRoiMin: true,
+            projectedRoiMax: true,
+            isActive: true,
+          },
         },
       },
-      tiers: {
-        where: {
-          id: parsedValues.data.investmentPlanTierId,
-        },
-        select: {
-          id: true,
-          level: true,
-          minAmount: true,
-          maxAmount: true,
-          roiPercent: true,
-          isActive: true,
-        },
-      },
-    },
-  });
+    });
 
   if (!selectedPlan?.isActive) {
     return createErrorState(

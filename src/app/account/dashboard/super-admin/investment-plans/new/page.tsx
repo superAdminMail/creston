@@ -1,5 +1,6 @@
 import { createInvestmentPlan } from "@/actions/super-admin/investment-plans/createInvestmentPlan";
 import { getSuperAdminInvestmentPlans } from "@/actions/super-admin/investment-plans/getSuperAdminInvestmentPlans";
+import { InvestmentModel } from "@/generated/prisma";
 import { InvestmentPlanForm } from "../_components/InvestmentPlanForm";
 
 export default async function NewInvestmentPlanPage() {
@@ -18,13 +19,29 @@ export default async function NewInvestmentPlanPage() {
         slug: "",
         description: "",
         period: data.filterOptions.periods[0]?.value ?? "LONG_TERM",
+        investmentModel: InvestmentModel.FIXED,
+        penaltyFreePeriodDays: "0",
+        penaltyType: "",
+        earlyWithdrawalPenaltyValue: "",
+        maxPenaltyAmount: "",
+        expectedReturnMin: "",
+        expectedReturnMax: "",
+        isLocked: false,
+        allowWithdrawal: true,
         currency: "USD",
+        seoTitle: "",
+        seoDescription: "",
+        seoImageFileId: "",
+        sortOrder: "0",
+        durationDays: "7",
         isActive: true,
         tiers: defaultLevels.map((level) => ({
           level,
           minAmount: "",
           maxAmount: "",
-          roiPercent: "",
+          fixedRoiPercent: "",
+          projectedRoiMin: "",
+          projectedRoiMax: "",
           isActive: true,
         })),
       }}

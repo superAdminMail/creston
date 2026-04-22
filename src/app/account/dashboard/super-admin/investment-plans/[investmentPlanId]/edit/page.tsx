@@ -22,7 +22,7 @@ export default async function EditInvestmentPlanPage({ params }: PageProps) {
   return (
     <InvestmentPlanForm
       title="Edit investment plan"
-      description="Update this plan's parent investment, category, term, and investable range while preserving its live catalog role."
+      description="Update the plan's investment model, term controls, return settings, and SEO metadata while preserving its live catalog role."
       submitLabel="Save changes"
       cancelHref={`/account/dashboard/super-admin/investment-plans/${plan.id}`}
       defaultValues={plan.formDefaults}
