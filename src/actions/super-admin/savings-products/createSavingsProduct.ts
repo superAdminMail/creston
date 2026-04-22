@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
+import { logAuditEvent } from "@/lib/audit/logAuditEvent";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { savingsProductSchema } from "@/lib/zodValidations/savingsProduct.schema";
@@ -11,24 +14,16 @@ import {
 } from "@/lib/forms/actionState";
 
 import { SavingsProductFormState } from "./savingsProductForm.state";
+import { getSavingsProductFormData } from "./savingsProductFormValues";
 
 export async function createSavingsProduct(
   _prevState: SavingsProductFormState,
   formData: FormData,
 ): Promise<SavingsProductFormState> {
   try {
-    await requireSuperAdminAccess();
+    const { userId } = await requireSuperAdminAccess();
 
-    const raw = Object.fromEntries(formData.entries());
-
-    const parsed = savingsProductSchema.safeParse({
-      ...raw,
-      interestEnabled: raw.interestEnabled === "true",
-      isLockable: raw.isLockable === "true",
-      allowsWithdrawals: raw.allowsWithdrawals === "true",
-      allowsDeposits: raw.allowsDeposits === "true",
-      isActive: raw.isActive === "true",
-    });
+    const parsed = savingsProductSchema.safeParse(getSavingsProductFormData(formData));
 
     if (!parsed.success) {
       return createValidationErrorState(
@@ -39,7 +34,7 @@ export async function createSavingsProduct(
 
     const data = parsed.data;
 
-    await prisma.savingsProduct.create({
+    const product = await prisma.savingsProduct.create({
       data: {
         name: data.name,
         description: data.description,
@@ -62,9 +57,44 @@ export async function createSavingsProduct(
         isActive: data.isActive,
         sortOrder: Number(data.sortOrder),
       },
+      select: {
+        id: true,
+      },
     });
 
-    return createSuccessFormState("Savings product created successfully.");
+    await logAuditEvent({
+      actorUserId: userId,
+      action: "savings-product.created",
+      entityType: "SavingsProduct",
+      entityId: product.id,
+      description: `Created savings product ${data.name}.`,
+      metadata: {
+        name: data.name,
+        description: data.description,
+        interestEnabled: data.interestEnabled,
+        interestRatePercent: data.interestRatePercent,
+        interestPayoutFrequency: data.interestPayoutFrequency,
+        isLockable: data.isLockable,
+        minimumLockDays: data.minimumLockDays,
+        maximumLockDays: data.maximumLockDays,
+        allowsWithdrawals: data.allowsWithdrawals,
+        allowsDeposits: data.allowsDeposits,
+        minBalance: data.minBalance,
+        maxBalance: data.maxBalance,
+        currency: data.currency,
+        isActive: data.isActive,
+        sortOrder: data.sortOrder,
+      },
+    });
+
+    revalidatePath("/account/dashboard/super-admin/savings-products");
+    revalidatePath(`/account/dashboard/super-admin/savings-products/${product.id}`);
+
+    return {
+      status: "success",
+      message: "Savings product created successfully.",
+      redirectHref: `/account/dashboard/super-admin/savings-products/${product.id}`,
+    };
   } catch (error) {
     console.error(error);
 
