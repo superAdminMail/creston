@@ -34,7 +34,7 @@ export default async function SuperAdminInvestmentsPage({
       {toastMessage ? (
         <SuperAdminRedirectToast message={toastMessage} kind={toastKind} />
       ) : null}
-      <InvestmentsHeader />
+      {await InvestmentsHeader()}
       <InvestmentsTable data={data} />
     </div>
   );

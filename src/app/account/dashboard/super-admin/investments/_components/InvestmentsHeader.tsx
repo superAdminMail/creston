@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Plus } from "lucide-react";
 
-export function InvestmentsHeader() {
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+
+export async function InvestmentsHeader() {
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -16,7 +21,7 @@ export function InvestmentsHeader() {
           Investment Products
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-          Manage Havenstone investment products, control catalog visibility, and
+          Manage {siteName} investment products, control catalog visibility, and
           keep platform offerings structured for the broader investment catalog.
         </p>
       </div>

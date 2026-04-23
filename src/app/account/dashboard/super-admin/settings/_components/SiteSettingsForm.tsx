@@ -149,6 +149,19 @@ export function SiteSettingsForm({
   } | null>(null);
 
   const [keywords, setKeywords] = useState<string[]>(defaultValues.keywords);
+  const siteTitlePlaceholder = useMemo(
+    () =>
+      `${siteName.trim() || "Company"} | Smarter investing`,
+    [siteName],
+  );
+  const twitterHandlePlaceholder = useMemo(() => {
+    const normalized = siteName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+
+    return normalized ? `@${normalized}` : "@company";
+  }, [siteName]);
 
   const serializedKeywords = useMemo(
     () => JSON.stringify(keywords),
@@ -390,7 +403,7 @@ export function SiteSettingsForm({
                     name="seoTitle"
                     value={seoTitle}
                     onChange={(e) => setSeoTitle(e.target.value)}
-                    placeholder="Havenstone | Smarter investing"
+                    placeholder={siteTitlePlaceholder}
                   />
                 </Field>
 
@@ -614,7 +627,7 @@ export function SiteSettingsForm({
                   name="defaultTwitterHandle"
                   value={defaultTwitterHandle}
                   onChange={(e) => setDefaultTwitterHandle(e.target.value)}
-                  placeholder="@havenstone"
+                  placeholder={twitterHandlePlaceholder}
                 />
               </Field>
               <Field className="mt-4">

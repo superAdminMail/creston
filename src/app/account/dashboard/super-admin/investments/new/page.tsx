@@ -1,14 +1,17 @@
 import { createInvestment } from "@/actions/super-admin/investments/createInvestment";
 import { getSuperAdminInvestments } from "@/actions/super-admin/investments/getSuperAdminInvestments";
 import { InvestmentForm } from "../_components/InvestmentForm";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function NewInvestmentPage() {
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
   const data = await getSuperAdminInvestments();
 
   return (
     <InvestmentForm
       title="New investment product"
-      description="Add a new Havenstone investment product with a clean catalog identity, activation state, and icon mapping."
+      description={`Add a new ${siteName} investment product with a clean catalog identity, activation state, and icon mapping.`}
       submitLabel="Create"
       cancelHref="/account/dashboard/super-admin/investments"
       defaultValues={{

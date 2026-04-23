@@ -1,14 +1,16 @@
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { DashboardUserDirectory } from "../../_components/DashboardUserDirectory";
 import { getDashboardUserDirectoryByHref } from "@/lib/services/dashboard/dashboardUserDirectoryService";
 
 export default async function SuperAdminUsersPage() {
+  const site = await getSiteConfigurationCached();
   const data = await getDashboardUserDirectoryByHref(
     "/account/dashboard/super-admin/users",
   );
 
   return (
     <DashboardUserDirectory
-      badgeLabel="Havenstone Super Admin"
+      badgeLabel={`${site?.siteName?.trim() || "Company"} Super Admin`}
       title="User Management"
       description="Review user accounts, monitor verification progress, and inspect savings and investment activity from a live administrative control center."
       cardTitle="Users"
