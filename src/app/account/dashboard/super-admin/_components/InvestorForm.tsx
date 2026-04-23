@@ -46,8 +46,20 @@ type InvestorFormProps = {
   ) => Promise<UpdateSuperAdminInvestorState>;
 };
 
-const initialInvestorFormState =
-  createInitialFormState<"name" | "username" | "phoneNumber" | "dateOfBirth" | "country" | "state" | "city" | "addressLine1" | "addressLine2" | "kycStatus" | "isVerified">();
+const initialInvestorFormState: UpdateSuperAdminInvestorState =
+  createInitialFormState<
+    | "name"
+    | "username"
+    | "phoneNumber"
+    | "dateOfBirth"
+    | "country"
+    | "state"
+    | "city"
+    | "addressLine1"
+    | "addressLine2"
+    | "kycStatus"
+    | "isVerified"
+  >() as UpdateSuperAdminInvestorState;
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
