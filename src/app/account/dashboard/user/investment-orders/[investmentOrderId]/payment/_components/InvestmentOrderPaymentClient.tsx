@@ -16,60 +16,11 @@ import {
   type CheckoutFundingMethodType,
   type CheckoutPaymentMode,
 } from "@/lib/types/payments/checkout.types";
+import type { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
 import BankTransferInstructionsCard from "./BankTransferInstructionsCard";
 import OrderPaymentSelector from "./OrderPaymentSelector";
 import PaymentProofModal from "./PaymentProofModal";
-
-export type InvestmentOrderPaymentDetails = {
-  id: string;
-  amount: number;
-  amountPaid: number;
-  remainingAmount: number;
-  currency: string;
-  status: string;
-  plan: {
-    name: string;
-    period: string;
-  };
-  tier: {
-    level: string;
-  };
-  bankMethod: {
-    id: string;
-    label: string;
-    type: string;
-    providerName: string | null;
-    bankName: string | null;
-    bankCode: string | null;
-    accountName: string | null;
-    reference: string | null;
-    bankAddress: string | null;
-    accountNumber: string | null;
-    iban: string | null;
-    swiftCode: string | null;
-    routingNumber: string | null;
-    branchName: string | null;
-    country: string | null;
-    instructions: string | null;
-    notes: string | null;
-    isPrivate: boolean;
-    isDefault: boolean;
-    sortOrder: number;
-    verificationStatus: string;
-    cryptoAsset: string | null;
-    cryptoNetwork: string | null;
-    walletAddress: string | null;
-    walletTag: string | null;
-    currency: string;
-  } | null;
-  hasBankMethod: boolean;
-  hasExistingBankInfoRequest: boolean;
-  paymentMethodType: string | null;
-  amountLabel: string;
-  amountPaidLabel: string;
-  remainingAmountLabel: string;
-};
 
 function normalizeFundingMethodType(
   value: string | null | undefined,

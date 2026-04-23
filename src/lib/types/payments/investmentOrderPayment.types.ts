@@ -29,14 +29,29 @@ export type InvestmentOrderPaymentDetails = {
   bankMethod: {
     id: string;
     label: string;
+    type: string;
+    providerName: string | null;
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
     reference: string | null;
     bankAddress: string | null;
     accountNumber: string | null;
+    iban: string | null;
+    swiftCode: string | null;
+    routingNumber: string | null;
+    branchName: string | null;
+    country: string | null;
     instructions: string | null;
     notes: string | null;
+    isPrivate: boolean;
+    isDefault: boolean;
+    sortOrder: number;
+    verificationStatus: string;
+    cryptoAsset: string | null;
+    cryptoNetwork: string | null;
+    walletAddress: string | null;
+    walletTag: string | null;
     currency: string;
   } | null;
 
