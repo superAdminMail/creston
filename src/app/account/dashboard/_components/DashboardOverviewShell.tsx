@@ -27,6 +27,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { CompactCurrency } from "@/components/helper/CompactCurrency";
 import type {
   DashboardOverviewActivity,
   DashboardOverviewCta,
@@ -315,7 +316,7 @@ export function DashboardOverviewShell({
                     {highlight.label}
                   </p>
                   <p className="mt-2 break-words text-xl font-semibold leading-tight sm:text-2xl">
-                    {highlight.value}
+                    <CompactCurrency amount={highlight.value} />
                   </p>
                 </div>
               ))}

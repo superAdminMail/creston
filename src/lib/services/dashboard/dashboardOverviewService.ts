@@ -41,7 +41,7 @@ export type DashboardOverviewLinkCard = {
 
 export type DashboardOverviewHighlight = {
   label: string;
-  value: string;
+  value: number;
 };
 
 export type DashboardOverviewSpotlight = {
@@ -524,11 +524,11 @@ export async function getDashboardOverviewByHref(
       heroHighlights: [
         {
           label: "Total Deposits",
-          value: formatCurrency(totalDeposits),
+          value: totalDeposits,
         },
         {
           label: "Total Invested",
-          value: formatCurrency(fundedInvestments),
+          value: fundedInvestments,
         },
       ],
       metrics: [
@@ -774,11 +774,11 @@ export async function getDashboardOverviewByHref(
     heroHighlights: [
       {
         label: "Pending KYC",
-        value: formatCount(pendingKyc),
+        value: pendingKyc,
       },
       {
         label: "Pending Withdrawals",
-        value: formatCount(pendingWithdrawals),
+        value: pendingWithdrawals,
       },
     ],
     metrics: [
