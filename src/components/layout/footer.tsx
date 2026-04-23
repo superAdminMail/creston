@@ -1,5 +1,6 @@
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { formatSitePhoneNumber } from "@/lib/formatters/sitePhone";
 import { FooterClient } from "./footer.client";
 
 export async function Footer() {
@@ -44,9 +45,10 @@ export async function Footer() {
   ];
 
   const supportEmail = config?.supportEmail?.trim() || "support@example.com";
-  const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
+  const supportPhone =
+    formatSitePhoneNumber(config?.supportPhone) || "+1 (000) 000-0000";
   const supportPhoneSecondary =
-    config?.supportPhoneSecondary?.trim() || "";
+    formatSitePhoneNumber(config?.supportPhoneSecondary) || "";
   const siteAddress =
     config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
   const siteCRN = config?.siteCRN?.trim() || "";

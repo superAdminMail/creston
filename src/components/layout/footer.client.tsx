@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Building2, Mail, MapPin, Phone, PhoneIcon } from "lucide-react";
+import { formatSitePhoneNumber } from "@/lib/formatters/sitePhone";
+import { getTelHrefPhoneNumber } from "@/lib/formatters/sitePhone";
 
 type FooterGroup = {
   title: string;
@@ -71,12 +73,17 @@ export function FooterClient({
   const safeSiteCRN = siteCRN ?? "";
   const safeSiteFRN = siteFRN ?? "";
   const phoneEntries = [
-    safeSupportPhone ? { label: "US", value: safeSupportPhone } : null,
+    safeSupportPhone
+      ? { label: "US", value: formatSitePhoneNumber(safeSupportPhone) }
+      : null,
     safeSupportPhoneSecondary
-      ? { label: "local", value: safeSupportPhoneSecondary }
+      ? {
+          label: "local",
+          value: formatSitePhoneNumber(safeSupportPhoneSecondary),
+        }
       : null,
   ].filter((entry): entry is { label: string; value: string } =>
-    Boolean(entry),
+    Boolean(entry?.value),
   );
 
   return (
@@ -124,20 +131,24 @@ export function FooterClient({
                   ) : null}
                 </div>
 
-                <div>
-                  <p className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 text-blue-300" />
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="shrink-0">
+                      <MapPin className="mt-0.5 h-4 w-4 text-blue-300 shrink-0" />
+                    </span>
                     <span>{safeSiteAddress}</span>
-                  </p>
+                  </div>
 
-                  <p className="flex items-start gap-2 leading-6">
-                    <Building2 className="h-4 w-4 text-blue-300" />
+                  <div className="flex items-start gap-2 leading-6">
+                    <span className="shrink-0">
+                      <Building2 className="h-4 w-4 text-blue-300 shrink-0" />
+                    </span>
                     <span>
                       {siteName} is authorised and regulated by the FCA (FRN:{" "}
                       {safeSiteFRN}). Registered in England & Wales (Company No.{" "}
                       {safeSiteCRN})
                     </span>
-                  </p>
+                  </div>
                 </div>
               </div>
 
@@ -151,7 +162,7 @@ export function FooterClient({
 
                 {phoneEntries.length > 0 ? (
                   <Link
-                    href={`tel:${phoneEntries[0].value.replace(/\s+/g, "")}`}
+                    href={getTelHrefPhoneNumber(phoneEntries[0].value)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] transition hover:bg-white/[0.08]"
                   >
                     <PhoneIcon className="h-4 w-4 text-white" />

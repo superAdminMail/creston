@@ -1,5 +1,6 @@
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
+import { formatSitePhoneNumber } from "@/lib/formatters/sitePhone";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
@@ -27,8 +28,10 @@ export default async function ContactPage() {
   ]);
 
   const supportEmail = config?.supportEmail?.trim() || "support@example.com";
-  const supportPhone = config?.supportPhone?.trim() || "+1 (000) 000-0000";
-  const supportPhoneSecondary = config?.supportPhoneSecondary?.trim() || "";
+  const supportPhone =
+    formatSitePhoneNumber(config?.supportPhone) || "+1 (000) 000-0000";
+  const supportPhoneSecondary =
+    formatSitePhoneNumber(config?.supportPhoneSecondary) || "";
   const officeLine = config?.siteAddress?.trim() || "123 Main St, Anytown, USA";
   const siteCRN = config?.siteCRN?.trim() || "";
   const availability = "24/7";
@@ -76,7 +79,7 @@ export default async function ContactPage() {
                 <p className="mt-1 text-white">{supportPhone}</p>
                 {supportPhoneSecondary ? (
                   <p className="mt-1 text-sm text-slate-300">
-                    Secondary: {supportPhoneSecondary}
+                    {supportPhoneSecondary}
                   </p>
                 ) : null}
               </div>

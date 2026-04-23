@@ -5,6 +5,7 @@ import { sendEmail } from "@/lib/resend/mail";
 import PasswordResetEmailTemplate from "./password-reset/PasswordResetEmailTemplate";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
+import { sendPostVerificationWelcome } from "@/lib/welcome/sendPostVerificationWelcome";
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) return null;
@@ -103,6 +104,14 @@ export const auth = betterAuth({
           emailVerifiedAt: new Date(),
           accountStatus: "ACTIVE",
         },
+      });
+    },
+
+    afterEmailVerification: async (user) => {
+      await sendPostVerificationWelcome({
+        id: user.id,
+        name: user.name,
+        email: user.email,
       });
     },
 
