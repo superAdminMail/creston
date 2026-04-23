@@ -402,6 +402,7 @@ model InvestmentOrder {
   investmentPlanTierId String
 
   investmentModel InvestmentModel
+  runtimeStatus   RuntimeStatus   @default(NOT_STARTED)
 
   startDate    DateTime?
   maturityDate DateTime?
@@ -541,9 +542,10 @@ model SavingsAccount {
   name        String
   description String?
 
-  balance      Decimal  @default(0) @db.Decimal(18, 2)
-  targetAmount Decimal? @db.Decimal(18, 2)
-  currency     String   @default("USD")
+  balance       Decimal       @default(0) @db.Decimal(18, 2)
+  targetAmount  Decimal?      @db.Decimal(18, 2)
+  currency      String        @default("USD")
+  runtimeStatus RuntimeStatus @default(NOT_STARTED)
 
   isLocked    Boolean   @default(false)
   lockedUntil DateTime?
@@ -1472,6 +1474,15 @@ enum AccountStatus {
   PENDING
   ACTIVE
   FROZEN
+  CLOSED
+}
+
+enum RuntimeStatus {
+  NOT_STARTED
+  ONGOING
+  ACTIVE
+  PAUSED
+  COMPLETED
   CLOSED
 }
 

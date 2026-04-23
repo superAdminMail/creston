@@ -6,6 +6,7 @@ import {
   InvestmentOrderStatus,
   Prisma,
   SavingsFundingIntentStatus,
+  SavingsStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
 
@@ -393,6 +394,7 @@ async function applySavingsCryptoFunding({
     where: { id: fundingIntent.savingsAccountId },
     data: {
       balance: newBalance,
+      status: SavingsStatus.ACTIVE,
       metadata: toNullableJsonValue({
         ...existingAccountMetadata,
         lastCryptoFundingIntentId: fundingIntent.id,

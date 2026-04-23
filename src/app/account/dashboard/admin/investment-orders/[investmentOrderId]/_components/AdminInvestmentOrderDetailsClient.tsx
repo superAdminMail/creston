@@ -94,6 +94,7 @@ export function AdminInvestmentOrderDetailsClient({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <InfoCard label="Status" value={order.statusLabel} />
+        <InfoCard label="Runtime status" value={order.runtimeStatusLabel} />
         <InfoCard label="Amount" value={order.amount} />
         <InfoCard label="Investment model" value={order.modelLabel} />
         <InfoCard label="KYC status" value={order.investorKycStatus} />

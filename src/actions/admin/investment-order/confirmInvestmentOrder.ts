@@ -90,6 +90,7 @@ export async function confirmInvestmentOrder(
     where: { id: order.id },
     data: {
       status: InvestmentOrderStatus.CONFIRMED,
+      runtimeStatus: "ONGOING",
       startDate,
       maturityDate,
       expectedReturn: new Prisma.Decimal(expectedProfit.toFixed(2)),

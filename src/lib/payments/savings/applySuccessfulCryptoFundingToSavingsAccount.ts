@@ -2,6 +2,7 @@ import {
   Prisma,
   PrismaClient,
   SavingsFundingIntentStatus,
+  SavingsStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
 
@@ -116,6 +117,7 @@ export async function applySuccessfulCryptoFundingToSavingsAccount(
     where: { id: fundingIntent.savingsAccountId },
     data: {
       balance: newBalance,
+      status: SavingsStatus.ACTIVE,
     },
   });
 

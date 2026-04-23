@@ -3,6 +3,7 @@
 import {
   Prisma,
   SavingsFundingIntentStatus,
+  SavingsStatus,
   SavingsTransactionPaymentStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
@@ -201,6 +202,11 @@ export async function approveSavingsTransactionPaymentReview({
       where: { id: payment.savingsFundingIntent.savingsAccount.id },
       data: {
         balance: newBalance,
+        ...(approvalMode === "FULL"
+          ? {
+              status: SavingsStatus.ACTIVE,
+            }
+          : {}),
       },
     });
 

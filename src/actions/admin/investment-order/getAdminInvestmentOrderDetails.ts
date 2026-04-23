@@ -20,6 +20,8 @@ export type AdminInvestmentOrderDetails = {
   currency: string;
   statusLabel: string;
   status: string;
+  runtimeStatus: string;
+  runtimeStatusLabel: string;
   paymentReference: string;
   paymentDate: string;
   confirmedDate: string;
@@ -58,6 +60,7 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
       amount: true,
       currency: true,
       status: true,
+      runtimeStatus: true,
       paymentReference: true,
       paidAt: true,
       confirmedAt: true,
@@ -125,6 +128,8 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     currency: order.currency,
     status: order.status,
     statusLabel: formatStatusLabel(order.status),
+    runtimeStatus: order.runtimeStatus,
+    runtimeStatusLabel: formatEnumLabel(order.runtimeStatus),
     paymentReference:
       order.paymentReference ?? `ORD-${order.id.slice(0, 8).toUpperCase()}`,
     paymentDate: formatDateLabel(order.paidAt, "Not paid yet"),

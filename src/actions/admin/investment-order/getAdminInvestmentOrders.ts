@@ -19,6 +19,8 @@ export type AdminInvestmentOrderListItem = {
   currency: string;
   status: InvestmentOrderStatus;
   statusLabel: string;
+  runtimeStatus: string;
+  runtimeStatusLabel: string;
   modelLabel: string;
   createdAtLabel: string;
   confirmedAtLabel: string;
@@ -54,6 +56,7 @@ export async function getAdminInvestmentOrders(): Promise<AdminInvestmentOrdersD
       amount: true,
       currency: true,
       status: true,
+      runtimeStatus: true,
       investmentModel: true,
       createdAt: true,
       confirmedAt: true,
@@ -101,6 +104,8 @@ export async function getAdminInvestmentOrders(): Promise<AdminInvestmentOrdersD
     currency: order.currency,
     status: order.status,
     statusLabel: formatStatusLabel(order.status),
+    runtimeStatus: order.runtimeStatus,
+    runtimeStatusLabel: formatEnumLabel(order.runtimeStatus),
     modelLabel: formatEnumLabel(order.investmentModel),
     createdAtLabel: formatDateLabel(order.createdAt),
     confirmedAtLabel: formatDateLabel(order.confirmedAt, "Awaiting confirmation"),

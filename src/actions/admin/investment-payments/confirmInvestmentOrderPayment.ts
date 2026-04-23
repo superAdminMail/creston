@@ -55,6 +55,7 @@ export async function confirmInvestmentOrderPayment(orderId: string) {
       where: { id: order.id },
       data: {
         status: "CONFIRMED",
+        runtimeStatus: "ONGOING",
         confirmedAt,
         startDate,
         maturityDate,

@@ -152,6 +152,7 @@ export default function SavingsFundingClient({
 
   const bankMethod = details.bankMethod;
   const latestIntent = details.latestIntent;
+  const latestBankPayment = latestIntent?.latestPayment ?? null;
   const latestPaidAmount = latestIntent?.creditedAmount ?? 0;
   const hasExistingIntent = latestIntent !== null;
   const isCompletingPayment = latestIntent?.status === "PARTIALLY_PAID";
@@ -174,6 +175,15 @@ export default function SavingsFundingClient({
   const bankInfoRequested =
     details.hasExistingBankInfoRequest || bankInfoRequestedLocal;
   const canOpenProof = bankSelected && effectivePaymentMode !== null;
+  const bankProofActionLabel = isSavingsFullySettled
+    ? "Payment complete"
+    : latestBankPayment?.status === "PENDING_REVIEW" || hasPendingSubmission
+      ? "Payment under review"
+      : isCompletingPayment
+        ? "Complete Payment"
+        : "I've made this payment";
+  const bankProofActionDisabled =
+    isSavingsFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
 
   const selectedAmount = useMemo(() => {
     const chargeBasis =
@@ -296,7 +306,7 @@ export default function SavingsFundingClient({
         />
       ) : null}
 
-      {selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+      {!isSavingsFullySettled && selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -328,6 +338,7 @@ export default function SavingsFundingClient({
       ) : null}
 
       {selectedFundingMethod &&
+      !isSavingsFullySettled &&
       effectivePaymentMode &&
       (cryptoSelected || bankMethod) ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
@@ -571,14 +582,10 @@ export default function SavingsFundingClient({
                       <Button
                         type="button"
                         onClick={() => setProofOpen(true)}
-                        disabled={!canOpenProof || hasPendingSubmission}
+                        disabled={!canOpenProof || bankProofActionDisabled}
                         className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                       >
-                        {hasPendingSubmission
-                          ? "Submission pending"
-                          : isCompletingPayment
-                            ? "Complete Payment"
-                            : "I've paid"}
+                        {bankProofActionLabel}
                       </Button>
                     </div>
                   ) : null}
@@ -587,6 +594,31 @@ export default function SavingsFundingClient({
             </CardContent>
           </Card>
         </div>
+      ) : null}
+
+      {isSavingsFullySettled ? (
+        <Card className="w-full rounded-[1.35rem] border border-emerald-200/70 bg-emerald-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-emerald-400/20 dark:bg-white/[0.04]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Savings account fully funded
+            </CardTitle>
+            <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+              This savings goal has already been fully funded and no further
+              bank transfer proof is required.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4 text-sm text-slate-600 sm:px-6 sm:pb-6 dark:text-slate-300">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <SummaryChip label="Balance" value={details.balanceLabel} />
+              <SummaryChip label="Target" value={details.targetAmountLabel} />
+            </div>
+            {latestIntent?.creditedAt ? (
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Credited on {latestIntent.creditedAt}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
       ) : null}
 
       {proofOpen &&

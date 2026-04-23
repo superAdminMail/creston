@@ -10,6 +10,7 @@ export async function reconcileInvestmentOrderPaymentState(
       id: true,
       amount: true,
       status: true,
+      runtimeStatus: true,
       paidAt: true,
       confirmedAt: true,
     },
@@ -38,15 +39,21 @@ export async function reconcileInvestmentOrderPaymentState(
   const isFullyPaid = approvedTotal.gte(orderAmount);
 
   let nextStatus = order.status;
+  let nextRuntimeStatus = order.runtimeStatus;
 
   if (!hasAnyApproved) {
     nextStatus = "PENDING_PAYMENT";
+    nextRuntimeStatus = "NOT_STARTED";
   } else if (isFullyPaid) {
     if (order.status !== "CONFIRMED") {
       nextStatus = "PAID";
     }
+    nextRuntimeStatus =
+      order.status === "CONFIRMED" ? "ONGOING" : "NOT_STARTED";
   } else {
     nextStatus = "PARTIALLY_PAID";
+    nextRuntimeStatus =
+      order.status === "CONFIRMED" ? "ONGOING" : "NOT_STARTED";
   }
 
   await tx.investmentOrder.update({
@@ -54,6 +61,7 @@ export async function reconcileInvestmentOrderPaymentState(
     data: {
       amountPaid: approvedTotal,
       status: nextStatus,
+      runtimeStatus: nextRuntimeStatus,
       paidAt:
         isFullyPaid && !order.paidAt
           ? new Date()

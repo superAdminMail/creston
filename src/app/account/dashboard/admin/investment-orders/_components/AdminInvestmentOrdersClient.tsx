@@ -11,13 +11,12 @@ import type {
   AdminInvestmentOrdersData,
   AdminInvestmentOrderListItem,
 } from "@/actions/admin/investment-order/getAdminInvestmentOrders";
+import { cancelAdminInvestmentOrder } from "@/actions/admin/investment-order/cancelAdminInvestmentOrder";
+import { deleteAdminInvestmentOrder as rejectAdminInvestmentOrder } from "@/actions/admin/investment-order/deleteAdminInvestmentOrder";
 import {
-  cancelAdminInvestmentOrder,
-} from "@/actions/admin/investment-order/cancelAdminInvestmentOrder";
-import {
-  deleteAdminInvestmentOrder as rejectAdminInvestmentOrder,
-} from "@/actions/admin/investment-order/deleteAdminInvestmentOrder";
-import { createInitialFormState, type FormActionState } from "@/lib/forms/actionState";
+  createInitialFormState,
+  type FormActionState,
+} from "@/lib/forms/actionState";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -59,8 +58,7 @@ const orderActionDialogSchema = z.object({
 });
 
 type OrderActionFieldName = "orderId" | "reason" | "adminNotes";
-const initialOrderActionState =
-  createInitialFormState<OrderActionFieldName>();
+const initialOrderActionState = createInitialFormState<OrderActionFieldName>();
 
 function getStatusClasses(status: string) {
   switch (status) {
@@ -99,14 +97,16 @@ function OrderActionDialog({
   reasonPlaceholder: string;
   adminNotesPlaceholder: string;
   destructive?: boolean;
-    action: typeof rejectAdminInvestmentOrder | typeof cancelAdminInvestmentOrder;
+  action: typeof rejectAdminInvestmentOrder | typeof cancelAdminInvestmentOrder;
   initialState: FormActionState<OrderActionFieldName>;
   icon: ReactNode;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(action, initialState);
-  const [clientReasonError, setClientReasonError] = useState<string | null>(null);
+  const [clientReasonError, setClientReasonError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (state.status === "success") {
@@ -322,6 +322,9 @@ function MobileOrderCard({ order }: { order: AdminInvestmentOrderListItem }) {
         <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-slate-300">
           {order.modelLabel}
         </span>
+        <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200">
+          {order.runtimeStatusLabel}
+        </span>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -395,7 +398,7 @@ export function AdminInvestmentOrdersClient({
   return (
     <AdminOperationsShell
       title="Investment Orders"
-      description="Review every order across the platform, inspect funding state, and continue operational actions from one place."
+      description="Review and manage pending and confirmed orders from investors."
       stats={stats}
     >
       <Alert className="rounded-2xl border border-blue-400/20 bg-blue-400/10 text-blue-100">
@@ -462,6 +465,9 @@ export function AdminInvestmentOrdersClient({
                   )}
                 >
                   {order.statusLabel}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200">
+                  {order.runtimeStatusLabel}
                 </span>
               </div>
             ),
