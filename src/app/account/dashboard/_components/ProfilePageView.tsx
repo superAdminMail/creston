@@ -33,10 +33,10 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6 lg:p-8">
-          <div className="flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+      <div className="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:rounded-[2rem] sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-5 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:pb-6">
+            <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-blue-200">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Personal Profile
@@ -51,10 +51,10 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
               <Button
                 asChild
-                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95 sm:w-auto"
               >
                 <Link href="/account/dashboard/profile/update">
                   Edit Profile
@@ -64,7 +64,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
               <Button
                 asChild
                 variant="outline"
-                className="inline-flex items-center justify-center rounded-2xl border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100"
+                className="inline-flex w-full items-center justify-center rounded-2xl border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100 sm:w-auto"
               >
                 <Link href="/account/dashboard/user/investment-profile">
                   Review your investment profile
@@ -73,9 +73,9 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-            <div className="space-y-6">
-              <div className="rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5">
+          <div className="mt-6 grid gap-4 lg:mt-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="rounded-[1.5rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:rounded-[1.75rem] sm:p-6">
                 <div className="flex flex-col items-center text-center">
                   <Avatar className="h-24 w-24 overflow-hidden rounded-full border border-white/10 bg-white/[0.05] sm:h-28 sm:w-28">
                     <AvatarImage
@@ -104,7 +104,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                 </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5 sm:p-6">
+              <div className="rounded-[1.5rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:rounded-[1.75rem] sm:p-6">
                 <h3 className="text-lg font-semibold text-white">
                   Account Information
                 </h3>
@@ -112,7 +112,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                   Your personal account details from the User model.
                 </p>
 
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <InfoCard
                     icon={<User2 className="h-4 w-4 text-blue-300" />}
                     label="Full Name"
@@ -132,8 +132,8 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-[1.75rem] border border-blue-400/10 bg-blue-500/5 p-5 sm:p-6">
+            <div className="grid gap-4 sm:gap-6">
+              <div className="rounded-[1.5rem] border border-blue-400/10 bg-blue-500/5 p-4 sm:rounded-[1.75rem] sm:p-6">
                 <h3 className="text-lg font-semibold text-white">Next step</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-300">
                   Keep your investment profile up to date separately so your
@@ -143,7 +143,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                 <div className="mt-5">
                   <Button
                     asChild
-                    className="rounded-2xl bg-blue-600 text-white hover:bg-blue-500"
+                    className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
                   >
                     <Link href="/account/dashboard/user/investment-profile">
                       Review your investment profile
@@ -152,7 +152,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                 </div>
               </div>
 
-              <div className="rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5 sm:p-6">
+              <div className="rounded-[1.5rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:rounded-[1.75rem] sm:p-6">
                 <h3 className="text-lg font-semibold text-white">
                   Security Notice
                 </h3>
@@ -179,7 +179,7 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
       <div className="flex items-center gap-2">
         {icon}
         <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">

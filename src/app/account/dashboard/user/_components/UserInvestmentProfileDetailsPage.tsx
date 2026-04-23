@@ -144,8 +144,7 @@ export function UserInvestmentProfileDetailsPage({
             </div>
 
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              These details are kept separate from your personal profile and
-              are used for investment servicing.
+              Set-up your investment profile to be ready for secure servicing.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
@@ -177,7 +176,7 @@ export function UserInvestmentProfileDetailsPage({
                   Status
                 </p>
                 <p className="mt-1 text-sm font-medium text-white">
-                  {profile.profileComplete ? "Ready" : "Needs attention"}
+                  {profile.profileComplete ? "Ready" : "Incomplete"}
                 </p>
               </div>
             </div>
@@ -208,7 +207,7 @@ export function UserInvestmentProfileDetailsPage({
                 Investment details
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                These fields belong to your investor profile model.
+                Your investment profile details
               </p>
             </div>
           </div>
@@ -234,7 +233,11 @@ export function UserInvestmentProfileDetailsPage({
               value={profile.details.state}
               icon={MapPin}
             />
-            <DetailCard label="City" value={profile.details.city} icon={MapPin} />
+            <DetailCard
+              label="City"
+              value={profile.details.city}
+              icon={MapPin}
+            />
             <DetailCard
               label="Address line 1"
               value={profile.details.addressLine1}
@@ -272,10 +275,11 @@ export function UserInvestmentProfileDetailsPage({
           </section>
 
           <section className="card-premium rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">Profile readiness</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Profile readiness
+            </h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
-              Review the key areas below to improve account completeness and
-              verification readiness.
+              Review and update your {siteName} investment profile.
             </p>
 
             <div className="mt-5 space-y-3">
@@ -288,7 +292,11 @@ export function UserInvestmentProfileDetailsPage({
                     className={cn("rounded-2xl p-4", item.tone)}
                   >
                     <div className="flex items-start gap-3">
-                      <Icon className={cn("mt-0.5 h-4 w-4", item.iconColor)} />
+                      <div className="px-2 py-2">
+                        <Icon
+                          className={cn("mt-0.5 h-4 w-4", item.iconColor)}
+                        />
+                      </div>
                       <div>
                         <p className="text-sm font-medium text-white">
                           {item.title}
