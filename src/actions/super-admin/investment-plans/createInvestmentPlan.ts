@@ -38,7 +38,6 @@ function getParsedTiers(formData: FormData) {
 function getFormData(formData: FormData) {
   return {
     investmentId: String(formData.get("investmentId") ?? ""),
-    investmentSymbol: String(formData.get("investmentSymbol") ?? ""),
     name: String(formData.get("name") ?? ""),
     slug: String(formData.get("slug") ?? ""),
     description: String(formData.get("description") ?? ""),
@@ -102,17 +101,6 @@ export async function createInvestmentPlan(
       });
     }
 
-    const investmentSymbol =
-      values.investmentSymbol.trim().length > 0
-        ? values.investmentSymbol.trim().toUpperCase()
-        : null;
-
-    if (values.investmentModel === "MARKET" && !investmentSymbol) {
-      return createErrorState("Add an investment symbol for market plans.", {
-        investmentSymbol: ["Investment symbol is required for market plans."],
-      });
-    }
-
     if (values.seoImageFileId) {
       const seoImage = await prisma.fileAsset.findUnique({
         where: { id: values.seoImageFileId },
@@ -131,17 +119,7 @@ export async function createInvestmentPlan(
       model: "investmentPlan",
     });
 
-    const plan = await prisma.$transaction(async (tx) => {
-      if (investmentSymbol !== null && investment.symbol !== investmentSymbol) {
-        await tx.investment.update({
-          where: { id: investment.id },
-          data: {
-            symbol: investmentSymbol,
-          },
-        });
-      }
-
-      return tx.investmentPlan.create({
+    const plan = await prisma.investmentPlan.create({
         data: {
           investmentId: values.investmentId,
           name: values.name,
@@ -193,10 +171,9 @@ export async function createInvestmentPlan(
             })),
           },
         },
-        select: {
-          id: true,
-        },
-      });
+      select: {
+        id: true,
+      },
     });
 
     await logAuditEvent({
@@ -208,7 +185,6 @@ export async function createInvestmentPlan(
       metadata: {
         investmentId: values.investmentId,
         investmentName: investment.name,
-        investmentSymbol,
         name: values.name,
         slug,
         description: values.description,

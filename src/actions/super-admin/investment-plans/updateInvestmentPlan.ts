@@ -38,7 +38,6 @@ function getParsedTiers(formData: FormData) {
 function getFormData(formData: FormData) {
   return {
     investmentId: String(formData.get("investmentId") ?? ""),
-    investmentSymbol: String(formData.get("investmentSymbol") ?? ""),
     name: String(formData.get("name") ?? ""),
     slug: String(formData.get("slug") ?? ""),
     description: String(formData.get("description") ?? ""),
@@ -91,11 +90,6 @@ export async function updateInvestmentPlan(
         description: true,
         period: true,
         currency: true,
-        investment: {
-          select: {
-            symbol: true,
-          },
-        },
         penaltyPeriodDays: true,
         penaltyType: true,
         earlyWithdrawalPenaltyValue: true,
@@ -146,23 +140,12 @@ export async function updateInvestmentPlan(
 
     const investment = await prisma.investment.findUnique({
       where: { id: values.investmentId },
-      select: { id: true, name: true, symbol: true },
+      select: { id: true, name: true },
     });
 
     if (!investment) {
       return createErrorState("Select a valid investment for this plan.", {
         investmentId: ["Select a valid parent investment."],
-      });
-    }
-
-    const investmentSymbol =
-      values.investmentSymbol.trim().length > 0
-        ? values.investmentSymbol.trim().toUpperCase()
-        : null;
-
-    if (values.investmentModel === "MARKET" && !investmentSymbol) {
-      return createErrorState("Add an investment symbol for market plans.", {
-        investmentSymbol: ["Investment symbol is required for market plans."],
       });
     }
 
@@ -185,17 +168,7 @@ export async function updateInvestmentPlan(
       excludeId: investmentPlanId,
     });
 
-    await prisma.$transaction(async (tx) => {
-      if (investmentSymbol !== null && investment.symbol !== investmentSymbol) {
-        await tx.investment.update({
-          where: { id: investment.id },
-          data: {
-            symbol: investmentSymbol,
-          },
-        });
-      }
-
-      await tx.investmentPlan.update({
+    await prisma.investmentPlan.update({
         where: { id: investmentPlanId },
         data: {
           investmentId: values.investmentId,
@@ -249,7 +222,6 @@ export async function updateInvestmentPlan(
             })),
           },
         },
-      });
     });
 
     await logAuditEvent({
@@ -263,7 +235,6 @@ export async function updateInvestmentPlan(
         next: {
           investmentId: values.investmentId,
           investmentName: investment.name,
-          investmentSymbol,
           name: values.name,
           slug,
           description: values.description,

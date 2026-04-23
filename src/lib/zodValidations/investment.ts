@@ -9,6 +9,7 @@ export const investmentFormSchema = z.object({
   name: z.string().trim().min(2, "Investment name is required."),
   slug: z.string().trim().optional().or(z.literal("")),
   description: z.string().trim().optional().or(z.literal("")),
+  symbol: z.string().trim().optional().or(z.literal("")),
   type: z.nativeEnum(InvestmentType, {
     message: "Select a valid investment type.",
   }),
@@ -41,6 +42,7 @@ export function normalizeInvestmentFormValues(values: InvestmentFormInput) {
     slugSource,
     normalizedSlug: slugify(slugSource),
     description: values.description?.trim() || null,
+    symbol: values.symbol?.trim().toUpperCase() || null,
     type: values.type,
     status: values.status,
     iconFileAssetId: values.iconFileAssetId?.trim() || null,

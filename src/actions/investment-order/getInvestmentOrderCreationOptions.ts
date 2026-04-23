@@ -199,12 +199,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
 
   const normalizedInvestments = investments
     .map<InvestmentOrderCreationInvestmentOption>((investment) => {
-      const plans = investment.investmentPlans
-        .filter(
-          (plan) =>
-            plan.investmentModel !== "MARKET" || Boolean(investment.symbol),
-        )
-        .map<InvestmentOrderCreationPlanOption>((plan) => {
+      const plans = investment.investmentPlans.map<InvestmentOrderCreationPlanOption>((plan) => {
           const tiers = plan.tiers.map((tier) => ({
             id: tier.id,
             level: tier.level,

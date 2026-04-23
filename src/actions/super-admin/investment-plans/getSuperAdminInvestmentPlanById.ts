@@ -64,13 +64,12 @@ export type SuperAdminInvestmentPlanDetails = {
   }>;
   formDefaults: {
     investmentId: string;
-    investmentSymbol: string;
     name: string;
     slug: string;
     description: string;
     period: InvestmentPeriod;
     investmentModel: InvestmentModel;
-  penaltyPeriodDays: string;
+    penaltyPeriodDays: string;
     penaltyType: PenaltyType | "";
     earlyWithdrawalPenaltyValue: string;
     maxPenaltyAmount: string;
@@ -101,6 +100,7 @@ export type SuperAdminInvestmentPlanDetails = {
 type SuperAdminInvestmentPlanRecord = {
   id: string;
   investmentId: string;
+  investmentName: string;
   name: string;
   slug: string;
   description: string | null;
@@ -133,10 +133,6 @@ type SuperAdminInvestmentPlanRecord = {
     projectedRoiMax: Prisma.Decimal | null;
     isActive: boolean;
   }>;
-  investment: {
-    name: string;
-    symbol: string | null;
-  };
 };
 
 async function loadSuperAdminInvestmentPlanRecord(
@@ -170,6 +166,11 @@ async function loadSuperAdminInvestmentPlanRecord(
         isActive: true,
         createdAt: true,
         updatedAt: true,
+        investment: {
+          select: {
+            name: true,
+          },
+        },
         tiers: {
           orderBy: {
             level: "asc",
@@ -185,17 +186,16 @@ async function loadSuperAdminInvestmentPlanRecord(
             isActive: true,
           },
         },
-        investment: {
-          select: {
-            name: true,
-            symbol: true,
-          },
-        },
       },
     });
 
     if (plan) {
-      return plan as SuperAdminInvestmentPlanRecord;
+      const { investment, ...planRecord } = plan;
+
+      return {
+        ...planRecord,
+        investmentName: investment.name,
+      } as SuperAdminInvestmentPlanRecord;
     }
   } catch (error) {
     if (!(error instanceof Prisma.PrismaClientValidationError)) {
@@ -231,7 +231,6 @@ async function loadSuperAdminInvestmentPlanRecord(
         createdAt: Date;
         updatedAt: Date;
         investmentName: string;
-        investmentSymbol: string | null;
       }>
     >`
       SELECT
@@ -259,8 +258,7 @@ async function loadSuperAdminInvestmentPlanRecord(
         ip."isActive",
         ip."createdAt",
         ip."updatedAt",
-        i."name" AS "investmentName",
-        i."symbol" AS "investmentSymbol"
+        i."name" AS "investmentName"
       FROM "investment_plan" ip
       INNER JOIN "investment" i ON i."id" = ip."investmentId"
       WHERE ip."id" = ${investmentPlanId}
@@ -302,6 +300,7 @@ async function loadSuperAdminInvestmentPlanRecord(
   return {
     id: planRow.id,
     investmentId: planRow.investmentId,
+    investmentName: planRow.investmentName,
     name: planRow.name,
     slug: planRow.slug,
     description: planRow.description,
@@ -325,10 +324,6 @@ async function loadSuperAdminInvestmentPlanRecord(
     createdAt: planRow.createdAt,
     updatedAt: planRow.updatedAt,
     tiers: tierRows,
-    investment: {
-      name: planRow.investmentName,
-      symbol: planRow.investmentSymbol,
-    },
   };
 }
 
@@ -386,7 +381,7 @@ export async function getSuperAdminInvestmentPlanById(
   return {
     id: plan.id,
     investmentId: plan.investmentId,
-    investmentName: plan.investment.name,
+    investmentName: plan.investmentName,
     name: plan.name,
     slug: plan.slug,
     description: plan.description?.trim() || "No description provided.",
@@ -429,17 +424,16 @@ export async function getSuperAdminInvestmentPlanById(
     tiers,
     formDefaults: {
       investmentId: plan.investmentId,
-      investmentSymbol: plan.investment.symbol ?? "",
       name: plan.name,
       slug: plan.slug,
       description: plan.description ?? "",
       period: plan.period,
-      investmentModel: plan.investmentModel,
-        penaltyPeriodDays: String(plan.penaltyPeriodDays),
-      penaltyType: plan.penaltyType ?? "",
-      earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
-        ? Number(plan.earlyWithdrawalPenaltyValue).toFixed(2)
-        : "",
+    investmentModel: plan.investmentModel,
+    penaltyPeriodDays: String(plan.penaltyPeriodDays),
+    penaltyType: plan.penaltyType ?? "",
+    earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
+      ? Number(plan.earlyWithdrawalPenaltyValue).toFixed(2)
+      : "",
       maxPenaltyAmount: plan.maxPenaltyAmount
         ? Number(plan.maxPenaltyAmount).toFixed(2)
         : "",

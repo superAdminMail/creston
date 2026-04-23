@@ -15,6 +15,7 @@ export default async function NewInvestmentPage() {
         name: "",
         slug: "",
         description: "",
+        symbol: "",
         type: data.filterOptions.types[0]?.value ?? "CRYPTO",
         status: data.filterOptions.statuses[0]?.value ?? "DRAFT",
         iconFileAssetId: "",

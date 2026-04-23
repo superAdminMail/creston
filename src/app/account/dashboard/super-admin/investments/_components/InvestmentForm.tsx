@@ -30,6 +30,7 @@ type InvestmentFormValues = {
   name: string;
   slug: string;
   description: string;
+  symbol: string;
   type: string;
   status: string;
   iconFileAssetId: string;
@@ -78,6 +79,7 @@ export function InvestmentForm({
   const [name, setName] = useState(defaultValues.name);
   const [type, setType] = useState(defaultValues.type);
   const [status, setStatus] = useState(defaultValues.status);
+  const [symbol, setSymbol] = useState(defaultValues.symbol);
   const [iconFileAssetId, setIconFileAssetId] = useState(
     defaultValues.iconFileAssetId,
   );
@@ -144,6 +146,25 @@ export function InvestmentForm({
                       Generated automatically from the investment name.
                     </FieldDescription>
                   )}
+                </FieldContent>
+              </Field>
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              <Field>
+                <FieldLabel className="text-slate-100">Symbol</FieldLabel>
+                <FieldContent>
+                  <Input
+                    name="symbol"
+                    value={symbol}
+                    onChange={(event) => setSymbol(event.target.value.toUpperCase())}
+                    placeholder="BTC"
+                    className="input-premium h-11 rounded-xl uppercase"
+                  />
+                  <FieldDescription className="text-slate-400">
+                    Used for market-based pricing and order creation.
+                  </FieldDescription>
+                  <FieldError>{state.fieldErrors?.symbol?.[0]}</FieldError>
                 </FieldContent>
               </Field>
             </div>

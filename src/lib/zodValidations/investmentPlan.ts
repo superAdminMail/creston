@@ -63,11 +63,6 @@ const investmentPlanTierInputSchema = z.object({
 export const investmentPlanFormSchema = z
   .object({
     investmentId: z.string().trim().min(1, "Select an investment."),
-    investmentSymbol: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal("")),
     name: z.string().trim().min(2, "Plan name is required."),
     slug: z.string().trim().optional().or(z.literal("")),
     description: z.string().trim().optional().or(z.literal("")),
@@ -161,17 +156,6 @@ export const investmentPlanFormSchema = z
         message: "Activate at least one tier for this plan.",
       });
       return;
-    }
-
-    if (
-      values.investmentModel === InvestmentModel.MARKET &&
-      (values.investmentSymbol ?? "").trim().length === 0
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["investmentSymbol"],
-        message: "Investment symbol is required for market plans.",
-      });
     }
 
     const seenLevels = new Set<InvestmentTierLevel>();
@@ -285,9 +269,6 @@ export function normalizeInvestmentPlanFormValues(
 
   return {
     investmentId: values.investmentId.trim(),
-    investmentSymbol: (values.investmentSymbol ?? "")
-      .trim()
-      .toUpperCase() || null,
     name: values.name.trim(),
     slugSource,
     normalizedSlug: slugify(slugSource),

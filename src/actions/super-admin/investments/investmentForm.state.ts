@@ -5,6 +5,7 @@ export type InvestmentFieldName =
   | "name"
   | "slug"
   | "description"
+  | "symbol"
   | "type"
   | "period"
   | "status"
