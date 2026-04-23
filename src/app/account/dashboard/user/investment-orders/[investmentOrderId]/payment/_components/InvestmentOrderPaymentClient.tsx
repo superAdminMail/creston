@@ -58,11 +58,13 @@ function SummaryChip({ label, value }: { label: string; value: string }) {
 export default function InvestmentOrderPaymentClient({
   order,
   partialPaymentAmount,
+  isSettled,
   fundingMethodType,
   paymentMode,
 }: {
   order: InvestmentOrderPaymentDetails;
   partialPaymentAmount: number;
+  isSettled: boolean;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
 }) {
@@ -85,11 +87,31 @@ export default function InvestmentOrderPaymentClient({
     useState(false);
   const [showModal, setShowModal] = useState(false);
   const bankMethod = order.bankMethod;
+  const latestBankPayment =
+    order.recentPayments.find((payment) => payment.type === "BANK_DEPOSIT") ??
+    null;
+  const isOrderFullySettled =
+    isSettled ||
+    order.remainingAmount <= 0 ||
+    order.status === "PAID" ||
+    order.status === "CONFIRMED";
   const canPay =
-    order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
+    !isOrderFullySettled &&
+    (order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID");
   const isCryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const isBankSelected = selectedFundingMethod === "BANK_TRANSFER";
   const effectivePaymentMode = isCryptoSelected ? "FULL" : selectedPaymentMode;
+  const bankProofActionLabel = isOrderFullySettled
+    ? "Payment complete"
+    : latestBankPayment?.status === "PENDING_REVIEW"
+      ? "Payment under review"
+      : isBankSelected &&
+          latestBankPayment?.status === "APPROVED" &&
+        order.status === "PARTIALLY_PAID"
+        ? "I've made this payment"
+        : "I've made this payment";
+  const bankProofActionDisabled =
+    isOrderFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
 
   const selectedAmount = useMemo(() => {
     if (isCryptoSelected || effectivePaymentMode === "FULL") {
@@ -262,7 +284,39 @@ export default function InvestmentOrderPaymentClient({
         </div>
       </div>
 
-      <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+      {isOrderFullySettled ? (
+        <Card className="w-full rounded-[1.35rem] border border-emerald-200/70 bg-emerald-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-emerald-400/20 dark:bg-white/[0.04]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Investment order fully paid
+            </CardTitle>
+            <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+              This investment order has already been fully paid and no further
+              bank transfer proof is required.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4 text-sm text-slate-600 sm:px-6 sm:pb-6 dark:text-slate-300">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <SummaryChip
+                label="Paid amount"
+                value={order.amountPaidLabel}
+              />
+              <SummaryChip
+                label="Order status"
+                value={order.status.replaceAll("_", " ")}
+              />
+            </div>
+            {order.confirmedAt ? (
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                Confirmed on {order.confirmedAt}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {!isOrderFullySettled ? (
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
         <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
           <div className="min-w-0">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -328,8 +382,9 @@ export default function InvestmentOrderPaymentClient({
           ) : null}
         </CardContent>
       </Card>
+      ) : null}
 
-      {isBankSelected ? (
+      {!isOrderFullySettled && isBankSelected ? (
         <OrderPaymentSelector
           remainingAmount={order.remainingAmount}
           currency={order.currency}
@@ -348,7 +403,7 @@ export default function InvestmentOrderPaymentClient({
         />
       ) : null}
 
-      {selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+      {!isOrderFullySettled && selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -417,6 +472,8 @@ export default function InvestmentOrderPaymentClient({
                       bankMethod={bankMethod!}
                       selectedAmount={selectedAmount}
                       currency={order.currency}
+                      actionLabel={bankProofActionLabel}
+                      actionDisabled={bankProofActionDisabled}
                       onConfirmPaid={() => setShowModal(true)}
                     />
                   </CardContent>

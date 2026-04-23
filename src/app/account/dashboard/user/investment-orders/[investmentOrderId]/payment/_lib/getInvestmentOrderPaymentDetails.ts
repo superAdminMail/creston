@@ -213,7 +213,7 @@ export async function getInvestmentOrderPaymentDetails(
       ? {
           id: resolvedBankMethod.id,
           label: resolvedBankMethod.label,
-          type: resolvedBankMethod.type,
+          type: "BANK_INFO",
           providerName: resolvedBankMethod.providerName ?? null,
           bankName: resolvedBankMethod.bankName,
           bankCode: resolvedBankMethod.bankCode ?? null,

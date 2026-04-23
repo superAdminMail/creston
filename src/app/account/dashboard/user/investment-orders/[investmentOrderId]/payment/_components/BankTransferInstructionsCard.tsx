@@ -29,6 +29,8 @@ type Props = {
   };
   selectedAmount: number;
   currency: string;
+  actionLabel: string;
+  actionDisabled?: boolean;
   onConfirmPaid: () => void;
 };
 
@@ -36,6 +38,8 @@ export default function BankTransferInstructionsCard({
   bankMethod,
   selectedAmount,
   currency,
+  actionLabel,
+  actionDisabled = false,
   onConfirmPaid,
 }: Props) {
   const rows = [
@@ -58,7 +62,7 @@ export default function BankTransferInstructionsCard({
   ].filter((row) => Boolean(row.value));
 
   return (
-    <Card className="border-border/60 shadow-sm  bg-white/88  ">
+    <Card className="border-border/60 bg-white/88 shadow-sm dark:bg-white/[0.03]">
       <CardHeader>
         <CardTitle className="text-lg">Bank transfer instructions</CardTitle>
       </CardHeader>
@@ -109,7 +113,9 @@ export default function BankTransferInstructionsCard({
         ) : null}
 
         <div className="flex justify-end">
-          <Button onClick={onConfirmPaid}>I’ve made this payment</Button>
+          <Button onClick={onConfirmPaid} disabled={actionDisabled}>
+            {actionLabel}
+          </Button>
         </div>
       </CardContent>
     </Card>

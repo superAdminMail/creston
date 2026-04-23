@@ -155,6 +155,11 @@ export default function SavingsFundingClient({
   const latestPaidAmount = latestIntent?.creditedAmount ?? 0;
   const hasExistingIntent = latestIntent !== null;
   const isCompletingPayment = latestIntent?.status === "PARTIALLY_PAID";
+  const isSavingsFullySettled =
+    (details.account.targetAmount !== null &&
+      details.account.balance >= details.account.targetAmount) ||
+    latestIntent?.status === "PAID" ||
+    latestIntent?.status === "CREDITED";
   const hasPendingSubmission = details.hasPendingSubmission;
 
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
@@ -281,7 +286,7 @@ export default function SavingsFundingClient({
         </Card>
       ) : null}
 
-      {bankSelected && !hasExistingIntent ? (
+      {bankSelected && !hasExistingIntent && !isSavingsFullySettled ? (
         <CheckoutPaymentModeSelector
           value={selectedPaymentMode}
           onChange={(next) => {

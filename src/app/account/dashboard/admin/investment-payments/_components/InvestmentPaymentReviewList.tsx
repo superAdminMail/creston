@@ -114,7 +114,7 @@ export default function InvestmentPaymentReviewList({
   }
 
   return (
-    <div className="space-y-6 px-4 py-6 md:px-6">
+    <div className="space-y-6 px-4 py-12 md:px-12">
       <Card className="border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle className="text-xl">Investment payment reviews</CardTitle>
@@ -129,7 +129,8 @@ export default function InvestmentPaymentReviewList({
                     Pending bank info requests
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Respond with bank details for the users waiting on transfer instructions.
+                    Respond with bank details for the users waiting on transfer
+                    instructions.
                   </p>
                 </div>
                 <Badge variant="secondary">{bankInfoRequests.length}</Badge>

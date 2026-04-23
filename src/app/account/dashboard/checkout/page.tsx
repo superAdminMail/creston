@@ -103,21 +103,28 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
   switch (routeInput.targetType) {
     case "INVESTMENT_ORDER": {
       const order = await getInvestmentOrderPaymentDetails(routeInput.targetId);
-      const partialPaymentAmount = calculateInvestmentOrderBankChargeAmount({
-        totalAmount: order.amount,
-        amountPaid: order.amountPaid,
-        usePartialPayment: true,
-        hasPendingSubmission: order.recentPayments.some(
-          (payment) =>
-            payment.type === "BANK_DEPOSIT" &&
-            payment.status === "PENDING_REVIEW",
-        ),
-      }).chargeAmount.toNumber();
+      const isInvestmentOrderSettled =
+        order.remainingAmount <= 0 ||
+        order.status === "PAID" ||
+        order.status === "CONFIRMED";
+      const partialPaymentAmount = isInvestmentOrderSettled
+        ? 0
+        : calculateInvestmentOrderBankChargeAmount({
+            totalAmount: order.amount,
+            amountPaid: order.amountPaid,
+            usePartialPayment: true,
+            hasPendingSubmission: order.recentPayments.some(
+              (payment) =>
+                payment.type === "BANK_DEPOSIT" &&
+                payment.status === "PENDING_REVIEW",
+            ),
+          }).chargeAmount.toNumber();
 
       return (
         <InvestmentOrderPaymentClient
           order={order}
           partialPaymentAmount={partialPaymentAmount}
+          isSettled={isInvestmentOrderSettled}
           fundingMethodType={routeInput.fundingMethodType}
           paymentMode={routeInput.paymentMode}
         />
