@@ -41,8 +41,10 @@ type SavingsAccountFormProps = {
   ) => Promise<UpdateSuperAdminSavingsAccountState>;
 };
 
-const initialSavingsAccountFormState =
-  createInitialFormState<"name" | "description" | "targetAmount" | "status" | "isLocked" | "lockedUntil">();
+const initialSavingsAccountFormState: UpdateSuperAdminSavingsAccountState =
+  createInitialFormState<
+    "name" | "description" | "targetAmount" | "status" | "isLocked" | "lockedUntil"
+  >() as UpdateSuperAdminSavingsAccountState;
 
 function SubmitButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
