@@ -1,7 +1,11 @@
-import React from "react";
+import { getSuperAdminAuditLogs } from "@/actions/super-admin/audit-logs/getSuperAdminAuditLogs";
 
-const page = () => {
-  return <div>page</div>;
-};
+import { AuditLogsView } from "./_components/AuditLogsView";
 
-export default page;
+export const dynamic = "force-dynamic";
+
+export default async function SuperAdminAuditLogPage() {
+  const data = await getSuperAdminAuditLogs();
+
+  return <AuditLogsView data={data} />;
+}

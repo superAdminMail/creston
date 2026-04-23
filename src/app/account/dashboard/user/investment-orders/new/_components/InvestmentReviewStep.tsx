@@ -125,7 +125,7 @@ export function InvestmentReviewStep({
               Tier return
             </p>
             <p className="mt-2 text-sm font-medium text-white">
-              {tier.returnLabel ?? `${tier.roiPercent.toFixed(2)}% ROI`}
+              {tier.returnLabel ?? "Return not configured"}
             </p>
           </div>
 

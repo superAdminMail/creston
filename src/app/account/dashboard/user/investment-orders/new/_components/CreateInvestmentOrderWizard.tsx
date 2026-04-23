@@ -448,7 +448,7 @@ export function CreateInvestmentOrderWizard({
                   </p>
                   <p className="mt-2 text-sm font-medium text-white">
                     {selectedTier.levelLabel} |{" "}
-                    {selectedTier.returnLabel ?? `${selectedTier.roiPercent.toFixed(2)}% ROI`}
+                    {selectedTier.returnLabel ?? "Return not configured"}
                   </p>
                 </div>
               ) : null}

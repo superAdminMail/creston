@@ -39,8 +39,8 @@ export default function KYCVerifiedCard({
         </div>
 
         {/* Icon */}
-        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-400/20">
-          <CheckCircle2 className="h-6 w-6 text-emerald-400" />
+        <div className="flex px-3 py-3 items-center justify-center h-12 w-12 rounded-xl bg-emerald-500/10 border border-emerald-400/20">
+          <CheckCircle2 className="h-6 w-6 text-emerald-400 shrink-0" />
         </div>
       </div>
 

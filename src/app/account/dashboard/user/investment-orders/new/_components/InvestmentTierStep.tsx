@@ -88,7 +88,7 @@ export function InvestmentTierStep({
                   </p>
                   <p className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
                     <Percent className="h-4 w-4 text-blue-300" />
-                    {tier.returnLabel ?? `${tier.roiPercent.toFixed(2)}% ROI`}
+                    {tier.returnLabel ?? "Return not configured"}
                   </p>
                 </div>
 

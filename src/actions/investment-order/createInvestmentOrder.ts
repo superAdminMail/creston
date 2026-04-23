@@ -405,7 +405,7 @@ export async function createInvestmentOrder(
 
     if (!symbol) {
       return createErrorState(
-        "This investment is temporarily unavailable for market pricing.",
+        "This market investment is temporarily unavailable. Please choose another plan.",
       );
     }
 

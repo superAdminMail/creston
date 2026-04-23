@@ -3,8 +3,8 @@
 import {
   InvestmentCatalogStatus,
   type InvestmentModel,
-  type InvestmentTierLevel,
   type InvestmentPeriod,
+  type InvestmentTierLevel,
   type InvestmentType,
 } from "@/generated/prisma";
 import {
@@ -12,10 +12,7 @@ import {
   formatEnumLabel,
   formatTierLevel,
 } from "@/lib/formatters/formatters";
-import {
-  formatInvestmentTierReturnLabel,
-  resolveInvestmentTierRoiPercentValue,
-} from "@/lib/investment/formatInvestmentTierReturnLabel";
+import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
@@ -31,7 +28,6 @@ export type InvestmentOrderCreationTierOption = {
   levelLabel: string;
   minAmount: number;
   maxAmount: number;
-  roiPercent: number;
   returnLabel: string | null;
   isActive: boolean;
 };
@@ -43,15 +39,12 @@ export type InvestmentOrderCreationPlanOption = {
   name: string;
   slug: string;
   description: string;
-
   period: InvestmentPeriod;
   periodLabel: string;
   durationDays: number;
   investmentModel: InvestmentModel;
-
   currency: string;
   isActive: boolean;
-
   tiers: InvestmentOrderCreationTierOption[];
   tiersCountLabel: string;
   tierRangeLabel: string | null;
@@ -64,15 +57,12 @@ export type InvestmentOrderCreationInvestmentOption = {
   description: string;
   type: InvestmentType;
   typeLabel: string;
-
   isActive: boolean;
   sortOrder: number;
-
   icon: {
     url: string;
     alt: string;
   } | null;
-
   plans: InvestmentOrderCreationPlanOption[];
 };
 
@@ -88,7 +78,7 @@ export type InvestmentOrderCreationOptionsData = {
 };
 
 function toNumber(value: Decimalish | number | null | undefined) {
-  if (!value) return 0;
+  if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
   return value.toNumber();
 }
@@ -163,14 +153,13 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
       name: true,
       slug: true,
       description: true,
+      symbol: true,
       type: true,
       isActive: true,
       sortOrder: true,
       iconFileAsset: {
         select: { url: true },
       },
-
-      // ✅ PLANS (correct place for period)
       investmentPlans: {
         where: {
           isActive: true,
@@ -179,17 +168,16 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
           },
         },
         orderBy: { name: "asc" },
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            period: true,
-            durationDays: true,
-            currency: true,
-            investmentModel: true,
-            isActive: true,
-
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          period: true,
+          durationDays: true,
+          currency: true,
+          investmentModel: true,
+          isActive: true,
           tiers: {
             where: { isActive: true },
             orderBy: { level: "asc" },
@@ -210,54 +198,20 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
   });
 
   const normalizedInvestments = investments
-    .map<InvestmentOrderCreationInvestmentOption>((investment) => ({
-      id: investment.id,
-      name: investment.name,
-      slug: investment.slug,
-      description:
-        investment.description?.trim() ||
-        "Structured Havenstone investment option tailored for long-term financial growth.",
-
-      type: investment.type,
-      typeLabel: formatEnumLabel(investment.type),
-
-      isActive: investment.isActive,
-      sortOrder: investment.sortOrder,
-
-      icon: investment.iconFileAsset?.url
-        ? {
-            url: investment.iconFileAsset.url,
-            alt: `${investment.name} icon`,
-          }
-        : null,
-
-      plans: investment.investmentPlans.map((plan) => ({
-        id: plan.id,
-        investmentId: investment.id,
-        investmentName: investment.name,
-
-        name: plan.name,
-        slug: plan.slug,
-        description:
-          plan.description?.trim() ||
-          "Carefully structured investment plan with defined entry levels and expected performance.",
-
-        period: plan.period,
-        periodLabel: formatEnumLabel(plan.period),
-        durationDays: plan.durationDays,
-        investmentModel: plan.investmentModel,
-
-        currency: plan.currency,
-        isActive: plan.isActive,
-
-        tiers: plan.tiers.map((tier) => ({
-          id: tier.id,
-          level: tier.level,
-          levelLabel: formatTierLevel(tier.level),
-          minAmount: toNumber(tier.minAmount),
-          maxAmount: toNumber(tier.maxAmount),
-          roiPercent:
-            resolveInvestmentTierRoiPercentValue({
+    .map<InvestmentOrderCreationInvestmentOption>((investment) => {
+      const plans = investment.investmentPlans
+        .filter(
+          (plan) =>
+            plan.investmentModel !== "MARKET" || Boolean(investment.symbol),
+        )
+        .map<InvestmentOrderCreationPlanOption>((plan) => {
+          const tiers = plan.tiers.map((tier) => ({
+            id: tier.id,
+            level: tier.level,
+            levelLabel: formatTierLevel(tier.level),
+            minAmount: toNumber(tier.minAmount),
+            maxAmount: toNumber(tier.maxAmount),
+            returnLabel: formatInvestmentTierReturnLabel({
               investmentModel: plan.investmentModel,
               fixedRoiPercent: tier.fixedRoiPercent
                 ? toNumber(tier.fixedRoiPercent)
@@ -268,39 +222,61 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
               projectedRoiMax: tier.projectedRoiMax
                 ? toNumber(tier.projectedRoiMax)
                 : null,
-            }) ?? 0,
-          returnLabel: formatInvestmentTierReturnLabel({
+            }),
+            isActive: tier.isActive,
+          }));
+
+          return {
+            id: plan.id,
+            investmentId: investment.id,
+            investmentName: investment.name,
+            name: plan.name,
+            slug: plan.slug,
+            description:
+              plan.description?.trim() ||
+              "Carefully structured investment plan with defined entry levels and expected performance.",
+            period: plan.period,
+            periodLabel: formatEnumLabel(plan.period),
+            durationDays: plan.durationDays,
             investmentModel: plan.investmentModel,
-            fixedRoiPercent: tier.fixedRoiPercent
-              ? toNumber(tier.fixedRoiPercent)
-              : null,
-            projectedRoiMin: tier.projectedRoiMin
-              ? toNumber(tier.projectedRoiMin)
-              : null,
-            projectedRoiMax: tier.projectedRoiMax
-              ? toNumber(tier.projectedRoiMax)
-              : null,
-          }),
-          isActive: tier.isActive,
-        })),
+            currency: plan.currency,
+            isActive: plan.isActive,
+            tiers,
+            tiersCountLabel:
+              tiers.length === 1 ? "1 tier option" : `${tiers.length} tier options`,
+            tierRangeLabel:
+              tiers.length > 0
+                ? `${formatCurrency(
+                    Math.min(...tiers.map((tier) => tier.minAmount)),
+                    plan.currency,
+                  )} - ${formatCurrency(
+                    Math.max(...tiers.map((tier) => tier.maxAmount)),
+                    plan.currency,
+                  )}`
+                : null,
+          };
+        });
 
-        tiersCountLabel:
-          plan.tiers.length === 1
-            ? "1 tier option"
-            : `${plan.tiers.length} tier options`,
-
-        tierRangeLabel:
-          plan.tiers.length > 0
-            ? `${formatCurrency(
-                Math.min(...plan.tiers.map((t) => toNumber(t.minAmount))),
-                plan.currency,
-              )} - ${formatCurrency(
-                Math.max(...plan.tiers.map((t) => toNumber(t.maxAmount))),
-                plan.currency,
-              )}`
-            : null,
-      })),
-    }))
+      return {
+        id: investment.id,
+        name: investment.name,
+        slug: investment.slug,
+        description:
+          investment.description?.trim() ||
+          "Structured Havenstone investment option tailored for long-term financial growth.",
+        type: investment.type,
+        typeLabel: formatEnumLabel(investment.type),
+        isActive: investment.isActive,
+        sortOrder: investment.sortOrder,
+        icon: investment.iconFileAsset?.url
+          ? {
+              url: investment.iconFileAsset.url,
+              alt: `${investment.name} icon`,
+            }
+          : null,
+        plans,
+      };
+    })
     .filter((investment) => investment.plans.length > 0);
 
   return {
@@ -312,12 +288,12 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
     activeUnpaidOrdersCount,
     totalActiveInvestments: normalizedInvestments.length,
     totalActivePlans: normalizedInvestments.reduce(
-      (acc, inv) => acc + inv.plans.length,
+      (acc, investment) => acc + investment.plans.length,
       0,
     ),
     totalActiveTiers: normalizedInvestments.reduce(
-      (acc, inv) =>
-        acc + inv.plans.reduce((pAcc, p) => pAcc + p.tiers.length, 0),
+      (acc, investment) =>
+        acc + investment.plans.reduce((planAcc, plan) => planAcc + plan.tiers.length, 0),
       0,
     ),
     investments: normalizedInvestments,
