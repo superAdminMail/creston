@@ -7,14 +7,29 @@ type Props = {
   bankMethod: {
     id: string;
     label: string;
+    type: string;
+    providerName: string | null;
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
     reference: string | null;
     bankAddress: string | null;
     accountNumber: string | null;
+    iban: string | null;
+    swiftCode: string | null;
+    routingNumber: string | null;
+    branchName: string | null;
+    country: string | null;
     instructions: string | null;
     notes: string | null;
+    isPrivate: boolean;
+    isDefault: boolean;
+    sortOrder: number;
+    verificationStatus: string;
+    cryptoAsset: string | null;
+    cryptoNetwork: string | null;
+    walletAddress: string | null;
+    walletTag: string | null;
     currency: string;
   };
   selectedAmount: number;
@@ -29,12 +44,27 @@ export default function BankTransferInstructionsCard({
   onConfirmPaid,
 }: Props) {
   const rows = [
+    { label: "Type", value: bankMethod.type },
+    { label: "Provider name", value: bankMethod.providerName },
     { label: "Bank", value: bankMethod.bankName },
     { label: "Account name", value: bankMethod.accountName },
     { label: "Reference", value: bankMethod.reference },
     { label: "Bank address", value: bankMethod.bankAddress },
     { label: "Account number", value: bankMethod.accountNumber },
     { label: "Bank code", value: bankMethod.bankCode },
+    { label: "IBAN", value: bankMethod.iban },
+    { label: "SWIFT code", value: bankMethod.swiftCode },
+    { label: "Wire routing number", value: bankMethod.routingNumber },
+    { label: "Branch name", value: bankMethod.branchName },
+    { label: "Country", value: bankMethod.country },
+    { label: "Private", value: bankMethod.isPrivate ? "Yes" : "No" },
+    { label: "Default", value: bankMethod.isDefault ? "Yes" : "No" },
+    { label: "Sort order", value: String(bankMethod.sortOrder) },
+    { label: "Verification status", value: bankMethod.verificationStatus },
+    { label: "Crypto asset", value: bankMethod.cryptoAsset },
+    { label: "Crypto network", value: bankMethod.cryptoNetwork },
+    { label: "Wallet address", value: bankMethod.walletAddress },
+    { label: "Wallet tag", value: bankMethod.walletTag },
   ].filter((row) => Boolean(row.value));
 
   return (
@@ -49,7 +79,7 @@ export default function BankTransferInstructionsCard({
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
               Method
             </p>
-            <p className="mt-2 font-semibold text-slate-300">
+            <p className="mt-2 font-semibold text-slate-400">
               {bankMethod.label}
             </p>
           </div>
@@ -58,7 +88,7 @@ export default function BankTransferInstructionsCard({
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
               Amount
             </p>
-            <p className="mt-2 font-semibold text-slate-300">
+            <p className="mt-2 font-semibold text-slate-400">
               {selectedAmount.toLocaleString()} {currency}
             </p>
           </div>
@@ -71,7 +101,7 @@ export default function BankTransferInstructionsCard({
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {row.label}
               </p>
-              <p className="mt-2 font-semibold text-slate-300">{row.value}</p>
+              <p className="mt-2 font-semibold text-slate-400">{row.value}</p>
             </div>
           ))}
         </div>
