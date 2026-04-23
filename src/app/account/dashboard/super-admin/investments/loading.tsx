@@ -2,14 +2,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-3">
-          <Skeleton className="h-5 w-40 rounded-full bg-white/10" />
-          <Skeleton className="h-10 w-64 rounded-2xl bg-white/10" />
+        <div className="min-w-0 space-y-3">
+          <Skeleton className="h-5 w-40 max-w-full rounded-full bg-white/10" />
+          <Skeleton className="h-10 w-full max-w-xs rounded-2xl bg-white/10 sm:w-64" />
           <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-white/10" />
         </div>
-        <Skeleton className="h-11 w-40 rounded-xl bg-white/10" />
+        <Skeleton className="h-11 w-full max-w-40 rounded-xl bg-white/10 sm:w-40" />
       </div>
 
       <section className="card-premium rounded-[2rem] p-5 sm:p-6">
@@ -29,12 +29,12 @@ export default function Loading() {
             key={index}
             className="card-premium rounded-[1.75rem] p-5 sm:p-6"
           >
-            <div className="flex flex-col gap-5 xl:flex-row xl:justify-between">
-              <div className="flex-1 space-y-4">
+            <div className="flex min-w-0 flex-col gap-5 xl:flex-row xl:justify-between">
+              <div className="min-w-0 flex-1 space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <Skeleton className="h-12 w-12 rounded-2xl bg-white/10" />
-                  <Skeleton className="h-6 w-44 rounded-full bg-white/10" />
-                  <Skeleton className="h-6 w-20 rounded-full bg-white/10" />
+                  <Skeleton className="h-6 w-full max-w-44 rounded-full bg-white/10" />
+                  <Skeleton className="h-6 w-20 shrink-0 rounded-full bg-white/10" />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {Array.from({ length: 4 }).map((__, statIndex) => (
@@ -45,7 +45,7 @@ export default function Loading() {
                   ))}
                 </div>
               </div>
-              <div className="grid gap-3 xl:w-[13rem]">
+              <div className="grid gap-3 xl:w-[13rem] xl:max-w-full">
                 {Array.from({ length: 3 }).map((__, actionIndex) => (
                   <Skeleton
                     key={actionIndex}
