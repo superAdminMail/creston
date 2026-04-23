@@ -118,19 +118,25 @@ function StatusCard({
   const styles = toneClasses(tone);
 
   return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
-      <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-      <p className="mt-3 text-sm leading-6 text-slate-400">{helper}</p>
-      <div
-        className={`mt-5 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${styles.badge}`}
-      >
-        <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
-        {tone}
-      </div>
-    </div>
+    <Card className="h-full rounded-[1.75rem] border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+      <CardHeader className="gap-2 px-5 pb-0 pt-5 sm:px-6">
+        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+          {label}
+        </p>
+        <CardTitle className="text-2xl font-semibold text-white">
+          {value}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-5 pb-5 pt-3 sm:px-6 sm:pb-6">
+        <p className="text-sm leading-6 text-slate-400">{helper}</p>
+        <div
+          className={`mt-5 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${styles.badge}`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
+          {tone}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -141,9 +147,9 @@ type SystemHealthClientProps = {
 export function SystemHealthClient({ health }: SystemHealthClientProps) {
   return (
     <div className="min-h-screen bg-[#020817] text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 xl:px-10">
-        <div className="rounded-[2rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6 md:p-8">
-          <div className="flex flex-col gap-5 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
+      <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+        <div className="rounded-[2rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-8">
+          <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-200">
                 <Siren className="h-3.5 w-3.5 shrink-0" />
@@ -160,7 +166,7 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:min-w-[340px] lg:max-w-[420px]">
               <Card className="border-white/10 bg-white/[0.04] shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur">
                 <CardHeader className="gap-2 px-4 py-3 sm:px-5 sm:py-4">
                   <CardTitle className="text-xs uppercase tracking-[0.18em] text-slate-500">
@@ -206,43 +212,44 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                 const Icon = ICON_MAP[card.icon];
 
                 return (
-                  <div
+                  <Card
                     key={card.title}
-                    className={`rounded-[1.5rem] border bg-[#071120] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${styles.card}`}
+                    className={`h-full rounded-[1.5rem] border bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${styles.card}`}
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <CardHeader className="flex flex-row items-start justify-between gap-3 px-4 py-4 sm:px-5">
                       <div
                         className={`shrink-0 rounded-2xl p-3 ${styles.iconWrap}`}
                       >
                         <Icon className="h-5 w-5 shrink-0" />
                       </div>
                       <div
-                        className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${styles.badge}`}
+                        className={`inline-flex max-w-full items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${styles.badge}`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${styles.dot}`}
                         />
-                        {card.value}
+                        <span className="truncate">{card.value}</span>
                       </div>
-                    </div>
-
-                    <p className="mt-4 text-sm font-medium text-slate-200">
-                      {card.title}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
-                      {card.description}
-                    </p>
-                    <p className="mt-4 text-xs uppercase tracking-[0.18em] text-slate-500">
-                      {card.meta}
-                    </p>
-                  </div>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4 sm:px-5 sm:pb-5">
+                      <p className="text-sm font-medium text-slate-200">
+                        {card.title}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-400">
+                        {card.description}
+                      </p>
+                      <p className="mt-4 text-xs uppercase tracking-[0.18em] text-slate-500">
+                        {card.meta}
+                      </p>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
           </div>
 
           <div className="mt-10 grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <SectionHeader
                 eyebrow="Operations"
                 title="Live incidents and warnings"
@@ -260,11 +267,11 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                         : ShieldAlert;
 
                   return (
-                    <div
+                    <Card
                       key={`${item.title}-${item.time}`}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-2xl border border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
                     >
-                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <CardHeader className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex min-w-0 gap-3">
                           <div
                             className={`mt-0.5 shrink-0 rounded-xl p-2.5 ${styles.iconWrap}`}
@@ -291,7 +298,7 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                           </div>
                         </div>
 
-                        <div className="shrink-0 text-left md:text-right">
+                        <div className="shrink-0 text-left lg:text-right">
                           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                             Owner
                           </p>
@@ -302,14 +309,14 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                             {item.time}
                           </p>
                         </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })}
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <SectionHeader
                 eyebrow="Service map"
                 title="Subsystem status"
@@ -322,37 +329,39 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                   const Icon = ICON_MAP[service.icon];
 
                   return (
-                    <div
+                    <Card
                       key={service.name}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-2xl border border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 gap-3">
-                          <div
-                            className={`shrink-0 rounded-xl p-2.5 ${styles.iconWrap}`}
-                          >
-                            <Icon className="h-4 w-4 shrink-0" />
+                      <CardHeader className="px-4 py-4 sm:px-5 sm:py-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex min-w-0 gap-3">
+                            <div
+                              className={`shrink-0 rounded-xl p-2.5 ${styles.iconWrap}`}
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                            </div>
+                            <div className="min-w-0 max-w-2xl pl-1 sm:pl-2">
+                              <p className="text-sm font-medium text-white">
+                                {service.name}
+                              </p>
+                              <p className="mt-1 text-sm leading-6 text-slate-400 sm:pr-4">
+                                {service.detail}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-white">
-                              {service.name}
-                            </p>
-                            <p className="mt-1 text-sm leading-6 text-slate-400">
-                              {service.detail}
-                            </p>
-                          </div>
-                        </div>
 
-                        <span
-                          className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${styles.badge}`}
-                        >
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${styles.dot}`}
-                          />
-                          {service.status}
-                        </span>
-                      </div>
-                    </div>
+                            className={`inline-flex self-start items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium sm:self-auto ${styles.badge}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${styles.dot}`}
+                            />
+                            {service.status}
+                          </span>
+                        </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })}
               </div>
@@ -360,7 +369,7 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
           </div>
 
           <div className="mt-10 grid gap-6 xl:grid-cols-2">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <SectionHeader
                 eyebrow="Queues"
                 title="Operational backlogs"
@@ -369,33 +378,35 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
 
               <div className="space-y-3">
                 {health.queueMetrics.map((item) => (
-                  <div
+                  <Card
                     key={item.label}
-                    className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="rounded-2xl border border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
                   >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white">
-                        {item.label}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-slate-400">
-                        {item.helper}
-                      </p>
-                    </div>
+                    <CardHeader className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white">
+                          {item.label}
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-slate-400">
+                          {item.helper}
+                        </p>
+                      </div>
 
-                    <div className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center">
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                        Count
-                      </p>
-                      <p className="mt-1 text-xl font-semibold text-white">
-                        {item.count}
-                      </p>
-                    </div>
-                  </div>
+                      <div className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center">
+                        <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                          Count
+                        </p>
+                        <p className="mt-1 text-xl font-semibold text-white">
+                          {item.count}
+                        </p>
+                      </div>
+                    </CardHeader>
+                  </Card>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <SectionHeader
                 eyebrow="Integrity"
                 title="Data consistency checks"
@@ -407,11 +418,11 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                   const styles = toneClasses(item.tone);
 
                   return (
-                    <div
+                    <Card
                       key={item.label}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-2xl border border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
                     >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <CardHeader className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:px-5 sm:py-5">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="text-sm font-medium text-white">
@@ -439,8 +450,8 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                             {item.count}
                           </p>
                         </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })}
               </div>
@@ -448,7 +459,7 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <div className="flex items-center gap-3">
                 <div className="shrink-0 rounded-2xl bg-sky-500/10 p-3 text-sky-300">
                   <RefreshCw className="h-5 w-5 shrink-0" />
@@ -469,11 +480,11 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                   const Icon = ICON_MAP[card.icon];
 
                   return (
-                    <div
+                    <Card
                       key={card.label}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-2xl border border-white/10 bg-[#071120] shadow-[0_10px_30px_rgba(0,0,0,0.18)]"
                     >
-                      <div className="flex items-start gap-3">
+                      <CardHeader className="flex items-start gap-3 px-4 py-4 sm:px-5 sm:py-5">
                         <div
                           className={`shrink-0 rounded-xl p-2.5 ${styles.iconWrap}`}
                         >
@@ -490,14 +501,14 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                             {card.time}
                           </p>
                         </div>
-                      </div>
-                    </div>
+                      </CardHeader>
+                    </Card>
                   );
                 })}
               </div>
             </div>
 
-            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-6">
               <div className="flex items-center gap-3">
                 <div className="shrink-0 rounded-2xl bg-sky-500/10 p-3 text-sky-300">
                   <ShieldCheck className="h-5 w-5 shrink-0" />
