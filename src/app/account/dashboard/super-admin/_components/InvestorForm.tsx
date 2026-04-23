@@ -168,18 +168,24 @@ export function InvestorForm({
                         defaultValue={defaultValues.username}
                         className="input-premium h-11 rounded-xl"
                       />
-                      <FieldError>{state.fieldErrors?.username?.[0]}</FieldError>
+                      <FieldError>
+                        {state.fieldErrors?.username?.[0]}
+                      </FieldError>
                     </FieldContent>
                   </Field>
                   <Field>
-                    <FieldLabel className="text-slate-100">Phone number</FieldLabel>
+                    <FieldLabel className="text-slate-100">
+                      Phone number
+                    </FieldLabel>
                     <FieldContent>
                       <Input
                         name="phoneNumber"
                         defaultValue={defaultValues.phoneNumber}
                         className="input-premium h-11 rounded-xl"
                       />
-                      <FieldError>{state.fieldErrors?.phoneNumber?.[0]}</FieldError>
+                      <FieldError>
+                        {state.fieldErrors?.phoneNumber?.[0]}
+                      </FieldError>
                     </FieldContent>
                   </Field>
                   <Field>
@@ -193,7 +199,9 @@ export function InvestorForm({
                         defaultValue={defaultValues.dateOfBirth}
                         className="input-premium h-11 rounded-xl"
                       />
-                      <FieldError>{state.fieldErrors?.dateOfBirth?.[0]}</FieldError>
+                      <FieldError>
+                        {state.fieldErrors?.dateOfBirth?.[0]}
+                      </FieldError>
                     </FieldContent>
                   </Field>
                 </FieldGroup>
@@ -204,20 +212,26 @@ export function InvestorForm({
           <div className="space-y-6">
             <Card className="rounded-[1.75rem] border-white/8 bg-white/[0.03] text-white shadow-[0_18px_50px_rgba(2,6,23,0.14)]">
               <CardHeader>
-                <CardTitle className="text-lg">Profile & verification</CardTitle>
+                <CardTitle className="text-lg">
+                  Profile & verification
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <FieldGroup>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-slate-100">Country</FieldLabel>
+                      <FieldLabel className="text-slate-100">
+                        Country
+                      </FieldLabel>
                       <FieldContent>
                         <Input
                           name="country"
                           defaultValue={defaultValues.country}
                           className="input-premium h-11 rounded-xl"
                         />
-                        <FieldError>{state.fieldErrors?.country?.[0]}</FieldError>
+                        <FieldError>
+                          {state.fieldErrors?.country?.[0]}
+                        </FieldError>
                       </FieldContent>
                     </Field>
                     <Field>
@@ -252,26 +266,34 @@ export function InvestorForm({
                           defaultValue={defaultValues.addressLine1}
                           className="input-premium h-11 rounded-xl"
                         />
-                        <FieldError>{state.fieldErrors?.addressLine1?.[0]}</FieldError>
+                        <FieldError>
+                          {state.fieldErrors?.addressLine1?.[0]}
+                        </FieldError>
                       </FieldContent>
                     </Field>
                   </div>
 
                   <Field>
-                    <FieldLabel className="text-slate-100">Address line 2</FieldLabel>
+                    <FieldLabel className="text-slate-100">
+                      Address line 2
+                    </FieldLabel>
                     <FieldContent>
                       <Input
                         name="addressLine2"
                         defaultValue={defaultValues.addressLine2}
                         className="input-premium h-11 rounded-xl"
                       />
-                      <FieldError>{state.fieldErrors?.addressLine2?.[0]}</FieldError>
+                      <FieldError>
+                        {state.fieldErrors?.addressLine2?.[0]}
+                      </FieldError>
                     </FieldContent>
                   </Field>
 
                   <div className="grid gap-5 sm:grid-cols-2">
                     <Field>
-                      <FieldLabel className="text-slate-100">KYC status</FieldLabel>
+                      <FieldLabel className="text-slate-100">
+                        KYC status
+                      </FieldLabel>
                       <FieldContent>
                         <select
                           name="kycStatus"
@@ -283,12 +305,16 @@ export function InvestorForm({
                           <option value="VERIFIED">Verified</option>
                           <option value="REJECTED">Rejected</option>
                         </select>
-                        <FieldError>{state.fieldErrors?.kycStatus?.[0]}</FieldError>
+                        <FieldError>
+                          {state.fieldErrors?.kycStatus?.[0]}
+                        </FieldError>
                       </FieldContent>
                     </Field>
 
                     <Field>
-                      <FieldLabel className="text-slate-100">Verified</FieldLabel>
+                      <FieldLabel className="text-slate-100">
+                        Verified
+                      </FieldLabel>
                       <FieldContent>
                         <label className="inline-flex items-center gap-2 text-sm text-slate-300">
                           <input
@@ -299,7 +325,9 @@ export function InvestorForm({
                           />
                           Profile is verified
                         </label>
-                        <FieldError>{state.fieldErrors?.isVerified?.[0]}</FieldError>
+                        <FieldError>
+                          {state.fieldErrors?.isVerified?.[0]}
+                        </FieldError>
                       </FieldContent>
                     </Field>
                   </div>
