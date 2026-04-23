@@ -95,7 +95,7 @@ export default function SavingsFundingClient({
     useState<CheckoutFundingMethodType | null>(
       normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
         fundingMethodType ??
-        "BANK_TRANSFER",
+        null,
     );
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
@@ -263,6 +263,23 @@ export default function SavingsFundingClient({
           updateCheckoutParams({ nextFundingMethod: next });
         }}
       />
+
+      {!selectedFundingMethod ? (
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Choose a funding method to continue
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+              Select bank transfer to view transfer details and submit proof,
+              or choose crypto wallet to continue with the secure wallet
+              checkout flow.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {bankSelected && !hasExistingIntent ? (
         <CheckoutPaymentModeSelector

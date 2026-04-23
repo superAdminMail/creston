@@ -106,7 +106,9 @@ export default function InvestmentOrderPaymentClient({
 
   const [selectedFundingMethod, setSelectedFundingMethod] =
     useState<CheckoutFundingMethodType | null>(
-      normalizeFundingMethodType(order.paymentMethodType) ?? fundingMethodType,
+      normalizeFundingMethodType(order.paymentMethodType) ??
+        fundingMethodType ??
+        null,
     );
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
@@ -350,6 +352,14 @@ export default function InvestmentOrderPaymentClient({
               Crypto wallet
             </Button>
           </div>
+
+          {!selectedFundingMethod ? (
+            <div className="mt-4 rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+              Choose a funding method to continue. Bank transfer will show the
+              transfer details and proof upload, while crypto wallet will take
+              you to the secure checkout flow.
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
