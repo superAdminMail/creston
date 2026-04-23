@@ -70,6 +70,7 @@ export type SuperAdminFundingIntentListItem = {
   expectedCryptoAmountLabel: string;
   receivedCryptoAmountLabel: string | null;
   creditedFiatAmountLabel: string | null;
+  creditedFiatAmount: number | null;
   status: CryptoFundingIntentStatus;
   statusLabel: string;
   destinationLabel: string;
@@ -87,6 +88,8 @@ export type SuperAdminFundingIntentListItem = {
   investmentOrderStatusLabel: string;
   investmentOrderAmountLabel: string;
   investmentOrderAmountPaidLabel: string;
+  investmentOrderAmount: number;
+  investmentOrderAmountPaid: number;
   investmentOrderPaymentMethodTypeLabel: string;
 };
 
@@ -168,6 +171,9 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
     creditedFiatAmountLabel: intent.creditedFiatAmount
       ? formatCurrency(toNumber(intent.creditedFiatAmount), intent.fiatCurrency)
       : null,
+    creditedFiatAmount: intent.creditedFiatAmount
+      ? toNumber(intent.creditedFiatAmount)
+      : null,
     status: intent.status,
     statusLabel: formatEnumLabel(intent.status),
     destinationLabel: intent.destinationLabel?.trim() || "Destination not recorded",
@@ -187,10 +193,12 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
       toNumber(intent.investmentOrder.amount),
       intent.investmentOrder.currency,
     ),
+    investmentOrderAmount: toNumber(intent.investmentOrder.amount),
     investmentOrderAmountPaidLabel: formatCurrency(
       toNumber(intent.investmentOrder.amountPaid),
       intent.investmentOrder.currency,
     ),
+    investmentOrderAmountPaid: toNumber(intent.investmentOrder.amountPaid),
     investmentOrderPaymentMethodTypeLabel: intent.investmentOrder.paymentMethodType
       ? formatEnumLabel(intent.investmentOrder.paymentMethodType)
       : "Not set",
@@ -207,14 +215,14 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
         CryptoFundingIntentStatus.REQUIRES_ACTION,
         CryptoFundingIntentStatus.PROCESSING,
         CryptoFundingIntentStatus.AWAITING_PROVIDER_CONFIRMATION,
-      ].includes(intent.status),
+      ].some((status) => status === intent.status),
     ).length,
     exceptionIntentsCount: mappedIntents.filter((intent) =>
       [
         CryptoFundingIntentStatus.FAILED,
         CryptoFundingIntentStatus.EXPIRED,
         CryptoFundingIntentStatus.CANCELED,
-      ].includes(intent.status),
+      ].some((status) => status === intent.status),
     ).length,
     intents: mappedIntents,
   };

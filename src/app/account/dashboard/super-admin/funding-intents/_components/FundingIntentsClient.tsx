@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
+import { CompactCurrency } from "@/components/helper/CompactCurrency";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { SuperAdminStatCard } from "../../_components/SuperAdminStatCard";
@@ -101,14 +102,14 @@ export function FundingIntentsClient({
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050B1F]">
+    <div className="relative w-full overflow-hidden rounded-[2rem] bg-[#050B1F]">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
         <div className="absolute right-[-6rem] top-24 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-7xl overflow-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6">
           <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0 max-w-2xl">
@@ -254,7 +255,10 @@ export function FundingIntentsClient({
                                   Fiat amount
                                 </p>
                                 <p className="mt-2 text-sm text-slate-200">
-                                  {intent.fiatAmountLabel}
+                                  <CompactCurrency
+                                    amount={intent.fiatAmount}
+                                    currency={intent.fiatCurrency}
+                                  />
                                 </p>
                               </div>
 
@@ -300,7 +304,10 @@ export function FundingIntentsClient({
                                 {intent.creditedFiatAmountLabel ? (
                                   <p className="mt-2 text-xs text-emerald-300">
                                     Credited fiat:{" "}
-                                    {intent.creditedFiatAmountLabel}
+                                    <CompactCurrency
+                                      amount={intent.creditedFiatAmount ?? 0}
+                                      currency={intent.fiatCurrency}
+                                    />
                                   </p>
                                 ) : null}
                               </div>
@@ -341,10 +348,18 @@ export function FundingIntentsClient({
                                   Order: {intent.investmentOrderId}
                                 </p>
                                 <p className="mt-1 text-xs text-slate-400">
-                                  Amount: {intent.investmentOrderAmountLabel}
+                                  Amount:{" "}
+                                  <CompactCurrency
+                                    amount={intent.investmentOrderAmount}
+                                    currency={intent.fiatCurrency}
+                                  />
                                 </p>
                                 <p className="mt-1 text-xs text-slate-400">
-                                  Paid: {intent.investmentOrderAmountPaidLabel}
+                                  Paid:{" "}
+                                  <CompactCurrency
+                                    amount={intent.investmentOrderAmountPaid}
+                                    currency={intent.fiatCurrency}
+                                  />
                                 </p>
                               </div>
 
