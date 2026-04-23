@@ -8,7 +8,7 @@ export type InvestmentPlanFieldName =
   | "description"
   | "period"
   | "investmentModel"
-  | "penaltyFreePeriodDays"
+  | "penaltyPeriodDays"
   | "penaltyType"
   | "earlyWithdrawalPenaltyValue"
   | "maxPenaltyAmount"

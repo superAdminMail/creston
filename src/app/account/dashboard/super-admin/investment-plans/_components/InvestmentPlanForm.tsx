@@ -48,7 +48,7 @@ type InvestmentPlanFormValues = {
   description: string;
   period: InvestmentPeriod;
   investmentModel: InvestmentModel;
-  penaltyFreePeriodDays: string;
+  penaltyPeriodDays: string;
   penaltyType: PenaltyType | "";
   earlyWithdrawalPenaltyValue: string;
   maxPenaltyAmount: string;
@@ -128,8 +128,8 @@ export function InvestmentPlanForm({
   const [investmentModel, setInvestmentModel] = useState(
     defaultValues.investmentModel,
   );
-  const [penaltyFreePeriodDays, setPenaltyFreePeriodDays] = useState(
-    defaultValues.penaltyFreePeriodDays,
+  const [penaltyPeriodDays, setPenaltyPeriodDays] = useState(
+    defaultValues.penaltyPeriodDays,
   );
   const [penaltyType, setPenaltyType] = useState(defaultValues.penaltyType);
   const [earlyWithdrawalPenaltyValue, setEarlyWithdrawalPenaltyValue] =
@@ -367,13 +367,13 @@ export function InvestmentPlanForm({
                   </FieldLabel>
                   <FieldContent>
                     <Input
-                      name="penaltyFreePeriodDays"
+                    name="penaltyPeriodDays"
                       type="number"
                       min={0}
                       step={1}
-                      value={penaltyFreePeriodDays}
+                      value={penaltyPeriodDays}
                       onChange={(event) =>
-                        setPenaltyFreePeriodDays(event.target.value)
+                        setPenaltyPeriodDays(event.target.value)
                       }
                       className="input-premium h-11 rounded-xl"
                     />
@@ -382,7 +382,7 @@ export function InvestmentPlanForm({
                       early withdrawal penalty.
                     </FieldDescription>
                     <FieldError>
-                      {state.fieldErrors?.penaltyFreePeriodDays?.[0]}
+                      {state.fieldErrors?.penaltyPeriodDays?.[0]}
                     </FieldError>
                   </FieldContent>
                 </Field>

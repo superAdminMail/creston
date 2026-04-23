@@ -325,7 +325,7 @@ model InvestmentPlan {
 
   description String?
 
-  penaltyFreePeriodDays Int @default(0)
+  penaltyPeriodDays Int @default(0)
 
   penaltyType                 PenaltyType?
   earlyWithdrawalPenaltyValue Decimal?     @db.Decimal(18, 2)

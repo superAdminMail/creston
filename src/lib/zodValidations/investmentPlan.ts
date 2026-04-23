@@ -74,7 +74,7 @@ export const investmentPlanFormSchema = z
       message: "Select a valid investment model.",
     }),
 
-    penaltyFreePeriodDays: z
+    penaltyPeriodDays: z
       .string()
       .trim()
       .min(1, "Penalty period is required.")
@@ -275,7 +275,7 @@ export function normalizeInvestmentPlanFormValues(
     description: values.description?.trim() || null,
     period: values.period,
     investmentModel: values.investmentModel,
-    penaltyFreePeriodDays: Number(values.penaltyFreePeriodDays),
+      penaltyPeriodDays: Number(values.penaltyPeriodDays),
     penaltyType: values.penaltyType || null,
     earlyWithdrawalPenaltyValue:
       values.earlyWithdrawalPenaltyValue === ""

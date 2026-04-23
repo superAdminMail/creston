@@ -20,7 +20,7 @@ export default async function NewInvestmentPlanPage() {
         description: "",
         period: data.filterOptions.periods[0]?.value ?? "LONG_TERM",
         investmentModel: InvestmentModel.FIXED,
-        penaltyFreePeriodDays: "0",
+        penaltyPeriodDays: "0",
         penaltyType: "",
         earlyWithdrawalPenaltyValue: "",
         maxPenaltyAmount: "",

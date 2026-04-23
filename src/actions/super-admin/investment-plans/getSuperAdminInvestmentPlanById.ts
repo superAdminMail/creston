@@ -32,7 +32,7 @@ export type SuperAdminInvestmentPlanDetails = {
   periodLabel: string;
   currency: string;
   investmentModel: InvestmentModel;
-  penaltyFreePeriodDays: number;
+  penaltyPeriodDays: number;
   penaltyType: PenaltyType | null;
   earlyWithdrawalPenaltyValue: number | null;
   maxPenaltyAmount: number | null;
@@ -71,7 +71,7 @@ export type SuperAdminInvestmentPlanDetails = {
     description: string;
     period: InvestmentPeriod;
     investmentModel: InvestmentModel;
-    penaltyFreePeriodDays: string;
+  penaltyPeriodDays: string;
     penaltyType: PenaltyType | "";
     earlyWithdrawalPenaltyValue: string;
     maxPenaltyAmount: string;
@@ -116,7 +116,7 @@ export async function getSuperAdminInvestmentPlanById(
         period: true,
         currency: true,
         investmentModel: true,
-        penaltyFreePeriodDays: true,
+        penaltyPeriodDays: true,
         penaltyType: true,
         earlyWithdrawalPenaltyValue: true,
         maxPenaltyAmount: true,
@@ -209,7 +209,7 @@ export async function getSuperAdminInvestmentPlanById(
     periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,
     investmentModel: plan.investmentModel,
-    penaltyFreePeriodDays: plan.penaltyFreePeriodDays,
+        penaltyPeriodDays: plan.penaltyPeriodDays,
     penaltyType: plan.penaltyType,
     earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
       ? Number(plan.earlyWithdrawalPenaltyValue)
@@ -249,7 +249,7 @@ export async function getSuperAdminInvestmentPlanById(
       description: plan.description ?? "",
       period: plan.period,
       investmentModel: plan.investmentModel,
-      penaltyFreePeriodDays: String(plan.penaltyFreePeriodDays),
+        penaltyPeriodDays: String(plan.penaltyPeriodDays),
       penaltyType: plan.penaltyType ?? "",
       earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
         ? Number(plan.earlyWithdrawalPenaltyValue).toFixed(2)

@@ -43,7 +43,7 @@ function getFormData(formData: FormData) {
     description: String(formData.get("description") ?? ""),
     period: String(formData.get("period") ?? ""),
     investmentModel: String(formData.get("investmentModel") ?? ""),
-    penaltyFreePeriodDays: String(formData.get("penaltyFreePeriodDays") ?? ""),
+    penaltyPeriodDays: String(formData.get("penaltyPeriodDays") ?? ""),
     penaltyType: String(formData.get("penaltyType") ?? ""),
     earlyWithdrawalPenaltyValue: String(
       formData.get("earlyWithdrawalPenaltyValue") ?? "",
@@ -125,7 +125,7 @@ export async function createInvestmentPlan(
         name: values.name,
         slug,
         description: values.description,
-        penaltyFreePeriodDays: values.penaltyFreePeriodDays,
+        penaltyPeriodDays: values.penaltyPeriodDays,
         penaltyType: values.penaltyType,
         earlyWithdrawalPenaltyValue: values.earlyWithdrawalPenaltyValue
           ? new Prisma.Decimal(values.earlyWithdrawalPenaltyValue.toFixed(2))
@@ -188,7 +188,7 @@ export async function createInvestmentPlan(
         name: values.name,
         slug,
         description: values.description,
-        penaltyFreePeriodDays: values.penaltyFreePeriodDays,
+        penaltyPeriodDays: values.penaltyPeriodDays,
         penaltyType: values.penaltyType,
         earlyWithdrawalPenaltyValue: values.earlyWithdrawalPenaltyValue,
         maxPenaltyAmount: values.maxPenaltyAmount,
