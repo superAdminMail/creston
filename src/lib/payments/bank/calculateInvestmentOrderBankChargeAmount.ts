@@ -18,10 +18,11 @@ export function calculateInvestmentOrderBankChargeAmount({
   totalAmount,
   amountPaid,
   usePartialPayment,
-  hasPendingSubmission,
+  hasPendingSubmission: _hasPendingSubmission,
 }: CalculateInvestmentOrderBankChargeAmountInput): CalculateInvestmentOrderBankChargeAmountResult {
   const total = new Prisma.Decimal(totalAmount);
   const paid = new Prisma.Decimal(amountPaid);
+  void _hasPendingSubmission;
 
   if (total.lte(0)) {
     throw new Error("Investment order amount must be greater than zero");
@@ -33,12 +34,6 @@ export function calculateInvestmentOrderBankChargeAmount({
 
   if (paid.gte(total)) {
     throw new Error("This investment order has already been fully paid");
-  }
-
-  if (hasPendingSubmission) {
-    throw new Error(
-      "There is already a pending bank payment submission for this order",
-    );
   }
 
   const remaining = total.minus(paid);

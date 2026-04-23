@@ -99,6 +99,12 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("This investment order can no longer be paid");
   }
 
+  if (order.payments.length > 0) {
+    throw new Error(
+      "There is already a pending bank payment submission for this order",
+    );
+  }
+
   const privateBankMethod = await getUserPrivateBankInfo(userId, order.currency);
   const selectedPlatformPaymentMethodId =
     platformPaymentMethodId?.trim() ||
@@ -154,7 +160,7 @@ export async function createInvestmentOrderBankDepositSubmission({
     totalAmount: order.amount,
     amountPaid: order.amountPaid,
     usePartialPayment,
-    hasPendingSubmission: Boolean(order.payments[0]),
+    hasPendingSubmission: false,
   });
 
   const paymentMode = chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL";
