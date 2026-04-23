@@ -1,5 +1,6 @@
 import { getAdminSavingsProducts } from "@/lib/service/getAdminCatalogData";
 import { SuperAdminRedirectToast } from "../_components/SuperAdminRedirectToast";
+import { SuperAdminStatCard } from "../_components/SuperAdminStatCard";
 import { SavingsProductsHeader } from "./_components/SavingsProductsHeader";
 import { SavingsProductsTable } from "./_components/SavingsProductsTable";
 
@@ -36,34 +37,22 @@ export default async function SuperAdminSavingsProductsPage({
 
       <SavingsProductsHeader />
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total products
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {products.length}
-          </p>
-          <p className="mt-2 text-sm text-slate-400">Savings products configured</p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Active products
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">{activeProducts}</p>
-          <p className="mt-2 text-sm text-slate-400">Currently available to users</p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Deposit enabled
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {depositEnabled}
-          </p>
-          <p className="mt-2 text-sm text-slate-400">
-            Products accepting deposits
-          </p>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <SuperAdminStatCard
+          label="Total products"
+          value={products.length}
+          description="Savings products configured."
+        />
+        <SuperAdminStatCard
+          label="Active products"
+          value={activeProducts}
+          description="Currently available to users."
+        />
+        <SuperAdminStatCard
+          label="Deposit enabled"
+          value={depositEnabled}
+          description="Products accepting deposits."
+        />
       </section>
 
       <SavingsProductsTable data={products} />

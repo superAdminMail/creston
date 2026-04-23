@@ -1,5 +1,6 @@
 import { getSuperAdminSavingsAccounts } from "@/actions/super-admin/savings-accounts/getSuperAdminSavingsAccounts";
 
+import { SuperAdminStatCard } from "../_components/SuperAdminStatCard";
 import { SavingsAccountsHeader } from "./_components/SavingsAccountsHeader";
 import { SavingsAccountsTable } from "./_components/SavingsAccountsTable";
 
@@ -10,42 +11,30 @@ export default async function SuperAdminSavingsAccountsPage() {
     <div className="space-y-6">
       <SavingsAccountsHeader />
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total accounts
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.totalAccountsCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Active accounts
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.activeAccountsCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Locked accounts
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.lockedAccountsCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total balance
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.totalBalance.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
-            })}
-          </p>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SuperAdminStatCard
+          label="Total accounts"
+          value={data.totalAccountsCount}
+          description="All savings accounts in the platform."
+        />
+        <SuperAdminStatCard
+          label="Active accounts"
+          value={data.activeAccountsCount}
+          description="Accounts currently open and accepting activity."
+        />
+        <SuperAdminStatCard
+          label="Locked accounts"
+          value={data.lockedAccountsCount}
+          description="Accounts currently locked by policy or admin action."
+        />
+        <SuperAdminStatCard
+          label="Total balance"
+          value={data.totalBalance.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+          })}
+          description="Combined balance across all savings accounts."
+        />
       </section>
 
       <SavingsAccountsTable data={data} />

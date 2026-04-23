@@ -11,6 +11,8 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { SuperAdminStatCard } from "../_components/SuperAdminStatCard";
+
 type FundingIntentStatus =
   | "PENDING"
   | "REQUIRES_ACTION"
@@ -151,26 +153,6 @@ function getStatusClasses(status: FundingIntentStatus) {
   }
 }
 
-function StatCard({
-  title,
-  value,
-  helper,
-}: {
-  title: string;
-  value: string;
-  helper: string;
-}) {
-  return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">
-        {title}
-      </p>
-      <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
-      <p className="mt-2 text-sm text-slate-400">{helper}</p>
-    </div>
-  );
-}
-
 export default function FundingIntentPage() {
   const total = fundingIntents.length;
   const funded = fundingIntents.filter(
@@ -228,26 +210,26 @@ export default function FundingIntentPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
-            <StatCard
-              title="Total Intents"
-              value={String(total)}
-              helper="All tracked crypto funding sessions."
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <SuperAdminStatCard
+              label="Total intents"
+              value={total}
+              description="All tracked crypto funding sessions."
             />
-            <StatCard
-              title="Funded"
-              value={String(funded)}
-              helper="Successfully completed and confirmed funding attempts."
+            <SuperAdminStatCard
+              label="Funded"
+              value={funded}
+              description="Successfully completed and confirmed funding attempts."
             />
-            <StatCard
-              title="In Progress"
-              value={String(processing)}
-              helper="Requires user or provider completion."
+            <SuperAdminStatCard
+              label="In progress"
+              value={processing}
+              description="Requires user or provider completion."
             />
-            <StatCard
-              title="Exceptions"
-              value={String(exceptions)}
-              helper="Expired, failed, or canceled flows needing review."
+            <SuperAdminStatCard
+              label="Exceptions"
+              value={exceptions}
+              description="Expired, failed, or canceled flows needing review."
             />
           </div>
 

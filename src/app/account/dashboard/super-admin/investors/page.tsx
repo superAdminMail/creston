@@ -1,5 +1,6 @@
 import { getSuperAdminInvestors } from "@/actions/super-admin/investors/getSuperAdminInvestors";
 
+import { SuperAdminStatCard } from "../_components/SuperAdminStatCard";
 import { InvestorsHeader } from "./_components/InvestorsHeader";
 import { InvestorsTable } from "./_components/InvestorsTable";
 
@@ -7,42 +8,30 @@ export default async function SuperAdminInvestorsPage() {
   const data = await getSuperAdminInvestors();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:space-y-8">
       <InvestorsHeader />
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total investors
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.totalInvestorsCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Verified investors
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.verifiedInvestorsCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Pending review
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.pendingReviewCount}
-          </p>
-        </div>
-        <div className="card-premium rounded-[1.75rem] p-5">
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            With accounts
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-white">
-            {data.investorsWithAccountsCount}
-          </p>
-        </div>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SuperAdminStatCard
+          label="Total investors"
+          value={data.totalInvestorsCount}
+          description="All investor profiles in the system."
+        />
+        <SuperAdminStatCard
+          label="Verified investors"
+          value={data.verifiedInvestorsCount}
+          description="Profiles with verified identity state."
+        />
+        <SuperAdminStatCard
+          label="Pending review"
+          value={data.pendingReviewCount}
+          description="Profiles awaiting manual review."
+        />
+        <SuperAdminStatCard
+          label="With accounts"
+          value={data.investorsWithAccountsCount}
+          description="Investors linked to at least one account."
+        />
       </section>
 
       <InvestorsTable data={data} />

@@ -6,7 +6,7 @@ import { InvestmentAccountMetaCard } from "@/app/account/dashboard/user/investme
 import { InvestmentAccountSummaryCards } from "@/app/account/dashboard/user/investment-accounts/[investmentAccountId]/_components/InvestmentAccountSummaryCards";
 import { InvestmentPlanOverviewCard } from "@/app/account/dashboard/user/investment-accounts/[investmentAccountId]/_components/InvestmentPlanOverviewCard";
 import { InvestmentProductCard } from "@/app/account/dashboard/user/investment-accounts/[investmentAccountId]/_components/InvestmentProductCard";
-import { InvestmentAccountDetailsHeader } from "./_components/InvestmentAccountDetailsHeader";
+import { InvestmentAccountDetailsHeader } from "../_components/InvestmentAccountDetailsHeader";
 
 type PageProps = {
   params: Promise<{
