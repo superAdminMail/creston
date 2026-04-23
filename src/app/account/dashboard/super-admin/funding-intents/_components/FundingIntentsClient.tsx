@@ -88,9 +88,11 @@ function maskReference(reference: string | null | undefined) {
   return `${reference.slice(0, 10)}...${reference.slice(-10)}`;
 }
 
-export function FundingIntentsClient({ initialData }: FundingIntentsClientProps) {
+export function FundingIntentsClient({
+  initialData,
+}: FundingIntentsClientProps) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = useState<FundingIntentFilter>("ALL");
 
   const intents = useMemo(
@@ -99,20 +101,20 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
   );
 
   return (
-    <div className="min-h-screen bg-[#050B1F]">
-      <div className="absolute inset-0 pointer-events-none">
+    <div className="min-h-screen overflow-x-hidden bg-[#050B1F]">
+      <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
         <div className="absolute right-[-6rem] top-24 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6">
+      <div className="relative mx-auto w-full max-w-7xl overflow-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6">
           <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-blue-200">
+            <div className="min-w-0 max-w-2xl">
+              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-blue-200">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                Paymento Funding Operations
+                <span className="truncate">Funding Intents Operations</span>
               </div>
 
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
@@ -120,13 +122,11 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                Monitor Paymento-backed crypto funding attempts across users,
-                investment orders, provider sessions, and treasury lifecycle
-                events.
+                View and manage your crypto funding intents.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex min-w-0 flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => {
@@ -134,14 +134,16 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                     router.refresh();
                   });
                 }}
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white hover:bg-white/[0.08]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white hover:bg-white/[0.08] sm:w-auto"
               >
-                <RefreshCcw className="h-4 w-4 shrink-0" />
+                <RefreshCcw
+                  className={`h-4 w-4 shrink-0 ${isPending ? "animate-spin" : ""}`}
+                />
                 Refresh feed
               </button>
               <Link
                 href="/account/dashboard/super-admin/system-health"
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] sm:w-auto"
               >
                 <ArrowUpRight className="h-4 w-4 shrink-0" />
                 View Webhooks
@@ -172,20 +174,20 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
             />
           </div>
 
-          <Card className="mt-8 rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+          <Card className="mt-8 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
             <CardContent className="p-4 sm:p-5">
               <div className="flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-lg font-semibold text-white">
                     Live funding queue
                   </h2>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 max-w-2xl text-sm text-slate-400">
                     Paymento-linked funding records mapped to investment orders
                     and treasury payment traces.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex min-w-0 flex-wrap gap-2">
                   {(["ALL", "FUNDED", "PROCESSING", "EXCEPTION"] as const).map(
                     (item) => {
                       const isActive = filter === item;
@@ -214,22 +216,22 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                   intents.map((intent) => (
                     <Card
                       key={intent.id}
-                      className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] transition hover:border-blue-400/20 hover:bg-white/[0.055]"
+                      className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] transition hover:border-blue-400/20 hover:bg-white/[0.055]"
                     >
                       <CardContent className="p-4 sm:p-5">
-                        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div className="flex min-w-0 flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                           <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
                                 <Wallet className="h-5 w-5 shrink-0 text-blue-300" />
                               </div>
 
                               <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
                                   <h3 className="text-base font-semibold text-white">
                                     {intent.userName}
                                   </h3>
-                                  <span className="truncate text-sm text-slate-500">
+                                  <span className="min-w-0 truncate text-sm text-slate-500">
                                     {intent.userEmail}
                                   </span>
                                   <span
@@ -239,8 +241,8 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                                   </span>
                                 </div>
 
-                                <p className="mt-1 text-sm text-slate-400">
-                                  {intent.providerLabel} • {intent.assetLabel} •{" "}
+                                <p className="mt-1 break-words text-sm text-slate-400">
+                                  {intent.providerLabel} - {intent.assetLabel} -
                                   {intent.networkLabel}
                                 </p>
                               </div>
@@ -289,10 +291,10 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                                   Destination reference
                                 </p>
-                                <p className="mt-2 text-sm text-white">
+                                <p className="mt-2 break-words text-sm text-white">
                                   {intent.destinationLabel}
                                 </p>
-                                <p className="mt-1 font-mono text-xs text-slate-400">
+                                <p className="mt-1 break-all font-mono text-xs text-slate-400">
                                   {maskReference(intent.destinationReference)}
                                 </p>
                                 {intent.creditedFiatAmountLabel ? (
@@ -307,13 +309,14 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                                   Provider trace
                                 </p>
-                                <p className="mt-2 text-sm text-white">
+                                <p className="mt-2 break-words text-sm text-white">
                                   Ref: {maskReference(intent.providerReference)}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-400">
-                                  Session: {maskReference(intent.providerSessionId)}
+                                <p className="mt-1 break-all text-xs text-slate-400">
+                                  Session:{" "}
+                                  {maskReference(intent.providerSessionId)}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="mt-1 break-all text-xs text-slate-400">
                                   External ID:{" "}
                                   {maskReference(intent.providerExternalId)}
                                 </p>
@@ -331,7 +334,7 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                                   Investment order
                                 </p>
                                 <p className="mt-2 text-sm text-white">
-                                  {intent.investmentOrderStatusLabel} •{" "}
+                                  {intent.investmentOrderStatusLabel} -{" "}
                                   {intent.investmentOrderPaymentMethodTypeLabel}
                                 </p>
                                 <p className="mt-1 text-xs text-slate-400">
@@ -362,10 +365,10 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
                             </div>
                           </div>
 
-                          <div className="flex shrink-0 flex-wrap gap-2 xl:w-[220px] xl:flex-col">
+                          <div className="flex w-full shrink-0 flex-wrap gap-2 overflow-hidden xl:w-[220px] xl:flex-col">
                             <Link
                               href={`/account/dashboard/super-admin/investment-orders/${intent.investmentOrderId}`}
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
                             >
                               <ExternalLink className="h-4 w-4 shrink-0" />
                               View details
@@ -373,7 +376,7 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
 
                             <button
                               type="button"
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
                             >
                               <CheckCircle2 className="h-4 w-4 shrink-0" />
                               Mark reviewed
@@ -381,7 +384,7 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
 
                             <button
                               type="button"
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
                             >
                               <Clock3 className="h-4 w-4 shrink-0" />
                               Check provider
@@ -389,7 +392,7 @@ export function FundingIntentsClient({ initialData }: FundingIntentsClientProps)
 
                             <button
                               type="button"
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-400/15 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300 hover:bg-rose-500/15"
+                              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-400/15 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300 hover:bg-rose-500/15"
                             >
                               <XCircle className="h-4 w-4 shrink-0" />
                               Flag issue
