@@ -77,7 +77,7 @@ export const investmentPlanFormSchema = z
     penaltyFreePeriodDays: z
       .string()
       .trim()
-      .min(1, "Penalty-free period is required.")
+      .min(1, "Penalty period is required.")
       .refine((value) => integerPattern.test(value), "Enter a valid number."),
 
     penaltyType: z.union([z.nativeEnum(PenaltyType), z.literal("")]),

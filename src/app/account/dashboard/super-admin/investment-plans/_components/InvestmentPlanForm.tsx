@@ -311,7 +311,7 @@ export function InvestmentPlanForm({
             <section className="space-y-4 rounded-[1.75rem] border border-white/8 bg-white/[0.03] p-5 sm:p-6">
               <SectionHeader
                 title="Plan controls"
-                description="Term, lock, withdrawal, and plan-mode settings."
+                description="Term, lock, withdrawal, and penalty settings."
               />
 
               <div className="grid gap-5 lg:grid-cols-2">
@@ -363,7 +363,7 @@ export function InvestmentPlanForm({
               <div className="grid gap-5 lg:grid-cols-2">
                 <Field>
                   <FieldLabel className="text-slate-100">
-                    Penalty-free period days
+                    Penalty period days
                   </FieldLabel>
                   <FieldContent>
                     <Input
@@ -377,6 +377,10 @@ export function InvestmentPlanForm({
                       }
                       className="input-premium h-11 rounded-xl"
                     />
+                    <FieldDescription className="text-slate-400">
+                      Withdrawals made within this period incur the configured
+                      early withdrawal penalty.
+                    </FieldDescription>
                     <FieldError>
                       {state.fieldErrors?.penaltyFreePeriodDays?.[0]}
                     </FieldError>
