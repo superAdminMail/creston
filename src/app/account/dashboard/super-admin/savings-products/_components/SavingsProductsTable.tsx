@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowRight, PencilLine } from "lucide-react";
 
 import type { AdminSavingsProductItem } from "@/lib/service/getAdminCatalogData";
-import { getAdminSavingsProducts } from "@/lib/service/getAdminCatalogData";
 import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { Button } from "@/components/ui/button";
 import { SuperAdminCollection } from "../../_components/SuperAdminCollection";
@@ -11,7 +10,7 @@ import { SavingsProductStatusBadge } from "./SavingsProductStatusBadge";
 import { SavingsProductsEmptyState } from "./SavingsProductsEmptyState";
 
 type SavingsProductsTableProps = {
-  data: Awaited<ReturnType<typeof getAdminSavingsProducts>>;
+  data: AdminSavingsProductItem[];
 };
 
 function getFrequencyLabel(

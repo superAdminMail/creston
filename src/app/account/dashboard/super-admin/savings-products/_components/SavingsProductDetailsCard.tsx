@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { deleteInvestmentPlan } from "@/actions/super-admin/investment-plans/deleteInvestmentPlan";
-import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 import { toggleSavingsProductActive } from "@/actions/super-admin/savings-products/toggleSavingsProductActive";
 import type { SuperAdminSavingsProductDetails } from "@/actions/super-admin/savings-products/getSuperAdminSavingsProductById";
+import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 import { SavingsProductStatusBadge } from "./SavingsProductStatusBadge";
 
 type SavingsProductDetailsCardProps = {

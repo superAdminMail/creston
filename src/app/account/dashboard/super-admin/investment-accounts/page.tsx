@@ -1,14 +1,13 @@
-import { getSuperAdminSavingsAccounts } from "@/actions/super-admin/savings-accounts/getSuperAdminSavingsAccounts";
+import { getSuperAdminInvestmentAccounts } from "@/actions/super-admin/investment-accounts/getSuperAdminInvestmentAccounts";
+import { InvestmentAccountsHeader } from "./_components/InvestmentAccountsHeader";
+import { InvestmentAccountsTable } from "./_components/InvestmentAccountsTable";
 
-import { SavingsAccountsHeader } from "./_components/SavingsAccountsHeader";
-import { SavingsAccountsTable } from "./_components/SavingsAccountsTable";
-
-export default async function SuperAdminSavingsAccountsPage() {
-  const data = await getSuperAdminSavingsAccounts();
+export default async function SuperAdminInvestmentAccountsPage() {
+  const data = await getSuperAdminInvestmentAccounts();
 
   return (
     <div className="space-y-6">
-      <SavingsAccountsHeader />
+      <InvestmentAccountsHeader />
 
       <section className="grid gap-4 md:grid-cols-4">
         <div className="card-premium rounded-[1.75rem] p-5">
@@ -29,10 +28,10 @@ export default async function SuperAdminSavingsAccountsPage() {
         </div>
         <div className="card-premium rounded-[1.75rem] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Locked accounts
+            Pending accounts
           </p>
           <p className="mt-3 text-3xl font-semibold text-white">
-            {data.lockedAccountsCount}
+            {data.pendingAccountsCount}
           </p>
         </div>
         <div className="card-premium rounded-[1.75rem] p-5">
@@ -48,7 +47,7 @@ export default async function SuperAdminSavingsAccountsPage() {
         </div>
       </section>
 
-      <SavingsAccountsTable data={data} />
+      <InvestmentAccountsTable data={data} />
     </div>
   );
 }

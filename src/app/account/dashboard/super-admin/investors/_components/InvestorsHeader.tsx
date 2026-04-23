@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
-export function SavingsProductsHeader() {
+export function InvestorsHeader() {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -13,21 +13,13 @@ export function SavingsProductsHeader() {
           Back to dashboard
         </Link>
         <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
-          Savings Products
+          Investors
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-          Create, review, and manage the savings product catalog that powers
-          user savings accounts.
+          Review investor profiles, verification state, and linked account
+          activity from one super-admin workspace.
         </p>
       </div>
-
-      <Link
-        href="/account/dashboard/super-admin/savings-products/new"
-        className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
-      >
-        <Plus className="h-4 w-4" />
-        New product
-      </Link>
     </div>
   );
 }

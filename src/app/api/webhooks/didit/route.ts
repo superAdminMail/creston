@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  markKycVerificationSessionStatus,
-} from "@/lib/kyc/kycVerificationSessionService";
-import {
-  verifyDiditWebhookSignature,
-} from "@/lib/kyc/didit";
+import { markKycVerificationSessionStatus } from "@/lib/kyc/kycVerificationSessionService";
+import { verifyDiditWebhookSignature } from "@/lib/kyc/didit";
 import { pusherServer } from "@/lib/pusher";
 
 export async function POST(req: Request) {
@@ -23,7 +19,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    const timestamp = req.headers.get("x-timestamp") ?? payload.timestamp ?? null;
+    const timestamp =
+      req.headers.get("x-timestamp") ?? payload.timestamp ?? null;
     const signatureV2 = req.headers.get("x-signature-v2");
     const signatureSimple = req.headers.get("x-signature-simple");
     const signatureRaw = req.headers.get("x-signature");

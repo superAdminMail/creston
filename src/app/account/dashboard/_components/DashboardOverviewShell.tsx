@@ -258,7 +258,9 @@ function CtaCard({
 
 function HeroHighlights({ children }: { children: ReactNode }) {
   return (
-    <div className="grid w-full max-w-xl grid-cols-2 gap-3">{children}</div>
+    <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:max-w-2xl">
+      {children}
+    </div>
   );
 }
 
@@ -307,12 +309,12 @@ export function DashboardOverviewShell({
               {heroHighlights.map((highlight) => (
                 <div
                   key={highlight.label}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-4"
+                  className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-5"
                 >
                   <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                     {highlight.label}
                   </p>
-                  <p className="mt-2 text-2xl font-semibold">
+                  <p className="mt-2 break-words text-xl font-semibold leading-tight sm:text-2xl">
                     {highlight.value}
                   </p>
                 </div>

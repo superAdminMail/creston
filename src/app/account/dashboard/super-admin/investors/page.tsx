@@ -1,54 +1,51 @@
-import { getSuperAdminSavingsAccounts } from "@/actions/super-admin/savings-accounts/getSuperAdminSavingsAccounts";
+import { getSuperAdminInvestors } from "@/actions/super-admin/investors/getSuperAdminInvestors";
 
-import { SavingsAccountsHeader } from "./_components/SavingsAccountsHeader";
-import { SavingsAccountsTable } from "./_components/SavingsAccountsTable";
+import { InvestorsHeader } from "./_components/InvestorsHeader";
+import { InvestorsTable } from "./_components/InvestorsTable";
 
-export default async function SuperAdminSavingsAccountsPage() {
-  const data = await getSuperAdminSavingsAccounts();
+export default async function SuperAdminInvestorsPage() {
+  const data = await getSuperAdminInvestors();
 
   return (
     <div className="space-y-6">
-      <SavingsAccountsHeader />
+      <InvestorsHeader />
 
       <section className="grid gap-4 md:grid-cols-4">
         <div className="card-premium rounded-[1.75rem] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total accounts
+            Total investors
           </p>
           <p className="mt-3 text-3xl font-semibold text-white">
-            {data.totalAccountsCount}
+            {data.totalInvestorsCount}
           </p>
         </div>
         <div className="card-premium rounded-[1.75rem] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Active accounts
+            Verified investors
           </p>
           <p className="mt-3 text-3xl font-semibold text-white">
-            {data.activeAccountsCount}
+            {data.verifiedInvestorsCount}
           </p>
         </div>
         <div className="card-premium rounded-[1.75rem] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Locked accounts
+            Pending review
           </p>
           <p className="mt-3 text-3xl font-semibold text-white">
-            {data.lockedAccountsCount}
+            {data.pendingReviewCount}
           </p>
         </div>
         <div className="card-premium rounded-[1.75rem] p-5">
           <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Total balance
+            With accounts
           </p>
           <p className="mt-3 text-3xl font-semibold text-white">
-            {data.totalBalance.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
-            })}
+            {data.investorsWithAccountsCount}
           </p>
         </div>
       </section>
 
-      <SavingsAccountsTable data={data} />
+      <InvestorsTable data={data} />
     </div>
   );
 }

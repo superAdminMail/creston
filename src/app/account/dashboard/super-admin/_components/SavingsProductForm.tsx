@@ -60,21 +60,6 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
-function SectionHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
-      <p className="text-sm leading-6 text-slate-400">{description}</p>
-    </div>
-  );
-}
-
 export function SavingsProductForm({
   title,
   description,
