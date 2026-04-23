@@ -18,9 +18,19 @@ export default function InvestmentOrderPaymentWorkspace({
   const [mode, setMode] = useState<"FULL" | "PARTIAL" | null>(null);
   const [partialAmount] = useState<number>(order.remainingAmount);
   const [proofOpen, setProofOpen] = useState(false);
+  const latestPayment = order.recentPayments[0] ?? null;
 
   const canSubmitPayment =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
+
+  const bankProofActionLabel =
+    order.status === "PAID" || order.status === "CONFIRMED"
+      ? "Payment complete"
+      : latestPayment?.status === "PENDING_REVIEW"
+        ? "Payment under review"
+        : order.status === "PARTIALLY_PAID"
+          ? "Complete Payment"
+          : "I've made this payment";
 
   const selectedAmount = useMemo(() => {
     if (mode === "FULL") return order.remainingAmount;
@@ -51,6 +61,7 @@ export default function InvestmentOrderPaymentWorkspace({
                 bankMethod={order.bankMethod}
                 selectedAmount={selectedAmount}
                 currency={order.currency}
+                actionLabel={bankProofActionLabel}
                 onConfirmPaid={() => setProofOpen(true)}
               />
             ) : (
