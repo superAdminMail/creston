@@ -51,6 +51,7 @@ export type SuperAdminInvestmentOption = {
   id: string;
   name: string;
   slug: string;
+  symbol: string | null;
 };
 
 export type SuperAdminInvestmentPlansData = {
@@ -125,6 +126,7 @@ export async function getSuperAdminInvestmentPlans(
         id: true,
         name: true,
         slug: true,
+        symbol: true,
       },
     }),
   ]);
@@ -133,6 +135,7 @@ export async function getSuperAdminInvestmentPlans(
     id: investment.id,
     name: investment.name,
     slug: investment.slug,
+    symbol: investment.symbol,
   }));
 
   return {

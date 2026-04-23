@@ -38,6 +38,7 @@ function getParsedTiers(formData: FormData) {
 function getFormData(formData: FormData) {
   return {
     investmentId: String(formData.get("investmentId") ?? ""),
+    investmentSymbol: String(formData.get("investmentSymbol") ?? ""),
     name: String(formData.get("name") ?? ""),
     slug: String(formData.get("slug") ?? ""),
     description: String(formData.get("description") ?? ""),
@@ -90,6 +91,11 @@ export async function updateInvestmentPlan(
         description: true,
         period: true,
         currency: true,
+        investment: {
+          select: {
+            symbol: true,
+          },
+        },
         penaltyPeriodDays: true,
         penaltyType: true,
         earlyWithdrawalPenaltyValue: true,
@@ -140,12 +146,23 @@ export async function updateInvestmentPlan(
 
     const investment = await prisma.investment.findUnique({
       where: { id: values.investmentId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, symbol: true },
     });
 
     if (!investment) {
       return createErrorState("Select a valid investment for this plan.", {
         investmentId: ["Select a valid parent investment."],
+      });
+    }
+
+    const investmentSymbol =
+      values.investmentSymbol.trim().length > 0
+        ? values.investmentSymbol.trim().toUpperCase()
+        : null;
+
+    if (values.investmentModel === "MARKET" && !investmentSymbol) {
+      return createErrorState("Add an investment symbol for market plans.", {
+        investmentSymbol: ["Investment symbol is required for market plans."],
       });
     }
 
@@ -168,60 +185,71 @@ export async function updateInvestmentPlan(
       excludeId: investmentPlanId,
     });
 
-    await prisma.investmentPlan.update({
-      where: { id: investmentPlanId },
-      data: {
-        investmentId: values.investmentId,
-        name: values.name,
-        slug,
-        description: values.description,
-        penaltyPeriodDays: values.penaltyPeriodDays,
-        penaltyType: values.penaltyType,
-        earlyWithdrawalPenaltyValue: values.earlyWithdrawalPenaltyValue
-          ? new Prisma.Decimal(values.earlyWithdrawalPenaltyValue.toFixed(2))
-          : null,
-        maxPenaltyAmount: values.maxPenaltyAmount
-          ? new Prisma.Decimal(values.maxPenaltyAmount.toFixed(2))
-          : null,
-        investmentModel: values.investmentModel,
-        expectedReturnMin: values.expectedReturnMin
-          ? new Prisma.Decimal(values.expectedReturnMin.toFixed(2))
-          : null,
-        expectedReturnMax: values.expectedReturnMax
-          ? new Prisma.Decimal(values.expectedReturnMax.toFixed(2))
-          : null,
-        isLocked: values.isLocked,
-        allowWithdrawal: values.allowWithdrawal,
-        period: values.period,
-        currency: values.currency,
-        seoTitle: values.seoTitle,
-        seoDescription: values.seoDescription,
-        seoImageFileId: values.seoImageFileId,
-        sortOrder: values.sortOrder,
-        durationDays: values.durationDays,
-        isActive: values.isActive,
-        tiers: {
-          deleteMany: {},
-          create: values.tiers.map((tier) => ({
-            level: tier.level,
-            minAmount: new Prisma.Decimal(tier.minAmount.toFixed(2)),
-            maxAmount: new Prisma.Decimal(tier.maxAmount.toFixed(2)),
-            fixedRoiPercent:
-              tier.fixedRoiPercent === null
-                ? null
-                : new Prisma.Decimal(tier.fixedRoiPercent.toFixed(2)),
-            projectedRoiMin:
-              tier.projectedRoiMin === null
-                ? null
-                : new Prisma.Decimal(tier.projectedRoiMin.toFixed(2)),
-            projectedRoiMax:
-              tier.projectedRoiMax === null
-                ? null
-                : new Prisma.Decimal(tier.projectedRoiMax.toFixed(2)),
-            isActive: tier.isActive,
-          })),
+    await prisma.$transaction(async (tx) => {
+      if (investmentSymbol !== null && investment.symbol !== investmentSymbol) {
+        await tx.investment.update({
+          where: { id: investment.id },
+          data: {
+            symbol: investmentSymbol,
+          },
+        });
+      }
+
+      await tx.investmentPlan.update({
+        where: { id: investmentPlanId },
+        data: {
+          investmentId: values.investmentId,
+          name: values.name,
+          slug,
+          description: values.description,
+          penaltyPeriodDays: values.penaltyPeriodDays,
+          penaltyType: values.penaltyType,
+          earlyWithdrawalPenaltyValue: values.earlyWithdrawalPenaltyValue
+            ? new Prisma.Decimal(values.earlyWithdrawalPenaltyValue.toFixed(2))
+            : null,
+          maxPenaltyAmount: values.maxPenaltyAmount
+            ? new Prisma.Decimal(values.maxPenaltyAmount.toFixed(2))
+            : null,
+          investmentModel: values.investmentModel,
+          expectedReturnMin: values.expectedReturnMin
+            ? new Prisma.Decimal(values.expectedReturnMin.toFixed(2))
+            : null,
+          expectedReturnMax: values.expectedReturnMax
+            ? new Prisma.Decimal(values.expectedReturnMax.toFixed(2))
+            : null,
+          isLocked: values.isLocked,
+          allowWithdrawal: values.allowWithdrawal,
+          period: values.period,
+          currency: values.currency,
+          seoTitle: values.seoTitle,
+          seoDescription: values.seoDescription,
+          seoImageFileId: values.seoImageFileId,
+          sortOrder: values.sortOrder,
+          durationDays: values.durationDays,
+          isActive: values.isActive,
+          tiers: {
+            deleteMany: {},
+            create: values.tiers.map((tier) => ({
+              level: tier.level,
+              minAmount: new Prisma.Decimal(tier.minAmount.toFixed(2)),
+              maxAmount: new Prisma.Decimal(tier.maxAmount.toFixed(2)),
+              fixedRoiPercent:
+                tier.fixedRoiPercent === null
+                  ? null
+                  : new Prisma.Decimal(tier.fixedRoiPercent.toFixed(2)),
+              projectedRoiMin:
+                tier.projectedRoiMin === null
+                  ? null
+                  : new Prisma.Decimal(tier.projectedRoiMin.toFixed(2)),
+              projectedRoiMax:
+                tier.projectedRoiMax === null
+                  ? null
+                  : new Prisma.Decimal(tier.projectedRoiMax.toFixed(2)),
+              isActive: tier.isActive,
+            })),
+          },
         },
-      },
+      });
     });
 
     await logAuditEvent({
@@ -235,6 +263,7 @@ export async function updateInvestmentPlan(
         next: {
           investmentId: values.investmentId,
           investmentName: investment.name,
+          investmentSymbol,
           name: values.name,
           slug,
           description: values.description,

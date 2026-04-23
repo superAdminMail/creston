@@ -2,7 +2,13 @@ import Link from "next/link";
 import { AlertCircle, ArrowLeft, CheckCircle2, Clock3 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { resolvePaymentoStatus } from "@/lib/payments/crypto/paymentoStatus";
 
@@ -134,15 +140,14 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
 
           <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              We received your redirect from Paymento. Final settlement does
-              not happen here. Your payment is verified securely on the server
-              and your dashboard will update automatically once confirmed.
+              We are currently verifying your payment with {provider}. This may
+              take a few minutes.
             </p>
 
             {targetLabel ? (
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                You can return to the same checkout context for this{" "}
-                {targetLabel.toLowerCase()} while verification completes.
+                You can return to your Dashboard {targetLabel.toLowerCase()}{" "}
+                while verification completes.
               </p>
             ) : null}
           </div>
@@ -158,7 +163,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
             <Button
               asChild
               variant="outline"
-              className="rounded-full px-5 border-slate-200/80 bg-white/80 dark:border-white/10 dark:bg-white/[0.04]"
+              className="rounded-full px-5 border-slate-200/80 bg-slate-400 dark:border-white/10 dark:bg-white/[0.04]"
             >
               <Link href="/account/dashboard">Go to dashboard</Link>
             </Button>

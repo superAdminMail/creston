@@ -3,6 +3,7 @@ import { createInitialFormState } from "@/lib/forms/actionState";
 
 export type InvestmentPlanFieldName =
   | "investmentId"
+  | "investmentSymbol"
   | "name"
   | "slug"
   | "description"

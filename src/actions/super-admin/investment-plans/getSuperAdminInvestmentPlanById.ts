@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import {
-  InvestmentModel,
-} from "@/generated/prisma";
+import { InvestmentModel, Prisma } from "@/generated/prisma";
 import type {
   InvestmentPeriod,
   InvestmentTierLevel,
@@ -66,6 +64,7 @@ export type SuperAdminInvestmentPlanDetails = {
   }>;
   formDefaults: {
     investmentId: string;
+    investmentSymbol: string;
     name: string;
     slug: string;
     description: string;
@@ -99,13 +98,52 @@ export type SuperAdminInvestmentPlanDetails = {
   investmentOptions: SuperAdminInvestmentOption[];
 };
 
-export async function getSuperAdminInvestmentPlanById(
-  investmentPlanId: string,
-): Promise<SuperAdminInvestmentPlanDetails> {
-  await requireSuperAdminAccess();
+type SuperAdminInvestmentPlanRecord = {
+  id: string;
+  investmentId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  period: InvestmentPeriod;
+  currency: string;
+  investmentModel: InvestmentModel;
+  penaltyPeriodDays: number;
+  penaltyType: PenaltyType | null;
+  earlyWithdrawalPenaltyValue: Prisma.Decimal | null;
+  maxPenaltyAmount: Prisma.Decimal | null;
+  expectedReturnMin: Prisma.Decimal | null;
+  expectedReturnMax: Prisma.Decimal | null;
+  isLocked: boolean;
+  allowWithdrawal: boolean;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoImageFileId: string | null;
+  sortOrder: number;
+  durationDays: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  tiers: Array<{
+    id: string;
+    level: InvestmentTierLevel;
+    minAmount: Prisma.Decimal;
+    maxAmount: Prisma.Decimal;
+    fixedRoiPercent: Prisma.Decimal | null;
+    projectedRoiMin: Prisma.Decimal | null;
+    projectedRoiMax: Prisma.Decimal | null;
+    isActive: boolean;
+  }>;
+  investment: {
+    name: string;
+    symbol: string | null;
+  };
+};
 
-  const [plan, planData] = await Promise.all([
-    prisma.investmentPlan.findUnique({
+async function loadSuperAdminInvestmentPlanRecord(
+  investmentPlanId: string,
+): Promise<SuperAdminInvestmentPlanRecord> {
+  try {
+    const plan = await prisma.investmentPlan.findUnique({
       where: { id: investmentPlanId },
       select: {
         id: true,
@@ -150,10 +188,157 @@ export async function getSuperAdminInvestmentPlanById(
         investment: {
           select: {
             name: true,
+            symbol: true,
           },
         },
       },
-    }),
+    });
+
+    if (plan) {
+      return plan as SuperAdminInvestmentPlanRecord;
+    }
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientValidationError)) {
+      throw error;
+    }
+  }
+
+  const [planRows, tierRows] = await Promise.all([
+    prisma.$queryRaw<
+      Array<{
+        id: string;
+        investmentId: string;
+        name: string;
+        slug: string;
+        description: string | null;
+        period: InvestmentPeriod;
+        currency: string;
+        investmentModel: InvestmentModel;
+        penaltyPeriodDays: number;
+        penaltyType: PenaltyType | null;
+        earlyWithdrawalPenaltyValue: Prisma.Decimal | null;
+        maxPenaltyAmount: Prisma.Decimal | null;
+        expectedReturnMin: Prisma.Decimal | null;
+        expectedReturnMax: Prisma.Decimal | null;
+        isLocked: boolean;
+        allowWithdrawal: boolean;
+        seoTitle: string | null;
+        seoDescription: string | null;
+        seoImageFileId: string | null;
+        sortOrder: number;
+        durationDays: number;
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        investmentName: string;
+        investmentSymbol: string | null;
+      }>
+    >`
+      SELECT
+        ip."id",
+        ip."investmentId",
+        ip."name",
+        ip."slug",
+        ip."description",
+        ip."period",
+        ip."currency",
+        ip."investmentModel",
+        ip."penaltyPeriodDays",
+        ip."penaltyType",
+        ip."earlyWithdrawalPenaltyValue",
+        ip."maxPenaltyAmount",
+        ip."expectedReturnMin",
+        ip."expectedReturnMax",
+        ip."isLocked",
+        ip."allowWithdrawal",
+        ip."seoTitle",
+        ip."seoDescription",
+        ip."seoImageFileId",
+        ip."sortOrder",
+        ip."durationDays",
+        ip."isActive",
+        ip."createdAt",
+        ip."updatedAt",
+        i."name" AS "investmentName",
+        i."symbol" AS "investmentSymbol"
+      FROM "investment_plan" ip
+      INNER JOIN "investment" i ON i."id" = ip."investmentId"
+      WHERE ip."id" = ${investmentPlanId}
+      LIMIT 1
+    `,
+    prisma.$queryRaw<
+      Array<{
+        id: string;
+        level: InvestmentTierLevel;
+        minAmount: Prisma.Decimal;
+        maxAmount: Prisma.Decimal;
+        fixedRoiPercent: Prisma.Decimal | null;
+        projectedRoiMin: Prisma.Decimal | null;
+        projectedRoiMax: Prisma.Decimal | null;
+        isActive: boolean;
+      }>
+    >`
+      SELECT
+        t."id",
+        t."level",
+        t."minAmount",
+        t."maxAmount",
+        t."fixedRoiPercent",
+        t."projectedRoiMin",
+        t."projectedRoiMax",
+        t."isActive"
+      FROM "investment_plan_tier" t
+      WHERE t."investmentPlanId" = ${investmentPlanId}
+      ORDER BY t."level" ASC
+    `,
+  ]);
+
+  const planRow = planRows[0];
+
+  if (!planRow) {
+    notFound();
+  }
+
+  return {
+    id: planRow.id,
+    investmentId: planRow.investmentId,
+    name: planRow.name,
+    slug: planRow.slug,
+    description: planRow.description,
+    period: planRow.period,
+    currency: planRow.currency,
+    investmentModel: planRow.investmentModel,
+    penaltyPeriodDays: planRow.penaltyPeriodDays,
+    penaltyType: planRow.penaltyType,
+    earlyWithdrawalPenaltyValue: planRow.earlyWithdrawalPenaltyValue,
+    maxPenaltyAmount: planRow.maxPenaltyAmount,
+    expectedReturnMin: planRow.expectedReturnMin,
+    expectedReturnMax: planRow.expectedReturnMax,
+    isLocked: planRow.isLocked,
+    allowWithdrawal: planRow.allowWithdrawal,
+    seoTitle: planRow.seoTitle,
+    seoDescription: planRow.seoDescription,
+    seoImageFileId: planRow.seoImageFileId,
+    sortOrder: planRow.sortOrder,
+    durationDays: planRow.durationDays,
+    isActive: planRow.isActive,
+    createdAt: planRow.createdAt,
+    updatedAt: planRow.updatedAt,
+    tiers: tierRows,
+    investment: {
+      name: planRow.investmentName,
+      symbol: planRow.investmentSymbol,
+    },
+  };
+}
+
+export async function getSuperAdminInvestmentPlanById(
+  investmentPlanId: string,
+): Promise<SuperAdminInvestmentPlanDetails> {
+  await requireSuperAdminAccess();
+
+  const [plan, planData] = await Promise.all([
+    loadSuperAdminInvestmentPlanRecord(investmentPlanId),
     getSuperAdminInvestmentPlans(),
   ]);
 
@@ -244,6 +429,7 @@ export async function getSuperAdminInvestmentPlanById(
     tiers,
     formDefaults: {
       investmentId: plan.investmentId,
+      investmentSymbol: plan.investment.symbol ?? "",
       name: plan.name,
       slug: plan.slug,
       description: plan.description ?? "",

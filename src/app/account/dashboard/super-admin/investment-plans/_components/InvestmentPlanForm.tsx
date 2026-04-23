@@ -43,6 +43,7 @@ type InvestmentPlanTierFormValue = {
 
 type InvestmentPlanFormValues = {
   investmentId: string;
+  investmentSymbol: string;
   name: string;
   slug: string;
   description: string;
@@ -124,6 +125,9 @@ export function InvestmentPlanForm({
     defaultValues.description,
   );
   const [investmentId, setInvestmentId] = useState(defaultValues.investmentId);
+  const [investmentSymbol, setInvestmentSymbol] = useState(
+    defaultValues.investmentSymbol,
+  );
   const [period, setPeriod] = useState(defaultValues.period);
   const [investmentModel, setInvestmentModel] = useState(
     defaultValues.investmentModel,
@@ -230,16 +234,49 @@ export function InvestmentPlanForm({
                     <SuperAdminFormSelect
                       name="investmentId"
                       value={investmentId}
-                      onValueChange={setInvestmentId}
+                      onValueChange={(value) => {
+                        setInvestmentId(value);
+                        const selected = investmentOptions.find(
+                          (option) => option.id === value,
+                        );
+
+                        setInvestmentSymbol(selected?.symbol ?? "");
+                      }}
                       placeholder="Select investment"
                       emptyOptionLabel="Select investment"
                       options={investmentOptions.map((option) => ({
                         value: option.id,
-                        label: option.name,
+                        label: option.symbol
+                          ? `${option.name} (${option.symbol})`
+                          : option.name,
                       }))}
                     />
                     <FieldError>
                       {state.fieldErrors?.investmentId?.[0]}
+                    </FieldError>
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel className="text-slate-100">
+                    Investment symbol
+                  </FieldLabel>
+                  <FieldContent>
+                    <Input
+                      name="investmentSymbol"
+                      value={investmentSymbol}
+                      onChange={(event) =>
+                        setInvestmentSymbol(event.target.value.toUpperCase())
+                      }
+                      placeholder="BTC"
+                      className="input-premium h-11 rounded-xl uppercase"
+                    />
+                    <FieldDescription className="text-slate-400">
+                      Stored on the parent investment and used for market plan
+                      pricing.
+                    </FieldDescription>
+                    <FieldError>
+                      {state.fieldErrors?.investmentSymbol?.[0]}
                     </FieldError>
                   </FieldContent>
                 </Field>

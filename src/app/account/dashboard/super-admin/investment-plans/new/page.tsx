@@ -15,6 +15,7 @@ export default async function NewInvestmentPlanPage() {
       cancelHref="/account/dashboard/super-admin/investment-plans"
       defaultValues={{
         investmentId: "",
+        investmentSymbol: "",
         name: "",
         slug: "",
         description: "",
