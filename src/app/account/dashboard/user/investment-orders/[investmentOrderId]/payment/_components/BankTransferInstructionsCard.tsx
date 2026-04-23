@@ -7,7 +7,6 @@ type Props = {
   bankMethod: {
     id: string;
     label: string;
-    type: string;
     providerName: string | null;
     bankName: string | null;
     bankCode: string | null;
@@ -22,10 +21,6 @@ type Props = {
     country: string | null;
     instructions: string | null;
     notes: string | null;
-    isPrivate: boolean;
-    isDefault: boolean;
-    sortOrder: number;
-    verificationStatus: string;
     cryptoAsset: string | null;
     cryptoNetwork: string | null;
     walletAddress: string | null;
@@ -44,7 +39,6 @@ export default function BankTransferInstructionsCard({
   onConfirmPaid,
 }: Props) {
   const rows = [
-    { label: "Type", value: bankMethod.type },
     { label: "Provider name", value: bankMethod.providerName },
     { label: "Bank", value: bankMethod.bankName },
     { label: "Account name", value: bankMethod.accountName },
@@ -57,10 +51,6 @@ export default function BankTransferInstructionsCard({
     { label: "Wire routing number", value: bankMethod.routingNumber },
     { label: "Branch name", value: bankMethod.branchName },
     { label: "Country", value: bankMethod.country },
-    { label: "Private", value: bankMethod.isPrivate ? "Yes" : "No" },
-    { label: "Default", value: bankMethod.isDefault ? "Yes" : "No" },
-    { label: "Sort order", value: String(bankMethod.sortOrder) },
-    { label: "Verification status", value: bankMethod.verificationStatus },
     { label: "Crypto asset", value: bankMethod.cryptoAsset },
     { label: "Crypto network", value: bankMethod.cryptoNetwork },
     { label: "Wallet address", value: bankMethod.walletAddress },
