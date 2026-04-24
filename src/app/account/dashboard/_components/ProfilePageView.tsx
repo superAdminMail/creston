@@ -24,6 +24,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
     email: user.email ?? "",
     username: user.username ?? undefined,
   });
+  const canReviewInvestmentProfile = user.role === "USER";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#050B1F]">
@@ -42,34 +43,36 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                 Personal Profile
               </div>
 
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
                 Personal Profile
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-[15px]">
                 Manage your account name, username, and profile image here.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
+            <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
               <Button
                 asChild
-                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95 sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95 sm:px-5"
               >
                 <Link href="/account/dashboard/profile/update">
                   Edit Profile
                 </Link>
               </Button>
 
-              <Button
-                asChild
-                variant="outline"
-                className="inline-flex w-full items-center justify-center rounded-2xl border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100 sm:w-auto"
-              >
-                <Link href="/account/dashboard/user/investment-profile">
-                  Review your investment profile
-                </Link>
-              </Button>
+              {canReviewInvestmentProfile ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="inline-flex w-full items-center justify-center rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-slate-100 sm:px-5"
+                >
+                  <Link href="/account/dashboard/user/investment-profile">
+                    Review your investment profile
+                  </Link>
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -88,7 +91,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
+                  <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
                     {user.isEmailVerified
                       ? "Email verified"
                       : "Email not verified"}
@@ -112,7 +115,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                   Your personal account details from the User model.
                 </p>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <InfoCard
                     icon={<User2 className="h-4 w-4 text-blue-300" />}
                     label="Full Name"
@@ -133,32 +136,38 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
             </div>
 
             <div className="grid gap-4 sm:gap-6">
-              <div className="rounded-[1.5rem] border border-blue-400/10 bg-blue-500/5 p-4 sm:rounded-[1.75rem] sm:p-6">
-                <h3 className="text-lg font-semibold text-white">Next step</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
-                  Keep your investment profile up to date separately so your
-                  account records stay clean and easy to review.
-                </p>
+              {canReviewInvestmentProfile ? (
+                <div className="rounded-[1.5rem] border border-blue-400/10 bg-blue-500/5 p-4 sm:rounded-[1.75rem] sm:p-6">
+                  <h3 className="text-lg font-semibold text-white">
+                    Next step
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    Keep your investment profile up to date separately so your
+                    account records stay clean and easy to review.
+                  </p>
 
-                <div className="mt-5">
-                  <Button
-                    asChild
-                    className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
-                  >
-                    <Link href="/account/dashboard/user/investment-profile">
-                      Review your investment profile
-                    </Link>
-                  </Button>
+                  <div className="mt-5">
+                    <Button
+                      asChild
+                      className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
+                    >
+                      <Link href="/account/dashboard/user/investment-profile">
+                        Review your investment profile
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <></>
+              )}
 
               <div className="rounded-[1.5rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:rounded-[1.75rem] sm:p-6">
                 <h3 className="text-lg font-semibold text-white">
                   Security Notice
                 </h3>
                 <p className="mt-2 text-sm leading-6 text-slate-300">
-                  Changes to your personal information may affect how the
-                  account is displayed across the dashboard.
+                  Your account is protected by a password and you can change it
+                  at any time.
                 </p>
               </div>
             </div>
@@ -179,7 +188,7 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-4">
       <div className="flex items-center gap-2">
         {icon}
         <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">

@@ -1,12 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowUpRight,
   CreditCard,
   Landmark,
+  Loader2,
   ShieldAlert,
+  AlertTriangle,
 } from "lucide-react";
 
 import { createWithdrawalOrder } from "@/actions/accounts/withdrawal/createWithdrawalOrder";
@@ -15,6 +19,9 @@ import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import type { WithdrawalSourceOption } from "@/lib/service/getAvailableWithdrawalSource";
+import type { AvailableWithdrawalBalanceSummary } from "@/lib/service/getAvailableWithdrawalBalance";
+import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
+import WithdrawalRequestsList from "../withdrawals/_components/WithdrawalRequestsList";
 
 type PaymentMethod = {
   id: string;
@@ -29,13 +36,18 @@ type Props = {
   kycStatus: string;
   paymentMethods: PaymentMethod[];
   withdrawalSources: WithdrawalSourceOption[];
+  withdrawalOrders: WithdrawalRequestItemDto[];
+  availableBalance: AvailableWithdrawalBalanceSummary;
 };
 
 export default function WithdrawalsClient({
   kycStatus,
   paymentMethods,
   withdrawalSources,
+  withdrawalOrders,
+  availableBalance,
 }: Props) {
+  const router = useRouter();
   const [amount, setAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [selectedSourceType, setSelectedSourceType] = useState<
@@ -46,7 +58,7 @@ export default function WithdrawalsClient({
       ? `${withdrawalSources[0].type}:${withdrawalSources[0].id}`
       : null,
   );
-  const [state, formAction] = useActionState(createWithdrawalOrder, {
+  const [state, formAction, isPending] = useActionState(createWithdrawalOrder, {
     status: "idle",
   });
 
@@ -61,21 +73,18 @@ export default function WithdrawalsClient({
       ? savingsSource
       : selectedSourceType === "INVESTMENT_ORDER"
         ? investmentSource
-        : null) ??
-    null;
-  const totalAvailableBalance = withdrawalSources.reduce(
-    (sum, source) => sum + source.amount,
-    0,
-  );
-  const availableBalanceCurrency = withdrawalSources[0]?.currency ?? "USD";
+        : null) ?? null;
+  const totalAvailableBalance = availableBalance.totalBalance;
+  const availableBalanceCurrency = availableBalance.currency ?? "USD";
 
-  const availableBalanceLabel = withdrawalSources.length === 0
-    ? "No eligible source available"
-    : savingsSource && investmentSource
-      ? "Combined available balance across savings and investments"
-      : savingsSource
-        ? savingsSource.label
-        : investmentSource?.label ?? "No eligible source available";
+  const availableBalanceLabel =
+    withdrawalSources.length === 0
+      ? "No eligible source available"
+      : savingsSource && investmentSource
+        ? "Combined available balance across savings and investments"
+        : savingsSource
+          ? savingsSource.label
+          : (investmentSource?.label ?? "No eligible source available");
 
   function mask(value?: string | null) {
     if (!value) return "";
@@ -102,12 +111,7 @@ export default function WithdrawalsClient({
       toast.success(state.message ?? "Withdrawal request submitted.");
       setAmount("");
       setSelectedMethod(null);
-      setSelectedSourceType(withdrawalSources[0]?.type ?? null);
-      setSelectedSourceKey(
-        withdrawalSources[0]
-          ? `${withdrawalSources[0].type}:${withdrawalSources[0].id}`
-          : null,
-      );
+      router.refresh();
       return;
     }
 
@@ -117,11 +121,24 @@ export default function WithdrawalsClient({
   }, [state]);
 
   useEffect(() => {
-    if (!selectedSourceKey && withdrawalSources[0]) {
-      setSelectedSourceType(withdrawalSources[0].type);
-      setSelectedSourceKey(
-        `${withdrawalSources[0].type}:${withdrawalSources[0].id}`,
-      );
+    const currentSelection = selectedSourceKey
+      ? withdrawalSources.find(
+          (source) => `${source.type}:${source.id}` === selectedSourceKey,
+        )
+      : null;
+
+    if (currentSelection) {
+      return;
+    }
+
+    const nextSource = withdrawalSources[0] ?? null;
+
+    setSelectedSourceType(nextSource?.type ?? null);
+    setSelectedSourceKey(
+      nextSource ? `${nextSource.type}:${nextSource.id}` : null,
+    );
+    if (nextSource) {
+      setAmount(String(nextSource.amount));
     }
   }, [selectedSourceKey, withdrawalSources]);
 
@@ -137,14 +154,9 @@ export default function WithdrawalsClient({
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
         <p className="text-sm text-slate-400">Available Balance</p>
         <h2 className="mt-2 text-3xl font-bold text-white">
-          {formatCurrency(
-            totalAvailableBalance,
-            availableBalanceCurrency,
-          )}
+          {formatCurrency(totalAvailableBalance, availableBalanceCurrency)}
         </h2>
-        <p className="mt-2 text-sm text-slate-400">
-          {availableBalanceLabel}
-        </p>
+        <p className="mt-2 text-sm text-slate-400">{availableBalanceLabel}</p>
       </div>
 
       {kycStatus !== "VERIFIED" ? (
@@ -186,14 +198,32 @@ export default function WithdrawalsClient({
         </div>
 
         {selectedSource ? (
-          <p className="text-xs text-slate-400">
-            Selected source: {selectedSource.label} with{" "}
-            {formatCurrency(selectedSource.amount, selectedSource.currency)}{" "}
-            available.
-          </p>
+          <div className="space-y-2 text-xs text-slate-400">
+            <p>
+              Selected source: {selectedSource.label} with{" "}
+              {formatCurrency(selectedSource.amount, selectedSource.currency)}{" "}
+              available.
+            </p>
+
+            {selectedSource.type === "INVESTMENT_ORDER" &&
+            selectedSource.label
+              .toLowerCase()
+              .startsWith("early withdrawal") ? (
+              <div className="flex items-start gap-2 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-amber-100">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
+                <p className="leading-6">
+                  Early withdrawal fee will be applied automatically.
+                </p>
+              </div>
+            ) : null}
+          </div>
         ) : selectedSourceType ? (
           <p className="text-xs text-slate-400">
-            No {selectedSourceType === "SAVINGS_ACCOUNT" ? "savings" : "investment"} balance is currently available for withdrawal.
+            No{" "}
+            {selectedSourceType === "SAVINGS_ACCOUNT"
+              ? "savings"
+              : "investment"}{" "}
+            balance is currently available for withdrawal.
           </p>
         ) : null}
 
@@ -213,6 +243,12 @@ export default function WithdrawalsClient({
           <label className="text-xs uppercase text-slate-400">
             Payment Method
           </label>
+
+          {paymentMethods.length > 0 ? (
+            <p className="text-xs tracking-[0.2em] text-slate-400">
+              Tap to select payment method
+            </p>
+          ) : null}
 
           {paymentMethods.map((method) => {
             const active = selectedMethod === method.id;
@@ -247,6 +283,24 @@ export default function WithdrawalsClient({
               </button>
             );
           })}
+
+          {paymentMethods.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
+              <p className="text-sm text-slate-300">
+                No payment method has been added yet.
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Add a verified bank account or crypto wallet before requesting a
+                withdrawal.
+              </p>
+              <Link
+                href="/account/dashboard/user/payment-info"
+                className="mt-4 inline-flex h-10 items-center justify-center rounded-full border border-[#3c9ee0]/30 bg-[#3c9ee0]/10 px-4 text-sm font-medium text-[#8fd0ff] transition hover:bg-[#3c9ee0]/15 hover:text-white"
+              >
+                Add payment method
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         <FieldError>{state.fieldErrors?.methodId?.[0]}</FieldError>
@@ -261,6 +315,7 @@ export default function WithdrawalsClient({
         <Button
           disabled={
             kycStatus !== "VERIFIED" ||
+            isPending ||
             !amount ||
             !selectedMethod ||
             !selectedSource ||
@@ -268,10 +323,20 @@ export default function WithdrawalsClient({
           }
           className="w-full gap-2 rounded-xl bg-[#3c9ee0]"
         >
-          <ArrowUpRight className="h-4 w-4" />
-          Withdraw Funds
+          {isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing....
+            </>
+          ) : (
+            <>
+              <ArrowUpRight className="h-4 w-4" />
+              Withdraw Funds
+            </>
+          )}
         </Button>
       </form>
+      <WithdrawalRequestsList withdrawalOrders={withdrawalOrders} />
     </div>
   );
 }

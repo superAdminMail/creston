@@ -68,7 +68,6 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
       state: true,
       city: true,
       addressLine1: true,
-      addressLine2: true,
       kycStatus: true,
       investmentAccounts: {
         orderBy: {
@@ -159,7 +158,6 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
     investorProfile?.state?.trim(),
     investorProfile?.city?.trim(),
     investorProfile?.addressLine1?.trim(),
-    investorProfile?.addressLine2?.trim(),
   ];
 
   return {

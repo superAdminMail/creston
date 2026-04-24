@@ -9,12 +9,16 @@ export type AdminWithdrawalItem = {
   status: WithdrawalStatus;
   amount: number;
   currency: string;
+  hasCommissionFees: boolean;
+  commissionPercent: number;
+  savingsFeeAmount: number | null;
   requestedAt: string;
   processedAt: string | null;
   completedAt: string | null;
   rejectedAt: string | null;
   rejectionReason: string | null;
   adminNotes: string | null;
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
   sourceLabel: string;
   requester: {
     id: string;
@@ -53,6 +57,9 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
       status: true,
       amount: true,
       currency: true,
+      hasCommissionFees: true,
+      commissionPercent: true,
+      savingsFeeAmount: true,
       requestedAt: true,
       processedAt: true,
       completedAt: true,
@@ -112,12 +119,20 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     status: withdrawal.status,
     amount: toNumber(withdrawal.amount),
     currency: withdrawal.currency,
+    hasCommissionFees: withdrawal.hasCommissionFees,
+    commissionPercent: toNumber(withdrawal.commissionPercent),
+    savingsFeeAmount: withdrawal.savingsFeeAmount
+      ? toNumber(withdrawal.savingsFeeAmount)
+      : null,
     requestedAt: withdrawal.requestedAt.toISOString(),
     processedAt: withdrawal.processedAt?.toISOString() ?? null,
     completedAt: withdrawal.completedAt?.toISOString() ?? null,
     rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
     rejectionReason: withdrawal.rejectionReason,
     adminNotes: withdrawal.adminNotes,
+    sourceType: withdrawal.investmentOrderId
+      ? "INVESTMENT_ORDER"
+      : "SAVINGS_ACCOUNT",
     sourceLabel: withdrawal.investmentOrder
       ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
       : withdrawal.investmentAccount

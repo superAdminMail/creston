@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
 import {
@@ -13,24 +12,7 @@ import {
 import { normalizePhoneToE164 } from "@/lib/formatters/phone";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
-
-const updateInvestorSchema = z.object({
-  name: z.string().trim().min(1, "Name is required."),
-  username: z
-    .string()
-    .trim()
-    .optional()
-    .transform((value) => value || ""),
-  phoneNumber: z.string().trim().optional(),
-  dateOfBirth: z.string().trim().optional(),
-  country: z.string().trim().optional(),
-  state: z.string().trim().optional(),
-  city: z.string().trim().optional(),
-  addressLine1: z.string().trim().optional(),
-  addressLine2: z.string().trim().optional(),
-  kycStatus: z.enum(["NOT_STARTED", "PENDING_REVIEW", "VERIFIED", "REJECTED"]),
-  isVerified: z.boolean(),
-});
+import { updateSuperAdminInvestorSchema } from "@/lib/zodValidations/update-super-admin-investor";
 
 export type UpdateSuperAdminInvestorFieldName =
   | "name"
@@ -41,7 +23,6 @@ export type UpdateSuperAdminInvestorFieldName =
   | "state"
   | "city"
   | "addressLine1"
-  | "addressLine2"
   | "kycStatus"
   | "isVerified";
 
@@ -67,7 +48,6 @@ export async function updateSuperAdminInvestor(
       state: formData.get("state"),
       city: formData.get("city"),
       addressLine1: formData.get("addressLine1"),
-      addressLine2: formData.get("addressLine2"),
       kycStatus: formData.get("kycStatus"),
       isVerified: formData.get("isVerified") === "true",
     });
@@ -89,7 +69,6 @@ export async function updateSuperAdminInvestor(
         state: true,
         city: true,
         addressLine1: true,
-        addressLine2: true,
         kycStatus: true,
         isVerified: true,
         user: {
@@ -134,7 +113,6 @@ export async function updateSuperAdminInvestor(
           state: parsed.data.state || null,
           city: parsed.data.city || null,
           addressLine1: parsed.data.addressLine1 || null,
-          addressLine2: parsed.data.addressLine2 || null,
           kycStatus: parsed.data.kycStatus,
           isVerified: parsed.data.isVerified,
         },
@@ -158,7 +136,6 @@ export async function updateSuperAdminInvestor(
           state: parsed.data.state,
           city: parsed.data.city,
           addressLine1: parsed.data.addressLine1,
-          addressLine2: parsed.data.addressLine2,
           kycStatus: parsed.data.kycStatus,
           isVerified: parsed.data.isVerified,
         },

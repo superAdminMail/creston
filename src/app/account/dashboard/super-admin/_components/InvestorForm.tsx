@@ -29,7 +29,6 @@ type InvestorFormValues = {
   state: string;
   city: string;
   addressLine1: string;
-  addressLine2: string;
   kycStatus: KycStatus;
   isVerified: boolean;
 };
@@ -56,7 +55,6 @@ const initialInvestorFormState: UpdateSuperAdminInvestorState =
     | "state"
     | "city"
     | "addressLine1"
-    | "addressLine2"
     | "kycStatus"
     | "isVerified"
   >() as UpdateSuperAdminInvestorState;
@@ -272,22 +270,6 @@ export function InvestorForm({
                       </FieldContent>
                     </Field>
                   </div>
-
-                  <Field>
-                    <FieldLabel className="text-slate-100">
-                      Address line 2
-                    </FieldLabel>
-                    <FieldContent>
-                      <Input
-                        name="addressLine2"
-                        defaultValue={defaultValues.addressLine2}
-                        className="input-premium h-11 rounded-xl"
-                      />
-                      <FieldError>
-                        {state.fieldErrors?.addressLine2?.[0]}
-                      </FieldError>
-                    </FieldContent>
-                  </Field>
 
                   <div className="grid gap-5 sm:grid-cols-2">
                     <Field>

@@ -23,8 +23,7 @@ type OnboardingFieldName =
   | "country"
   | "state"
   | "city"
-  | "addressLine1"
-  | "addressLine2";
+  | "addressLine1";
 
 export type UpsertCurrentUserInvestorProfileResult = {
   success?: true;
@@ -82,7 +81,6 @@ export async function upsertCurrentUserInvestorProfile(
     state: values.state,
     city: values.city,
     addressLine1: values.addressLine1 || null,
-    addressLine2: values.addressLine2 || null,
   };
 
   const profileWrite = prisma.investorProfile

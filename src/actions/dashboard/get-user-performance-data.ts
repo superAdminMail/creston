@@ -154,9 +154,11 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
       userId: user.id,
     },
     select: {
-      investmentOrders: {
+        investmentOrders: {
         where: {
-          status: InvestmentOrderStatus.CONFIRMED,
+          status: {
+            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
+          },
         },
         orderBy: {
           createdAt: "desc",

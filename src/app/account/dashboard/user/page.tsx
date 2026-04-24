@@ -1,4 +1,5 @@
 import { getUserDashboardDataAction } from "@/actions/dashboard/get-user-dashboard-data";
+import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import UserDashboardPage from "./_components/UserDashboardPage";
 import { TransactionTable } from "./_components/TransactionTable";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
@@ -20,12 +21,17 @@ export default async function Page() {
   }
 
   const { userName, stats } = await getUserDashboardDataAction();
+  const investmentProfile = await getCurrentUserInvestmentProfileData();
 
   const transactions = await getUserTransactions(userId);
 
   return (
     <main className="space-y-5">
-      <UserDashboardPage userName={userName} stats={stats} />
+      <UserDashboardPage
+        userName={userName}
+        stats={stats}
+        investmentProfileComplete={investmentProfile.profileComplete}
+      />
       <TransactionTable transactions={transactions} />
     </main>
   );

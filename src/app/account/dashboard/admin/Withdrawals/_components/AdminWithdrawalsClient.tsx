@@ -233,6 +233,7 @@ export default function AdminWithdrawalsClient({
                     <th className="px-6 py-4">Source</th>
                     <th className="px-6 py-4">Payout Method</th>
                     <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Fees</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Requested</th>
                   </tr>
@@ -268,6 +269,31 @@ export default function AdminWithdrawalsClient({
                       </td>
                       <td className="px-6 py-5 font-medium text-emerald-300">
                         {formatCurrency(withdrawal.amount, withdrawal.currency)}
+                      </td>
+                      <td className="px-6 py-5 text-sm text-slate-300">
+                        {withdrawal.hasCommissionFees ? (
+                          withdrawal.sourceType === "INVESTMENT_ORDER" ? (
+                            <div className="space-y-1">
+                              <p className="text-slate-200">
+                                Commission: {withdrawal.commissionPercent}%
+                              </p>
+                            </div>
+                          ) : withdrawal.savingsFeeAmount != null ? (
+                            <div className="space-y-1">
+                              <p className="text-slate-200">
+                                Savings fee:{" "}
+                                {formatCurrency(
+                                  withdrawal.savingsFeeAmount,
+                                  withdrawal.currency,
+                                )}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">Not available</span>
+                          )
+                        ) : (
+                          <span className="text-slate-500">No commission fees</span>
+                        )}
                       </td>
                       <td className="px-6 py-5">
                         <Badge
@@ -341,6 +367,33 @@ export default function AdminWithdrawalsClient({
 
                   <div className="text-lg font-semibold text-emerald-300">
                     {formatCurrency(withdrawal.amount, withdrawal.currency)}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm text-slate-300">
+                    {withdrawal.hasCommissionFees ? (
+                      withdrawal.sourceType === "INVESTMENT_ORDER" ? (
+                        <p>
+                          Commission fee:{" "}
+                          <span className="text-slate-100">
+                            {withdrawal.commissionPercent}%
+                          </span>
+                        </p>
+                      ) : withdrawal.savingsFeeAmount != null ? (
+                        <p>
+                          Savings fee:{" "}
+                          <span className="text-slate-100">
+                            {formatCurrency(
+                              withdrawal.savingsFeeAmount,
+                              withdrawal.currency,
+                            )}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-slate-500">Fee details unavailable</p>
+                      )
+                    ) : (
+                      <p className="text-slate-500">No commission fees applied</p>
+                    )}
                   </div>
 
                   {withdrawal.rejectionReason ? (

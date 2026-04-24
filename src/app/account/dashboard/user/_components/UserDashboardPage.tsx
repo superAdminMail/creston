@@ -1,5 +1,6 @@
 import {
   ArrowUpRight,
+  AlertTriangle,
   BriefcaseBusiness,
   Landmark,
   Layers3,
@@ -7,12 +8,15 @@ import {
   ShoppingBagIcon,
   Wallet,
 } from "lucide-react";
+import Link from "next/link";
 
 import { formatUsd } from "@/lib/formatters/formatters";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 type UserDashboardPageProps = {
   userName: string;
   stats: UserDashboardStats;
+  investmentProfileComplete: boolean;
 };
 
 export type UserDashboardStats = {
@@ -65,10 +69,28 @@ function DashboardStatCard({
 export default function UserDashboardPage({
   userName,
   stats,
+  investmentProfileComplete,
 }: UserDashboardPageProps) {
   return (
     <div className="min-h-full bg-transparent">
       <div className="space-y-5 sm:space-y-6">
+        {!investmentProfileComplete ? (
+          <Alert className="rounded-[1.5rem] border border-amber-400/20 bg-amber-500/10 px-5 py-4 text-amber-100 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+            <AlertTriangle className="h-4 w-4 text-amber-200" />
+            <AlertTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-sm font-semibold">
+                Your investment profile is not set up yet
+              </span>
+              <Link
+                href="/account/dashboard/user/investment-profile/edit"
+                className="inline-flex items-center rounded-full border border-amber-300/30 bg-white/5 px-3 py-1 text-xs font-medium text-amber-50 transition hover:bg-white/10"
+              >
+                Complete profile
+              </Link>
+            </AlertTitle>
+          </Alert>
+        ) : null}
+
         <section className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(135deg,rgba(8,15,33,0.98),rgba(15,23,42,0.96))] px-5 py-6 shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:px-6 sm:py-7 lg:px-8 lg:py-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(60,158,224,0.16),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.10),transparent_30%)]" />
 

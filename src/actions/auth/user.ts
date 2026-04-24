@@ -130,11 +130,24 @@ export async function updateUserProfile(
         if (profileAvatar === null) {
           nextProfileAvatarFileAssetId = null;
         } else {
-          const asset = await createFileAssetFromUpload({
-            url: profileAvatar.url,
-            key: profileAvatar.key,
+          const existingAsset = await tx.fileAsset.findUnique({
+            where: {
+              storageKey: profileAvatar.key,
+            },
+            select: {
+              id: true,
+            },
           });
-          nextProfileAvatarFileAssetId = asset.id;
+
+          if (existingAsset) {
+            nextProfileAvatarFileAssetId = existingAsset.id;
+          } else {
+            const asset = await createFileAssetFromUpload({
+              url: profileAvatar.url,
+              key: profileAvatar.key,
+            });
+            nextProfileAvatarFileAssetId = asset.id;
+          }
         }
       }
 

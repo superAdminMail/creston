@@ -31,7 +31,6 @@ type MapboxAddressFeature = {
 
 export type OnboardingAddressFields = {
   addressLine1?: string;
-  addressLine2?: string;
   city?: string;
   state?: string;
   country?: string;
@@ -101,7 +100,6 @@ export function mapMapboxAddressToOnboardingFields(
     properties.name,
   );
 
-  const addressLine2 = firstNonEmpty(properties.address_line2);
   const city = firstNonEmpty(
     properties.city,
     properties.locality,
@@ -124,7 +122,6 @@ export function mapMapboxAddressToOnboardingFields(
 
   return {
     addressLine1: addressLine1 || undefined,
-    addressLine2: addressLine2 || undefined,
     city: city || undefined,
     state: state || undefined,
     country: country || undefined,

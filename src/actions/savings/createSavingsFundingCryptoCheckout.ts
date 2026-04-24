@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import {
   CryptoFundingProvider,
@@ -14,11 +13,7 @@ import { getAppBaseUrl } from "@/lib/config/appUrl";
 import { prisma } from "@/lib/prisma";
 import { paymentoCreatePayment } from "@/lib/payments/crypto/paymento";
 import { calculateSavingsFundingChargeAmount } from "@/lib/payments/savings/calculateSavingsFundingChargeAmount";
-
-const schema = z.object({
-  savingsAccountId: z.string().min(1),
-  paymentMode: z.literal("FULL"),
-});
+import { createSavingsFundingCryptoCheckoutSchema as schema } from "@/lib/zodValidations/savings-funding-crypto-checkout";
 
 type Input = z.infer<typeof schema>;
 

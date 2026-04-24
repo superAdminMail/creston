@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import {
   createErrorFormState,
@@ -12,15 +11,7 @@ import {
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
-
-const updateSavingsAccountSchema = z.object({
-  name: z.string().trim().min(1, "Account name is required."),
-  description: z.string().trim().optional(),
-  targetAmount: z.string().trim().optional(),
-  status: z.enum(["ACTIVE", "PAUSED", "CLOSED"]),
-  isLocked: z.boolean(),
-  lockedUntil: z.string().trim().optional(),
-});
+import { updateSuperAdminSavingsAccountSchema as updateSavingsAccountSchema } from "@/lib/zodValidations/update-super-admin-savings-account";
 
 export type UpdateSuperAdminSavingsAccountFieldName =
   | "name"

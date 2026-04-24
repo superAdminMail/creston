@@ -440,7 +440,6 @@ export async function createInvestmentOrder(
       amount: new Prisma.Decimal(amount.toFixed(2)),
       currency: selectedPlan.currency,
       status: InvestmentOrderStatus.PENDING_PAYMENT,
-      commissionPercent: new Prisma.Decimal(0),
 
       units,
       entryPrice,

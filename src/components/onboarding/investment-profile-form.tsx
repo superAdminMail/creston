@@ -89,8 +89,7 @@ export function InvestmentProfileForm({
     initialValues?.addressLine1?.trim() ||
     initialValues?.country?.trim() ||
       initialValues?.state?.trim() ||
-      initialValues?.city?.trim() ||
-      initialValues?.addressLine2?.trim(),
+      initialValues?.city?.trim(),
   );
   const [showAddressDetails, setShowAddressDetails] = useState(
     hasPrefilledAddressDetails,
@@ -113,7 +112,6 @@ export function InvestmentProfileForm({
       state: "",
       city: "",
       addressLine1: "",
-      addressLine2: "",
       ...initialValues,
     },
   });
@@ -165,12 +163,6 @@ export function InvestmentProfileForm({
       });
     }
 
-    if (selectedAddress.addressLine2) {
-      form.setValue("addressLine2", selectedAddress.addressLine2, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
   };
 
   const selectAddressSuggestion = async (
@@ -640,28 +632,6 @@ export function InvestmentProfileForm({
               />
             </div>
 
-            <Controller
-              control={form.control}
-              name="addressLine2"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid || undefined}>
-                  <FieldLabel className="text-white/80">
-                    Address line 2 (optional)
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="Apartment, suite, unit"
-                      className="input-premium h-11 rounded-xl"
-                    />
-                    {fieldState.error ? (
-                      <FieldError errors={[fieldState.error]} />
-                    ) : null}
-                  </FieldContent>
-                </Field>
-              )}
-            />
           </>
         ) : null}
       </FieldGroup>

@@ -57,6 +57,7 @@ export function UserProfileCard({
   }).format(new Date(user.createdAt));
 
   const roleLabel = getRoleLabel(user.role);
+  const canReviewInvestmentProfile = user.role === "USER";
 
   const initials = getUserInitials(user);
 
@@ -77,13 +78,13 @@ export function UserProfileCard({
           </AvatarFallback>
         </Avatar>
 
-        <div className="min-w-0 space-y-1">
+        <div className="min-w-0 flex-1 space-y-1">
           <h2 className="truncate text-xl font-semibold text-white">
             {fullName}
           </h2>
 
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+            <div className="flex min-w-0 items-center gap-2 text-sm text-slate-400">
               <Mail size={14} />
               <span className="truncate">{user.email}</span>
             </div>
@@ -153,12 +154,33 @@ export function UserProfileCard({
 
       {/* Actions */}
       <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button className="w-full sm:w-auto rounded-xl bg-[#3c9ee0] hover:bg-[#2f8bd0] text-white shadow-md">
+        <Button className="w-full rounded-xl bg-[#3c9ee0] text-white shadow-md hover:bg-[#2f8bd0] sm:w-auto">
           <Link href="/account/dashboard/profile/update">Update Profile</Link>
         </Button>
 
         <DeleteAcountModal userId={user.id} />
       </div>
+
+      {canReviewInvestmentProfile ? (
+        <div className="relative z-10 rounded-[1.5rem] border border-blue-400/10 bg-blue-500/5 p-4 sm:rounded-[1.75rem] sm:p-5">
+          <h3 className="text-lg font-semibold text-white">Next step</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            Keep your investment profile up to date separately so your account
+            records stay clean and easy to review.
+          </p>
+
+          <div className="mt-4">
+            <Button
+              asChild
+              className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
+            >
+              <Link href="/account/dashboard/user/investment-profile">
+                Review your investment profile
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

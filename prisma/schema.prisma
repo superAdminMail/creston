@@ -215,7 +215,6 @@ model InvestorProfile {
   state        String?
   city         String?
   addressLine1 String?
-  addressLine2 String?
 
   kycStatus       KycStatus        @default(NOT_STARTED)
   kycVerification KYCVerification?
@@ -420,12 +419,9 @@ model InvestmentOrder {
   currentValue    Decimal?  @db.Decimal(18, 2)
   lastValuationAt DateTime?
 
-  isMatured   Boolean @default(false)
-  isWithdrawn Boolean @default(false)
-
-  status            InvestmentOrderStatus @default(PENDING_PAYMENT)
-  commissionStatus  CommissionStatus      @default(PENDING)
-  commissionPercent Decimal               @default(0) @db.Decimal(5, 2)
+  isMatured   Boolean               @default(false)
+  isWithdrawn Boolean               @default(false)
+  status      InvestmentOrderStatus @default(PENDING_PAYMENT)
 
   paymentMethodType       InvestmentPaymentMethodType?
   platformPaymentMethodId String?
@@ -585,8 +581,6 @@ model SavingsTransaction {
   balanceBefore Decimal @db.Decimal(18, 2)
   balanceAfter  Decimal @db.Decimal(18, 2)
 
-  feeAmount Decimal? @db.Decimal(18, 2)
-
   reference String?
   note      String?
 
@@ -618,6 +612,11 @@ model WithdrawalOrder {
   currency String  @default("USD")
 
   status WithdrawalStatus @default(PENDING)
+
+  hasCommissionFees Boolean          @default(false)
+  commissionStatus  CommissionStatus @default(PENDING)
+  commissionPercent Decimal          @default(0) @db.Decimal(5, 2)
+  savingsFeeAmount  Decimal?         @db.Decimal(18, 2)
 
   payoutMethodId String?
 

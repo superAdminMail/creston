@@ -3,6 +3,7 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { getUserInitials } from "@/lib/User-Initials/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ type ProfileEditUser = {
 
 export default async function Page() {
   const sessionUser = await getCurrentSessionUser();
+  const role = await getCurrentUserRole();
 
   if (!sessionUser?.id || !sessionUser.email) return null;
 
@@ -67,6 +69,7 @@ export default async function Page() {
     email: user.email ?? "",
     username: user.username ?? undefined,
   });
+  const canReviewInvestmentProfile = role === "USER";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#050B1F]">
@@ -76,9 +79,9 @@ export default async function Page() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6 lg:p-8">
-          <div className="flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:rounded-[2rem] sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-5 border-b border-white/10 pb-5 sm:gap-6 sm:pb-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <Link
                 href="/account/dashboard/profile"
@@ -93,7 +96,7 @@ export default async function Page() {
                 Personal Profile
               </div>
 
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
                 Edit Personal Info
               </h1>
 
@@ -103,17 +106,19 @@ export default async function Page() {
               </p>
             </div>
 
-            <Button
-              asChild
-              className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95"
-            >
-              <Link href="/account/dashboard/user/investment-profile">
-                Review your investment profile
-              </Link>
-            </Button>
+            {canReviewInvestmentProfile ? (
+              <Button
+                asChild
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95 sm:w-auto"
+              >
+                <Link href="/account/dashboard/user/investment-profile">
+                  Review your investment profile
+                </Link>
+              </Button>
+            ) : null}
           </div>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 flex justify-center sm:mt-8">
             <div className="w-full max-w-3xl rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5 sm:p-6">
               <div className="flex flex-col items-center text-center">
                 <Avatar className="h-24 w-24 overflow-hidden rounded-full border border-white/10 bg-white/[0.05] sm:h-28 sm:w-28">
@@ -135,7 +140,7 @@ export default async function Page() {
                   {profile.username ?? "No username yet"}
                 </p>
 
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
+                <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
                   {profile.isEmailVerified ? "Email verified" : "Email not verified"}
                 </div>
               </div>

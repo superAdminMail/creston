@@ -16,7 +16,6 @@ export const publicRoutes = [
 export const authRoutes = [
   "/auth/login",
   "/auth/get-started",
-  "/auth/onboarding",
   "/auth/verify-email",
   "/auth/send-verify-email",
   "/auth/reset-password",
@@ -27,7 +26,8 @@ export const authRoutes = [
 export const apiAuthPrefix = "/api/auth";
 
 export const DEFAULT_LOGIN_REDIRECT = "/account";
-export const DEFAULT_ONBOARDING_REDIRECT = "/auth/onboarding";
+export const DEFAULT_ONBOARDING_REDIRECT =
+  "/account/dashboard/user/investment-profile/edit";
 
 export const protectedRoutePrefixes = ["/account"] as const;
 

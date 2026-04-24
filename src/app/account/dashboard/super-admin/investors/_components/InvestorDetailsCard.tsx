@@ -67,14 +67,7 @@ export function InvestorDetailsCard({
                 ["Country", investor.profile.country],
                 ["State", investor.profile.state],
                 ["City", investor.profile.city],
-                [
-                  "Address",
-                  `${investor.profile.addressLine1}${
-                    investor.profile.addressLine2 !== "Not set"
-                      ? `, ${investor.profile.addressLine2}`
-                      : ""
-                  }`,
-                ],
+                ["Address", investor.profile.addressLine1],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">

@@ -1,4 +1,3 @@
-import { DEFAULT_ONBOARDING_REDIRECT } from "@/routes";
 import { getAppBaseUrl } from "@/lib/config/appUrl";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
@@ -24,7 +23,7 @@ export async function sendPostVerificationWelcome(user: WelcomeRecipient) {
   const brandName = site?.siteName?.trim() || "Company";
   const firstName = getFirstName(user.name);
   const onboardingUrl = new URL(
-    DEFAULT_ONBOARDING_REDIRECT,
+    "/account/dashboard/user/investment-profile/edit",
     getAppBaseUrl(),
   ).toString();
   const idempotencyKey = `post-email-verification-welcome:${user.id}`;
@@ -48,12 +47,12 @@ export async function sendPostVerificationWelcome(user: WelcomeRecipient) {
     event: "SYSTEM",
     title: `Welcome to ${brandName}`,
     message:
-      "Your email has been successfully verified. Complete your onboarding to unlock your account and start investing.",
-    link: DEFAULT_ONBOARDING_REDIRECT,
+      "Your email has been successfully verified. Complete your investment profile to unlock your account and start investing.",
+    link: "/account/dashboard/user/investment-profile/edit",
     key: idempotencyKey,
     metadata: {
       kind: "POST_EMAIL_VERIFICATION_WELCOME",
-      onboardingUrl: DEFAULT_ONBOARDING_REDIRECT,
+      onboardingUrl: "/account/dashboard/user/investment-profile/edit",
     },
   });
 

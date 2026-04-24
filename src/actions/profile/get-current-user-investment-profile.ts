@@ -22,7 +22,6 @@ export type CurrentUserInvestmentProfileData = {
     state: string;
     city: string;
     addressLine1: string;
-    addressLine2: string;
   };
   editDefaults: OnboardingSchemaInput;
 };
@@ -34,7 +33,6 @@ const PROFILE_COMPLETION_FIELDS = [
   "state",
   "city",
   "addressLine1",
-  "addressLine2",
 ] as const;
 
 function formatKycStatus(status: KycStatus | null | undefined) {
@@ -92,7 +90,6 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
       state: true,
       city: true,
       addressLine1: true,
-      addressLine2: true,
       kycStatus: true,
     },
   });
@@ -109,7 +106,6 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
     state: investorProfile?.state?.trim() || "",
     city: investorProfile?.city?.trim() || "",
     addressLine1: investorProfile?.addressLine1?.trim() || "",
-    addressLine2: investorProfile?.addressLine2?.trim() || "",
   };
 
   const completionSnapshot = getCompletionSnapshot(details);
@@ -133,7 +129,6 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
       state: details.state,
       city: details.city,
       addressLine1: details.addressLine1,
-      addressLine2: details.addressLine2,
     },
   };
 }

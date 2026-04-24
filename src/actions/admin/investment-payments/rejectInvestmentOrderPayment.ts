@@ -1,18 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { Prisma } from "@/generated/prisma";
 import { getFriendlyServerError } from "@/lib/forms/actionState";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { rejectInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewInvestmentOrderPayment";
-
-const schema = z.object({
-  paymentId: z.string().min(1),
-  rejectionReason: z.string().trim().min(1).max(500),
-  reviewNote: z.string().trim().max(500).optional(),
-});
+import { rejectInvestmentOrderPaymentSchema as schema } from "@/lib/zodValidations/reject-investment-order-payment";
 
 export async function rejectInvestmentOrderPayment(
   input: z.infer<typeof schema>,

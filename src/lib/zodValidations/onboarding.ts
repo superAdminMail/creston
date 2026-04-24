@@ -29,7 +29,6 @@ export const onboardingSchema = z
     city: z.string().trim().min(2, "City is required"),
 
     addressLine1: z.string().trim().optional().or(z.literal("")),
-    addressLine2: z.string().trim().optional().or(z.literal("")),
   })
   .superRefine((values, ctx) => {
     if (!isValidPhoneInput(values)) {

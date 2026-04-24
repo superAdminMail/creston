@@ -1,7 +1,14 @@
-import { InvestmentModel, Prisma, SavingsStatus } from "@/generated/prisma";
+import {
+  InvestmentOrderStatus,
+  SavingsStatus,
+  WithdrawalStatus,
+} from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
 import { toDecimal } from "@/lib/services/investment/decimal";
+import {
+  resolveInvestmentOrderWithdrawalAmount,
+} from "@/lib/service/getAvailableWithdrawalBalance";
 
 export type AvailableWithdrawalSource =
   | {
@@ -24,19 +31,16 @@ export type AvailableWithdrawalSource =
 
 export type WithdrawalSourceOption = Exclude<AvailableWithdrawalSource, null>;
 
-function resolveInvestmentOrderAmount(order: {
-  investmentModel: InvestmentModel;
-  amount: Prisma.Decimal;
-  accruedProfit: Prisma.Decimal;
-  currentValue: Prisma.Decimal | null;
-}) {
-  if (order.investmentModel === InvestmentModel.MARKET) {
-    return toDecimal(order.currentValue).greaterThan(0)
-      ? toDecimal(order.currentValue)
-      : toDecimal(order.amount);
+function isEarlyWithdrawal(order: { isMatured: boolean; maturityDate: Date | null }, now: Date) {
+  if (order.isMatured) {
+    return false;
   }
 
-  return toDecimal(order.amount).add(toDecimal(order.accruedProfit));
+  if (!order.maturityDate) {
+    return true;
+  }
+
+  return order.maturityDate > now;
 }
 
 export async function getWithdrawalSourceOptions(
@@ -44,73 +48,144 @@ export async function getWithdrawalSourceOptions(
 ): Promise<WithdrawalSourceOption[]> {
   const now = new Date();
 
-  const [maturedOrder, unlockedSavings] = await Promise.all([
-    prisma.investmentOrder.findFirst({
-      where: {
-        investorProfileId,
-        status: "CONFIRMED",
-        isWithdrawn: false,
-        isMatured: true,
-        maturityDate: {
-          lte: now,
+  const [investmentOrders, savingsAccounts, activeWithdrawals] =
+    await Promise.all([
+      prisma.investmentOrder.findMany({
+        where: {
+          investorProfileId,
+          status: {
+            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
+          },
+          isWithdrawn: false,
         },
-      },
-      orderBy: {
-        maturityDate: "asc",
-      },
-      select: {
-        id: true,
-        investmentAccountId: true,
-        amount: true,
-        accruedProfit: true,
-        currentValue: true,
-        currency: true,
-        investmentModel: true,
-        investmentPlan: {
-          select: {
-            name: true,
+        orderBy: {
+          maturityDate: "asc",
+        },
+        select: {
+          id: true,
+          investmentAccountId: true,
+          investmentModel: true,
+          amount: true,
+          accruedProfit: true,
+          currentValue: true,
+          currency: true,
+          maturityDate: true,
+          isMatured: true,
+          investmentPlan: {
+            select: {
+              name: true,
+            },
           },
         },
-      },
-    }),
-    prisma.savingsAccount.findFirst({
-      where: {
-        investorProfileId,
-        status: SavingsStatus.ACTIVE,
-        isLocked: false,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      select: {
-        id: true,
-        balance: true,
-        currency: true,
-        name: true,
-      },
-    }),
-  ]);
+      }),
+      prisma.savingsAccount.findMany({
+        where: {
+          investorProfileId,
+          status: SavingsStatus.ACTIVE,
+          isLocked: false,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          id: true,
+          balance: true,
+          currency: true,
+          name: true,
+        },
+      }),
+      prisma.withdrawalOrder.findMany({
+        where: {
+          investorProfileId,
+          status: {
+            in: [
+              WithdrawalStatus.PENDING,
+              WithdrawalStatus.APPROVED,
+              WithdrawalStatus.PROCESSING,
+              WithdrawalStatus.COMPLETED,
+            ],
+          },
+        },
+        select: {
+          status: true,
+          investmentOrderId: true,
+          payoutSnapshot: true,
+        },
+        orderBy: {
+          requestedAt: "desc",
+        },
+      }),
+    ]);
 
   const sources: WithdrawalSourceOption[] = [];
 
-  if (maturedOrder) {
+  const blockedInvestmentOrderIds = new Set<string>();
+  const blockedSavingsSourceIds = new Set<string>();
+  let hasLegacyActiveSavingsWithdrawal = false;
+
+  for (const withdrawal of activeWithdrawals) {
+    if (withdrawal.investmentOrderId) {
+      blockedInvestmentOrderIds.add(withdrawal.investmentOrderId);
+      continue;
+    }
+
+    if (withdrawal.status === WithdrawalStatus.COMPLETED) {
+      continue;
+    }
+
+    const snapshot = withdrawal.payoutSnapshot;
+
+    if (!snapshot || typeof snapshot !== "object") {
+      hasLegacyActiveSavingsWithdrawal = true;
+      continue;
+    }
+
+    const sourceType =
+      "sourceType" in snapshot ? String(snapshot.sourceType ?? "") : "";
+    const sourceId =
+      "sourceId" in snapshot ? String(snapshot.sourceId ?? "") : "";
+
+    if (sourceType === "SAVINGS_ACCOUNT" && sourceId) {
+      blockedSavingsSourceIds.add(sourceId);
+      continue;
+    }
+
+    hasLegacyActiveSavingsWithdrawal = true;
+  }
+
+  const availableInvestmentOrder = investmentOrders.find(
+    (order) => !blockedInvestmentOrderIds.has(order.id),
+  );
+
+  if (availableInvestmentOrder) {
+    const earlyWithdrawal = isEarlyWithdrawal(availableInvestmentOrder, now);
     sources.push({
       type: "INVESTMENT_ORDER",
-      id: maturedOrder.id,
-      amount: resolveInvestmentOrderAmount(maturedOrder).toNumber(),
-      currency: maturedOrder.currency,
-      label: `Matured order: ${maturedOrder.investmentPlan.name}`,
-      investmentAccountId: maturedOrder.investmentAccountId,
+      id: availableInvestmentOrder.id,
+      amount: resolveInvestmentOrderWithdrawalAmount(
+        availableInvestmentOrder,
+      ).toNumber(),
+      currency: availableInvestmentOrder.currency,
+      label: earlyWithdrawal
+        ? `Early withdrawal: ${availableInvestmentOrder.investmentPlan.name}`
+        : `Matured order: ${availableInvestmentOrder.investmentPlan.name}`,
+      investmentAccountId: availableInvestmentOrder.investmentAccountId,
     });
   }
 
-  if (unlockedSavings) {
+  const availableSavings = savingsAccounts.find(
+    (account) =>
+      !hasLegacyActiveSavingsWithdrawal &&
+      !blockedSavingsSourceIds.has(account.id),
+  );
+
+  if (availableSavings) {
     sources.push({
       type: "SAVINGS_ACCOUNT",
-      id: unlockedSavings.id,
-      amount: toDecimal(unlockedSavings.balance).toNumber(),
-      currency: unlockedSavings.currency,
-      label: `Savings account: ${unlockedSavings.name}`,
+      id: availableSavings.id,
+      amount: toDecimal(availableSavings.balance).toNumber(),
+      currency: availableSavings.currency,
+      label: `Savings account: ${availableSavings.name}`,
       investmentAccountId: null,
     });
   }

@@ -1,17 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { approveInvestmentOrderPaymentReview } from "@/lib/payments/bank/reviewInvestmentOrderPayment";
-
-const schema = z.object({
-  paymentId: z.string().min(1),
-  approvedAmount: z.number().positive(),
-  approvalMode: z.enum(["FULL", "PARTIAL"]),
-  reviewNote: z.string().trim().max(500).optional(),
-});
+import { approveInvestmentOrderPaymentSchema as schema } from "@/lib/zodValidations/approve-investment-order-payment";
 
 export async function approveInvestmentOrderPayment(
   input: z.infer<typeof schema>,

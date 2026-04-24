@@ -26,7 +26,6 @@ const investorDetailsSelect =
     state: true,
     city: true,
     addressLine1: true,
-    addressLine2: true,
     kycStatus: true,
     createdAt: true,
     updatedAt: true,
@@ -118,7 +117,6 @@ export type SuperAdminInvestorDetailsViewModel = {
     state: string;
     city: string;
     addressLine1: string;
-    addressLine2: string;
   };
   counts: {
     investmentAccounts: number;
@@ -163,7 +161,6 @@ export type SuperAdminInvestorDetailsViewModel = {
     state: string;
     city: string;
     addressLine1: string;
-    addressLine2: string;
     kycStatus: KycStatus;
     isVerified: boolean;
   };
@@ -210,7 +207,6 @@ export async function getSuperAdminInvestorById(
       state: investor.state?.trim() || "Not set",
       city: investor.city?.trim() || "Not set",
       addressLine1: investor.addressLine1?.trim() || "Not set",
-      addressLine2: investor.addressLine2?.trim() || "Not set",
     },
     counts: {
       investmentAccounts: investor._count.investmentAccounts,
@@ -263,7 +259,6 @@ export async function getSuperAdminInvestorById(
       state: investor.state ?? "",
       city: investor.city ?? "",
       addressLine1: investor.addressLine1 ?? "",
-      addressLine2: investor.addressLine2 ?? "",
       kycStatus: investor.kycStatus,
       isVerified: investor.isVerified,
     },

@@ -45,9 +45,11 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
       userId: user.id,
     },
     select: {
-      investmentOrders: {
+        investmentOrders: {
         where: {
-          status: InvestmentOrderStatus.CONFIRMED,
+          status: {
+            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
+          },
         },
         orderBy: {
           createdAt: "desc",

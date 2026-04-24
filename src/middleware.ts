@@ -43,8 +43,7 @@ function isProtectedPath(pathname: string) {
 function isAuthUtilityRoute(pathname: string) {
   return (
     matchesRoute(pathname, "/auth/verify-email") ||
-    matchesRoute(pathname, "/auth/send-verify-email") ||
-    matchesRoute(pathname, "/auth/onboarding")
+    matchesRoute(pathname, "/auth/send-verify-email")
   );
 }
 

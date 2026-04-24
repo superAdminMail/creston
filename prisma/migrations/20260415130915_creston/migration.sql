@@ -254,7 +254,6 @@ CREATE TABLE "investor_profile" (
     "state" TEXT,
     "city" TEXT,
     "addressLine1" TEXT,
-    "addressLine2" TEXT,
     "kycStatus" "KycStatus" NOT NULL DEFAULT 'NOT_STARTED',
     "avatarFileId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

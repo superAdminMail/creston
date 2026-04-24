@@ -8,7 +8,6 @@ import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
-import { DEFAULT_ONBOARDING_REDIRECT } from "@/routes";
 import { requireActiveVerifiedUser } from "@/lib/auth/requireActiveVerifiedUser";
 
 export async function generateMetadata() {
@@ -41,14 +40,6 @@ export default async function AccountLayout({
 
   if (!sessionUser?.id) {
     redirect("/auth/login");
-  }
-
-  if (
-    dbUser.role === "USER" &&
-    !dbUser.hasCompletedOnboarding &&
-    !dbUser.investorProfile?.id
-  ) {
-    redirect(DEFAULT_ONBOARDING_REDIRECT);
   }
 
   const user = normalizeUser({

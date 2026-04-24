@@ -1,22 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { createSavingsFundingDepositSubmission } from "@/lib/payments/bank/createSavingsFundingDepositSubmission";
-
-const schema = z.object({
-  savingsAccountId: z.string().min(1),
-  platformPaymentMethodId: z.string().min(1),
-  claimedAmount: z.number().positive(),
-  depositorName: z.string().trim().max(120).optional(),
-  depositorAccountName: z.string().trim().max(120).optional(),
-  depositorAccountNo: z.string().trim().max(80).optional(),
-  transferReference: z.string().trim().max(120).optional(),
-  note: z.string().trim().max(500).optional(),
-  receiptFileId: z.string().trim().max(100).optional(),
-});
+import { submitSavingsFundingProofSchema as schema } from "@/lib/zodValidations/savings-funding-proof";
 
 type Input = z.infer<typeof schema>;
 
