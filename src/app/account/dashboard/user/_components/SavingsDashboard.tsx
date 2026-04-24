@@ -53,14 +53,14 @@ export default function SavingsDashboard({
           </p>
         </div>
 
-        {canCreateSavingsAccount ? (
+        {hasAccounts && canCreateSavingsAccount ? (
           <Button asChild className="rounded-2xl bg-blue-500 hover:bg-blue-600">
             <Link href="/account/dashboard/user/savings/new">
               <Plus className="h-4 w-4" />
               Add savings account
             </Link>
           </Button>
-        ) : (
+        ) : !canCreateSavingsAccount ? (
           <Button
             asChild
             variant="outline"
@@ -71,7 +71,7 @@ export default function SavingsDashboard({
               Complete KYC
             </Link>
           </Button>
-        )}
+        ) : null}
       </div>
 
       {!canCreateSavingsAccount ? (

@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Lock, PiggyBank, ShieldCheck } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Lock,
+  PiggyBank,
+  ShieldCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { createSavingsAccount } from "@/actions/savings/createSavingsAccount";
@@ -101,7 +107,15 @@ export default function AddSavingsAccount({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">
-      <div className="space-y-2">
+      <div className="space-y-3">
+        <Link
+          href="/account/dashboard/user/savings"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to savings
+        </Link>
+
         <h1 className="text-2xl font-semibold text-white">
           Open a savings account
         </h1>
