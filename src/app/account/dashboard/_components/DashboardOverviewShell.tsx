@@ -158,7 +158,7 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
   return (
     <Alert
       variant="default"
-      className={`relative !flex items-start gap-4 overflow-hidden px-4 py-4 !text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
+      className={`relative flex flex-col gap-4 overflow-hidden px-4 py-4 !text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] sm:flex-row sm:items-start sm:pr-32 ${
         alert.tone === "critical"
           ? "!border-rose-500/20 !bg-rose-500/10"
           : "!border-white/10 !bg-white/[0.03]"
@@ -174,8 +174,8 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
         <Icon className="h-5 w-5" />
       </div>
 
-      <div className="min-w-0 space-y-2 pr-28">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <AlertTitle className="text-sm font-semibold !text-white">
             {alert.title}
           </AlertTitle>
@@ -195,7 +195,7 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
         </AlertDescription>
       </div>
 
-      <div className="absolute right-4 top-4">
+      <div className="sm:absolute sm:right-4 sm:top-4">
         <Button
           asChild
           size="sm"
@@ -401,7 +401,7 @@ export function DashboardOverviewShell({
               title={alertsTitle}
               description={alertsDescription}
             />
-            <div className="grid gap-3">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {alerts.map((alert) => (
                 <ReviewAlert key={alert.title} alert={alert} />
               ))}
