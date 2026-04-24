@@ -21,7 +21,20 @@ export type DashboardOverviewIconKey =
   | "landmark"
   | "creditCard"
   | "building2"
-  | "banknote";
+  | "banknote"
+  | "alertTriangle";
+
+export type DashboardOverviewAlertTone = "warning" | "critical";
+
+export type DashboardOverviewAlert = {
+  title: string;
+  description: string;
+  countLabel: string;
+  tone: DashboardOverviewAlertTone;
+  href: string;
+  actionLabel: string;
+  icon: DashboardOverviewIconKey;
+};
 
 type DashboardActivityStatus = "success" | "pending" | "info";
 type DashboardStatusTone = "success" | "warning" | "neutral";
@@ -82,6 +95,9 @@ export type DashboardOverviewData = {
   badgeLabel: string;
   title: string;
   description: string;
+  alertsTitle: string;
+  alertsDescription: string;
+  alerts: DashboardOverviewAlert[];
   heroHighlights: DashboardOverviewHighlight[];
   metrics: DashboardOverviewMetric[];
   quickActions: DashboardOverviewLinkCard[];
@@ -176,6 +192,10 @@ export async function getDashboardOverviewByHref(
     totalUsers,
     activeInvestors,
     fundedInvestmentOrdersCount,
+    pendingInvestmentPayments,
+    pendingSavingsPayments,
+    paidInvestmentOrders,
+    paidSavingsFundingIntents,
     pendingWithdrawals,
     processingWithdrawals,
     pendingKyc,
@@ -230,6 +250,30 @@ export async function getDashboardOverviewByHref(
         status: {
           in: [...FUNDED_INVESTMENT_ORDER_STATUSES],
         },
+      },
+    }),
+    prisma.investmentOrderPayment.count({
+      where: {
+        status: "PENDING_REVIEW",
+      },
+    }),
+    prisma.savingsTransactionPayment.count({
+      where: {
+        status: "PENDING_REVIEW",
+      },
+    }),
+    prisma.investmentOrder.findMany({
+      where: {
+        status: "PAID",
+      },
+      select: {
+        amountPaid: true,
+        amount: true,
+      },
+    }),
+    prisma.savingsFundingIntent.count({
+      where: {
+        status: "PAID",
       },
     }),
     prisma.withdrawalOrder.count({
@@ -449,6 +493,60 @@ export async function getDashboardOverviewByHref(
   const openWithdrawals = pendingWithdrawals + processingWithdrawals;
 
   if (href === "/account/dashboard/super-admin") {
+    const alerts: DashboardOverviewAlert[] = [];
+
+    if (pendingInvestmentPayments > 0) {
+      alerts.push({
+        title: "Investment payments pending review",
+        description:
+          "Investor payment proofs are still waiting for admin approval.",
+        countLabel: `${formatCount(pendingInvestmentPayments)} open`,
+        tone: "warning",
+        href: "/account/dashboard/admin/investment-payments",
+        actionLabel: "Review payments",
+        icon: "wallet",
+      });
+    }
+
+    if (pendingSavingsPayments > 0) {
+      alerts.push({
+        title: "Savings payments pending review",
+        description:
+          "Savings funding proofs are still waiting for admin approval.",
+        countLabel: `${formatCount(pendingSavingsPayments)} open`,
+        tone: "warning",
+        href: "/account/dashboard/admin/savings-payments",
+        actionLabel: "Review payments",
+        icon: "wallet",
+      });
+    }
+
+    if (paidInvestmentOrders.length > 0) {
+      alerts.push({
+        title: "Investment orders awaiting confirmation",
+        description:
+          "These orders are marked PAID and still need admin confirmation.",
+        countLabel: `${formatCount(paidInvestmentOrders.length)} orders`,
+        tone: "critical",
+        href: "/account/dashboard/admin/investment-payments",
+        actionLabel: "Review orders",
+        icon: "alertTriangle",
+      });
+    }
+
+    if (paidSavingsFundingIntents > 0) {
+      alerts.push({
+        title: "Savings funding awaiting crediting",
+        description:
+          "These funding intents are marked PAID and still need to be credited.",
+        countLabel: `${formatCount(paidSavingsFundingIntents)} intents`,
+        tone: "critical",
+        href: "/account/dashboard/admin/savings-payments",
+        actionLabel: "Review savings",
+        icon: "alertTriangle",
+      });
+    }
+
     const activities: DashboardOverviewActivity[] = [
       latestPlan
         ? {
@@ -521,6 +619,10 @@ export async function getDashboardOverviewByHref(
       title: "Platform control center",
       description:
         "Monitor investments, user growth, operational health, KYC activity, deposits, withdrawals, and platform-wide performance from one place.",
+      alertsTitle: "Review alerts",
+      alertsDescription:
+        "Payments and settlements that still need administrative attention.",
+      alerts,
       heroHighlights: [
         {
           label: "Total Deposits",
@@ -771,6 +873,66 @@ export async function getDashboardOverviewByHref(
     title: "Administrative operations dashboard",
     description:
       "Oversee investor activity, monitor KYC submissions, manage withdrawals, track deposits, and keep day-to-day operations moving cleanly.",
+    alertsTitle: "Review alerts",
+    alertsDescription:
+      "Payments and settlements that still need administrative attention.",
+    alerts: (() => {
+      const alerts: DashboardOverviewAlert[] = [];
+
+      if (pendingInvestmentPayments > 0) {
+        alerts.push({
+          title: "Investment payments pending review",
+          description:
+            "Investor payment proofs are still waiting for admin approval.",
+          countLabel: `${formatCount(pendingInvestmentPayments)} open`,
+          tone: "warning",
+          href: "/account/dashboard/admin/investment-payments",
+          actionLabel: "Review payments",
+          icon: "wallet",
+        });
+      }
+
+      if (pendingSavingsPayments > 0) {
+        alerts.push({
+          title: "Savings payments pending review",
+          description:
+            "Savings funding proofs are still waiting for admin approval.",
+          countLabel: `${formatCount(pendingSavingsPayments)} open`,
+          tone: "warning",
+          href: "/account/dashboard/admin/savings-payments",
+          actionLabel: "Review payments",
+          icon: "wallet",
+        });
+      }
+
+      if (paidInvestmentOrders.length > 0) {
+        alerts.push({
+          title: "Investment orders awaiting confirmation",
+          description:
+            "These orders are marked PAID and still need admin confirmation.",
+          countLabel: `${formatCount(paidInvestmentOrders.length)} orders`,
+          tone: "critical",
+          href: "/account/dashboard/admin/investment-payments",
+          actionLabel: "Review orders",
+          icon: "alertTriangle",
+        });
+      }
+
+      if (paidSavingsFundingIntents > 0) {
+        alerts.push({
+          title: "Savings funding awaiting crediting",
+          description:
+            "These funding intents are marked PAID and still need to be credited.",
+          countLabel: `${formatCount(paidSavingsFundingIntents)} intents`,
+          tone: "critical",
+          href: "/account/dashboard/admin/savings-payments",
+          actionLabel: "Review savings",
+          icon: "alertTriangle",
+        });
+      }
+
+      return alerts;
+    })(),
     heroHighlights: [
       {
         label: "Pending KYC",

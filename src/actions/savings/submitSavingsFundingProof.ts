@@ -39,7 +39,10 @@ export async function submitSavingsFundingProof(input: Input) {
     revalidatePath("/account/dashboard/user/savings");
     revalidatePath("/account/dashboard/checkout");
     revalidatePath("/account/dashboard/admin/deposits");
+    revalidatePath("/account/dashboard/admin/savings-payments");
+    revalidatePath(`/account/dashboard/admin/savings-payments/${result.paymentId}`);
     revalidatePath("/account/dashboard/super-admin/deposits");
+    revalidatePath("/account/dashboard/notifications");
 
     return {
       ok: true,

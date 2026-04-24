@@ -7,6 +7,7 @@ import {
   SavingsStatus,
   SavingsTransactionPaymentStatus,
   SavingsTransactionPaymentType,
+  UserRole,
 } from "@/generated/prisma";
 import { isSavingsFundingBankInfoRequestAckNotification } from "@/lib/notifications/savingsFundingBankInfo";
 import { prisma } from "@/lib/prisma";
@@ -141,6 +142,18 @@ export async function createSavingsFundingDepositSubmission({
     throw new Error("Selected bank transfer method is not available");
   }
 
+  const admins = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
   const now = new Date();
 
   const result = await prisma.$transaction(async (tx) => {
@@ -223,6 +236,44 @@ export async function createSavingsFundingDepositSubmission({
         paymentReference: transferReference?.trim() || payment.id,
       },
     });
+
+    for (const admin of admins) {
+      await tx.notification.upsert({
+        where: {
+          key: `savings-funding-bank-deposit-submitted:${payment.id}:${admin.id}`,
+        },
+        create: {
+          userId: admin.id,
+          title: "Savings funding proof submitted",
+          message: `A payment proof was submitted for savings account ${account.id} in ${account.currency}.`,
+          type: "SYSTEM",
+          key: `savings-funding-bank-deposit-submitted:${payment.id}:${admin.id}`,
+          link: `/account/dashboard/admin/savings-payments/${payment.id}`,
+          metadata: {
+            kind: "SAVINGS_FUNDING_BANK_DEPOSIT_SUBMITTED",
+            savingsAccountId: account.id,
+            fundingIntentId: fundingIntent.id,
+            paymentId: payment.id,
+            submittedByUserId: userId,
+            currency: account.currency,
+          },
+        },
+        update: {
+          title: "Savings funding proof submitted",
+          message: `A payment proof was submitted for savings account ${account.id} in ${account.currency}.`,
+          type: "SYSTEM",
+          link: `/account/dashboard/admin/savings-payments/${payment.id}`,
+          metadata: {
+            kind: "SAVINGS_FUNDING_BANK_DEPOSIT_SUBMITTED",
+            savingsAccountId: account.id,
+            fundingIntentId: fundingIntent.id,
+            paymentId: payment.id,
+            submittedByUserId: userId,
+            currency: account.currency,
+          },
+        },
+      });
+    }
 
     return {
       fundingIntentId: fundingIntent.id,

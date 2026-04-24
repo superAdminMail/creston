@@ -3,6 +3,7 @@ import {
   InvestmentOrderPaymentType,
   InvestmentOrderStatus,
   PlatformPaymentMethodType,
+  UserRole,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
@@ -156,6 +157,18 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("Selected bank transfer method is not available");
   }
 
+  const admins = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
   const chargeCalculation = calculateInvestmentOrderBankChargeAmount({
     totalAmount: order.amount,
     amountPaid: order.amountPaid,
@@ -214,6 +227,44 @@ export async function createInvestmentOrderBankDepositSubmission({
         },
       },
     });
+
+    for (const admin of admins) {
+      await tx.notification.upsert({
+        where: {
+          key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
+        },
+        create: {
+          userId: admin.id,
+          title: "Investment payment proof submitted",
+          message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
+          type: "SYSTEM",
+          key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
+          link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
+          metadata: {
+            kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
+            orderId: order.id,
+            paymentId: createdPayment.id,
+            submittedByUserId: userId,
+            investmentPlanName: order.investmentPlan.name,
+            currency: order.currency,
+          },
+        },
+        update: {
+          title: "Investment payment proof submitted",
+          message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
+          type: "SYSTEM",
+          link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
+          metadata: {
+            kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
+            orderId: order.id,
+            paymentId: createdPayment.id,
+            submittedByUserId: userId,
+            investmentPlanName: order.investmentPlan.name,
+            currency: order.currency,
+          },
+        },
+      });
+    }
 
     return createdPayment;
   });

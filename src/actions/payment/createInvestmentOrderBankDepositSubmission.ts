@@ -74,6 +74,11 @@ export async function createInvestmentOrderBankDepositSubmissionAction({
     revalidatePath(
       `/account/dashboard/user/investment-orders/${normalizedInvestmentOrderId}`,
     );
+    revalidatePath("/account/dashboard/admin/investment-payments");
+    revalidatePath(
+      `/account/dashboard/admin/investment-payments/${data.paymentId}`,
+    );
+    revalidatePath("/account/dashboard/notifications");
 
     return {
       success: true,

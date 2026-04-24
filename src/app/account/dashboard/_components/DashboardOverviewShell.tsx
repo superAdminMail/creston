@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  AlertTriangle,
   Banknote,
   Bell,
   BriefcaseBusiness,
@@ -19,6 +20,11 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +35,7 @@ import {
 } from "@/components/ui/card";
 import type {
   DashboardOverviewActivity,
+  DashboardOverviewAlert,
   DashboardOverviewCta,
   DashboardOverviewData,
   DashboardOverviewIconKey,
@@ -51,6 +58,7 @@ const ICON_MAP: Record<DashboardOverviewIconKey, typeof Users> = {
   creditCard: CreditCard,
   building2: Building2,
   banknote: Banknote,
+  alertTriangle: AlertTriangle,
 };
 
 function MetricCard({
@@ -141,6 +149,67 @@ function SpotlightCard({
       </div>
       <p className="mt-5 text-3xl font-semibold">{value}</p>
     </div>
+  );
+}
+
+function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
+  const Icon = ICON_MAP[alert.icon];
+
+  return (
+    <Alert
+      variant="default"
+      className={`relative !flex items-start gap-4 overflow-hidden px-4 py-4 !text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] ${
+        alert.tone === "critical"
+          ? "!border-rose-500/20 !bg-rose-500/10"
+          : "!border-white/10 !bg-white/[0.03]"
+      }`}
+    >
+      <div
+        className={`rounded-2xl border p-3 ${
+          alert.tone === "critical"
+            ? "border-rose-500/20 bg-rose-500/10 text-rose-200"
+            : "border-[#3c9ee0]/20 bg-[#3c9ee0]/10 text-[#7cc4f3]"
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+
+      <div className="min-w-0 space-y-2 pr-28">
+        <div className="flex flex-wrap items-center gap-2">
+          <AlertTitle className="text-sm font-semibold !text-white">
+            {alert.title}
+          </AlertTitle>
+          <Badge
+            className={`border ${
+              alert.tone === "critical"
+                ? "border-rose-500/25 bg-rose-500/10 text-rose-200"
+                : "border-amber-500/25 bg-amber-500/10 text-amber-100"
+            }`}
+          >
+            {alert.countLabel}
+          </Badge>
+        </div>
+
+        <AlertDescription className="text-sm leading-6 !text-white/65">
+          {alert.description}
+        </AlertDescription>
+      </div>
+
+      <div className="absolute right-4 top-4">
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className={
+            alert.tone === "critical"
+              ? "border-rose-500/25 bg-rose-500/10 text-rose-100 hover:bg-rose-500/15"
+              : "border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+          }
+        >
+          <Link href={alert.href}>{alert.actionLabel}</Link>
+        </Button>
+      </div>
+    </Alert>
   );
 }
 
@@ -268,6 +337,9 @@ export function DashboardOverviewShell({
   badgeLabel,
   title,
   description,
+  alertsTitle,
+  alertsDescription,
+  alerts,
   heroHighlights,
   metrics,
   quickActions,
@@ -322,6 +394,20 @@ export function DashboardOverviewShell({
             </HeroHighlights>
           </div>
         </section>
+
+        {alerts.length > 0 ? (
+          <section className="space-y-3">
+            <SectionHeader
+              title={alertsTitle}
+              description={alertsDescription}
+            />
+            <div className="grid gap-3">
+              {alerts.map((alert) => (
+                <ReviewAlert key={alert.title} alert={alert} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((metric) => (
