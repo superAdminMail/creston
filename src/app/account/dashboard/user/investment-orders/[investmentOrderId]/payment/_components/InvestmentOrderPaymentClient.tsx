@@ -83,6 +83,7 @@ export default function InvestmentOrderPaymentClient({
   const [partialAmount, setPartialAmount] =
     useState<number>(partialPaymentAmount);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
+  const [bankInfoRequestedLocal, setBankInfoRequestedLocal] = useState(false);
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -110,6 +111,8 @@ export default function InvestmentOrderPaymentClient({
         order.status === "PARTIALLY_PAID"
         ? "I've made this payment"
         : "I've made this payment";
+  const bankInfoRequested =
+    order.hasExistingBankInfoRequest || bankInfoRequestedLocal;
   const bankProofActionDisabled =
     isOrderFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
 
@@ -180,8 +183,13 @@ export default function InvestmentOrderPaymentClient({
     const res = await requestInvestmentOrderBankInfo(order.id);
     setIsRequestingBankInfo(false);
 
-    if (res.ok) toast.success(res.message);
-    else toast.error(res.message);
+    if (res.ok) {
+      setBankInfoRequestedLocal(true);
+      toast.success(res.message);
+      return;
+    }
+
+    toast.error(res.message);
   }
 
   async function handleCryptoCheckout() {
@@ -420,9 +428,7 @@ export default function InvestmentOrderPaymentClient({
               <Button
                 type="button"
                 onClick={() => void handleRequestBankInfo()}
-                disabled={
-                  isRequestingBankInfo || order.hasExistingBankInfoRequest
-                }
+                disabled={isRequestingBankInfo || bankInfoRequested}
                 className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
               >
                 {isRequestingBankInfo ? (
@@ -430,7 +436,7 @@ export default function InvestmentOrderPaymentClient({
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Sending...
                   </span>
-                ) : order.hasExistingBankInfoRequest ? (
+                ) : bankInfoRequested ? (
                   "Request Sent"
                 ) : (
                   "Request Bank Info"

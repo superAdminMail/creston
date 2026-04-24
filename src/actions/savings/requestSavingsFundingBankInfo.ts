@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import {
   SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
   SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
@@ -45,27 +46,12 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
     account.currency,
   );
 
-  if (existingPrivateBankMethod) {
+  const hasAnyBankInfoRequest = await hasUserBankInfoRequest(user.id);
+
+  if (existingPrivateBankMethod || hasAnyBankInfoRequest) {
     return {
       ok: true,
-      message: "Bank details are already available for you.",
-    };
-  }
-
-  const existingRequest = await prisma.notification.findFirst({
-    where: {
-      userId: user.id,
-      key: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (existingRequest) {
-    return {
-      ok: true,
-      message: "Your request has already been sent. Please wait for admin review.",
+      message: "Bank details are already available or already requested.",
     };
   }
 

@@ -15,6 +15,8 @@ export default function MissingBankInfoCard({
   hasExistingRequest: boolean;
 }) {
   const [loading, setLoading] = useState(false);
+  const [requestedLocal, setRequestedLocal] = useState(false);
+  const bankInfoRequested = hasExistingRequest || requestedLocal;
 
   async function handleRequest() {
     setLoading(true);
@@ -22,6 +24,7 @@ export default function MissingBankInfoCard({
     setLoading(false);
 
     if (result.ok) {
+      setRequestedLocal(true);
       toast.success(result.message);
       return;
     }
@@ -44,9 +47,11 @@ export default function MissingBankInfoCard({
         <div className="flex flex-wrap gap-3">
           <Button
             onClick={handleRequest}
-            disabled={loading || hasExistingRequest}
+            disabled={loading || bankInfoRequested}
           >
-            {hasExistingRequest ? "Request already sent" : "Request bank info"}
+            {bankInfoRequested
+              ? "Request already sent"
+              : "Request bank info"}
           </Button>
         </div>
       </CardContent>

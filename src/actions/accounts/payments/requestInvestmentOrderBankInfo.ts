@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import {
   INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
@@ -46,27 +47,16 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
     order.currency,
   );
 
-  if (order.platformPaymentMethodId || existingPrivateBankMethod) {
+  const hasAnyBankInfoRequest = await hasUserBankInfoRequest(user.id);
+
+  if (
+    order.platformPaymentMethodId ||
+    existingPrivateBankMethod ||
+    hasAnyBankInfoRequest
+  ) {
     return {
       ok: true,
-      message: "Bank details are already available for this order.",
-    };
-  }
-
-  const existingRequest = await prisma.notification.findFirst({
-    where: {
-      userId: user.id,
-      key: `investment-order-bank-info-request-ack:${order.id}:${user.id}`,
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (existingRequest) {
-    return {
-      ok: true,
-      message: "Your request has already been sent. Please wait for admin review.",
+      message: "Bank details are already available or already requested.",
     };
   }
 

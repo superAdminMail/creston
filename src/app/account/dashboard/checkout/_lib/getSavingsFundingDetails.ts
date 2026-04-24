@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { isSavingsFundingBankInfoRequestAckNotification } from "@/lib/notifications/savingsFundingBankInfo";
+import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
@@ -124,59 +124,7 @@ export async function getSavingsFundingDetails(
 
   const latestIntent = account.savingsFundingIntents[0] ?? null;
 
-  const existingBankInfoRequest = await prisma.notification.findFirst({
-    where: {
-      userId: user.id,
-      key: {
-        startsWith: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
-      },
-    },
-    select: {
-      id: true,
-      type: true,
-      metadata: true,
-    },
-  });
-
-  const existingBankInfoRequestMetadata =
-    existingBankInfoRequest &&
-    isSavingsFundingBankInfoRequestAckNotification(existingBankInfoRequest) &&
-    typeof existingBankInfoRequest.metadata === "object" &&
-    existingBankInfoRequest.metadata !== null &&
-    !Array.isArray(existingBankInfoRequest.metadata)
-      ? existingBankInfoRequest.metadata
-      : null;
-
-  const requestedPlatformPaymentMethodId =
-    existingBankInfoRequestMetadata &&
-    typeof existingBankInfoRequestMetadata.platformPaymentMethodId === "string"
-      ? existingBankInfoRequestMetadata.platformPaymentMethodId
-      : null;
-
-  const requestedBankMethod = requestedPlatformPaymentMethodId
-    ? await prisma.platformPaymentMethod.findFirst({
-        where: {
-          id: requestedPlatformPaymentMethodId,
-          isActive: true,
-          isPrivate: true,
-          type: "BANK_INFO",
-        },
-        select: {
-          id: true,
-          label: true,
-          bankName: true,
-          bankCode: true,
-          accountName: true,
-          accountNumber: true,
-          reference: true,
-          bankAddress: true,
-          routingNumber: true,
-          instructions: true,
-          notes: true,
-          currency: true,
-        },
-      })
-    : null;
+  const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
 
   const privateBankMethod = latestIntent?.platformPaymentMethod
     ? null
@@ -184,8 +132,7 @@ export async function getSavingsFundingDetails(
 
   const fallbackBankMethod = latestIntent?.platformPaymentMethod
     ? null
-    : requestedBankMethod ??
-      privateBankMethod ??
+    : privateBankMethod ??
       (await getPublicPlatformPaymentMethods().then(
         (methods) =>
           methods.find(
@@ -294,9 +241,7 @@ export async function getSavingsFundingDetails(
         }
       : null,
     hasPendingSubmission,
-    hasExistingBankInfoRequest:
-      existingBankInfoRequest !== null &&
-      isSavingsFundingBankInfoRequestAckNotification(existingBankInfoRequest),
+    hasExistingBankInfoRequest,
     canSubmitFundingProof: Boolean(bankMethod) && !hasPendingSubmission,
     fundingAmountSuggestion:
       remainingToTargetAmount && remainingToTargetAmount > 0

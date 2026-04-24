@@ -130,7 +130,7 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
     rejectionReason: withdrawal.rejectionReason,
     adminNotes: withdrawal.adminNotes,
-    sourceType: withdrawal.investmentOrderId
+    sourceType: withdrawal.investmentOrder
       ? "INVESTMENT_ORDER"
       : "SAVINGS_ACCOUNT",
     sourceLabel: withdrawal.investmentOrder

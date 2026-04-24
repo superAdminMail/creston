@@ -7,6 +7,7 @@ import {
   formatInvestmentTierReturnLabel,
   resolveInvestmentTierRoiPercentValue,
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
+import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
@@ -129,17 +130,7 @@ export async function getInvestmentOrderPaymentDetails(
     notFound();
   }
 
-  const existingBankInfoRequest = await prisma.notification.findFirst({
-    where: {
-      userId: user.id,
-      key: `investment-order-bank-info-request-ack:${order.id}:${user.id}`,
-    },
-    select: {
-      id: true,
-      read: true,
-      createdAt: true,
-    },
-  });
+  const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
 
   const privateBankMethod = order.platformPaymentMethod
     ? null
@@ -240,14 +231,8 @@ export async function getInvestmentOrderPaymentDetails(
         }
       : null,
     hasBankMethod: Boolean(resolvedBankMethod),
-    hasExistingBankInfoRequest: Boolean(existingBankInfoRequest),
-    bankInfoRequest: existingBankInfoRequest
-      ? {
-          id: existingBankInfoRequest.id,
-          createdAt: existingBankInfoRequest.createdAt.toISOString(),
-          status: existingBankInfoRequest.read ? "READ" : "SENT",
-        }
-      : null,
+    hasExistingBankInfoRequest,
+    bankInfoRequest: null,
     recentPayments: order.payments.map((payment) => ({
       id: payment.id,
       type: payment.type,
