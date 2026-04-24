@@ -39,7 +39,7 @@ export async function updateSuperAdminInvestor(
   try {
     const { userId } = await requireSuperAdminAccess();
 
-    const parsed = updateInvestorSchema.safeParse({
+    const parsed = updateSuperAdminInvestorSchema.safeParse({
       name: formData.get("name"),
       username: formData.get("username"),
       phoneNumber: formData.get("phoneNumber"),
