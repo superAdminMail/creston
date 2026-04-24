@@ -136,12 +136,21 @@ export default async function Page() {
                   {profile.name}
                 </h2>
 
-                <p className="mt-1 text-sm text-blue-200">
+                <p className="mt-1 max-w-full truncate text-sm text-blue-200">
                   {profile.username ?? "No username yet"}
                 </p>
 
                 <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300">
                   {profile.isEmailVerified ? "Email verified" : "Email not verified"}
+                </div>
+
+                <div className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-left">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                    Email address
+                  </p>
+                  <p className="mt-2 truncate text-sm font-medium text-white">
+                    {profile.email}
+                  </p>
                 </div>
               </div>
 

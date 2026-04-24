@@ -3,6 +3,10 @@
 import { Prisma, InvestmentOrderStatus } from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import {
+  activateReferralForReferredUser,
+  creditPendingReferralRewardForUser,
+} from "@/lib/referrals/referralRewardService";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
 
@@ -45,13 +49,13 @@ export async function confirmInvestmentOrder(
       id: orderId,
     },
     include: {
-      investmentPlan: true,
-      investmentPlanTier: true,
       investorProfile: {
         select: {
           userId: true,
         },
       },
+      investmentPlan: true,
+      investmentPlanTier: true,
     },
   });
 
@@ -108,6 +112,21 @@ export async function confirmInvestmentOrder(
       completedAt: null,
     },
   });
+
+  try {
+    await activateReferralForReferredUser({
+      referredUserId: order.investorProfile.userId,
+      activationType: "INVESTMENT_ORDER_CONFIRMED",
+      activationEntityId: order.id,
+      investmentOrderId: order.id,
+    });
+
+    await creditPendingReferralRewardForUser({
+      userId: order.investorProfile.userId,
+    });
+  } catch (error) {
+    console.error("[confirmInvestmentOrder.referrals]", error);
+  }
 
   await prisma.notification.create({
     data: {

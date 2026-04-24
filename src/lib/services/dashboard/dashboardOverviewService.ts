@@ -215,6 +215,7 @@ export async function getDashboardOverviewByHref(
     latestPendingKyc,
     latestDeposit,
     latestInvestmentOrder,
+    latestPaidInvestmentOrder,
   ] = await Promise.all([
     prisma.user.count({
       where: {
@@ -478,6 +479,34 @@ export async function getDashboardOverviewByHref(
         },
       },
     }),
+    prisma.investmentOrder.findFirst({
+      where: {
+        status: "PAID",
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        createdAt: true,
+        investorProfile: {
+          select: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        investmentPlan: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const savingsDeposits = toNumber(savingsDepositAggregate._sum.amount);
@@ -528,7 +557,9 @@ export async function getDashboardOverviewByHref(
           "These orders are marked PAID and still need admin confirmation.",
         countLabel: `${formatCount(paidInvestmentOrders.length)} orders`,
         tone: "critical",
-        href: "/account/dashboard/admin/investment-payments",
+        href: latestPaidInvestmentOrder
+          ? `/account/dashboard/admin/investment-orders/${latestPaidInvestmentOrder.id}`
+          : "/account/dashboard/admin/investment-orders",
         actionLabel: "Review orders",
         icon: "alertTriangle",
       });
@@ -879,18 +910,18 @@ export async function getDashboardOverviewByHref(
     alerts: (() => {
       const alerts: DashboardOverviewAlert[] = [];
 
-      if (pendingInvestmentPayments > 0) {
-        alerts.push({
-          title: "Investment payments pending review",
-          description:
-            "Investor payment proofs are still waiting for admin approval.",
-          countLabel: `${formatCount(pendingInvestmentPayments)} open`,
-          tone: "warning",
-          href: "/account/dashboard/admin/investment-payments",
-          actionLabel: "Review payments",
-          icon: "wallet",
-        });
-      }
+    if (pendingInvestmentPayments > 0) {
+      alerts.push({
+        title: "Investment payments pending review",
+        description:
+          "Investor payment proofs are still waiting for admin approval.",
+        countLabel: `${formatCount(pendingInvestmentPayments)} open`,
+        tone: "warning",
+        href: "/account/dashboard/admin/investment-payments",
+        actionLabel: "Review payments",
+        icon: "wallet",
+      });
+    }
 
       if (pendingSavingsPayments > 0) {
         alerts.push({
@@ -905,18 +936,20 @@ export async function getDashboardOverviewByHref(
         });
       }
 
-      if (paidInvestmentOrders.length > 0) {
-        alerts.push({
-          title: "Investment orders awaiting confirmation",
-          description:
-            "These orders are marked PAID and still need admin confirmation.",
-          countLabel: `${formatCount(paidInvestmentOrders.length)} orders`,
-          tone: "critical",
-          href: "/account/dashboard/admin/investment-payments",
-          actionLabel: "Review orders",
-          icon: "alertTriangle",
-        });
-      }
+    if (paidInvestmentOrders.length > 0) {
+      alerts.push({
+        title: "Investment orders awaiting confirmation",
+        description:
+          "These orders are marked PAID and still need admin confirmation.",
+        countLabel: `${formatCount(paidInvestmentOrders.length)} orders`,
+        tone: "critical",
+        href: latestPaidInvestmentOrder
+          ? `/account/dashboard/admin/investment-orders/${latestPaidInvestmentOrder.id}`
+          : "/account/dashboard/admin/investment-orders",
+        actionLabel: "Review orders",
+        icon: "alertTriangle",
+      });
+    }
 
       if (paidSavingsFundingIntents > 0) {
         alerts.push({
@@ -969,9 +1002,9 @@ export async function getDashboardOverviewByHref(
         icon: "trendingUp",
       },
     ],
-    quickActions: [
-      {
-        title: "Review Investor Profiles",
+      quickActions: [
+        {
+          title: "Review Investor Profiles",
         description:
           "Inspect investor records, verification state, and account readiness.",
         href: "/account/dashboard/admin/investors",
@@ -982,11 +1015,11 @@ export async function getDashboardOverviewByHref(
           "Track funded orders and keep investment operations in sync.",
         href: "/account/dashboard/admin/investment-orders",
       },
-      {
-        title: "Handle Withdrawals",
-        description: "Review requests queued for operational processing.",
-        href: "/account/dashboard/admin/Withdrawals",
-      },
+        {
+          title: "Handle Withdrawals",
+          description: "Review requests queued for operational processing.",
+          href: "/account/dashboard/admin/withdrawals",
+        },
       {
         title: "Track Transactions",
         description:

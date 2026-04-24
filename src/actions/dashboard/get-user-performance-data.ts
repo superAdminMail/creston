@@ -1,6 +1,10 @@
 "use server";
 
-import { Prisma, InvestmentOrderStatus } from "@/generated/prisma";
+import {
+  InvestmentOrderStatus,
+  Prisma,
+  ReferralRewardStatus,
+} from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
@@ -83,6 +87,13 @@ export type UserPerformanceData = {
     activeOrdersCount: number;
     maturedOrdersCount: number;
     profitableAssetsCount: number;
+  };
+  referral: {
+    referralCode: string | null;
+    referredUsersCount: number;
+    creditedRewardsCount: number;
+    pendingRewardsCount: number;
+    totalRewards: number;
   };
   assets: UserPerformanceAsset[];
   activities: UserPerformanceActivity[];
@@ -203,6 +214,42 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
 
   const orders = (investorProfile?.investmentOrders ??
     []) as PerformanceOrderRecord[];
+
+  const [referralCodeRecord, referralRewardTotals, pendingReferralRewardsCount, referredUsersCount] =
+    await Promise.all([
+      prisma.user.findUnique({
+        where: {
+          id: user.id,
+        },
+        select: {
+          referralCode: true,
+        },
+      }),
+      prisma.referralReward.aggregate({
+        where: {
+          userId: user.id,
+          status: ReferralRewardStatus.CREDITED,
+        },
+        _sum: {
+          amount: true,
+        },
+        _count: {
+          _all: true,
+        },
+      }),
+      prisma.referralReward.count({
+        where: {
+          userId: user.id,
+          status: ReferralRewardStatus.PENDING,
+        },
+      }),
+      prisma.referral.count({
+        where: {
+          referrerUserId: user.id,
+        },
+      }),
+    ]);
+
   const symbols = Array.from(
     new Set(
       orders
@@ -317,6 +364,13 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
       activeOrdersCount: assets.filter((asset) => !asset.isMatured).length,
       maturedOrdersCount: assets.filter((asset) => asset.isMatured).length,
       profitableAssetsCount: assets.filter((asset) => asset.profit > 0).length,
+    },
+    referral: {
+      referralCode: referralCodeRecord?.referralCode ?? null,
+      referredUsersCount,
+      creditedRewardsCount: referralRewardTotals._count._all,
+      pendingRewardsCount: pendingReferralRewardsCount,
+      totalRewards: decimalToNumber(referralRewardTotals._sum.amount ?? 0),
     },
     assets,
     activities,

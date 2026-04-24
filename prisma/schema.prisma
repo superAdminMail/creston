@@ -72,6 +72,13 @@ model User {
   reviewedSavingsTransactionPayments  SavingsTransactionPayment[] @relation("SavingsTransactionPaymentReviewedBy")
   savingsFundingIntents               SavingsFundingIntent[]
 
+  referralCode   String? @unique
+  referredByCode String?
+
+  referralsMade    Referral[]       @relation("ReferralsMade")
+  referralReceived Referral?        @relation("ReferralsReceived")
+  referralRewards  ReferralReward[] @relation("ReferralRewards")
+
   @@unique([email])
   @@index([accountStatus])
   @@index([emailVerified])
@@ -1299,7 +1306,7 @@ model SiteConfiguration {
 
 /// *
 /// * ===========================
-/// *   PROMOTIONS
+/// *   PROMOTIONS & REFERRALS
 /// * ===========================
 model PromotionCampaign {
   id String @id @default(cuid())
@@ -1374,10 +1381,94 @@ model PromotionDelivery {
   @@map("promotion_delivery")
 }
 
+model Referral {
+  id String @id @default(cuid())
+
+  referrerUserId String
+  referredUserId String @unique
+
+  code String
+
+  status ReferralStatus @default(PENDING)
+
+  rewardCurrency       String  @default("USD")
+  referrerRewardAmount Decimal @default(100) @db.Decimal(18, 2)
+  referredRewardAmount Decimal @default(100) @db.Decimal(18, 2)
+
+  activatedBy         ReferralActivationType?
+  activatedByEntityId String?
+
+  activatedAt DateTime?
+  rewardedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  referrer User @relation("ReferralsMade", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  referred User @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  rewards ReferralReward[]
+
+  @@index([referrerUserId])
+  @@index([referredUserId])
+  @@index([code])
+  @@index([status])
+  @@map("referral")
+}
+
+model ReferralReward {
+  id String @id @default(cuid())
+
+  referralId String
+  userId     String
+
+  type   ReferralRewardType
+  status ReferralRewardStatus @default(PENDING)
+
+  amount   Decimal @db.Decimal(18, 2)
+  currency String  @default("USD")
+
+  creditedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  user     User     @relation("ReferralRewards", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([referralId, type])
+  @@index([userId])
+  @@index([status])
+  @@map("referral_reward")
+}
+
 /// *
 /// * ===========================
 /// * Enums & Constants
 /// * ===========================
+enum ReferralStatus {
+  PENDING
+  ACTIVE
+  REWARDED
+  CANCELLED
+}
+
+enum ReferralActivationType {
+  SAVINGS_ACCOUNT_CREATED
+  INVESTMENT_ORDER_CONFIRMED
+}
+
+enum ReferralRewardType {
+  REFERRER_BONUS
+  REFERRED_BONUS
+}
+
+enum ReferralRewardStatus {
+  PENDING
+  CREDITED
+  CANCELLED
+}
+
 enum SavingsFundingMethodType {
   BANK_TRANSFER
   CRYPTO_PROVIDER

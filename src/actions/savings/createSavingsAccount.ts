@@ -12,6 +12,10 @@ import {
 } from "@/lib/forms/actionState";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import {
+  activateReferralForReferredUser,
+  creditPendingReferralRewardForUser,
+} from "@/lib/referrals/referralRewardService";
 import { createSavingsAccountSchema } from "@/lib/zodValidations/account-operations";
 
 type CreateSavingsAccountFieldName =
@@ -121,7 +125,7 @@ export async function createSavingsAccount(
       : null;
 
   try {
-    await prisma.savingsAccount.create({
+    const savingsAccount = await prisma.savingsAccount.create({
       data: {
         investorProfileId: profile.id,
         savingsProductId: product.id,
@@ -134,7 +138,25 @@ export async function createSavingsAccount(
         lockedUntil,
         status: SavingsStatus.ACTIVE,
       },
+      select: {
+        id: true,
+      },
     });
+
+    try {
+      await activateReferralForReferredUser({
+        referredUserId: user.id,
+        activationType: "SAVINGS_ACCOUNT_CREATED",
+        activationEntityId: savingsAccount.id,
+        savingsAccountId: savingsAccount.id,
+      });
+
+      await creditPendingReferralRewardForUser({
+        userId: user.id,
+      });
+    } catch (error) {
+      console.error("[createSavingsAccount.referrals]", error);
+    }
   } catch (error) {
     return createErrorFormState(
       getFriendlyServerError(

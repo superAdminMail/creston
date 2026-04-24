@@ -6,8 +6,10 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
+  Gift,
   Landmark,
   PieChart,
+  Users,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -264,6 +266,49 @@ export function UserPerformancePageClient({ data }: Props) {
               icon={Activity}
             />
           </div>
+
+          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+            <CardContent className="space-y-5 p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    Referral performance
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Track your referral code, successful referrals, and rewards
+                    credited to your account.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                  title="Referral code"
+                  value={data.referral.referralCode ?? "Not generated"}
+                  hint="Share this code to track new signups"
+                  icon={Gift}
+                />
+                <StatCard
+                  title="Referrals made"
+                  value={String(data.referral.referredUsersCount)}
+                  hint="Users linked to your referral code"
+                  icon={Users}
+                />
+                <StatCard
+                  title="Rewards earned"
+                  value={formatUsd(data.referral.totalRewards)}
+                  hint="Credited referral bonuses"
+                  icon={TrendingUp}
+                />
+                <StatCard
+                  title="Pending rewards"
+                  value={String(data.referral.pendingRewardsCount)}
+                  hint="Rewards waiting for an eligible destination"
+                  icon={Activity}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {hasAssets ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

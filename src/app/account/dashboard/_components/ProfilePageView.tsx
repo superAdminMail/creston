@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, ShieldCheck, User2 } from "lucide-react";
+import { useState } from "react";
+import { Check, Copy, Mail, Share2, ShieldCheck, User2 } from "lucide-react";
 
 import { getUserInitials } from "@/lib/User-Initials/user";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,55 @@ type ProfilePageProps = {
     image?: string | null;
     role?: string | null;
     isEmailVerified?: boolean | null;
+    referralCode?: string | null;
   };
 };
 
 export default function ProfilePageView({ user }: ProfilePageProps) {
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
   const avatarFallback = getUserInitials({
     name: user.name ?? undefined,
     email: user.email ?? "",
     username: user.username ?? undefined,
   });
   const canReviewInvestmentProfile = user.role === "USER";
+
+  async function handleCopyReferralCode() {
+    if (!user.referralCode) return;
+
+    try {
+      await navigator.clipboard.writeText(user.referralCode);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  async function handleShareReferralLink() {
+    if (!user.referralCode) return;
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("ref", user.referralCode);
+    const referralUrl = currentUrl.toString();
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Join me on Havenstone",
+          text: "Use my referral link to sign up.",
+          url: referralUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(referralUrl);
+        setShared(true);
+        window.setTimeout(() => setShared(false), 2000);
+      }
+    } catch {
+      setShared(false);
+    }
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#050B1F]">
@@ -133,6 +173,68 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                   />
                 </div>
               </div>
+
+              {canReviewInvestmentProfile ? (
+                <div className="rounded-[1.5rem] border border-blue-400/10 bg-[rgba(15,23,42,0.72)] p-4 sm:rounded-[1.75rem] sm:p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Referral Code
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-400">
+                        Share this code so your referral reward can be tracked.
+                      </p>
+                    </div>
+
+                    <div className="rounded-full border border-blue-400/15 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-blue-200">
+                      Ready
+                    </div>
+                  </div>
+
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                      Your code
+                    </p>
+
+                    <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="break-all font-mono text-lg font-semibold tracking-[0.2em] text-white">
+                        {user.referralCode ?? "Generating..."}
+                      </p>
+
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                        <Button
+                          type="button"
+                          onClick={handleCopyReferralCode}
+                          disabled={!user.referralCode}
+                          variant="outline"
+                          className="w-full rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 sm:w-auto"
+                        >
+                          {copied ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                          {copied ? "Copied" : "Copy code"}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={handleShareReferralLink}
+                          disabled={!user.referralCode}
+                          className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
+                        >
+                          {shared ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Share2 className="h-4 w-4" />
+                          )}
+                          {shared ? "Shared" : "Share link"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-4 sm:gap-6">
