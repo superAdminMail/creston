@@ -82,6 +82,14 @@ export default async function AdminSavingsProductsPage() {
           <Badge variant="secondary" className="border-white/10 bg-white/10">
             {product.allowsWithdrawals ? "Withdrawals on" : "Withdrawals off"}
           </Badge>
+          {product.sortOrder === 1 ? (
+            <Badge
+              variant="secondary"
+              className="border-amber-400/20 bg-amber-500/10 text-amber-300"
+            >
+              Popular
+            </Badge>
+          ) : null}
         </div>
       ),
     },
@@ -120,19 +128,33 @@ export default async function AdminSavingsProductsPage() {
       renderMobileCard={(product) => (
         <div className="space-y-3">
           <div>
-            <p className="text-base font-semibold text-white">{product.name}</p>
+            <span className="flex justify-between">
+              <p className="text-base font-semibold text-white">
+                {product.name}
+              </p>{" "}
+              {product.sortOrder === 1 ? (
+                <Badge
+                  variant="secondary"
+                  className="border-amber-400/20 bg-amber-500/10 text-amber-300 px-8 py-1.5 text-xl"
+                >
+                  Popular
+                </Badge>
+              ) : null}
+            </span>
             <p className="mt-1 text-sm text-slate-400">
               {product.description ?? "No description provided"}
             </p>
           </div>
           <div className="space-y-1 text-xs leading-6 text-slate-400">
             <p>
-              Interest:{" "}
+              Interest:
               {product.interestRatePercent !== null
                 ? `${product.interestRatePercent}%`
                 : "Not set"}
             </p>
-            <p>Frequency: {getFrequencyLabel(product.interestPayoutFrequency)}</p>
+            <p>
+              Frequency: {getFrequencyLabel(product.interestPayoutFrequency)}
+            </p>
             <p>Balance: {getBalanceRange(product)}</p>
             <p>Accounts: {product.accountCount}</p>
             <p>{formatDateLabel(product.createdAt)}</p>

@@ -10,6 +10,7 @@ type Props = {
   accountId: string;
   label?: string;
   disabled?: boolean;
+  disabledLabel?: string;
   className?: string;
 };
 
@@ -17,6 +18,7 @@ export default function SavingsDepositButton({
   accountId,
   label = "Deposit",
   disabled = false,
+  disabledLabel = "Target reached",
   className,
 }: Props) {
   const router = useRouter();
@@ -41,7 +43,7 @@ export default function SavingsDepositButton({
           Processing...
         </>
       ) : disabled ? (
-        "Target reached"
+        disabledLabel
       ) : (
         label
       )}

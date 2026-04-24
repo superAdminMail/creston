@@ -13,6 +13,7 @@ import {
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
+import CancelSavingsAccountButton from "./CancelSavingsAccountButton";
 import SavingsDepositButton from "./SavingsDepositButton";
 
 type SavingsDashboardProps = {
@@ -27,6 +28,20 @@ function getSavingsDepositButtonLabel(
   return latestFundingIntentStatus === "PARTIALLY_PAID"
     ? "Complete Deposit"
     : "Deposit";
+}
+
+function canCancelSavingsAccount(account: SavingsPageData["accounts"][number]) {
+  if (account.status !== "ACTIVE") {
+    return false;
+  }
+
+  if (account.isLocked || account.balance > 0) {
+    return false;
+  }
+
+  return !["PENDING", "SUBMITTED", "PARTIALLY_PAID", "PAID"].includes(
+    account.latestFundingIntentStatus ?? "",
+  );
 }
 
 export default function SavingsDashboard({
@@ -185,14 +200,15 @@ export default function SavingsDashboard({
                   accounts.length === 1 && "w-full",
                 )}
               >
-                <CardContent className="flex h-full flex-col gap-5 p-5 sm:p-6">
+                <CardContent className="flex h-full flex-col gap-5 p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1">
                       <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
                         {account.name}
                       </h2>
                       <p className="truncate text-sm text-slate-400">
-                        {account.product.name} - {formatEnumLabel(account.status)}
+                        {account.product.name} -{" "}
+                        {formatEnumLabel(account.status)}
                       </p>
                     </div>
 
@@ -269,15 +285,23 @@ export default function SavingsDashboard({
                       "No product description available."}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="grid gap-4">
                     <SavingsDepositButton
                       accountId={account.id}
                       label={getSavingsDepositButtonLabel(
                         account.latestFundingIntentStatus,
                       )}
-                      disabled={isTargetReached}
+                      disabled={isTargetReached || account.status === "CLOSED"}
+                      disabledLabel={
+                        account.status === "CLOSED"
+                          ? "Closed"
+                          : "Target reached"
+                      }
                       className="flex-1 rounded-2xl bg-blue-500 hover:bg-blue-600"
                     />
+                    {canCancelSavingsAccount(account) ? (
+                      <CancelSavingsAccountButton accountId={account.id} />
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>

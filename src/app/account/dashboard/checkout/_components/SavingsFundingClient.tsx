@@ -91,12 +91,13 @@ export default function SavingsFundingClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const initialFundingMethod =
+    normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
+    fundingMethodType ??
+    null;
+
   const [selectedFundingMethod, setSelectedFundingMethod] =
-    useState<CheckoutFundingMethodType | null>(
-      normalizeFundingMethodType(details.latestIntent?.fundingMethodType) ??
-        fundingMethodType ??
-        null,
-    );
+    useState<CheckoutFundingMethodType | null>(initialFundingMethod);
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
   const [proofOpen, setProofOpen] = useState(false);

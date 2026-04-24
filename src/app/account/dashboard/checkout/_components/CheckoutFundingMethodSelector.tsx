@@ -102,7 +102,7 @@ export default function CheckoutFundingMethodSelector({
 
       <CardContent className="grid gap-3 md:grid-cols-2">
         <MethodTile
-          active={value === "BANK_TRANSFER" || value === null}
+          active={value === "BANK_TRANSFER"}
           icon={<Landmark className="h-4 w-4" />}
           title="Bank Transfer"
           description="Use the bank transfer route to continue.."
