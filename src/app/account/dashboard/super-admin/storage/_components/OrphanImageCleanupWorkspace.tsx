@@ -1,7 +1,8 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,31 @@ type OrphanPreview = {
   assets: OrphanPreviewAsset[];
 };
 
+type CleanupExecuteResult = {
+  scanned: number;
+  deletedFromStorage: number;
+  deletedFromDatabase: number;
+  skipped: number;
+  failed: number;
+  results: Array<{
+    assetId: string;
+    originalName: string | null;
+    fileName: string;
+    storageProvider: string;
+    storageKey: string;
+    status: "deleted" | "skipped" | "failed";
+    reason: string;
+    deletedFromStorage: boolean;
+    deletedFromDatabase: boolean;
+    storageResult: {
+      ok: boolean;
+      provider: string;
+      storageKey: string;
+      error?: string;
+    } | null;
+  }>;
+};
+
 type OrphanImageCleanupWorkspaceProps = {
   initialPreview: OrphanPreview;
   initialOlderThanDaysRaw?: string | null;
@@ -111,6 +137,52 @@ export function OrphanImageCleanupWorkspace({
   const providerSelectValue = provider || ALL_PROVIDER_VALUE;
   const typeSelectValue = type || ALL_TYPE_VALUE;
 
+  function summarizePreviewAssets(assets: OrphanPreviewAsset[]): OrphanPreview {
+    const estimatedSizeBytes = assets.reduce(
+      (total, asset) => total + (asset.sizeBytes ?? 0),
+      0,
+    );
+    const oldestCreatedAt =
+      assets.length === 0
+        ? null
+        : assets.reduce(
+            (oldest, asset) => {
+              if (!oldest) return asset.createdAt;
+              return new Date(asset.createdAt) < new Date(oldest)
+                ? asset.createdAt
+                : oldest;
+            },
+            null as string | null,
+          );
+
+    const providerBreakdownMap = new Map<
+      string,
+      { provider: string; count: number; sizeBytes: number }
+    >();
+
+    for (const asset of assets) {
+      const current = providerBreakdownMap.get(asset.storageProvider) ?? {
+        provider: asset.storageProvider,
+        count: 0,
+        sizeBytes: 0,
+      };
+
+      current.count += 1;
+      current.sizeBytes += asset.sizeBytes ?? 0;
+      providerBreakdownMap.set(asset.storageProvider, current);
+    }
+
+    return {
+      olderThanDays: preview.olderThanDays,
+      limit: preview.limit,
+      totalFoundInBatch: assets.length,
+      estimatedSizeBytes,
+      oldestCreatedAt,
+      providerBreakdown: Array.from(providerBreakdownMap.values()),
+      assets,
+    };
+  }
+
   const oldestOrphanLabel = preview.oldestCreatedAt
     ? formatDateLabel(preview.oldestCreatedAt, "Not available")
     : "Not available";
@@ -145,18 +217,19 @@ export function OrphanImageCleanupWorkspace({
       if (provider) params.set("provider", provider);
       if (type) params.set("type", type);
 
-      const response = await fetch(
-        `${endpoint}?${params.toString()}`,
-        { method: "GET" },
-      );
+      const response = await fetch(`${endpoint}?${params.toString()}`, {
+        method: "GET",
+      });
 
-      const data = (await response.json()) as OrphanPreview | { error?: string };
+      const data = (await response.json()) as
+        | OrphanPreview
+        | { error?: string };
 
       if (!response.ok) {
         setScanState("error");
         setScanError(
           "error" in data
-            ? data.error ?? "Unable to scan preview."
+            ? (data.error ?? "Unable to scan preview.")
             : "Unable to scan preview.",
         );
         return;
@@ -165,13 +238,53 @@ export function OrphanImageCleanupWorkspace({
       setPreview(data as OrphanPreview);
       setCurrentPage(1);
       setScanState("scanned");
+      const totalFound = (data as OrphanPreview).totalFoundInBatch;
+
       setScanMessage(
-        `Scan completed with ${formatAnalyticsCount((data as OrphanPreview).totalFoundInBatch)} orphaned image(s).`,
+        `Scan completed with ${formatAnalyticsCount(totalFound)} orphaned image(s).`,
+      );
+      toast.success(
+        `Scan complete. Found ${formatAnalyticsCount(totalFound)} orphaned image(s).`,
       );
     } catch {
       setScanState("error");
-      setScanError("Unable to scan orphan images right now.");
+      const message = "Unable to scan orphan images right now.";
+      setScanError(message);
+      toast.error(message);
     }
+  }
+
+  function handleDeleteSuccess(result: CleanupExecuteResult) {
+    const deletedIds = new Set(
+      result.results
+        .filter((item) => item.deletedFromDatabase)
+        .map((item) => item.assetId),
+    );
+
+    setPreview((current) => {
+      const remainingAssets = current.assets.filter(
+        (asset) => !deletedIds.has(asset.id),
+      );
+
+      return summarizePreviewAssets(remainingAssets);
+    });
+
+    setCurrentPage(1);
+
+    const remainingDeleted = result.deletedFromDatabase;
+
+    if (remainingDeleted > 0) {
+      setScanState("scanned");
+      setScanMessage(
+        `Deleted ${formatAnalyticsCount(remainingDeleted)} orphaned image(s) from the scanned preview.`,
+      );
+      setScanError(null);
+      return;
+    }
+
+    setScanState("idle");
+    setScanMessage("No database records were removed.");
+    setScanError(null);
   }
 
   return (
@@ -257,7 +370,9 @@ export function OrphanImageCleanupWorkspace({
               <SelectValue placeholder="All image-like types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_TYPE_VALUE}>All image-like types</SelectItem>
+              <SelectItem value={ALL_TYPE_VALUE}>
+                All image-like types
+              </SelectItem>
               <SelectItem value="AVATAR">Avatar</SelectItem>
               <SelectItem value="OTHER">Other</SelectItem>
             </SelectContent>
@@ -432,11 +547,11 @@ export function OrphanImageCleanupWorkspace({
                             {formatDateLabel(asset.createdAt, "—")}
                           </TableCell>
 
-                              <TableCell className="align-top">
-                                <Badge className="rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100">
-                                  {formatEnumLabel(asset.reason)}
-                                </Badge>
-                              </TableCell>
+                          <TableCell className="align-top">
+                            <Badge className="rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100">
+                              {formatEnumLabel(asset.reason)}
+                            </Badge>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -457,7 +572,10 @@ export function OrphanImageCleanupWorkspace({
                     </PaginationContent>
 
                     <PaginationContent>
-                      {Array.from({ length: totalPages }, (_, index) => index + 1)
+                      {Array.from(
+                        { length: totalPages },
+                        (_, index) => index + 1,
+                      )
                         .slice(
                           Math.max(0, safeCurrentPage - 3),
                           Math.min(totalPages, safeCurrentPage + 2),
@@ -492,14 +610,52 @@ export function OrphanImageCleanupWorkspace({
               </div>
             ) : (
               <Card className="rounded-[1.5rem] border-dashed border-slate-200/80 bg-slate-50/80 shadow-none dark:border-white/10 dark:bg-white/5">
-                <CardContent className="px-6 py-10 text-center">
-                  <p className="text-lg font-semibold text-slate-950 dark:text-white">
+                <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-10">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-400 shadow-sm dark:border-white/10 dark:bg-white/5">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                      className="h-6 w-6"
+                    >
+                      <path
+                        d="M4 7.5V6a2 2 0 0 1 2-2h1.5M20 7.5V6a2 2 0 0 0-2-2h-1.5M4 16.5V18a2 2 0 0 0 2 2h1.5M20 16.5V18a2 2 0 0 1-2 2h-1.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 12h7m-3.5-3.5V15.5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  <p className="mt-5 text-lg font-semibold text-slate-950 dark:text-white">
                     No orphaned images found
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    Widen the preview window or adjust the filters if you want
-                    to inspect a different batch.
+                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    The scanned batch is clear. Run another scan if you want to
+                    inspect a different window or verify the current filters
+                    again.
                   </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-5 rounded-2xl border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
+                    onClick={handleScan}
+                    disabled={scanState === "scanning"}
+                  >
+                    {scanState === "scanning" ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Scanning...
+                      </>
+                    ) : (
+                      "Scan orphaned images"
+                    )}
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -550,6 +706,7 @@ export function OrphanImageCleanupWorkspace({
             provider={provider ?? null}
             type={type ?? null}
             previewCount={preview.totalFoundInBatch}
+            onDeleteSuccess={handleDeleteSuccess}
           />
         </div>
       </div>

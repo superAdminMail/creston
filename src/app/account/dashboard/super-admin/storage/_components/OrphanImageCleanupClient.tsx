@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ type OrphanImageCleanupClientProps = {
   provider: string | null;
   type: string | null;
   previewCount: number;
+  onDeleteSuccess: (result: CleanupExecuteResult) => void;
 };
 
 export function OrphanImageCleanupClient({
@@ -63,6 +65,7 @@ export function OrphanImageCleanupClient({
   provider,
   type,
   previewCount,
+  onDeleteSuccess,
 }: OrphanImageCleanupClientProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -106,20 +109,34 @@ export function OrphanImageCleanupClient({
         | { error?: string };
 
       if (!response.ok) {
-        setError("error" in payload ? payload.error ?? "Unable to clean up." : "Unable to clean up.");
+        const message =
+          "error" in payload
+            ? payload.error ?? "Unable to clean up."
+            : "Unable to clean up.";
+        setError(message);
+        toast.error(message);
         return;
       }
 
-      setResult(payload as CleanupExecuteResult);
+      const resultPayload = payload as CleanupExecuteResult;
+
+      setResult(resultPayload);
       setOpen(false);
+      onDeleteSuccess(resultPayload);
+      toast.success(
+        `Cleanup complete. Deleted ${resultPayload.deletedFromDatabase} record(s) and ${resultPayload.deletedFromStorage} storage file(s).`,
+      );
     } catch {
-      setError("Unable to clean up orphan images right now.");
+      const message = "Unable to clean up orphan images right now.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   function refreshPreview() {
+    toast("Refreshing preview.");
     router.refresh();
   }
 
@@ -245,14 +262,14 @@ export function OrphanImageCleanupClient({
       </Dialog>
 
       {result ? (
-        <SuperAdminSectionCard
-          title="Deletion summary"
-          description="Latest execution result for the orphan image cleanup batch."
-          className="border-rose-500/20"
-          headerClassName="bg-gradient-to-r from-rose-500/10 via-transparent to-transparent"
-          contentClassName="space-y-5"
-        >
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <SuperAdminSectionCard
+        title="Deletion summary"
+        description="Latest execution result for the orphan image cleanup batch."
+        className="border-rose-500/25 bg-slate-950/95"
+        headerClassName="bg-gradient-to-r from-rose-500/18 via-slate-950/40 to-transparent"
+        contentClassName="space-y-5"
+      >
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryPill label="Scanned" value={result.scanned} tone="slate" />
             <SummaryPill
               label="Deleted from storage"
@@ -275,12 +292,12 @@ export function OrphanImageCleanupClient({
             <Button
               type="button"
               variant="secondary"
-              className="rounded-2xl"
+              className="rounded-2xl border border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
               onClick={refreshPreview}
             >
               Re-run dry preview
             </Button>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-300">
               Refreshing the preview will re-check orphan status before showing
               the batch again.
             </p>
@@ -295,21 +312,21 @@ export function OrphanImageCleanupClient({
                 {highlightedResults.map((item) => (
                   <div
                     key={item.assetId}
-                    className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-white">
                         {item.originalName ?? item.fileName}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-300">
                         {item.storageProvider} • {formatEnumLabel(item.reason)}
                       </p>
                     </div>
                     <Badge
                       className={
                         item.status === "failed"
-                          ? "rounded-full border border-rose-500/20 bg-rose-500/10 text-rose-100"
-                          : "rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-100"
+                          ? "rounded-full border border-rose-400/30 bg-rose-500/20 text-rose-50"
+                          : "rounded-full border border-amber-400/30 bg-amber-500/20 text-amber-50"
                       }
                     >
                       {item.status}
@@ -336,12 +353,12 @@ function SummaryPill({
 }) {
   const toneClassName =
     tone === "emerald"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+      ? "border-emerald-400/30 bg-emerald-500/20 text-emerald-50"
       : tone === "blue"
-        ? "border-sky-500/20 bg-sky-500/10 text-sky-100"
+        ? "border-sky-400/30 bg-sky-500/20 text-sky-50"
         : tone === "rose"
-          ? "border-rose-500/20 bg-rose-500/10 text-rose-100"
-          : "border-white/10 bg-white/5 text-slate-100";
+          ? "border-rose-400/30 bg-rose-500/20 text-rose-50"
+          : "border-white/10 bg-white/10 text-slate-50";
 
   return (
     <div className={`rounded-2xl border px-4 py-3 ${toneClassName}`}>
