@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+
 import { prisma } from "@/lib/prisma";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
@@ -10,6 +12,13 @@ import {
 
 export default async function AdminPromotionsPage() {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
+  const requestHeaders = await headers();
+  const forwardedHost =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const forwardedProto = requestHeaders.get("x-forwarded-proto") ?? "https";
+  const siteOrigin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : "";
   const site = await getSiteConfigurationCached();
   const siteName = site?.siteName?.trim() || "Company";
 
@@ -70,6 +79,7 @@ export default async function AdminPromotionsPage() {
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
       <PromotionCampaignForm
+        siteOrigin={siteOrigin}
         siteName={siteName}
         users={users.map((item) => ({
           id: item.id,

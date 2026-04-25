@@ -1765,6 +1765,33 @@ export async function createPendingPlatformPromoRewardForUser(params: {
       return existingReward;
     }
 
+    let reward: PlatformPromoRewardRow;
+
+    try {
+      reward = await createPlatformPromoRewardRow(tx, {
+        promotionCampaignId: campaign.id,
+        userId: params.userId,
+        amount: campaign.rewardAmount,
+        currency: campaign.rewardCurrency,
+        promoCode: campaign.promoCode ?? promoCode,
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const duplicateReward = await findPlatformPromoRewardByCampaignAndUser(
+          tx,
+          campaign.id,
+          params.userId,
+        );
+
+        return duplicateReward;
+      }
+
+      throw error;
+    }
+
     const redemptionUpdate = await tx.promotionCampaign.updateMany({
       where: {
         id: campaign.id,
@@ -1784,16 +1811,8 @@ export async function createPendingPlatformPromoRewardForUser(params: {
     });
 
     if (redemptionUpdate.count === 0) {
-      return null;
+      throw new Error("This campaign has reached its redemption limit.");
     }
-
-    const reward = await createPlatformPromoRewardRow(tx, {
-      promotionCampaignId: campaign.id,
-      userId: params.userId,
-      amount: campaign.rewardAmount,
-      currency: campaign.rewardCurrency,
-      promoCode: campaign.promoCode ?? promoCode,
-    });
 
     await notifyPendingPlatformPromoReward(tx, reward);
 

@@ -1,3 +1,7 @@
+"use client";
+
+import { Share2 } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,19 +25,61 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
   );
 }
 
-function buildSignupLink(promoCode: string | null) {
+function buildSignupLink(siteOrigin: string, promoCode: string | null) {
   if (!promoCode) {
     return null;
   }
 
-  return `/auth/get-started?promo=${encodeURIComponent(promoCode)}`;
+  const base = siteOrigin.replace(/\/$/, "");
+  const path = `/auth/get-started?promo=${encodeURIComponent(promoCode)}`;
+
+  return base ? `${base}${path}` : path;
 }
 
 export default function PromotionCampaignDetail({
   campaign,
+  siteOrigin,
 }: {
   campaign: PromotionCampaignDetails;
+  siteOrigin: string;
 }) {
+  async function copyInviteLink() {
+    const link = buildSignupLink(siteOrigin, campaign.promoCode);
+
+    if (!link || typeof navigator === "undefined" || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(link);
+  }
+
+  async function shareInviteLink() {
+    const link = buildSignupLink(siteOrigin, campaign.promoCode);
+
+    if (!link) {
+      return;
+    }
+
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({
+          title: campaign.promoCode ?? "Promo campaign",
+          text: `Join using invite code ${campaign.promoCode ?? ""}`.trim(),
+          url: link,
+        });
+        return;
+      } catch {
+        // fall back to copy below
+      }
+    }
+
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(link);
+  }
+
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
       <Card className="border-border/60 shadow-sm">
@@ -111,7 +157,7 @@ export default function PromotionCampaignDetail({
               <StatCard
                 label="Signup link"
                 value={
-                  buildSignupLink(campaign.promoCode) ?? "-"
+                  buildSignupLink(siteOrigin, campaign.promoCode) ?? "-"
                 }
               />
               <div className="md:col-span-2 xl:col-span-4">
@@ -122,25 +168,28 @@ export default function PromotionCampaignDetail({
                         Derived signup link
                       </p>
                       <p className="mt-2 break-all text-sm text-white/90">
-                        {buildSignupLink(campaign.promoCode) ?? "-"}
+                        {buildSignupLink(siteOrigin, campaign.promoCode) ?? "-"}
                       </p>
                     </div>
                     {campaign.promoCode ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="rounded-xl border-white/10 bg-white/[0.03]"
-                        onClick={() => {
-                          const link = buildSignupLink(campaign.promoCode);
-                          if (!link || typeof navigator === "undefined" || !navigator.clipboard) {
-                            return;
-                          }
-
-                          navigator.clipboard.writeText(link);
-                        }}
-                      >
-                        Copy invite link
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-xl border-white/10 bg-white/[0.03]"
+                          onClick={copyInviteLink}
+                        >
+                          Copy invite link
+                        </Button>
+                        <Button
+                          type="button"
+                          className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
+                          onClick={shareInviteLink}
+                        >
+                          <Share2 className="h-4 w-4" />
+                          Share link
+                        </Button>
+                      </div>
                     ) : null}
                   </div>
                 </div>

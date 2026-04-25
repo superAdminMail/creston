@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ type RecentCampaign = {
 };
 
 type Props = {
+  siteOrigin: string;
   siteName: string;
   users: PromotionUserOption[];
   recentCampaigns: RecentCampaign[];
@@ -72,12 +74,18 @@ const initialState: CreatePromotionCampaignActionState = {
   status: "idle",
 };
 
-function SubmitButton() {
+function SubmitButton({ inviteMode }: { inviteMode: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? "Sending..." : "Send promotion"}
+      {pending
+        ? inviteMode
+          ? "Creating..."
+          : "Sending..."
+        : inviteMode
+          ? "Create promotion"
+          : "Send promotion"}
     </Button>
   );
 }
@@ -88,6 +96,7 @@ function formatDate(value: string | null) {
 }
 
 export default function PromotionCampaignForm({
+  siteOrigin,
   siteName,
   users,
   recentCampaigns,
@@ -110,13 +119,46 @@ export default function PromotionCampaignForm({
       return null;
     }
 
-    return `/auth/get-started?promo=${encodeURIComponent(campaign.promoCode)}`;
+    const base = siteOrigin.replace(/\/$/, "");
+    const path = `/auth/get-started?promo=${encodeURIComponent(
+      campaign.promoCode,
+    )}`;
+
+    return base ? `${base}${path}` : path;
   }
 
   async function copyInviteLink(campaign: { promoCode: string | null }) {
     const link = buildInviteLink(campaign);
 
     if (!link || typeof navigator === "undefined" || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(link);
+    toast.success("Invite link copied.");
+  }
+
+  async function shareInviteLink(campaign: { promoCode: string | null }) {
+    const link = buildInviteLink(campaign);
+
+    if (!link) {
+      return;
+    }
+
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({
+          title: campaign.promoCode ?? "Promo campaign",
+          text: `Join using invite code ${campaign.promoCode ?? ""}`.trim(),
+          url: link,
+        });
+        return;
+      } catch {
+        // Fall back to clipboard below.
+      }
+    }
+
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
       return;
     }
 
@@ -417,10 +459,10 @@ export default function PromotionCampaignForm({
               </div>
             ) : null}
 
-            <div className="flex items-center justify-end">
-              <SubmitButton />
-            </div>
-          </form>
+              <div className="flex items-center justify-end">
+                <SubmitButton inviteMode={inviteMode} />
+              </div>
+            </form>
         </CardContent>
       </Card>
 
@@ -509,16 +551,26 @@ export default function PromotionCampaignForm({
                           </span>{" "}
                           {campaign.rewardAmount} {campaign.rewardCurrency}
                         </div>
-                        <div className="flex items-center justify-end">
+                        <div className="flex flex-wrap items-center justify-end gap-2">
                           {campaign.promoCode ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="rounded-xl border-white/10 bg-white/[0.03]"
-                              onClick={() => copyInviteLink(campaign)}
-                            >
-                              Copy invite link
-                            </Button>
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="rounded-xl border-white/10 bg-white/[0.03]"
+                                onClick={() => copyInviteLink(campaign)}
+                              >
+                                Copy invite link
+                              </Button>
+                              <Button
+                                type="button"
+                                className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
+                                onClick={() => shareInviteLink(campaign)}
+                              >
+                                <Share2 className="h-4 w-4" />
+                                Share link
+                              </Button>
+                            </>
                           ) : null}
                         </div>
                         {campaign.promoCode ? (
