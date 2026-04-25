@@ -16,6 +16,61 @@ export function formatCurrency(amount: number, currency = "USD") {
   }).format(amount);
 }
 
+export function formatCompactUsd(amount: number) {
+  const absoluteAmount = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+
+  if (absoluteAmount >= 1_000_000_000) {
+    return `${sign}$${trimTrailingZeros(absoluteAmount / 1_000_000_000)}b`;
+  }
+
+  if (absoluteAmount >= 1_000_000) {
+    return `${sign}$${trimTrailingZeros(absoluteAmount / 1_000_000)}m`;
+  }
+
+  if (absoluteAmount >= 1_000) {
+    return `${sign}$${trimTrailingZeros(absoluteAmount / 1_000)}k`;
+  }
+
+  return `${sign}$${Math.round(absoluteAmount).toLocaleString("en-US")}`;
+}
+
+export function formatBytes(
+  bytes: number | bigint | null | undefined,
+  fallback = "0 B",
+) {
+  if (bytes === null || bytes === undefined) {
+    return fallback;
+  }
+
+  const size =
+    typeof bytes === "bigint" ? Number(bytes) : Number(bytes);
+
+  if (!Number.isFinite(size) || size < 0) {
+    return fallback;
+  }
+
+  if (size < 1024) {
+    return `${Math.round(size)} B`;
+  }
+
+  const units = ["KB", "MB", "GB", "TB", "PB"];
+  let value = size / 1024;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  return `${trimTrailingZeros(value)} ${units[unitIndex]}`;
+}
+
+function trimTrailingZeros(value: number) {
+  const rounded = Number(value.toFixed(1));
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toString();
+}
+
 export function formatDateLabel(
   value: Date | string | null | undefined,
   fallback = "Not available",

@@ -33,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatCompactUsd } from "@/lib/formatters/formatters";
 import type {
   DashboardOverviewActivity,
   DashboardOverviewAlert,
@@ -387,7 +388,9 @@ export function DashboardOverviewShell({
                     {highlight.label}
                   </p>
                   <p className="mt-2 break-words text-xl font-semibold leading-tight sm:text-2xl">
-                    {new Intl.NumberFormat("en-US").format(highlight.value)}
+                    {highlight.kind === "currency"
+                      ? formatCompactUsd(highlight.value)
+                      : new Intl.NumberFormat("en-US").format(highlight.value)}
                   </p>
                 </div>
               ))}

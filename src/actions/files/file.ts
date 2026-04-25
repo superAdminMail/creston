@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { UTApi } from "uploadthing/server";
 
+import { FileStorageProvider } from "@/generated/prisma";
+import { getFileAssetReferenceSummary } from "@/lib/file-assets/findOrphanImageAssets";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
-
-const utapi = new UTApi();
+import { deleteFileAssetFromStorage } from "@/lib/storage/deleteFileAssetFromStorage";
 
 type FileActionResult = {
   success?: true;
@@ -29,70 +29,14 @@ async function requireAuthenticatedUser() {
 }
 
 async function deleteStorageObject(storageKey: string) {
-  await utapi.deleteFiles([storageKey]);
-}
+  const result = await deleteFileAssetFromStorage({
+    storageProvider: FileStorageProvider.UPLOADTHING,
+    storageKey,
+  });
 
-async function getFileAssetReferenceSummary(fileAssetId: string) {
-  const [
-    usersAsProfileAvatar,
-    investorProfilesAsAvatar,
-    investmentIcons,
-    siteLogo,
-    siteConfigurationDefaultOgImages,
-    investmentPlanSeoImages,
-
-    testimonies,
-    management,
-  ] = await Promise.all([
-    prisma.user.count({
-      where: { profileAvatarFileAssetId: fileAssetId },
-    }),
-    prisma.investorProfile.count({
-      where: { avatarFileId: fileAssetId },
-    }),
-    prisma.investment.count({
-      where: { iconFileAssetId: fileAssetId },
-    }),
-    prisma.siteConfiguration.count({
-      where: { siteLogoFileAssetId: fileAssetId },
-    }),
-    prisma.siteConfiguration.count({
-      where: { defaultOgImageFileAssetId: fileAssetId },
-    }),
-    prisma.investmentPlan.count({
-      where: { seoImageFileId: fileAssetId },
-    }),
-
-    prisma.testimony.count({
-      where: { avatarFileId: fileAssetId },
-    }),
-    prisma.management.count({
-      where: { photoFileId: fileAssetId },
-    }),
-  ]);
-
-  const total =
-    usersAsProfileAvatar +
-    investorProfilesAsAvatar +
-    investmentIcons +
-    siteLogo +
-    siteConfigurationDefaultOgImages +
-    investmentPlanSeoImages +
-    testimonies +
-    management;
-
-  return {
-    usersAsProfileAvatar,
-    investorProfilesAsAvatar,
-    investmentIcons,
-    siteLogo,
-    siteConfigurationDefaultOgImages,
-    investmentPlanSeoImages,
-
-    testimonies,
-    management,
-    total,
-  };
+  if (!result.ok) {
+    throw new Error(result.error ?? "Unable to delete file");
+  }
 }
 
 async function deleteFileAssetIfOrphaned(
@@ -103,6 +47,7 @@ async function deleteFileAssetIfOrphaned(
     select: {
       id: true,
       storageKey: true,
+      storageProvider: true,
     },
   });
 
@@ -122,11 +67,26 @@ async function deleteFileAssetIfOrphaned(
     };
   }
 
-  await prisma.fileAsset.delete({
-    where: { id: fileAssetId },
-  });
+  if (fileAsset.storageKey) {
+    const storageDeletion = await deleteFileAssetFromStorage({
+      storageProvider: fileAsset.storageProvider,
+      storageKey: fileAsset.storageKey,
+    });
 
-  await deleteStorageObject(fileAsset.storageKey);
+    if (!storageDeletion.ok) {
+      return {
+        error:
+          storageDeletion.error ??
+          "Unable to delete the storage object for this file asset.",
+      };
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.fileAsset.delete({
+      where: { id: fileAssetId },
+    });
+  });
 
   return {
     success: true,

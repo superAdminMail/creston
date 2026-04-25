@@ -24,6 +24,7 @@ import {
   Banknote,
   LifeBuoy,
   Gift,
+  HardDrive,
 } from "lucide-react";
 
 export type DashboardRole = "USER" | "MODERATOR" | "ADMIN" | "SUPER_ADMIN";
@@ -393,6 +394,11 @@ export const DASHBOARD_MENU = {
           name: "System Health",
           href: "/account/dashboard/super-admin/system-health",
           icon: Activity,
+        },
+        {
+          name: "Storage Usage",
+          href: "/account/dashboard/super-admin/storage",
+          icon: HardDrive,
         },
       ],
     },

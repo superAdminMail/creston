@@ -55,6 +55,7 @@ export type DashboardOverviewLinkCard = {
 export type DashboardOverviewHighlight = {
   label: string;
   value: number;
+  kind?: "number" | "currency";
 };
 
 export type DashboardOverviewSpotlight = {
@@ -658,10 +659,12 @@ export async function getDashboardOverviewByHref(
         {
           label: "Total Deposits",
           value: totalDeposits,
+          kind: "currency",
         },
         {
           label: "Total Invested",
           value: fundedInvestments,
+          kind: "currency",
         },
       ],
       metrics: [
