@@ -161,6 +161,12 @@ export function OrphanImageCleanupClient({
 
             <div className="space-y-2">
               <Label htmlFor="confirm-orphan-cleanup">Confirmation text</Label>
+              <p className="text-xs text-slate-400">
+                To delete type{" "}
+                <span className="font-semibold text-slate-200">
+                  DELETE_ORPHANED_IMAGES
+                </span>
+              </p>
               <Input
                 id="confirm-orphan-cleanup"
                 value={confirmText}
