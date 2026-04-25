@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { formatEnumLabel } from "@/lib/formatters/formatters";
 
 import { SuperAdminSectionCard } from "../../_components/SuperAdminSectionCard";
 
@@ -295,7 +296,7 @@ export function OrphanImageCleanupClient({
                         {item.originalName ?? item.fileName}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {item.storageProvider} • {item.reason}
+                        {item.storageProvider} • {formatEnumLabel(item.reason)}
                       </p>
                     </div>
                     <Badge

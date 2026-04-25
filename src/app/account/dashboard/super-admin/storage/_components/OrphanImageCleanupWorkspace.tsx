@@ -365,9 +365,9 @@ export function OrphanImageCleanupWorkspace({
             ) : null}
 
             {paginatedAssets.length > 0 ? (
-              <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 dark:border-white/10">
+              <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="min-w-[900px]">
                     <TableHeader>
                       <TableRow className="border-slate-200/70 dark:border-white/10">
                         <TableHead className="w-[92px]">Preview</TableHead>
@@ -432,11 +432,11 @@ export function OrphanImageCleanupWorkspace({
                             {formatDateLabel(asset.createdAt, "—")}
                           </TableCell>
 
-                          <TableCell className="align-top">
-                            <Badge className="rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100">
-                              {asset.reason}
-                            </Badge>
-                          </TableCell>
+                              <TableCell className="align-top">
+                                <Badge className="rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100">
+                                  {formatEnumLabel(asset.reason)}
+                                </Badge>
+                              </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -444,7 +444,7 @@ export function OrphanImageCleanupWorkspace({
                 </div>
 
                 <div className="border-t border-slate-200/80 px-4 py-4 dark:border-white/10 sm:px-5">
-                  <Pagination>
+                  <Pagination className="justify-between">
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
@@ -454,7 +454,9 @@ export function OrphanImageCleanupWorkspace({
                           disabled={safeCurrentPage <= 1}
                         />
                       </PaginationItem>
+                    </PaginationContent>
 
+                    <PaginationContent>
                       {Array.from({ length: totalPages }, (_, index) => index + 1)
                         .slice(
                           Math.max(0, safeCurrentPage - 3),
@@ -471,7 +473,9 @@ export function OrphanImageCleanupWorkspace({
                             </PaginationLink>
                           </PaginationItem>
                         ))}
+                    </PaginationContent>
 
+                    <PaginationContent>
                       <PaginationItem>
                         <PaginationNext
                           onClick={() =>

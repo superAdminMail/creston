@@ -35,29 +35,35 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">
+  disabled?: boolean
+} & Pick<React.ComponentProps<typeof Button>, "size" | "variant"> &
+  React.ComponentProps<"button">
 
 function PaginationLink({
   className,
   isActive,
+  disabled,
   size = "icon",
+  variant = "outline",
   ...props
 }: PaginationLinkProps) {
   return (
     <Button
-      asChild
-      variant={isActive ? "outline" : "ghost"}
+      type="button"
+      variant={isActive ? "outline" : variant}
       size={size}
-      className={cn(className)}
-    >
-      <a
-        aria-current={isActive ? "page" : undefined}
-        data-slot="pagination-link"
-        data-active={isActive}
-        {...props}
-      />
-    </Button>
+      className={cn(
+        "border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-white/20 dark:hover:bg-white/10 dark:hover:text-white",
+        isActive &&
+          "border-sky-500/30 bg-sky-500/10 text-sky-700 shadow-[0_0_0_1px_rgba(14,165,233,0.18)] dark:border-sky-400/30 dark:bg-sky-500/15 dark:text-sky-100",
+        className,
+      )}
+      disabled={disabled}
+      aria-current={isActive ? "page" : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
+      {...props}
+    />
   )
 }
 
@@ -69,8 +75,9 @@ function PaginationPrevious({
   return (
     <PaginationLink
       aria-label="Go to previous page"
+      disabled={props.disabled}
       size="default"
-      className={cn("pl-1.5!", className)}
+      className={cn("gap-2 px-3 pl-3", className)}
       {...props}
     >
       <ChevronLeftIcon data-icon="inline-start" />
@@ -87,8 +94,9 @@ function PaginationNext({
   return (
     <PaginationLink
       aria-label="Go to next page"
+      disabled={props.disabled}
       size="default"
-      className={cn("pr-1.5!", className)}
+      className={cn("gap-2 px-3 pr-3", className)}
       {...props}
     >
       <span className="hidden sm:block">{text}</span>
