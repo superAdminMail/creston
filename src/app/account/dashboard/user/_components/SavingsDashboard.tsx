@@ -184,7 +184,7 @@ export default function SavingsDashboard({
           className={
             accounts.length === 1
               ? "grid gap-5"
-              : "grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+              : "grid gap-5 md:grid-cols-1 2xl:grid-cols-3"
           }
         >
           {accounts.map((account) => {
@@ -197,22 +197,23 @@ export default function SavingsDashboard({
                 key={account.id}
                 className={cn(
                   "h-full rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10",
+                  "min-w-0 overflow-hidden",
                   accounts.length === 1 && "w-full",
                 )}
               >
-                <CardContent className="flex h-full flex-col gap-5 p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 space-y-1">
-                      <h2 className="truncate text-lg font-semibold text-white sm:text-xl">
+                <CardContent className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5">
+                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <h2 className="break-words text-lg font-semibold text-white sm:text-xl">
                         {account.name}
                       </h2>
-                      <p className="truncate text-sm text-slate-400">
+                      <p className="break-words text-sm text-slate-400">
                         {account.product.name} -{" "}
                         {formatEnumLabel(account.status)}
                       </p>
                     </div>
 
-                    <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                    <div className="flex shrink-0 flex-wrap justify-start gap-2 sm:justify-end">
                       {account.product.interestEnabled ? (
                         <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
                           Interest
@@ -236,7 +237,7 @@ export default function SavingsDashboard({
                       {account.description}
                     </p>
                   ) : null}
-                  <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 sm:grid-cols-2">
+                  <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm sm:grid-cols-2">
                     <div>
                       <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
                         Target amount
@@ -285,7 +286,7 @@ export default function SavingsDashboard({
                       "No product description available."}
                   </div>
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <SavingsDepositButton
                       accountId={account.id}
                       label={getSavingsDepositButtonLabel(
@@ -297,7 +298,7 @@ export default function SavingsDashboard({
                           ? "Closed"
                           : "Target reached"
                       }
-                      className="flex-1 rounded-2xl bg-blue-500 hover:bg-blue-600"
+                      className="w-full rounded-2xl bg-blue-500 hover:bg-blue-600"
                     />
                     {canCancelSavingsAccount(account) ? (
                       <CancelSavingsAccountButton accountId={account.id} />

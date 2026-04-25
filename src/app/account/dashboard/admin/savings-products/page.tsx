@@ -82,14 +82,6 @@ export default async function AdminSavingsProductsPage() {
           <Badge variant="secondary" className="border-white/10 bg-white/10">
             {product.allowsWithdrawals ? "Withdrawals on" : "Withdrawals off"}
           </Badge>
-          {product.sortOrder === 1 ? (
-            <Badge
-              variant="secondary"
-              className="border-amber-400/20 bg-amber-500/10 text-amber-300"
-            >
-              Popular
-            </Badge>
-          ) : null}
         </div>
       ),
     },

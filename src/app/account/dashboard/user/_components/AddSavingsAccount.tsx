@@ -17,6 +17,7 @@ import type { SavingsPageData } from "@/actions/savings/getSavingsPageData";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Field,
   FieldContent,
@@ -107,6 +108,17 @@ export default function AddSavingsAccount({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">
+      <style>{`
+        @keyframes popularBadgeShimmer {
+          0% {
+            transform: translateX(-140%);
+          }
+          100% {
+            transform: translateX(140%);
+          }
+        }
+      `}</style>
+
       <div className="space-y-3">
         <Link
           href="/account/dashboard/user/savings"
@@ -169,11 +181,25 @@ export default function AddSavingsAccount({
                       </p>
                     </div>
 
-                    {isSelected ? (
-                      <span className="rounded-full bg-blue-500 px-2.5 py-1 text-xs font-medium text-white">
-                        Selected
-                      </span>
-                    ) : null}
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {product.sortOrder === 1 ? (
+                        <Badge
+                          variant="secondary"
+                          className="relative overflow-hidden border-amber-400/20 bg-amber-500/10 text-amber-300"
+                        >
+                          <span className="relative z-10">Popular</span>
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.75),transparent)] opacity-70 motion-safe:animate-[popularBadgeShimmer_2.8s_linear_infinite]"
+                          />
+                        </Badge>
+                      ) : null}
+                      {isSelected ? (
+                        <span className="rounded-full bg-blue-500 px-2.5 py-1 text-xs font-medium text-white">
+                          Selected
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
                   <p className="text-sm leading-7 text-slate-400">

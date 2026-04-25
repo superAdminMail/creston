@@ -34,6 +34,7 @@ type SavingsProductOption = {
   id: string;
   name: string;
   description: string | null;
+  sortOrder: number;
   interestEnabled: boolean;
   interestRatePercent: number | null;
   interestPayoutFrequency: string | null;
@@ -111,6 +112,7 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
         id: true,
         name: true,
         description: true,
+        sortOrder: true,
         interestEnabled: true,
         interestRatePercent: true,
         interestPayoutFrequency: true,
@@ -165,6 +167,7 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
       id: product.id,
       name: product.name,
       description: product.description,
+      sortOrder: product.sortOrder,
       interestEnabled: product.interestEnabled,
       interestRatePercent: product.interestRatePercent
         ? Number(product.interestRatePercent)
