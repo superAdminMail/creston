@@ -1,5 +1,4 @@
 import { getAdminWithdrawals } from "@/lib/service/getAdminWithdrawals";
-
 import AdminWithdrawalsClient from "./_components/AdminWithdrawalsClient";
 
 export default async function AdminWithdrawalsPage() {

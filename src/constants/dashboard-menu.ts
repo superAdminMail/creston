@@ -298,7 +298,7 @@ export const DASHBOARD_MENU = {
       links: [
         {
           name: "Withdrawals",
-          href: "/account/dashboard/admin/withdrawals",
+          href: "/account/dashboard/admin/Withdrawals",
           icon: CircleDollarSign,
         },
         {
