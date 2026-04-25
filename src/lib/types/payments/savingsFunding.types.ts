@@ -78,6 +78,7 @@ export type SavingsFundingDetails = {
   hasExistingBankInfoRequest: boolean;
   canSubmitFundingProof: boolean;
   fundingAmountSuggestion: number;
+  latestFundingPaymentShortfallAmount: number;
   remainingToTargetAmount: number | null;
   balanceLabel: string;
   targetAmountLabel: string;

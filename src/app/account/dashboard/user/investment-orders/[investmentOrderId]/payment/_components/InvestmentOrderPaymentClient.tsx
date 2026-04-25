@@ -91,6 +91,8 @@ export default function InvestmentOrderPaymentClient({
   const latestBankPayment =
     order.recentPayments.find((payment) => payment.type === "BANK_DEPOSIT") ??
     null;
+  const latestBankPaymentShortfallAmount =
+    order.latestBankPaymentShortfallAmount ?? 0;
   const isOrderFullySettled =
     isSettled ||
     order.remainingAmount <= 0 ||
@@ -473,6 +475,18 @@ export default function InvestmentOrderPaymentClient({
                         value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
                       />
                     </div>
+
+                    {latestBankPaymentShortfallAmount > 0 ? (
+                      <div className="rounded-[1.15rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm leading-6 text-amber-900 shadow-sm backdrop-blur dark:border-amber-300/20 dark:bg-white/[0.04] dark:text-amber-100">
+                        Includes previous bank shortfall of{" "}
+                        {formatCurrency(
+                          latestBankPaymentShortfallAmount,
+                          order.currency,
+                        )}
+                        . This amount is already carried into your next bank
+                        transfer.
+                      </div>
+                    ) : null}
 
                     <BankTransferInstructionsCard
                       bankMethod={bankMethod!}

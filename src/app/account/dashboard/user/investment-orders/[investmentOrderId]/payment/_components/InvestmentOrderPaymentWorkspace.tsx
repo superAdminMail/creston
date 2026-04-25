@@ -1,6 +1,7 @@
 "use client";
 
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { useMemo, useState } from "react";
 import BankTransferInstructionsCard from "./BankTransferInstructionsCard";
 import MissingBankInfoCard from "./MissingBankInfoCard";
@@ -39,6 +40,8 @@ export default function InvestmentOrderPaymentWorkspace({
     }
     return 0;
   }, [mode, partialAmount, order.remainingAmount]);
+  const latestBankPaymentShortfallAmount =
+    order.latestBankPaymentShortfallAmount ?? 0;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 md:px-6">
@@ -57,13 +60,26 @@ export default function InvestmentOrderPaymentWorkspace({
 
           {mode ? (
             order.hasBankMethod && order.bankMethod ? (
-              <BankTransferInstructionsCard
-                bankMethod={order.bankMethod}
-                selectedAmount={selectedAmount}
-                currency={order.currency}
-                actionLabel={bankProofActionLabel}
-                onConfirmPaid={() => setProofOpen(true)}
-              />
+              <>
+                {latestBankPaymentShortfallAmount > 0 ? (
+                  <div className="rounded-[1.15rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm leading-6 text-amber-900 shadow-sm backdrop-blur dark:border-amber-300/20 dark:bg-white/[0.04] dark:text-amber-100">
+                    Includes previous bank shortfall of{" "}
+                    {formatCurrency(
+                      latestBankPaymentShortfallAmount,
+                      order.currency,
+                    )}
+                    . This amount is already carried into your next bank
+                    transfer.
+                  </div>
+                ) : null}
+                <BankTransferInstructionsCard
+                  bankMethod={order.bankMethod}
+                  selectedAmount={selectedAmount}
+                  currency={order.currency}
+                  actionLabel={bankProofActionLabel}
+                  onConfirmPaid={() => setProofOpen(true)}
+                />
+              </>
             ) : (
               <MissingBankInfoCard
                 orderId={order.id}

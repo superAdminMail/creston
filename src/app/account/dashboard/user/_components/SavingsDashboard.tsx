@@ -22,15 +22,27 @@ type SavingsDashboardProps = {
   canCreateSavingsAccount: boolean;
 };
 
+type SavingsAccount = SavingsPageData["accounts"][number];
+
 function getSavingsDepositButtonLabel(
   latestFundingIntentStatus: SavingsPageData["accounts"][number]["latestFundingIntentStatus"],
+  latestFundingPaymentStatus: SavingsPageData["accounts"][number]["latestFundingPaymentStatus"],
 ) {
-  return latestFundingIntentStatus === "PARTIALLY_PAID"
-    ? "Complete Deposit"
-    : "Deposit";
+  if (
+    latestFundingIntentStatus === "SUBMITTED" ||
+    latestFundingPaymentStatus === "PENDING_REVIEW"
+  ) {
+    return "Deposit under review";
+  }
+
+  if (latestFundingIntentStatus === "PARTIALLY_PAID") {
+    return "Complete Deposit";
+  }
+
+  return "Deposit";
 }
 
-function canCancelSavingsAccount(account: SavingsPageData["accounts"][number]) {
+function canCancelSavingsAccount(account: SavingsAccount) {
   if (account.status !== "ACTIVE") {
     return false;
   }
@@ -44,16 +56,178 @@ function canCancelSavingsAccount(account: SavingsPageData["accounts"][number]) {
   );
 }
 
+function SavingsAccountCard({
+  account,
+  variant,
+}: {
+  account: SavingsAccount;
+  variant: "active" | "closed";
+}) {
+  const isActive = variant === "active";
+  const isTargetReached =
+    account.targetAmount !== null && account.balance >= account.targetAmount;
+
+  return (
+    <Card
+      className={cn(
+        "h-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 shadow-lg shadow-black/10",
+        isActive
+          ? "bg-white/5"
+          : "bg-white/[0.03] ring-1 ring-white/5 backdrop-blur-sm",
+      )}
+    >
+      <CardContent className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2 className="break-words text-lg font-semibold text-white sm:text-xl">
+              {account.name}
+            </h2>
+            <p className="break-words text-sm text-slate-400">
+              {account.product.name} - {formatEnumLabel(account.status)}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-wrap justify-start gap-2 sm:justify-end">
+            {isActive && account.product.interestEnabled ? (
+              <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
+                Interest
+              </span>
+            ) : null}
+            {isActive && account.isLocked ? (
+              <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-300">
+                Locked
+              </span>
+            ) : null}
+            {!isActive ? (
+              <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-300">
+                Inactive
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs text-slate-400">Available balance</p>
+          <h3 className="mt-1 break-words text-2xl font-semibold text-white sm:text-[2rem]">
+            {formatCurrency(account.balance, account.currency)}
+          </h3>
+        </div>
+
+        {account.description ? (
+          <p className="line-clamp-3 text-sm leading-6 text-slate-400">
+            {account.description}
+          </p>
+        ) : null}
+
+        <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Target amount
+            </dt>
+            <dd className="mt-2 text-sm font-medium text-white">
+              {account.targetAmount
+                ? formatCurrency(account.targetAmount, account.currency)
+                : "Not set"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Opened
+            </dt>
+            <dd className="mt-2 text-sm font-medium text-white">
+              {formatDateLabel(account.createdAt)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Withdrawals
+            </dt>
+            <dd className="mt-2 text-sm font-medium text-white">
+              {account.product.allowsWithdrawals ? "Available" : "Restricted"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
+              Lock status
+            </dt>
+            <dd className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
+              <Lock className="h-4 w-4 text-slate-400" />
+              {account.isLocked && account.lockedUntil
+                ? `Until ${formatDateLabel(account.lockedUntil)}`
+                : "Flexible"}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-slate-300">
+          {account.product.description ?? "No product description available."}
+        </div>
+
+        {isActive ? (
+          <div
+            className={cn(
+              "grid gap-3",
+              canCancelSavingsAccount(account)
+                ? "sm:grid-cols-2"
+                : "sm:grid-cols-1",
+            )}
+          >
+            <SavingsDepositButton
+              accountId={account.id}
+              label={getSavingsDepositButtonLabel(
+                account.latestFundingIntentStatus,
+                account.latestFundingPaymentStatus,
+              )}
+              disabled={
+                isTargetReached ||
+                account.status === "CLOSED" ||
+                account.latestFundingIntentStatus === "SUBMITTED" ||
+                account.latestFundingPaymentStatus === "PENDING_REVIEW"
+              }
+              disabledLabel={
+                account.latestFundingIntentStatus === "SUBMITTED" ||
+                account.latestFundingPaymentStatus === "PENDING_REVIEW"
+                  ? "Deposit under review"
+                  : account.status === "CLOSED"
+                    ? "Closed"
+                    : "Target reached"
+              }
+              className="w-full cursor-not-allowed rounded-2xl bg-blue-500 hover:bg-blue-600 disabled:cursor-not-allowed"
+            />
+            {canCancelSavingsAccount(account) ? (
+              <CancelSavingsAccountButton accountId={account.id} />
+            ) : null}
+          </div>
+        ) : (
+          <div className="rounded-2xl text-center border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-slate-300">
+            This savings account is inactive and no longer accepts deposits.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SavingsDashboard({
   accounts,
   kycStatus,
   canCreateSavingsAccount,
 }: SavingsDashboardProps) {
+  const activeAccounts = accounts.filter(
+    (account) => account.status === "ACTIVE",
+  );
+  const closedAccounts = accounts.filter(
+    (account) => account.status !== "ACTIVE",
+  );
   const hasAccounts = accounts.length > 0;
-  const totalBalance = accounts.reduce(
+  const hasActiveAccounts = activeAccounts.length > 0;
+  const activeTotalBalance = activeAccounts.reduce(
     (sum, account) => sum + account.balance,
     0,
   );
+  const activeLockedCount = activeAccounts.filter(
+    (account) => account.isLocked,
+  ).length;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
@@ -112,10 +286,11 @@ export default function SavingsDashboard({
               </span>
             </div>
             <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
-              {accounts.length}
+              {activeAccounts.length}
             </p>
           </CardContent>
         </Card>
+
         <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
@@ -128,10 +303,11 @@ export default function SavingsDashboard({
               </span>
             </div>
             <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
-              {formatCurrency(totalBalance)}
+              {formatCurrency(activeTotalBalance)}
             </p>
           </CardContent>
         </Card>
+
         <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
@@ -144,20 +320,37 @@ export default function SavingsDashboard({
               </span>
             </div>
             <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
-              {accounts.filter((account) => account.isLocked).length}
+              {activeLockedCount}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-300/50 to-transparent" />
+          <CardContent className="space-y-3 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-slate-400">
+                Closed accounts
+              </p>
+              <span className="rounded-full border border-red-300/20 bg-red-400/10 px-2.5 py-1 text-[11px] font-medium text-red-300">
+                Inactive
+              </span>
+            </div>
+            <p className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-[2.35rem]">
+              {closedAccounts.length}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {!hasAccounts ? (
+      {!hasActiveAccounts ? (
         <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center shadow-lg shadow-black/10">
           <CardContent className="space-y-4 p-6 sm:p-8 lg:p-10">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
               <PiggyBank className="h-6 w-6 text-blue-200" />
             </div>
             <h2 className="text-lg font-semibold text-white">
-              No savings account yet
+              No active savings account yet
             </h2>
             <p className="text-sm text-slate-400">
               Open your first savings account to start tracking balances and
@@ -182,134 +375,54 @@ export default function SavingsDashboard({
       ) : (
         <div
           className={
-            accounts.length === 1
+            activeAccounts.length === 1
               ? "grid gap-5"
               : "grid gap-5 md:grid-cols-1 2xl:grid-cols-3"
           }
         >
-          {accounts.map((account) => {
-            const isTargetReached =
-              account.targetAmount !== null &&
-              account.balance >= account.targetAmount;
-
-            return (
-              <Card
-                key={account.id}
-                className={cn(
-                  "h-full rounded-[1.75rem] border border-white/10 bg-white/5 shadow-lg shadow-black/10",
-                  "min-w-0 overflow-hidden",
-                  accounts.length === 1 && "w-full",
-                )}
-              >
-                <CardContent className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5">
-                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <h2 className="break-words text-lg font-semibold text-white sm:text-xl">
-                        {account.name}
-                      </h2>
-                      <p className="break-words text-sm text-slate-400">
-                        {account.product.name} -{" "}
-                        {formatEnumLabel(account.status)}
-                      </p>
-                    </div>
-
-                    <div className="flex shrink-0 flex-wrap justify-start gap-2 sm:justify-end">
-                      {account.product.interestEnabled ? (
-                        <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-300">
-                          Interest
-                        </span>
-                      ) : null}
-                      {account.isLocked ? (
-                        <span className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-300">
-                          Locked
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Available balance</p>
-                    <h3 className="mt-1 break-words text-2xl font-semibold text-white sm:text-[2rem]">
-                      {formatCurrency(account.balance, account.currency)}
-                    </h3>
-                  </div>
-                  {account.description ? (
-                    <p className="line-clamp-3 text-sm leading-6 text-slate-400">
-                      {account.description}
-                    </p>
-                  ) : null}
-                  <dl className="grid gap-3 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm sm:grid-cols-2">
-                    <div>
-                      <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                        Target amount
-                      </dt>
-                      <dd className="mt-2 text-sm font-medium text-white">
-                        {account.targetAmount
-                          ? formatCurrency(
-                              account.targetAmount,
-                              account.currency,
-                            )
-                          : "Not set"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                        Opened
-                      </dt>
-                      <dd className="mt-2 text-sm font-medium text-white">
-                        {formatDateLabel(account.createdAt)}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                        Withdrawals
-                      </dt>
-                      <dd className="mt-2 text-sm font-medium text-white">
-                        {account.product.allowsWithdrawals
-                          ? "Available"
-                          : "Restricted"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                        Lock status
-                      </dt>
-                      <dd className="mt-2 flex items-center gap-2 text-sm font-medium text-white">
-                        <Lock className="h-4 w-4 text-slate-400" />
-                        {account.isLocked && account.lockedUntil
-                          ? `Until ${formatDateLabel(account.lockedUntil)}`
-                          : "Flexible"}
-                      </dd>
-                    </div>
-                  </dl>
-                  <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm text-slate-300">
-                    {account.product.description ??
-                      "No product description available."}
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <SavingsDepositButton
-                      accountId={account.id}
-                      label={getSavingsDepositButtonLabel(
-                        account.latestFundingIntentStatus,
-                      )}
-                      disabled={isTargetReached || account.status === "CLOSED"}
-                      disabledLabel={
-                        account.status === "CLOSED"
-                          ? "Closed"
-                          : "Target reached"
-                      }
-                      className="w-full rounded-2xl bg-blue-500 hover:bg-blue-600"
-                    />
-                    {canCancelSavingsAccount(account) ? (
-                      <CancelSavingsAccountButton accountId={account.id} />
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {activeAccounts.map((account) => (
+            <SavingsAccountCard
+              key={account.id}
+              account={account}
+              variant="active"
+            />
+          ))}
         </div>
       )}
+
+      {closedAccounts.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4 shadow-lg shadow-black/10 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold text-white sm:text-xl">
+                Closed accounts
+              </h2>
+              <p className="text-sm text-slate-400">
+                Cancelled, closed, or otherwise inactive savings accounts.
+              </p>
+            </div>
+            <span className="inline-flex w-fit items-center rounded-full border border-red-300/20 bg-red-400/10 px-3 py-1 text-xs font-medium text-red-300">
+              {closedAccounts.length} inactive
+            </span>
+          </div>
+
+          <div
+            className={
+              closedAccounts.length === 1
+                ? "grid gap-5"
+                : "grid gap-5 md:grid-cols-1 2xl:grid-cols-3"
+            }
+          >
+            {closedAccounts.map((account) => (
+              <SavingsAccountCard
+                key={account.id}
+                account={account}
+                variant="closed"
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

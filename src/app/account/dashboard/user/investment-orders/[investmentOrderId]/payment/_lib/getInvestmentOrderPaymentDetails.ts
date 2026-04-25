@@ -151,6 +151,18 @@ export async function getInvestmentOrderPaymentDetails(
   const amount = toNumber(order.amount);
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
+  const latestPayment = order.payments[0] ?? null;
+  const latestBankPaymentShortfallAmount =
+    latestPayment &&
+    latestPayment.status === "APPROVED" &&
+    latestPayment.approvedAmount !== null &&
+    latestPayment.approvedAmount !== undefined
+      ? Math.max(
+          toNumber(latestPayment.claimedAmount) -
+            toNumber(latestPayment.approvedAmount),
+          0,
+        )
+      : 0;
 
   return {
     id: order.id,
@@ -260,5 +272,6 @@ export async function getInvestmentOrderPaymentDetails(
     amountLabel: formatCurrency(amount, order.currency),
     amountPaidLabel: formatCurrency(amountPaid, order.currency),
     remainingAmountLabel: formatCurrency(remainingAmount, order.currency),
+    latestBankPaymentShortfallAmount,
   };
 }

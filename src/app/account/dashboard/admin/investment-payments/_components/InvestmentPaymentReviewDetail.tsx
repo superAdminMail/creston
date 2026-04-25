@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { getPartialApprovalAmount } from "@/lib/payments/getPartialApprovalAmount";
 import type { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
 
 import { approveInvestmentOrderPayment } from "@/actions/admin/investment-payments/approveInvestmentOrderPayment";
@@ -37,6 +38,16 @@ export default function InvestmentPaymentReviewDetail({
   const [pending, startTransition] = useTransition();
 
   const canReview = payment.status === "PENDING_REVIEW";
+  const isFinalPayment = payment.claimedAmount >= payment.order.remainingAmount;
+  const canOfferPartialApproval = canReview && !isFinalPayment;
+  const partialApprovalAmount = getPartialApprovalAmount(
+    payment.claimedAmount,
+    approvedAmount,
+  );
+
+  useEffect(() => {
+    setApprovedAmount(payment.claimedAmount);
+  }, [payment.claimedAmount, payment.id]);
 
   function submitReview(
     approvedAmountValue: number,
@@ -70,8 +81,13 @@ export default function InvestmentPaymentReviewDetail({
   }
 
   function handleMarkPartiallyPaid() {
+    if (partialApprovalAmount === null) {
+      toast.error("Partial approval needs a valid amount below the claimed amount.");
+      return;
+    }
+
     submitReview(
-      approvedAmount,
+      partialApprovalAmount,
       "PARTIAL",
       "Payment submission marked as partially paid.",
     );
@@ -225,8 +241,17 @@ export default function InvestmentPaymentReviewDetail({
         </CardHeader>
 
         <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Submitted amount
+            </p>
+            <p className="mt-2 font-semibold">
+              {payment.claimedAmount.toLocaleString()} {payment.currency}
+            </p>
+          </div>
+
           <div className="grid gap-2 max-w-sm">
-            <label className="text-sm font-medium">Approved amount</label>
+            <label className="text-sm font-medium">Review amount</label>
             <Input
               type="number"
               step="0.01"
@@ -236,7 +261,7 @@ export default function InvestmentPaymentReviewDetail({
               disabled={!canReview || pending}
             />
             <p className="text-xs text-muted-foreground">
-              Use this amount when marking a payment as partially paid.
+              Auto-filled from the submitted amount. Adjust it only for partial approvals.
             </p>
           </div>
 
@@ -269,17 +294,23 @@ export default function InvestmentPaymentReviewDetail({
             ) : null}
           </div>
 
-          {canReview ? (
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={handleApproveFull} disabled={pending}>
-                Approve full payment
-              </Button>
-              <Button variant="secondary" onClick={handleMarkPartiallyPaid} disabled={pending}>
-                Mark partially paid
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleReject}
+            {canReview ? (
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={handleApproveFull} disabled={pending}>
+                  Approve full payment
+                </Button>
+                {canOfferPartialApproval ? (
+                  <Button
+                    variant="secondary"
+                    onClick={handleMarkPartiallyPaid}
+                    disabled={pending}
+                  >
+                    Mark partially paid
+                  </Button>
+                ) : null}
+                <Button
+                  variant="destructive"
+                  onClick={handleReject}
                 disabled={pending}
               >
                 Reject payment

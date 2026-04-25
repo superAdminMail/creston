@@ -61,6 +61,10 @@ export async function approveInvestmentOrderPaymentReview({
     throw new Error("Approved amount cannot be greater than claimed amount.");
   }
 
+  if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
+    throw new Error("Partial approval amount must be lower than the claimed amount.");
+  }
+
   const orderAmount = payment.investmentOrder.amount.toNumber();
   const currentPaid = payment.investmentOrder.amountPaid.toNumber();
   const remaining = Math.max(orderAmount - currentPaid, 0);

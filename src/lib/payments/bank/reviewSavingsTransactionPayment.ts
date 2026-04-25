@@ -92,7 +92,7 @@ export async function approveSavingsTransactionPaymentReview({
   }
 
   if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
-    throw new Error("Partial approval amount must be less than the claimed amount.");
+    throw new Error("Partial approval amount must be lower than the claimed amount.");
   }
 
   const currentBalance = new Prisma.Decimal(

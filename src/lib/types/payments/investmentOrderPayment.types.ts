@@ -88,4 +88,5 @@ export type InvestmentOrderPaymentDetails = {
   amountLabel: string;
   amountPaidLabel: string;
   remainingAmountLabel: string;
+  latestBankPaymentShortfallAmount: number;
 };

@@ -155,6 +155,8 @@ export default function SavingsFundingClient({
   const latestIntent = details.latestIntent;
   const latestBankPayment = latestIntent?.latestPayment ?? null;
   const latestPaidAmount = latestIntent?.creditedAmount ?? 0;
+  const latestPaymentShortfall =
+    details.latestFundingPaymentShortfallAmount ?? 0;
   const hasExistingIntent = latestIntent !== null;
   const isCompletingPayment = latestIntent?.status === "PARTIALLY_PAID";
   const isSavingsFullySettled =
@@ -197,7 +199,7 @@ export default function SavingsFundingClient({
     }
 
     try {
-      return calculateSavingsFundingChargeAmount({
+      const calculatedAmount = calculateSavingsFundingChargeAmount({
         totalAmount: chargeBasis,
         amountPaid: latestPaidAmount,
         usePartialPayment: bankSelected && effectivePaymentMode === "PARTIAL",
@@ -205,6 +207,16 @@ export default function SavingsFundingClient({
         hasPendingSubmission: hasPendingSubmission,
         hasActiveCryptoIntent: false,
       }).chargeAmount.toNumber();
+
+      if (
+        bankSelected &&
+        latestIntent?.status === "PARTIALLY_PAID" &&
+        latestPaymentShortfall > 0
+      ) {
+        return calculatedAmount + latestPaymentShortfall;
+      }
+
+      return calculatedAmount;
     } catch {
       return details.remainingToTargetAmount ?? chargeBasis;
     }
@@ -216,6 +228,8 @@ export default function SavingsFundingClient({
     details.remainingToTargetAmount,
     bankSelected,
     latestPaidAmount,
+    latestIntent?.status,
+    latestPaymentShortfall,
     hasPendingSubmission,
     effectivePaymentMode,
   ]);
@@ -576,6 +590,17 @@ export default function SavingsFundingClient({
                         ? "Transfer this amount now and submit proof after payment."
                         : "Transfer this full amount and submit proof after payment."}
                     </p>
+                    {bankSelected &&
+                    latestIntent?.status === "PARTIALLY_PAID" &&
+                    latestPaymentShortfall > 0 ? (
+                      <p className="mt-2 text-xs leading-5 text-amber-700 dark:text-amber-300">
+                        Includes previous bank shortfall of{" "}
+                        {formatCurrency(
+                          latestPaymentShortfall,
+                          details.account.currency,
+                        )}.
+                      </p>
+                    ) : null}
                   </div>
 
                   {bankMethod ? (

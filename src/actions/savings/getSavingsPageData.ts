@@ -17,6 +17,8 @@ type SavingsAccountViewModel = {
   lockedUntil: Date | null;
   createdAt: Date;
   latestFundingIntentStatus: string | null;
+  latestFundingPaymentStatus: string | null;
+  latestFundingPaymentShortfallAmount: number;
   product: {
     id: string;
     name: string;
@@ -86,6 +88,15 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
               take: 1,
               select: {
                 status: true,
+                payments: {
+                  orderBy: { submittedAt: "desc" },
+                  take: 1,
+                  select: {
+                    status: true,
+                    claimedAmount: true,
+                    approvedAmount: true,
+                  },
+                },
               },
             },
             savingsProduct: {
@@ -133,36 +144,53 @@ export async function getSavingsPageData(): Promise<SavingsPageData> {
     kycStatus: profile?.kycStatus ?? null,
     canCreateSavingsAccount: profile?.kycStatus === KycStatus.VERIFIED,
     accounts:
-      profile?.savingsAccounts.map((account) => ({
-        id: account.id,
-        name: account.name,
-        description: account.description,
-        balance: Number(account.balance),
-        currency: account.currency,
-        targetAmount: account.targetAmount
-          ? Number(account.targetAmount)
-          : null,
-        status: account.status,
-        isLocked: account.isLocked,
-        lockedUntil: account.lockedUntil,
-        createdAt: account.createdAt,
-        latestFundingIntentStatus:
-          account.savingsFundingIntents[0]?.status ?? null,
-        product: {
-          id: account.savingsProduct.id,
-          name: account.savingsProduct.name,
-          description: account.savingsProduct.description,
-          interestEnabled: account.savingsProduct.interestEnabled,
-          interestRatePercent: account.savingsProduct.interestRatePercent
-            ? Number(account.savingsProduct.interestRatePercent)
+      profile?.savingsAccounts.map((account) => {
+        const latestFundingPayment =
+          account.savingsFundingIntents[0]?.payments[0] ?? null;
+        const latestFundingPaymentShortfallAmount =
+          latestFundingPayment &&
+          latestFundingPayment.status === "APPROVED" &&
+          latestFundingPayment.approvedAmount
+            ? Math.max(
+                Number(latestFundingPayment.claimedAmount) -
+                  Number(latestFundingPayment.approvedAmount),
+                0,
+              )
+            : 0;
+
+        return {
+          id: account.id,
+          name: account.name,
+          description: account.description,
+          balance: Number(account.balance),
+          currency: account.currency,
+          targetAmount: account.targetAmount
+            ? Number(account.targetAmount)
             : null,
-          interestPayoutFrequency:
-            account.savingsProduct.interestPayoutFrequency,
-          allowsDeposits: account.savingsProduct.allowsDeposits,
-          allowsWithdrawals: account.savingsProduct.allowsWithdrawals,
-          isLockable: account.savingsProduct.isLockable,
-        },
-      })) ?? [],
+          status: account.status,
+          isLocked: account.isLocked,
+          lockedUntil: account.lockedUntil,
+          createdAt: account.createdAt,
+          latestFundingIntentStatus:
+            account.savingsFundingIntents[0]?.status ?? null,
+          latestFundingPaymentStatus: latestFundingPayment?.status ?? null,
+          latestFundingPaymentShortfallAmount,
+          product: {
+            id: account.savingsProduct.id,
+            name: account.savingsProduct.name,
+            description: account.savingsProduct.description,
+            interestEnabled: account.savingsProduct.interestEnabled,
+            interestRatePercent: account.savingsProduct.interestRatePercent
+              ? Number(account.savingsProduct.interestRatePercent)
+              : null,
+            interestPayoutFrequency:
+              account.savingsProduct.interestPayoutFrequency,
+            allowsDeposits: account.savingsProduct.allowsDeposits,
+            allowsWithdrawals: account.savingsProduct.allowsWithdrawals,
+            isLockable: account.savingsProduct.isLockable,
+          },
+        };
+      }) ?? [],
     products: products.map((product) => ({
       id: product.id,
       name: product.name,

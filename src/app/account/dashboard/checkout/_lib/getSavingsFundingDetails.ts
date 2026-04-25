@@ -104,16 +104,16 @@ export async function getSavingsFundingDetails(
               rejectionReason: true,
               submittedAt: true,
               reviewedAt: true,
-              receiptFile: {
-                select: {
-                  id: true,
-                  url: true,
-                  fileName: true,
+                receiptFile: {
+                  select: {
+                    id: true,
+                    url: true,
+                    fileName: true,
+                  },
                 },
               },
             },
           },
-        },
       },
     },
   });
@@ -152,6 +152,17 @@ export async function getSavingsFundingDetails(
     targetAmount === null ? null : Math.max(targetAmount - balance, 0);
 
   const latestPayment = latestIntent?.payments[0] ?? null;
+  const latestFundingPaymentShortfallAmount =
+    latestPayment &&
+    latestPayment.status === "APPROVED" &&
+    latestPayment.approvedAmount !== null &&
+    latestPayment.approvedAmount !== undefined
+      ? Math.max(
+          toNumber(latestPayment.claimedAmount) -
+            toNumber(latestPayment.approvedAmount),
+          0,
+        )
+      : 0;
   const hasPendingSubmission =
     latestIntent?.status === "PENDING" ||
     latestIntent?.status === "SUBMITTED" ||
@@ -249,6 +260,7 @@ export async function getSavingsFundingDetails(
         : balance > 0
           ? balance
           : 0,
+    latestFundingPaymentShortfallAmount,
     remainingToTargetAmount,
     balanceLabel: formatCurrency(balance, account.currency),
     targetAmountLabel:

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { approveSavingsTransactionPayment } from "@/actions/admin/savings-payments/approveSavingsTransactionPayment";
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { getPartialApprovalAmount } from "@/lib/payments/getPartialApprovalAmount";
 import type { SavingsPaymentReviewDetails } from "@/lib/types/payments/savingsPaymentReview.types";
 
 function formatDate(value: string | null) {
@@ -36,6 +37,20 @@ export default function SavingsPaymentReviewDetail({
   const [pending, startTransition] = useTransition();
 
   const canReview = payment.status === "PENDING_REVIEW";
+  const remainingFundingAmount = Math.max(
+    payment.fundingIntent.targetAmount - payment.fundingIntent.creditedAmount,
+    0,
+  );
+  const isFinalPayment = payment.claimedAmount >= remainingFundingAmount;
+  const canOfferPartialApproval = canReview && !isFinalPayment;
+  const partialApprovalAmount = getPartialApprovalAmount(
+    payment.claimedAmount,
+    approvedAmount,
+  );
+
+  useEffect(() => {
+    setApprovedAmount(payment.claimedAmount);
+  }, [payment.claimedAmount, payment.id]);
 
   function submitReview(
     approvedAmountValue: number,
@@ -69,8 +84,15 @@ export default function SavingsPaymentReviewDetail({
   }
 
   function handleMarkPartiallyPaid() {
+    if (partialApprovalAmount === null) {
+      toast.error(
+        "Partial approval needs a valid amount below the claimed amount.",
+      );
+      return;
+    }
+
     submitReview(
-      approvedAmount,
+      partialApprovalAmount,
       "PARTIAL",
       "Payment submission marked as partially paid.",
     );
@@ -138,7 +160,9 @@ export default function SavingsPaymentReviewDetail({
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 Savings account
               </p>
-              <p className="mt-2 font-semibold">{payment.fundingIntent.account.name}</p>
+              <p className="mt-2 font-semibold">
+                {payment.fundingIntent.account.name}
+              </p>
               <p className="text-sm text-muted-foreground">
                 {payment.fundingIntent.account.product.name}
               </p>
@@ -158,8 +182,10 @@ export default function SavingsPaymentReviewDetail({
                 Balance progress
               </p>
               <p className="mt-2 font-semibold">
-                Balance: {payment.fundingIntent.account.balance.toLocaleString()} /{" "}
-                {payment.fundingIntent.account.targetAmount?.toLocaleString() ?? "Not set"}{" "}
+                Balance:{" "}
+                {payment.fundingIntent.account.balance.toLocaleString()} /{" "}
+                {payment.fundingIntent.account.targetAmount?.toLocaleString() ??
+                  "Not set"}{" "}
                 {payment.fundingIntent.account.currency}
               </p>
               <p className="text-sm text-muted-foreground">
@@ -213,7 +239,8 @@ export default function SavingsPaymentReviewDetail({
 
           <CardContent className="grid gap-3 md:grid-cols-2">
             <div>
-              <span className="font-medium">Label:</span> {payment.bankMethod.label}
+              <span className="font-medium">Label:</span>{" "}
+              {payment.bankMethod.label}
             </div>
             <div>
               <span className="font-medium">Bank name:</span>{" "}
@@ -273,8 +300,17 @@ export default function SavingsPaymentReviewDetail({
         </CardHeader>
 
         <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              Submitted amount
+            </p>
+            <p className="mt-2 font-semibold">
+              {payment.claimedAmount.toLocaleString()} {payment.currency}
+            </p>
+          </div>
+
           <div className="grid gap-2 max-w-sm">
-            <label className="text-sm font-medium">Approved amount</label>
+            <label className="text-sm font-medium">Review amount</label>
             <Input
               type="number"
               step="0.01"
@@ -284,7 +320,7 @@ export default function SavingsPaymentReviewDetail({
               disabled={!canReview || pending}
             />
             <p className="text-xs text-muted-foreground">
-              Use this amount when marking a payment as partially paid.
+              Adjust if necessary, only for partial approvals.
             </p>
           </div>
 
@@ -317,17 +353,23 @@ export default function SavingsPaymentReviewDetail({
             ) : null}
           </div>
 
-          {canReview ? (
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={handleApproveFull} disabled={pending}>
-                Approve full payment
-              </Button>
-              <Button variant="secondary" onClick={handleMarkPartiallyPaid} disabled={pending}>
-                Mark partially paid
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleReject}
+            {canReview ? (
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={handleApproveFull} disabled={pending}>
+                  Approve full payment
+                </Button>
+                {canOfferPartialApproval ? (
+                  <Button
+                    variant="secondary"
+                    onClick={handleMarkPartiallyPaid}
+                    disabled={pending}
+                  >
+                    Mark partially paid
+                  </Button>
+                ) : null}
+                <Button
+                  variant="destructive"
+                  onClick={handleReject}
                 disabled={pending}
               >
                 Reject payment
