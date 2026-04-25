@@ -80,13 +80,13 @@ export default async function SuperAdminStoragePage({
   return (
     <main className="mx-auto max-w-7xl space-y-8 px-4 py-6">
       <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(135deg,#111827_0%,#0f3d5e_44%,#0f766e_100%)] shadow-[0_22px_70px_rgba(15,23,42,0.22)]">
-        <div className="flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-end lg:justify-between lg:p-10">
+        <div className="flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-end lg:justify-between lg:p-10">
           <div className="space-y-3">
             <Badge className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white">
               System Monitoring
             </Badge>
             <div className="space-y-3">
-              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl">
+              <h1 className="text-2xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl">
                 Storage Cleanup
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-200/90 sm:text-base">
@@ -132,7 +132,7 @@ export default async function SuperAdminStoragePage({
         />
       </section>
 
-      <section className="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] sm:p-6">
+      <section className="rounded-[1.75rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] sm:p-6">
         <OrphanImageCleanupWorkspace
           initialPreview={preview}
           initialOlderThanDaysRaw={olderThanDaysRaw ?? null}

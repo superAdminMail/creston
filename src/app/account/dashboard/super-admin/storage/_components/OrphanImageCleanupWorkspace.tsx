@@ -304,7 +304,7 @@ export function OrphanImageCleanupWorkspace({
         </Badge>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
             Older than days
@@ -379,7 +379,7 @@ export function OrphanImageCleanupWorkspace({
           </Select>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end sm:col-span-2 xl:col-span-1">
           <Button
             type="button"
             onClick={handleScan}
@@ -400,9 +400,9 @@ export function OrphanImageCleanupWorkspace({
 
       <div className="grid gap-4 xl:grid-cols-[1.45fr_0.95fr]">
         <Card className="rounded-[1.75rem] border-slate-200/80 bg-white/90 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-          <CardContent className="space-y-5 p-5 sm:p-6">
+          <CardContent className="space-y-5 p-4 sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-lg font-semibold text-slate-950 dark:text-white">
                   Orphan image preview
                 </p>
@@ -423,7 +423,7 @@ export function OrphanImageCleanupWorkspace({
                 {preview.assets.length === 1 ? "" : "s"}
               </p>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <label className="text-sm text-slate-600 dark:text-slate-400">
                   Per page
                 </label>
@@ -482,7 +482,7 @@ export function OrphanImageCleanupWorkspace({
             {paginatedAssets.length > 0 ? (
               <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
                 <div className="overflow-x-auto">
-                  <Table className="min-w-[900px]">
+                  <Table className="min-w-[760px] lg:min-w-[900px]">
                     <TableHeader>
                       <TableRow className="border-slate-200/70 dark:border-white/10">
                         <TableHead className="w-[92px]">Preview</TableHead>
@@ -506,11 +506,11 @@ export function OrphanImageCleanupWorkspace({
                               <img
                                 src={asset.url}
                                 alt={asset.originalName ?? asset.fileName}
-                                className="h-14 w-14 rounded-2xl border border-slate-200 object-cover shadow-sm dark:border-white/10"
+                                className="h-12 w-12 rounded-2xl border border-slate-200 object-cover shadow-sm sm:h-14 sm:w-14 dark:border-white/10"
                                 loading="lazy"
                               />
                             ) : (
-                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:border-white/10 dark:bg-white/5">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:h-14 sm:w-14 dark:border-white/10 dark:bg-white/5">
                                 Private
                               </div>
                             )}
@@ -664,7 +664,7 @@ export function OrphanImageCleanupWorkspace({
 
         <div className="space-y-4">
           <Card className="rounded-[1.75rem] border-slate-200/80 bg-white/90 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-            <CardContent className="space-y-4 p-5 sm:p-6">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <p className="text-lg font-semibold text-slate-950 dark:text-white">
                 Storage provider breakdown
               </p>
@@ -673,11 +673,11 @@ export function OrphanImageCleanupWorkspace({
               </p>
 
               {preview.providerBreakdown.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                   {preview.providerBreakdown.map((item) => (
                     <div
                       key={item.provider}
-                      className="min-w-[11rem] rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
+                      className="w-full rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
                     >
                       <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                         {item.provider}

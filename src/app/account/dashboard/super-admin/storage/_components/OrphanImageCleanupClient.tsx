@@ -149,7 +149,7 @@ export function OrphanImageCleanupClient({
         <DialogTrigger asChild>
           <Button
             variant="destructive"
-            className="h-11 rounded-2xl px-5 text-sm font-semibold shadow-lg shadow-rose-950/20"
+            className="h-11 w-full rounded-2xl px-5 text-sm font-semibold shadow-lg shadow-rose-950/20 sm:w-auto"
           >
             Delete previewed orphans
           </Button>
@@ -231,11 +231,11 @@ export function OrphanImageCleanupClient({
             ) : null}
           </div>
 
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
             <Button
               type="button"
               variant="ghost"
-              className="rounded-2xl"
+              className="w-full rounded-2xl sm:w-auto"
               onClick={() => setOpen(false)}
             >
               Cancel
@@ -244,7 +244,7 @@ export function OrphanImageCleanupClient({
             <Button
               type="button"
               variant="destructive"
-              className="rounded-2xl px-5 font-semibold"
+              className="w-full rounded-2xl px-5 font-semibold sm:w-auto"
               onClick={handleDelete}
               disabled={!canSubmit}
             >
@@ -365,7 +365,7 @@ function SummaryPill({
       <p className="text-xs uppercase tracking-[0.24em] text-current/70">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
+      <p className="mt-2 text-xl font-semibold sm:text-2xl">{value}</p>
     </div>
   );
 }
