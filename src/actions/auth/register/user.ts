@@ -5,10 +5,16 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadDisposableDomainsLocal } from "@/lib/data/loadDisposableDomainsLocal";
+import {
+  createPendingPlatformPromoRewardForUser,
+  createReferralForNewUser,
+} from "@/lib/referrals/referralRewardService";
 
 type RegisterUserInput = {
   email: string;
   password: string;
+  referralCode?: string | null;
+  promoCode?: string | null;
 };
 
 type RegisterUserResult = { ok: true } | { ok: false; message: string };
@@ -32,11 +38,23 @@ function getEmailDomain(email: string) {
   return email.trim().toLowerCase().split("@")[1] ?? "";
 }
 
+function normalizeInviteCode(value?: string | null) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed.toUpperCase();
+}
+
 export async function registerUserAction(
   input: RegisterUserInput,
 ): Promise<RegisterUserResult> {
   const email = normalizeEmail(input.email);
   const password = input.password;
+  const referralCode = normalizeInviteCode(input.referralCode);
+  const promoCode = normalizeInviteCode(input.promoCode);
 
   if (!email || !password) {
     return {
@@ -77,7 +95,7 @@ export async function registerUserAction(
       },
     });
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { email },
       data: {
         accountStatus: "PENDING_VERIFICATION",
@@ -90,7 +108,22 @@ export async function registerUserAction(
         disposableCheckProvider: "local_blocklist",
         disposableCheckedAt: new Date(),
       },
+      select: {
+        id: true,
+      },
     });
+
+    if (referralCode) {
+      await createReferralForNewUser({
+        newUserId: updatedUser.id,
+        referralCode,
+      });
+    } else if (promoCode) {
+      await createPendingPlatformPromoRewardForUser({
+        userId: updatedUser.id,
+        promoCode,
+      });
+    }
 
     return { ok: true };
   } catch (error) {

@@ -1318,6 +1318,15 @@ model PromotionCampaign {
   subject String?
   message String
 
+  promoCode       String?   @unique
+  rewardEnabled   Boolean   @default(false)
+  rewardAmount    Decimal   @default(100) @db.Decimal(18, 2)
+  rewardCurrency  String    @default("USD")
+  startsAt        DateTime?
+  expiresAt       DateTime?
+  maxRedemptions  Int?
+  redemptionCount Int       @default(0)
+
   audienceType PromotionAudienceType
   channel      PromotionChannel
   status       PromotionCampaignStatus @default(DRAFT)
@@ -1338,6 +1347,7 @@ model PromotionCampaign {
   updatedAt DateTime @updatedAt
 
   deliveries PromotionDelivery[]
+  rewards    ReferralReward[]
 
   @@index([createdByUserId])
   @@index([status])
@@ -1370,8 +1380,9 @@ model PromotionDelivery {
 
   failureMessage String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  referralReward ReferralReward?
 
   @@unique([campaignId, userId, channel])
   @@index([campaignId])
@@ -1419,8 +1430,13 @@ model Referral {
 model ReferralReward {
   id String @id @default(cuid())
 
-  referralId String
+  source RewardSource @default(USER_REFERRAL)
+
+  referralId String?
   userId     String
+
+  promotionCampaignId String?
+  promotionDeliveryId String?
 
   type   ReferralRewardType
   status ReferralRewardStatus @default(PENDING)
@@ -1428,15 +1444,30 @@ model ReferralReward {
   amount   Decimal @db.Decimal(18, 2)
   currency String  @default("USD")
 
+  destinationType RewardDestinationType?
+  destinationId   String?
+
+  activatedBy         ReferralActivationType?
+  activatedByEntityId String?
+  activatedAt         DateTime?
+
   creditedAt DateTime?
+
+  metadata Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  referral Referral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  user     User     @relation("ReferralRewards", fields: [userId], references: [id], onDelete: Cascade)
+  referral          Referral?          @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  promotionCampaign PromotionCampaign? @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
+  promotionDelivery PromotionDelivery? @relation(fields: [promotionDeliveryId], references: [id], onDelete: SetNull)
+  user              User               @relation("ReferralRewards", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([referralId, type])
+  @@unique([promotionCampaignId, userId])
+  @@unique([promotionDeliveryId])
+  @@index([source])
+  @@index([promotionCampaignId])
   @@index([userId])
   @@index([status])
   @@map("referral_reward")
@@ -1446,6 +1477,7 @@ model ReferralReward {
 /// * ===========================
 /// * Enums & Constants
 /// * ===========================
+
 enum ReferralStatus {
   PENDING
   ACTIVE
@@ -1461,6 +1493,17 @@ enum ReferralActivationType {
 enum ReferralRewardType {
   REFERRER_BONUS
   REFERRED_BONUS
+  PROMOTION_BONUS
+}
+
+enum RewardSource {
+  USER_REFERRAL
+  PLATFORM_PROMOTION
+}
+
+enum RewardDestinationType {
+  SAVINGS_ACCOUNT
+  INVESTMENT_ORDER
 }
 
 enum ReferralRewardStatus {

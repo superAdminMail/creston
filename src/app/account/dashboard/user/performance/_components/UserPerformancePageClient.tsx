@@ -310,6 +310,53 @@ export function UserPerformancePageClient({ data }: Props) {
             </CardContent>
           </Card>
 
+          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+            <CardContent className="space-y-5 p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-white">
+                    Welcome bonus
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Track your reserved platform bonus and the action needed to
+                    unlock it.
+                  </p>
+                </div>
+
+                <div className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-200">
+                  {data.welcomeBonus.nextActionLabel}
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                  title="Reserved bonus"
+                  value={formatUsd(data.welcomeBonus.pendingAmount)}
+                  hint="Pending platform promotion reward"
+                  icon={Gift}
+                />
+                <StatCard
+                  title="Credited bonus"
+                  value={formatUsd(data.welcomeBonus.creditedAmount)}
+                  hint="Platform promotion rewards already unlocked"
+                  icon={TrendingUp}
+                />
+                <StatCard
+                  title="Pending rewards"
+                  value={String(data.welcomeBonus.pendingRewardsCount)}
+                  hint="Rewards waiting on your first eligible action"
+                  icon={Activity}
+                />
+                <StatCard
+                  title="Credited rewards"
+                  value={String(data.welcomeBonus.creditedRewardsCount)}
+                  hint="Welcome bonuses credited to your account"
+                  icon={Landmark}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {hasAssets ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {data.assets.map((asset) => (

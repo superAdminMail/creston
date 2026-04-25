@@ -13,8 +13,7 @@ import {
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import {
-  activateReferralForReferredUser,
-  creditPendingReferralRewardForUser,
+  activateEligibleRewardsForUser,
 } from "@/lib/referrals/referralRewardService";
 import { createSavingsAccountSchema } from "@/lib/zodValidations/account-operations";
 
@@ -144,15 +143,11 @@ export async function createSavingsAccount(
     });
 
     try {
-      await activateReferralForReferredUser({
+      await activateEligibleRewardsForUser({
         referredUserId: user.id,
         activationType: "SAVINGS_ACCOUNT_CREATED",
         activationEntityId: savingsAccount.id,
         savingsAccountId: savingsAccount.id,
-      });
-
-      await creditPendingReferralRewardForUser({
-        userId: user.id,
       });
     } catch (error) {
       console.error("[createSavingsAccount.referrals]", error);

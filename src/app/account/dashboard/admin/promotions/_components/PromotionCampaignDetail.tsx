@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 
@@ -18,6 +19,14 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
       <p className="mt-2 text-lg font-semibold">{value}</p>
     </div>
   );
+}
+
+function buildSignupLink(promoCode: string | null) {
+  if (!promoCode) {
+    return null;
+  }
+
+  return `/auth/get-started?promo=${encodeURIComponent(promoCode)}`;
 }
 
 export default function PromotionCampaignDetail({
@@ -72,6 +81,64 @@ export default function PromotionCampaignDetail({
               value={campaign.sendToAllUsers ? "Yes" : "No"}
             />
           </div>
+
+          {campaign.rewardEnabled ? (
+            <div className="grid gap-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-4 md:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                label="Promo code"
+                value={campaign.promoCode ?? "-"}
+              />
+              <StatCard
+                label="Reward amount"
+                value={`${campaign.rewardAmount} ${campaign.rewardCurrency}`}
+              />
+              <StatCard
+                label="Redemptions"
+                value={
+                  campaign.maxRedemptions != null
+                    ? `${campaign.redemptionCount} / ${campaign.maxRedemptions}`
+                    : String(campaign.redemptionCount)
+                }
+              />
+              <StatCard
+                label="Signup link"
+                value={
+                  buildSignupLink(campaign.promoCode) ?? "-"
+                }
+              />
+              <div className="md:col-span-2 xl:col-span-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                        Derived signup link
+                      </p>
+                      <p className="mt-2 break-all text-sm text-white/90">
+                        {buildSignupLink(campaign.promoCode) ?? "-"}
+                      </p>
+                    </div>
+                    {campaign.promoCode ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-xl border-white/10 bg-white/[0.03]"
+                        onClick={() => {
+                          const link = buildSignupLink(campaign.promoCode);
+                          if (!link || typeof navigator === "undefined" || !navigator.clipboard) {
+                            return;
+                          }
+
+                          navigator.clipboard.writeText(link);
+                        }}
+                      >
+                        Copy invite link
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           <div className="rounded-2xl border border-border/60 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">

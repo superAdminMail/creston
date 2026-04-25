@@ -7,6 +7,7 @@ import {
   PromotionCampaignStatus,
   PromotionChannel,
   PromotionDeliveryStatus,
+  Prisma,
   UserRole,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
@@ -91,6 +92,16 @@ export async function createPromotionCampaignAction(
     ) as PromotionAudienceType,
     channel: String(formData.get("channel") ?? "") as PromotionChannel,
     userId: String(formData.get("userId") ?? "") || undefined,
+    rewardEnabled: String(formData.get("rewardEnabled") ?? "false") as
+      | "true"
+      | "false",
+    promoCode: String(formData.get("promoCode") ?? "") || undefined,
+    rewardAmount: String(formData.get("rewardAmount") ?? "") || undefined,
+    rewardCurrency: String(formData.get("rewardCurrency") ?? "") || undefined,
+    startsAt: String(formData.get("startsAt") ?? "") || undefined,
+    expiresAt: String(formData.get("expiresAt") ?? "") || undefined,
+    maxRedemptions:
+      String(formData.get("maxRedemptions") ?? "") || undefined,
   };
 
   const parsed = createPromotionCampaignSchema.safeParse(rawInput);
@@ -106,9 +117,32 @@ export async function createPromotionCampaignAction(
   const input = parsed.data;
 
   try {
-    const audienceUserIds = await getAudienceUserIds(input);
+    const inviteMode = input.rewardEnabled === "true";
+    const promoCode = input.promoCode?.trim().toUpperCase() || null;
+    const rewardAmount = new Prisma.Decimal(
+      input.rewardAmount?.trim() || "100",
+    );
+    const rewardCurrency = input.rewardCurrency?.trim().toUpperCase() || "USD";
+    const startsAt = input.startsAt?.trim()
+      ? new Date(input.startsAt.trim())
+      : null;
+    const expiresAt = input.expiresAt?.trim()
+      ? new Date(input.expiresAt.trim())
+      : null;
+    const maxRedemptions = input.maxRedemptions?.trim()
+      ? Number.parseInt(input.maxRedemptions.trim(), 10)
+      : null;
 
-    if (audienceUserIds.length === 0) {
+    if (inviteMode && !promoCode) {
+      return {
+        status: "error",
+        message: "A promo code is required for invite campaigns.",
+      };
+    }
+
+    const audienceUserIds = inviteMode ? [] : await getAudienceUserIds(input);
+
+    if (!inviteMode && audienceUserIds.length === 0) {
       return {
         status: "error",
         message: "No eligible users found for this promotion.",
@@ -116,20 +150,52 @@ export async function createPromotionCampaignAction(
     }
 
     const campaign = await prisma.$transaction(async (tx) => {
+      if (inviteMode && promoCode) {
+        const existingPromoCampaign = await tx.promotionCampaign.findUnique({
+          where: {
+            promoCode,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (existingPromoCampaign) {
+          throw new Error("A promo campaign with this code already exists.");
+        }
+      }
+
       const createdCampaign = await tx.promotionCampaign.create({
         data: {
           createdByUserId: sessionUser.userId,
           title: input.title,
           subject: input.subject?.trim() || null,
           message: input.message,
+          promoCode,
+          rewardEnabled: inviteMode,
+          rewardAmount,
+          rewardCurrency,
+          startsAt,
+          expiresAt,
+          maxRedemptions,
           audienceType: input.audienceType,
           channel: input.channel,
           sendToAllUsers:
+            !inviteMode &&
             input.audienceType === PromotionAudienceType.BROADCAST_ALL_USERS,
-          status: PromotionCampaignStatus.PROCESSING,
+          status: inviteMode
+            ? PromotionCampaignStatus.PROCESSING
+            : PromotionCampaignStatus.PROCESSING,
           startedAt: new Date(),
           metadata: {
             promotionType: input.promotionType,
+            rewardEnabled: inviteMode,
+            promoCode,
+            rewardAmount: rewardAmount.toString(),
+            rewardCurrency,
+            startsAt: startsAt?.toISOString() ?? null,
+            expiresAt: expiresAt?.toISOString() ?? null,
+            maxRedemptions,
           },
         },
         select: {
@@ -138,103 +204,111 @@ export async function createPromotionCampaignAction(
           title: true,
           subject: true,
           message: true,
+          promoCode: true,
+          rewardEnabled: true,
         },
       });
 
-      const users = await tx.user.findMany({
-        where: {
-          id: {
-            in: audienceUserIds,
+      if (!inviteMode) {
+        const users = await tx.user.findMany({
+          where: {
+            id: {
+              in: audienceUserIds,
+            },
+            isDeleted: false,
           },
-          isDeleted: false,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-        },
-      });
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        });
 
-      if (createdCampaign.channel === PromotionChannel.IN_APP) {
-        for (const user of users) {
-          const notification = await tx.notification.create({
-            data: {
-              userId: user.id,
-              title: createdCampaign.title,
-              message: createdCampaign.message,
-              type: "SYSTEM",
-              key: `promotion:${createdCampaign.id}:inapp:${user.id}`,
-              metadata: {
-                campaignId: createdCampaign.id,
-                audienceType: input.audienceType,
-                campaignType: input.promotionType,
-                channel: createdCampaign.channel,
-                promotionType: input.promotionType,
+        if (createdCampaign.channel === PromotionChannel.IN_APP) {
+          for (const user of users) {
+            const notification = await tx.notification.create({
+              data: {
+                userId: user.id,
+                title: createdCampaign.title,
+                message: createdCampaign.message,
+                type: "SYSTEM",
+                key: `promotion:${createdCampaign.id}:inapp:${user.id}`,
+                metadata: {
+                  campaignId: createdCampaign.id,
+                  audienceType: input.audienceType,
+                  campaignType: input.promotionType,
+                  channel: createdCampaign.channel,
+                  promotionType: input.promotionType,
+                },
               },
-            },
-            select: {
-              id: true,
-            },
-          });
+              select: {
+                id: true,
+              },
+            });
 
-          await tx.promotionDelivery.create({
-            data: {
-              campaignId: createdCampaign.id,
-              userId: user.id,
-              channel: PromotionChannel.IN_APP,
-              status: PromotionDeliveryStatus.SENT,
-              notificationId: notification.id,
-              deliveredAt: new Date(),
-            },
-          });
+            await tx.promotionDelivery.create({
+              data: {
+                campaignId: createdCampaign.id,
+                userId: user.id,
+                channel: PromotionChannel.IN_APP,
+                status: PromotionDeliveryStatus.SENT,
+                notificationId: notification.id,
+                deliveredAt: new Date(),
+              },
+            });
+          }
         }
-      }
 
-      if (createdCampaign.channel === PromotionChannel.EMAIL) {
-        for (const user of users) {
-          if (!user.email) {
+        if (createdCampaign.channel === PromotionChannel.EMAIL) {
+          for (const user of users) {
+            if (!user.email) {
+              await tx.promotionDelivery.create({
+                data: {
+                  campaignId: createdCampaign.id,
+                  userId: user.id,
+                  channel: PromotionChannel.EMAIL,
+                  status: PromotionDeliveryStatus.FAILED,
+                  failureMessage: "User has no email address.",
+                  failedAt: new Date(),
+                  emailAddress: null,
+                },
+              });
+              continue;
+            }
+
+            // Replace this block with your real mail sender.
+            // Example:
+            // await sendEmail({
+            //   to: user.email,
+            //   subject: createdCampaign.subject ?? createdCampaign.title,
+            //   react: <PromotionEmailTemplate ... />
+            // });
+
             await tx.promotionDelivery.create({
               data: {
                 campaignId: createdCampaign.id,
                 userId: user.id,
                 channel: PromotionChannel.EMAIL,
-                status: PromotionDeliveryStatus.FAILED,
-                failureMessage: "User has no email address.",
-                failedAt: new Date(),
-                emailAddress: null,
+                status: PromotionDeliveryStatus.SENT,
+                emailAddress: user.email,
+                emailSentAt: new Date(),
+                deliveredAt: new Date(),
               },
             });
-            continue;
           }
-
-          // Replace this block with your real mail sender.
-          // Example:
-          // await sendEmail({
-          //   to: user.email,
-          //   subject: createdCampaign.subject ?? createdCampaign.title,
-          //   react: <PromotionEmailTemplate ... />
-          // });
-
-          await tx.promotionDelivery.create({
-            data: {
-              campaignId: createdCampaign.id,
-              userId: user.id,
-              channel: PromotionChannel.EMAIL,
-              status: PromotionDeliveryStatus.SENT,
-              emailAddress: user.email,
-              emailSentAt: new Date(),
-              deliveredAt: new Date(),
-            },
-          });
         }
       }
 
       await tx.promotionCampaign.update({
         where: { id: createdCampaign.id },
-        data: {
-          status: PromotionCampaignStatus.SENT,
-          completedAt: new Date(),
-        },
+        data: inviteMode
+          ? {
+              status: PromotionCampaignStatus.PROCESSING,
+            }
+          : {
+              status: PromotionCampaignStatus.SENT,
+              completedAt: new Date(),
+            },
       });
 
       return createdCampaign;
@@ -244,8 +318,9 @@ export async function createPromotionCampaignAction(
 
     return {
       status: "success",
-      message:
-        input.audienceType === PromotionAudienceType.BROADCAST_ALL_USERS
+      message: input.rewardEnabled === "true"
+        ? "Promotion invite campaign created successfully."
+        : input.audienceType === PromotionAudienceType.BROADCAST_ALL_USERS
           ? "Promotion broadcast sent successfully."
           : "Promotion sent successfully.",
       campaignId: campaign.id,

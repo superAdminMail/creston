@@ -4,6 +4,7 @@ import {
   InvestmentOrderStatus,
   Prisma,
   ReferralRewardStatus,
+  RewardSource,
 } from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
@@ -94,6 +95,13 @@ export type UserPerformanceData = {
     creditedRewardsCount: number;
     pendingRewardsCount: number;
     totalRewards: number;
+  };
+  welcomeBonus: {
+    creditedRewardsCount: number;
+    pendingRewardsCount: number;
+    creditedAmount: number;
+    pendingAmount: number;
+    nextActionLabel: string;
   };
   assets: UserPerformanceAsset[];
   activities: UserPerformanceActivity[];
@@ -215,8 +223,14 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
   const orders = (investorProfile?.investmentOrders ??
     []) as PerformanceOrderRecord[];
 
-  const [referralCodeRecord, referralRewardTotals, pendingReferralRewardsCount, referredUsersCount] =
-    await Promise.all([
+  const [
+    referralCodeRecord,
+    referralRewardTotals,
+    pendingReferralRewardsCount,
+    referredUsersCount,
+    creditedPromoRewardTotals,
+    pendingPromoRewardTotals,
+  ] = await Promise.all([
       prisma.user.findUnique({
         where: {
           id: user.id,
@@ -246,6 +260,32 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
       prisma.referral.count({
         where: {
           referrerUserId: user.id,
+        },
+      }),
+      prisma.referralReward.aggregate({
+        where: {
+          userId: user.id,
+          source: RewardSource.PLATFORM_PROMOTION,
+          status: ReferralRewardStatus.CREDITED,
+        },
+        _sum: {
+          amount: true,
+        },
+        _count: {
+          _all: true,
+        },
+      }),
+      prisma.referralReward.aggregate({
+        where: {
+          userId: user.id,
+          source: RewardSource.PLATFORM_PROMOTION,
+          status: ReferralRewardStatus.PENDING,
+        },
+        _sum: {
+          amount: true,
+        },
+        _count: {
+          _all: true,
         },
       }),
     ]);
@@ -371,6 +411,16 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
       creditedRewardsCount: referralRewardTotals._count._all,
       pendingRewardsCount: pendingReferralRewardsCount,
       totalRewards: decimalToNumber(referralRewardTotals._sum.amount ?? 0),
+    },
+    welcomeBonus: {
+      creditedRewardsCount: creditedPromoRewardTotals._count._all,
+      pendingRewardsCount: pendingPromoRewardTotals._count._all,
+      creditedAmount: decimalToNumber(creditedPromoRewardTotals._sum.amount ?? 0),
+      pendingAmount: decimalToNumber(pendingPromoRewardTotals._sum.amount ?? 0),
+      nextActionLabel:
+        pendingPromoRewardTotals._count._all > 0
+          ? "Start a savings plan or confirm an investment order."
+          : "Your welcome bonus is already credited.",
     },
     assets,
     activities,

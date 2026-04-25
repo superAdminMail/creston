@@ -28,9 +28,13 @@ import { registerUserAction } from "@/actions/auth/register/user";
 export default function RegisterForm({
   siteName,
   siteLogoUrl,
+  referralCode,
+  promoCode,
 }: {
   siteName: string;
   siteLogoUrl?: string | null;
+  referralCode?: string | null;
+  promoCode?: string | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
@@ -54,6 +58,8 @@ export default function RegisterForm({
       const result = await registerUserAction({
         email: values.email,
         password: values.password,
+        referralCode,
+        promoCode,
       });
 
       if (!result.ok) {

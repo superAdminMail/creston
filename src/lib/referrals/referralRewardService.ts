@@ -8,6 +8,7 @@ import {
   ReferralRewardStatus,
   ReferralRewardType,
   ReferralStatus,
+  RewardSource,
   SavingsStatus,
   SavingsTransactionType,
   UserAccountStatus,
@@ -116,6 +117,25 @@ type ReferralStatusCheck = {
   emailVerified: boolean;
 };
 
+type PlatformPromoRewardRow = {
+  id: string;
+  referralId: string | null;
+  promotionCampaignId: string | null;
+  userId: string;
+  source: RewardSource;
+  type: ReferralRewardType;
+  status: ReferralRewardStatus;
+  amount: Prisma.Decimal;
+  currency: string;
+  creditedAt: Date | null;
+  promotionCampaign: {
+    id: string;
+    promoCode: string | null;
+    rewardAmount: Prisma.Decimal;
+    rewardCurrency: string;
+  } | null;
+};
+
 async function canReceiveReferralReward(
   tx: Prisma.TransactionClient,
   userId: string,
@@ -152,6 +172,10 @@ async function canReceiveReferralReward(
 
 function referralNotificationKey(rewardId: string, suffix: string) {
   return `referral-reward:${rewardId}:${suffix}`;
+}
+
+function promoRewardNotificationKey(rewardId: string, suffix: string) {
+  return `promo-reward:${rewardId}:${suffix}`;
 }
 
 async function upsertReferralNotification(tx: Prisma.TransactionClient, input: {
@@ -220,6 +244,48 @@ async function writeReferralAudit(
         activationType: input.activationType,
         activationEntityId: input.activationEntityId,
         source: "REFERRAL",
+      },
+    },
+  });
+}
+
+async function writeRewardAudit(
+  tx: Prisma.TransactionClient,
+  input: {
+    action:
+      | "PLATFORM_PROMO_REWARD_RESERVED"
+      | "REWARD_ACTIVATION_ATTEMPTED"
+      | "REWARD_CREDITED"
+      | "REWARD_PENDING_DESTINATION";
+    reward: PlatformPromoRewardRow;
+    userId: string;
+    amount: Prisma.Decimal;
+    currency: string;
+    destinationType: RewardDestination["kind"] | "NONE";
+    destinationId: string | null;
+    activationType: ReferralActivationType;
+    activationEntityId: string | null;
+    description: string;
+  },
+) {
+  await tx.auditLog.create({
+    data: {
+      actorUserId: input.userId,
+      action: input.action,
+      entityType: "ReferralReward",
+      entityId: input.reward.id,
+      description: input.description,
+      metadata: {
+        source: input.reward.source,
+        rewardId: input.reward.id,
+        referralId: input.reward.referralId,
+        promotionCampaignId: input.reward.promotionCampaignId,
+        amount: input.amount.toString(),
+        currency: input.currency,
+        destinationType: input.destinationType,
+        destinationId: input.destinationId,
+        activationType: input.activationType,
+        activationEntityId: input.activationEntityId,
       },
     },
   });
@@ -345,6 +411,91 @@ async function ensureReferralRewardRow(
   });
 }
 
+async function findPlatformPromoRewardByCampaignAndUser(
+  tx: Prisma.TransactionClient,
+  promotionCampaignId: string,
+  userId: string,
+) {
+  return tx.referralReward.findUnique({
+    where: {
+      promotionCampaignId_userId: {
+        promotionCampaignId,
+        userId,
+      },
+    },
+    select: {
+      id: true,
+      referralId: true,
+      promotionCampaignId: true,
+      userId: true,
+      source: true,
+      type: true,
+      status: true,
+      amount: true,
+      currency: true,
+      creditedAt: true,
+      promotionCampaign: {
+        select: {
+          id: true,
+          promoCode: true,
+          rewardAmount: true,
+          rewardCurrency: true,
+        },
+      },
+    },
+  }) as Promise<PlatformPromoRewardRow | null>;
+}
+
+async function createPlatformPromoRewardRow(
+  tx: Prisma.TransactionClient,
+  input: {
+    promotionCampaignId: string;
+    userId: string;
+    amount: Prisma.Decimal;
+    currency: string;
+    promoCode: string;
+  },
+) {
+  return tx.referralReward.create({
+    data: {
+      source: RewardSource.PLATFORM_PROMOTION,
+      promotionCampaignId: input.promotionCampaignId,
+      userId: input.userId,
+      type: ReferralRewardType.PROMOTION_BONUS,
+      amount: input.amount,
+      currency: input.currency,
+      status: ReferralRewardStatus.PENDING,
+      metadata: {
+        source: RewardSource.PLATFORM_PROMOTION,
+        promoCode: input.promoCode,
+        promotionCampaignId: input.promotionCampaignId,
+        amount: input.amount.toString(),
+        currency: input.currency,
+      },
+    },
+    select: {
+      id: true,
+      referralId: true,
+      promotionCampaignId: true,
+      userId: true,
+      source: true,
+      type: true,
+      status: true,
+      amount: true,
+      currency: true,
+      creditedAt: true,
+      promotionCampaign: {
+        select: {
+          id: true,
+          promoCode: true,
+          rewardAmount: true,
+          rewardCurrency: true,
+        },
+      },
+    },
+  }) as Promise<PlatformPromoRewardRow>;
+}
+
 async function claimReferralRewardForCredit(
   tx: Prisma.TransactionClient,
   reward: ReferralRewardRow,
@@ -369,6 +520,35 @@ async function claimReferralRewardForCredit(
     tx,
     reward.referralId,
     reward.type,
+  );
+
+  return fresh?.status === ReferralRewardStatus.CREDITED;
+}
+
+async function claimPlatformPromoRewardForCredit(
+  tx: Prisma.TransactionClient,
+  reward: PlatformPromoRewardRow,
+  creditedAt: Date,
+) {
+  const updateResult = await tx.referralReward.updateMany({
+    where: {
+      id: reward.id,
+      status: ReferralRewardStatus.PENDING,
+    },
+    data: {
+      status: ReferralRewardStatus.CREDITED,
+      creditedAt,
+    },
+  });
+
+  if (updateResult.count > 0) {
+    return true;
+  }
+
+  const fresh = await findPlatformPromoRewardByCampaignAndUser(
+    tx,
+    reward.promotionCampaignId ?? "",
+    reward.userId,
   );
 
   return fresh?.status === ReferralRewardStatus.CREDITED;
@@ -405,6 +585,55 @@ export async function createReferralForNewUser(params: {
       referredRewardAmount: REFERRAL_REWARD_AMOUNT,
     },
   });
+}
+
+async function findActivePromotionCampaignByCode(
+  tx: Prisma.TransactionClient,
+  promoCode: string,
+) {
+  const campaign = await tx.promotionCampaign.findFirst({
+    where: {
+      promoCode,
+      rewardEnabled: true,
+      startsAt: {
+        lte: new Date(),
+      },
+      OR: [
+        {
+          expiresAt: null,
+        },
+        {
+          expiresAt: {
+            gte: new Date(),
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      promoCode: true,
+      rewardAmount: true,
+      rewardCurrency: true,
+      rewardEnabled: true,
+      startsAt: true,
+      expiresAt: true,
+      maxRedemptions: true,
+      redemptionCount: true,
+    },
+  });
+
+  if (!campaign) {
+    return null;
+  }
+
+  if (
+    campaign.maxRedemptions != null &&
+    campaign.redemptionCount >= campaign.maxRedemptions
+  ) {
+    return null;
+  }
+
+  return campaign;
 }
 
 export async function resolveReferralRewardDestination(
@@ -505,6 +734,9 @@ export async function resolveReferralRewardDestination(
 
   return null;
 }
+
+export const resolveRewardDestinationForUser =
+  resolveReferralRewardDestination;
 
 export async function creditReferralRewardToSavingsAccount(
   tx: Prisma.TransactionClient,
@@ -813,6 +1045,279 @@ async function notifyPendingReferralReward(
       "Referral reward is pending until the user has an eligible destination.",
   });
 }
+
+async function notifyPendingPlatformPromoReward(
+  tx: Prisma.TransactionClient,
+  reward: PlatformPromoRewardRow,
+) {
+  await upsertReferralNotification(tx, {
+    userId: reward.userId,
+    key: promoRewardNotificationKey(reward.id, "reserved"),
+    title: "Welcome bonus reserved",
+    message:
+      "Your $100 welcome bonus is reserved. Start your first savings or investment to unlock it.",
+    link: "/account/dashboard",
+    metadata: {
+      source: RewardSource.PLATFORM_PROMOTION,
+      promotionCampaignId: reward.promotionCampaignId,
+      rewardId: reward.id,
+      amount: reward.amount.toString(),
+      currency: reward.currency,
+      status: "PENDING",
+    },
+  });
+
+  await writeRewardAudit(tx, {
+    action: "PLATFORM_PROMO_REWARD_RESERVED",
+    reward,
+    userId: reward.userId,
+    amount: reward.amount,
+    currency: reward.currency,
+    destinationType: "NONE",
+    destinationId: null,
+    activationType: ReferralActivationType.SAVINGS_ACCOUNT_CREATED,
+    activationEntityId: null,
+    description: "Platform promo reward reserved pending the first eligible action.",
+  });
+}
+
+async function creditPlatformPromoRewardToSavingsAccount(
+  tx: Prisma.TransactionClient,
+  input: {
+    reward: PlatformPromoRewardRow;
+    destination: Extract<RewardDestination, { kind: "SAVINGS_ACCOUNT" }>;
+    activationType: ReferralActivationType;
+    activationEntityId: string | null;
+    rewardedAt: Date;
+  },
+) {
+  const existingReward = await findPlatformPromoRewardByCampaignAndUser(
+    tx,
+    input.reward.promotionCampaignId ?? "",
+    input.reward.userId,
+  );
+
+  if (existingReward?.status === ReferralRewardStatus.CREDITED) {
+    return { credited: false as const, reward: existingReward };
+  }
+
+  const reward = existingReward ?? input.reward;
+
+  if (reward.status === ReferralRewardStatus.CREDITED) {
+    return { credited: false as const, reward };
+  }
+
+  const claimed = await claimPlatformPromoRewardForCredit(
+    tx,
+    reward,
+    input.rewardedAt,
+  );
+
+  if (!claimed) {
+    return { credited: false as const, reward };
+  }
+
+  const balanceBefore = toDecimal(input.destination.savingsAccount.balance);
+  const balanceAfter = balanceBefore.add(reward.amount);
+
+  await tx.savingsAccount.update({
+    where: {
+      id: input.destination.savingsAccountId,
+    },
+    data: {
+      balance: balanceAfter,
+    },
+  });
+
+  await tx.savingsTransaction.create({
+    data: {
+      savingsAccountId: input.destination.savingsAccountId,
+      type: SavingsTransactionType.ADJUSTMENT,
+      amount: reward.amount,
+      currency: reward.currency,
+      balanceBefore,
+      balanceAfter,
+      reference: `PROMO_BONUS:${reward.id}`,
+      note: "Platform promotion bonus credited",
+      metadata: {
+        source: RewardSource.PLATFORM_PROMOTION,
+        rewardType: reward.type,
+        rewardId: reward.id,
+        promotionCampaignId: reward.promotionCampaignId,
+        amount: reward.amount.toString(),
+        currency: reward.currency,
+        destinationType: input.destination.kind,
+        destinationId: input.destination.savingsAccountId,
+        activationType: input.activationType,
+        activationEntityId: input.activationEntityId,
+      },
+    },
+  });
+
+  await upsertReferralNotification(tx, {
+    userId: reward.userId,
+    key: promoRewardNotificationKey(reward.id, "credited-savings"),
+    title: "Welcome bonus unlocked",
+    message: `Your ${formatCurrency(
+      reward.amount.toNumber(),
+      reward.currency,
+    )} welcome bonus has been credited to your savings account.`,
+    link: "/account/dashboard/user/savings",
+    metadata: {
+      source: RewardSource.PLATFORM_PROMOTION,
+      promotionCampaignId: reward.promotionCampaignId,
+      rewardId: reward.id,
+      rewardType: reward.type,
+      amount: reward.amount.toString(),
+      currency: reward.currency,
+      destinationType: input.destination.kind,
+      destinationId: input.destination.savingsAccountId,
+      activationType: input.activationType,
+      activationEntityId: input.activationEntityId,
+    },
+  });
+
+  await writeRewardAudit(tx, {
+    action: "REWARD_CREDITED",
+    reward,
+    userId: reward.userId,
+    amount: reward.amount,
+    currency: reward.currency,
+    destinationType: input.destination.kind,
+    destinationId: input.destination.savingsAccountId,
+    activationType: input.activationType,
+    activationEntityId: input.activationEntityId,
+    description: "Platform promo reward credited to a savings account.",
+  });
+
+  return { credited: true as const, reward };
+}
+
+async function creditPlatformPromoRewardToInvestment(
+  tx: Prisma.TransactionClient,
+  input: {
+    reward: PlatformPromoRewardRow;
+    destination: Extract<RewardDestination, { kind: "INVESTMENT_ORDER" }>;
+    activationType: ReferralActivationType;
+    activationEntityId: string | null;
+    rewardedAt: Date;
+  },
+) {
+  const existingReward = await findPlatformPromoRewardByCampaignAndUser(
+    tx,
+    input.reward.promotionCampaignId ?? "",
+    input.reward.userId,
+  );
+
+  if (existingReward?.status === ReferralRewardStatus.CREDITED) {
+    return { credited: false as const, reward: existingReward };
+  }
+
+  const reward = existingReward ?? input.reward;
+
+  if (reward.status === ReferralRewardStatus.CREDITED) {
+    return { credited: false as const, reward };
+  }
+
+  const claimed = await claimPlatformPromoRewardForCredit(
+    tx,
+    reward,
+    input.rewardedAt,
+  );
+
+  if (!claimed) {
+    return { credited: false as const, reward };
+  }
+
+  const investmentAmountBefore = toDecimal(
+    input.destination.investmentOrder.currentValue,
+  ).greaterThan(0)
+    ? toDecimal(input.destination.investmentOrder.currentValue)
+    : toDecimal(input.destination.investmentOrder.amount);
+  const nextInvestmentValue = investmentAmountBefore.add(reward.amount);
+  const accountBalanceBefore = toDecimal(
+    input.destination.investmentOrder.investmentAccount.balance,
+  );
+  const accountBalanceAfter = accountBalanceBefore.add(reward.amount);
+
+  await tx.investmentAccount.update({
+    where: {
+      id: input.destination.investmentAccountId,
+    },
+    data: {
+      balance: accountBalanceAfter,
+    },
+  });
+
+  await tx.investmentOrder.update({
+    where: {
+      id: input.destination.investmentOrderId,
+    },
+    data: {
+      ...(input.destination.investmentOrder.investmentModel === InvestmentModel.FIXED
+        ? {
+            accruedProfit: {
+              increment: reward.amount,
+            },
+          }
+        : {
+            currentValue: nextInvestmentValue,
+          }),
+    },
+  });
+
+  await tx.investmentEarning.create({
+    data: {
+      investmentOrderId: input.destination.investmentOrderId,
+      date: input.rewardedAt,
+      amount: reward.amount,
+    },
+  });
+
+  await upsertReferralNotification(tx, {
+    userId: reward.userId,
+    key: promoRewardNotificationKey(reward.id, "credited-investment"),
+    title: "Welcome bonus unlocked",
+    message: `Your ${formatCurrency(
+      reward.amount.toNumber(),
+      reward.currency,
+    )} welcome bonus has been credited to your investment order.`,
+    link: "/account/dashboard/user/investment-orders",
+    metadata: {
+      source: RewardSource.PLATFORM_PROMOTION,
+      promotionCampaignId: reward.promotionCampaignId,
+      rewardId: reward.id,
+      rewardType: reward.type,
+      amount: reward.amount.toString(),
+      currency: reward.currency,
+      destinationType: input.destination.kind,
+      destinationId: input.destination.investmentOrderId,
+      activationType: input.activationType,
+      activationEntityId: input.activationEntityId,
+    },
+  });
+
+  await writeRewardAudit(tx, {
+    action: "REWARD_CREDITED",
+    reward,
+    userId: reward.userId,
+    amount: reward.amount,
+    currency: reward.currency,
+    destinationType: input.destination.kind,
+    destinationId: input.destination.investmentOrderId,
+    activationType: input.activationType,
+    activationEntityId: input.activationEntityId,
+    description: "Platform promo reward credited to an investment order.",
+  });
+
+  return { credited: true as const, reward };
+}
+
+export const creditRewardToSavingsAccount =
+  creditPlatformPromoRewardToSavingsAccount;
+
+export const creditRewardToInvestmentOrder =
+  creditPlatformPromoRewardToInvestment;
 
 async function syncReferralStatus(tx: Prisma.TransactionClient, referralId: string) {
   const [pendingCount, creditedCount] = await Promise.all([
@@ -1149,6 +1654,7 @@ export async function creditPendingReferralRewardForUser(params: {
     const pendingRewards = await tx.referralReward.findMany({
       where: {
         userId: params.userId,
+        source: RewardSource.USER_REFERRAL,
         status: ReferralRewardStatus.PENDING,
       },
       select: {
@@ -1226,4 +1732,185 @@ export async function creditPendingReferralRewardForUser(params: {
       destination,
     };
   });
+}
+
+export async function createPendingPlatformPromoRewardForUser(params: {
+  userId: string;
+  promoCode: string;
+}) {
+  const promoCode = params.promoCode.trim().toUpperCase();
+
+  if (!promoCode) {
+    return null;
+  }
+
+  return prisma.$transaction(async (tx) => {
+    if (!(await canReceiveReferralReward(tx, params.userId))) {
+      return null;
+    }
+
+    const campaign = await findActivePromotionCampaignByCode(tx, promoCode);
+
+    if (!campaign) {
+      return null;
+    }
+
+    const existingReward = await findPlatformPromoRewardByCampaignAndUser(
+      tx,
+      campaign.id,
+      params.userId,
+    );
+
+    if (existingReward) {
+      return existingReward;
+    }
+
+    const redemptionUpdate = await tx.promotionCampaign.updateMany({
+      where: {
+        id: campaign.id,
+        ...(campaign.maxRedemptions != null
+          ? {
+              redemptionCount: {
+                lt: campaign.maxRedemptions,
+              },
+            }
+          : {}),
+      },
+      data: {
+        redemptionCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    if (redemptionUpdate.count === 0) {
+      return null;
+    }
+
+    const reward = await createPlatformPromoRewardRow(tx, {
+      promotionCampaignId: campaign.id,
+      userId: params.userId,
+      amount: campaign.rewardAmount,
+      currency: campaign.rewardCurrency,
+      promoCode: campaign.promoCode ?? promoCode,
+    });
+
+    await notifyPendingPlatformPromoReward(tx, reward);
+
+    return reward;
+  });
+}
+
+export async function creditPendingPlatformPromoRewardForUser(params: {
+  userId: string;
+  activationType: ReferralActivationType;
+  activationEntityId: string;
+  savingsAccountId?: string;
+  investmentOrderId?: string;
+}) {
+  return prisma.$transaction(async (tx) => {
+    if (!(await canReceiveReferralReward(tx, params.userId))) {
+      return {
+        credited: 0,
+        destination: null as RewardDestination | null,
+      };
+    }
+
+    const destination = await resolveReferralRewardDestination(tx, params.userId);
+
+    if (!destination) {
+      return {
+        credited: 0,
+        destination: null as RewardDestination | null,
+      };
+    }
+
+    const pendingRewards = await tx.referralReward.findMany({
+      where: {
+        userId: params.userId,
+        source: RewardSource.PLATFORM_PROMOTION,
+        status: ReferralRewardStatus.PENDING,
+      },
+      select: {
+        id: true,
+        referralId: true,
+        promotionCampaignId: true,
+        userId: true,
+        source: true,
+        type: true,
+        status: true,
+        amount: true,
+        currency: true,
+        creditedAt: true,
+        promotionCampaign: {
+          select: {
+            id: true,
+            promoCode: true,
+            rewardAmount: true,
+            rewardCurrency: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    }) as PlatformPromoRewardRow[];
+
+    let creditedCount = 0;
+
+    for (const reward of pendingRewards) {
+      const creditedAt = new Date(Date.now() + creditedCount);
+
+      const creditResult =
+        destination.kind === "SAVINGS_ACCOUNT"
+          ? await creditPlatformPromoRewardToSavingsAccount(tx, {
+              reward,
+              destination,
+              activationType: params.activationType,
+              activationEntityId: params.activationEntityId,
+              rewardedAt: creditedAt,
+            })
+          : await creditPlatformPromoRewardToInvestment(tx, {
+              reward,
+              destination,
+              activationType: params.activationType,
+              activationEntityId: params.activationEntityId,
+              rewardedAt: creditedAt,
+            });
+
+      if (creditResult.credited) {
+        creditedCount += 1;
+      }
+    }
+
+    return {
+      credited: creditedCount,
+      destination,
+    };
+  });
+}
+
+export const creditPendingRewardToDestination =
+  creditPendingPlatformPromoRewardForUser;
+
+export async function activateEligibleRewardsForUser(params: {
+  referredUserId: string;
+  activationType: ReferralActivationType;
+  activationEntityId: string;
+  savingsAccountId?: string;
+  investmentOrderId?: string;
+}) {
+  const referralResult = await activateReferralForReferredUser(params);
+  const promoResult = await creditPendingPlatformPromoRewardForUser({
+    userId: params.referredUserId,
+    activationType: params.activationType,
+    activationEntityId: params.activationEntityId,
+    savingsAccountId: params.savingsAccountId,
+    investmentOrderId: params.investmentOrderId,
+  });
+
+  return {
+    referralResult,
+    promoResult,
+  };
 }

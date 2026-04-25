@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -43,6 +44,12 @@ type RecentCampaign = {
   audienceType: string;
   channel: string;
   status: string;
+  promoCode: string | null;
+  rewardEnabled: boolean;
+  rewardAmount: string;
+  rewardCurrency: string;
+  maxRedemptions: number | null;
+  redemptionCount: number;
   createdAt: string;
   completedAt: string | null;
   createdBy: string;
@@ -83,6 +90,7 @@ export default function PromotionCampaignForm({
     createPromotionCampaignAction,
     initialState,
   );
+  const [inviteMode, setInviteMode] = useState(false);
 
   const userOptions = useMemo(() => {
     return users.map((user) => ({
@@ -90,6 +98,25 @@ export default function PromotionCampaignForm({
       label: `${user.name || "Unnamed user"} (${user.email})`,
     }));
   }, [users]);
+
+  function buildInviteLink(campaign: { promoCode: string | null }) {
+    if (!campaign.promoCode) {
+      return null;
+    }
+
+    return `/auth/get-started?promo=${encodeURIComponent(campaign.promoCode)}`;
+  }
+
+  async function copyInviteLink(campaign: { promoCode: string | null }) {
+    const link = buildInviteLink(campaign);
+
+    if (!link || typeof navigator === "undefined" || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(link);
+    toast.success("Invite link copied.");
+  }
 
   const lastToastKey = useRef<string | null>(null);
 
@@ -139,7 +166,115 @@ export default function PromotionCampaignForm({
               />
             </div>
 
-            <div className="grid gap-2">
+            <input
+              type="hidden"
+              name="rewardEnabled"
+              value={inviteMode ? "true" : "false"}
+            />
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white">
+                    Invite link campaign
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    Turn this on to create a promo code users can redeem after
+                    signup.
+                  </p>
+                </div>
+
+                <Switch checked={inviteMode} onCheckedChange={setInviteMode} />
+              </div>
+            </div>
+
+            {inviteMode ? (
+              <div className="grid gap-4 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <label htmlFor="promoCode" className="text-sm font-medium">
+                    Promo code
+                  </label>
+                  <Input
+                    id="promoCode"
+                    name="promoCode"
+                    placeholder="SAVE100"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label htmlFor="rewardAmount" className="text-sm font-medium">
+                    Reward amount
+                  </label>
+                  <Input
+                    id="rewardAmount"
+                    name="rewardAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue="100"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label
+                    htmlFor="rewardCurrency"
+                    className="text-sm font-medium"
+                  >
+                    Currency
+                  </label>
+                  <Input
+                    id="rewardCurrency"
+                    name="rewardCurrency"
+                    defaultValue="USD"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label htmlFor="maxRedemptions" className="text-sm font-medium">
+                    Max redemptions
+                  </label>
+                  <Input
+                    id="maxRedemptions"
+                    name="maxRedemptions"
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Unlimited"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label htmlFor="startsAt" className="text-sm font-medium">
+                    Starts at
+                  </label>
+                  <Input
+                    id="startsAt"
+                    name="startsAt"
+                    type="datetime-local"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label htmlFor="expiresAt" className="text-sm font-medium">
+                    Expires at
+                  </label>
+                  <Input
+                    id="expiresAt"
+                    name="expiresAt"
+                    type="datetime-local"
+                    className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {!inviteMode ? (
+              <div className="grid gap-2">
               <label htmlFor="promotionType" className="text-sm font-medium">
                 Promotion type
               </label>
@@ -160,8 +295,12 @@ export default function PromotionCampaignForm({
                 notification presentation.
               </p>
             </div>
+            ) : (
+              <input type="hidden" name="promotionType" value="SYSTEM" />
+            )}
 
-            <div className="grid gap-2">
+            {!inviteMode ? (
+              <div className="grid gap-2">
               <label htmlFor="channel" className="text-sm font-medium">
                 Channel
               </label>
@@ -169,14 +308,18 @@ export default function PromotionCampaignForm({
                 <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
                   <SelectValue placeholder="Choose channel" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={PromotionChannel.IN_APP}>In-app</SelectItem>
-                  <SelectItem value={PromotionChannel.EMAIL}>Email</SelectItem>
-                </SelectContent>
-              </Select>
+              <SelectContent>
+                <SelectItem value={PromotionChannel.IN_APP}>In-app</SelectItem>
+                <SelectItem value={PromotionChannel.EMAIL}>Email</SelectItem>
+              </SelectContent>
+            </Select>
             </div>
+            ) : (
+              <input type="hidden" name="channel" value={PromotionChannel.IN_APP} />
+            )}
 
-            <div className="grid gap-2">
+            {!inviteMode ? (
+              <div className="grid gap-2">
               <label htmlFor="audienceType" className="text-sm font-medium">
                 Audience
               </label>
@@ -187,18 +330,26 @@ export default function PromotionCampaignForm({
                 <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
                   <SelectValue placeholder="Choose audience" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={PromotionAudienceType.SINGLE_USER}>
-                    Single user
-                  </SelectItem>
-                  <SelectItem value={PromotionAudienceType.BROADCAST_ALL_USERS}>
-                    Broadcast to all users
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <SelectContent>
+                <SelectItem value={PromotionAudienceType.SINGLE_USER}>
+                  Single user
+                </SelectItem>
+                <SelectItem value={PromotionAudienceType.BROADCAST_ALL_USERS}>
+                  Broadcast to all users
+                </SelectItem>
+              </SelectContent>
+            </Select>
             </div>
+            ) : (
+              <input
+                type="hidden"
+                name="audienceType"
+                value={PromotionAudienceType.BROADCAST_ALL_USERS}
+              />
+            )}
 
-            <div className="grid gap-2">
+            {!inviteMode ? (
+              <div className="grid gap-2">
               <label htmlFor="userId" className="text-sm font-medium">
                 Select user
               </label>
@@ -219,6 +370,7 @@ export default function PromotionCampaignForm({
                 user.
               </p>
             </div>
+            ) : null}
 
             <div className="grid gap-2">
               <label htmlFor="subject" className="text-sm font-medium">
@@ -308,6 +460,11 @@ export default function PromotionCampaignForm({
                         {formatEnumLabel(campaign.audienceType)}
                       </Badge>
                       <Badge>{formatEnumLabel(campaign.status)}</Badge>
+                      {campaign.rewardEnabled ? (
+                        <Badge className="border-blue-400/20 bg-blue-400/10 text-blue-200">
+                          Invite
+                        </Badge>
+                      ) : null}
                     </div>
                   </div>
 
@@ -320,6 +477,53 @@ export default function PromotionCampaignForm({
                       <span className="text-muted-foreground">Completed:</span>{" "}
                       {formatDate(campaign.completedAt)}
                     </div>
+                    {campaign.rewardEnabled ? (
+                      <>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Promo code:
+                          </span>{" "}
+                          {campaign.promoCode ?? "-"}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Rewards redeemed:
+                          </span>{" "}
+                          {campaign.redemptionCount}
+                          {campaign.maxRedemptions != null
+                            ? ` / ${campaign.maxRedemptions}`
+                            : ""}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">
+                            Reward amount:
+                          </span>{" "}
+                          {campaign.rewardAmount} {campaign.rewardCurrency}
+                        </div>
+                            <div className="flex items-center justify-end">
+                              {campaign.promoCode ? (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="rounded-xl border-white/10 bg-white/[0.03]"
+                                  onClick={() => copyInviteLink(campaign)}
+                                >
+                                  Copy invite link
+                                </Button>
+                              ) : null}
+                            </div>
+                            {campaign.promoCode ? (
+                              <div className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 md:col-span-2">
+                                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                                  Signup link
+                                </p>
+                                <p className="mt-2 break-all text-sm text-white/90">
+                                  {buildInviteLink(campaign) ?? "-"}
+                                </p>
+                              </div>
+                            ) : null}
+                      </>
+                    ) : null}
                   </div>
                 </div>
               ))}

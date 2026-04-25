@@ -18,8 +18,29 @@ export const createPromotionCampaignSchema = z
     audienceType: z.nativeEnum(PromotionAudienceType),
     channel: z.nativeEnum(PromotionChannel),
     userId: z.string().trim().optional(),
+    rewardEnabled: z.enum(["true", "false"]).optional().default("false"),
+    promoCode: z.string().trim().max(40).optional(),
+    rewardAmount: z.string().trim().optional(),
+    rewardCurrency: z.string().trim().max(8).optional(),
+    startsAt: z.string().trim().optional(),
+    expiresAt: z.string().trim().optional(),
+    maxRedemptions: z.string().trim().optional(),
   })
   .superRefine((data, ctx) => {
+    const inviteMode = data.rewardEnabled === "true";
+
+    if (inviteMode) {
+      if (!data.promoCode?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["promoCode"],
+          message: "A promo code is required for invite campaigns.",
+        });
+      }
+
+      return;
+    }
+
     if (
       data.audienceType === PromotionAudienceType.SINGLE_USER &&
       !data.userId

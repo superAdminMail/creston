@@ -8,6 +8,14 @@ export type PromotionCampaignDetails = {
   title: string;
   subject: string | null;
   message: string;
+  promoCode: string | null;
+  rewardEnabled: boolean;
+  rewardAmount: string;
+  rewardCurrency: string;
+  startsAt: string | null;
+  expiresAt: string | null;
+  maxRedemptions: number | null;
+  redemptionCount: number;
   audienceType: string;
   channel: string;
   status: string;
@@ -72,6 +80,14 @@ export async function getPromotionCampaignDetails(
       title: true,
       subject: true,
       message: true,
+      promoCode: true,
+      rewardEnabled: true,
+      rewardAmount: true,
+      rewardCurrency: true,
+      startsAt: true,
+      expiresAt: true,
+      maxRedemptions: true,
+      redemptionCount: true,
       audienceType: true,
       channel: true,
       status: true,
@@ -174,6 +190,14 @@ export async function getPromotionCampaignDetails(
     title: campaign.title,
     subject: campaign.subject,
     message: campaign.message,
+    promoCode: campaign.promoCode,
+    rewardEnabled: campaign.rewardEnabled,
+    rewardAmount: campaign.rewardAmount.toString(),
+    rewardCurrency: campaign.rewardCurrency,
+    startsAt: campaign.startsAt?.toISOString() ?? null,
+    expiresAt: campaign.expiresAt?.toISOString() ?? null,
+    maxRedemptions: campaign.maxRedemptions,
+    redemptionCount: campaign.redemptionCount,
     audienceType: campaign.audienceType,
     channel: campaign.channel,
     status: campaign.status,
