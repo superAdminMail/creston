@@ -76,7 +76,9 @@ export default async function ContactPage() {
                 <p className="text-xs uppercase tracking-wide text-slate-500">
                   Phone
                 </p>
-                <p className="mt-1 text-white">{supportPhone}</p>
+                {supportPhone ? (
+                  <p className="mt-1 text-slate-300 text-sm">{supportPhone}</p>
+                ) : null}
                 {supportPhoneSecondary ? (
                   <p className="mt-1 text-sm text-slate-300">
                     {supportPhoneSecondary}
