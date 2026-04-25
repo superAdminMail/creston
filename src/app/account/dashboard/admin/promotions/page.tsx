@@ -3,6 +3,10 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 
 import PromotionCampaignForm from "./_components/PromotionCampaignForm";
+import {
+  getPromotionCampaignStatusLabel,
+  getPromotionCampaignTypeLabel,
+} from "./_lib/promotionCampaignChips";
 
 export default async function AdminPromotionsPage() {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
@@ -43,6 +47,10 @@ export default async function AdminPromotionsPage() {
       rewardCurrency: true,
       maxRedemptions: true,
       redemptionCount: true,
+      startsAt: true,
+      expiresAt: true,
+      cancelledAt: true,
+      failedAt: true,
       createdAt: true,
       completedAt: true,
       createdByUser: {
@@ -82,6 +90,21 @@ export default async function AdminPromotionsPage() {
           rewardCurrency: campaign.rewardCurrency,
           maxRedemptions: campaign.maxRedemptions,
           redemptionCount: campaign.redemptionCount,
+          startsAt: campaign.startsAt?.toISOString() ?? null,
+          expiresAt: campaign.expiresAt?.toISOString() ?? null,
+          cancelledAt: campaign.cancelledAt?.toISOString() ?? null,
+          failedAt: campaign.failedAt?.toISOString() ?? null,
+          campaignTypeLabel: getPromotionCampaignTypeLabel(
+            campaign.rewardEnabled,
+          ),
+          campaignStatusLabel: getPromotionCampaignStatusLabel({
+            status: campaign.status,
+            rewardEnabled: campaign.rewardEnabled,
+            expiresAt: campaign.expiresAt?.toISOString() ?? null,
+            completedAt: campaign.completedAt?.toISOString() ?? null,
+            cancelledAt: campaign.cancelledAt?.toISOString() ?? null,
+            failedAt: campaign.failedAt?.toISOString() ?? null,
+          }),
           createdAt: campaign.createdAt.toISOString(),
           completedAt: campaign.completedAt?.toISOString() ?? null,
           createdBy:

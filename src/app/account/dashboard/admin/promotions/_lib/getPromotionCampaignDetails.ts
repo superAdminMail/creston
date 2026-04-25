@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import {
+  getPromotionCampaignStatusLabel,
+  getPromotionCampaignTypeLabel,
+} from "./promotionCampaignChips";
 
 export type PromotionCampaignDetails = {
   id: string;
@@ -16,6 +20,8 @@ export type PromotionCampaignDetails = {
   expiresAt: string | null;
   maxRedemptions: number | null;
   redemptionCount: number;
+  campaignTypeLabel: string;
+  campaignStatusLabel: string;
   audienceType: string;
   channel: string;
   status: string;
@@ -198,6 +204,15 @@ export async function getPromotionCampaignDetails(
     expiresAt: campaign.expiresAt?.toISOString() ?? null,
     maxRedemptions: campaign.maxRedemptions,
     redemptionCount: campaign.redemptionCount,
+    campaignTypeLabel: getPromotionCampaignTypeLabel(campaign.rewardEnabled),
+    campaignStatusLabel: getPromotionCampaignStatusLabel({
+      status: campaign.status,
+      rewardEnabled: campaign.rewardEnabled,
+      expiresAt: campaign.expiresAt?.toISOString() ?? null,
+      completedAt: campaign.completedAt?.toISOString() ?? null,
+      cancelledAt: campaign.cancelledAt?.toISOString() ?? null,
+      failedAt: campaign.failedAt?.toISOString() ?? null,
+    }),
     audienceType: campaign.audienceType,
     channel: campaign.channel,
     status: campaign.status,

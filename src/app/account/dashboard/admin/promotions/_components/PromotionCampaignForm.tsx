@@ -50,6 +50,12 @@ type RecentCampaign = {
   rewardCurrency: string;
   maxRedemptions: number | null;
   redemptionCount: number;
+  startsAt: string | null;
+  expiresAt: string | null;
+  cancelledAt: string | null;
+  failedAt: string | null;
+  campaignTypeLabel: string;
+  campaignStatusLabel: string;
   createdAt: string;
   completedAt: string | null;
   createdBy: string;
@@ -453,18 +459,21 @@ export default function PromotionCampaignForm({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                      <Badge className="border-white/10 bg-white/[0.06] text-white">
+                        {campaign.campaignTypeLabel}
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className="border-blue-400/20 bg-blue-400/10 text-blue-200"
+                      >
+                        {campaign.campaignStatusLabel}
+                      </Badge>
                       <Badge variant="secondary">
                         {formatEnumLabel(campaign.channel)}
                       </Badge>
                       <Badge variant="outline">
                         {formatEnumLabel(campaign.audienceType)}
                       </Badge>
-                      <Badge>{formatEnumLabel(campaign.status)}</Badge>
-                      {campaign.rewardEnabled ? (
-                        <Badge className="border-blue-400/20 bg-blue-400/10 text-blue-200">
-                          Invite
-                        </Badge>
-                      ) : null}
                     </div>
                   </div>
 
@@ -500,28 +509,28 @@ export default function PromotionCampaignForm({
                           </span>{" "}
                           {campaign.rewardAmount} {campaign.rewardCurrency}
                         </div>
-                            <div className="flex items-center justify-end">
-                              {campaign.promoCode ? (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="rounded-xl border-white/10 bg-white/[0.03]"
-                                  onClick={() => copyInviteLink(campaign)}
-                                >
-                                  Copy invite link
-                                </Button>
-                              ) : null}
-                            </div>
-                            {campaign.promoCode ? (
-                              <div className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 md:col-span-2">
-                                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
-                                  Signup link
-                                </p>
-                                <p className="mt-2 break-all text-sm text-white/90">
-                                  {buildInviteLink(campaign) ?? "-"}
-                                </p>
-                              </div>
-                            ) : null}
+                        <div className="flex items-center justify-end">
+                          {campaign.promoCode ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="rounded-xl border-white/10 bg-white/[0.03]"
+                              onClick={() => copyInviteLink(campaign)}
+                            >
+                              Copy invite link
+                            </Button>
+                          ) : null}
+                        </div>
+                        {campaign.promoCode ? (
+                          <div className="rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 md:col-span-2">
+                            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
+                              Signup link
+                            </p>
+                            <p className="mt-2 break-all text-sm text-white/90">
+                              {buildInviteLink(campaign) ?? "-"}
+                            </p>
+                          </div>
+                        ) : null}
                       </>
                     ) : null}
                   </div>

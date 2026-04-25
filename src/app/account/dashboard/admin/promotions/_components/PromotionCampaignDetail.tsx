@@ -56,13 +56,21 @@ export default function PromotionCampaignDetail({
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <Badge className="border-white/10 bg-white/[0.06] text-white">
+                {campaign.campaignTypeLabel}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-blue-400/20 bg-blue-400/10 text-blue-200"
+              >
+                {campaign.campaignStatusLabel}
+              </Badge>
               <Badge variant="secondary">
                 {formatEnumLabel(campaign.channel)}
               </Badge>
               <Badge variant="outline">
                 {formatEnumLabel(campaign.audienceType)}
               </Badge>
-              <Badge>{formatEnumLabel(campaign.status)}</Badge>
             </div>
           </div>
         </CardHeader>
