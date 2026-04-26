@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma";
+import { calculateFixedExpectedReturn } from "@/lib/services/investment/fixedOrderLifecycle";
 
 export async function reconcileInvestmentOrderPaymentState(
   tx: Prisma.TransactionClient,
@@ -13,6 +14,13 @@ export async function reconcileInvestmentOrderPaymentState(
       runtimeStatus: true,
       paidAt: true,
       confirmedAt: true,
+      investmentModel: true,
+      expectedReturn: true,
+      investmentPlanTier: {
+        select: {
+          fixedRoiPercent: true,
+        },
+      },
     },
   });
 
@@ -48,7 +56,7 @@ export async function reconcileInvestmentOrderPaymentState(
     if (order.status !== "CONFIRMED") {
       nextStatus = "PAID";
     }
-    nextRuntimeStatus =
+      nextRuntimeStatus =
       order.status === "CONFIRMED" ? "ONGOING" : "NOT_STARTED";
   } else {
     nextStatus = "PARTIALLY_PAID";
@@ -56,12 +64,22 @@ export async function reconcileInvestmentOrderPaymentState(
       order.status === "CONFIRMED" ? "ONGOING" : "NOT_STARTED";
   }
 
+  const fixedExpectedReturn =
+    order.investmentModel === "FIXED" && isFullyPaid
+      ? order.expectedReturn ??
+        calculateFixedExpectedReturn(
+          order.amount,
+          order.investmentPlanTier?.fixedRoiPercent ?? null,
+        )
+      : null;
+
   await tx.investmentOrder.update({
     where: { id: investmentOrderId },
     data: {
       amountPaid: approvedTotal,
       status: nextStatus,
       runtimeStatus: nextRuntimeStatus,
+      ...(fixedExpectedReturn ? { expectedReturn: fixedExpectedReturn } : {}),
       paidAt:
         isFullyPaid && !order.paidAt
           ? new Date()

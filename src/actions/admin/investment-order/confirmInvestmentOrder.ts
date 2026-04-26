@@ -8,6 +8,10 @@ import {
 } from "@/lib/referrals/referralRewardService";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
+import {
+  calculateFixedExpectedReturn,
+  resolveFixedOrderSchedule,
+} from "@/lib/services/investment/fixedOrderLifecycle";
 
 import { canConfirmInvestmentOrderStatus } from "./adminInvestmentOrder.shared";
 
@@ -18,12 +22,6 @@ type ConfirmInvestmentOrderState = {
 
 function errorState(message: string): ConfirmInvestmentOrderState {
   return { status: "error", message };
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
 }
 
 export async function confirmInvestmentOrder(
@@ -73,30 +71,41 @@ export async function confirmInvestmentOrder(
   }
 
   const now = new Date();
-  const startDate = now;
-  const maturityDate = addDays(startDate, order.investmentPlan.durationDays);
   const amount = order.amount.toNumber();
   const roiPercent = order.investmentPlanTier.fixedRoiPercent;
+  const expectedReturn =
+    order.investmentModel === "FIXED"
+      ? order.expectedReturn ??
+        calculateFixedExpectedReturn(amount, roiPercent ?? null)
+      : null;
+  const fixedSchedule =
+    order.investmentModel === "FIXED"
+      ? resolveFixedOrderSchedule(
+          order.startDate,
+          order.maturityDate,
+          order.investmentPlan.durationDays,
+          now,
+        )
+      : null;
 
-  if (order.investmentModel === "FIXED" && !roiPercent) {
+  if (order.investmentModel === "FIXED" && !expectedReturn) {
     return errorState(
       "This fixed investment tier is missing an ROI configuration.",
     );
   }
-
-  const expectedProfit =
-    order.investmentModel === "FIXED" && roiPercent
-      ? (amount * roiPercent.toNumber()) / 100
-      : 0;
 
   await prisma.investmentOrder.update({
     where: { id: order.id },
     data: {
       status: InvestmentOrderStatus.CONFIRMED,
       runtimeStatus: "ONGOING",
-      startDate,
-      maturityDate,
-      expectedReturn: new Prisma.Decimal(expectedProfit.toFixed(2)),
+      ...(fixedSchedule
+        ? {
+            startDate: fixedSchedule.startDate,
+            maturityDate: fixedSchedule.maturityDate,
+          }
+        : {}),
+      ...(expectedReturn ? { expectedReturn } : {}),
       confirmedAt: now,
       paidAt: now,
       accruedProfit: new Prisma.Decimal(0),

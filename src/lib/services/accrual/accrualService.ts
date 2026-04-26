@@ -1,18 +1,9 @@
-import { InvestmentModel, InvestmentTierLevel, Prisma } from "@/generated/prisma";
+import { InvestmentModel, Prisma, RuntimeStatus } from "@/generated/prisma";
 
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
-import {
-  minDecimal,
-  toDecimal,
-  ZERO_DECIMAL,
-} from "@/lib/services/investment/decimal";
-import {
-  applyProfitSimulation,
-  removeProfitSimulation,
-  resolveSimulationMultiplier,
-} from "@/lib/services/simulation/profitSimulationService";
+import { minDecimal, toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
 
 export const FIXED_ACCRUAL_INTERVAL_MINUTES = 2;
 
@@ -28,14 +19,10 @@ export type FixedAccrualOrderRecord = {
   maturityDate: Date | null;
   lastAccruedAt: Date | null;
   completedAt: Date | null;
+  runtimeStatus: RuntimeStatus;
   isMatured: boolean;
   investorProfile: {
     userId: string;
-  };
-  investmentPlanTier: {
-    level: InvestmentTierLevel;
-    projectedRoiMin: Prisma.Decimal | null;
-    projectedRoiMax: Prisma.Decimal | null;
   };
   investmentPlan: {
     durationDays: number;
@@ -53,7 +40,6 @@ export type FixedAccrualResult =
       orderId: string;
       accruedAmount: Prisma.Decimal;
       totalAccruedProfit: Prisma.Decimal;
-      simulationMultiplier: Prisma.Decimal;
       accruedUntil: Date;
       matured: boolean;
     };
@@ -92,19 +78,6 @@ export function calculateFixedAccrual(
   }
 
   const expectedProfit = toDecimal(order.expectedReturn);
-  const simulationMultiplier = resolveSimulationMultiplier({
-    tierLevel: order.investmentPlanTier.level,
-    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
-    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
-  });
-  const rawAccruedProfit = removeProfitSimulation({
-    amount: order.amount,
-    profit: order.accruedProfit,
-    tierLevel: order.investmentPlanTier.level,
-    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
-    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
-    simulationMultiplier,
-  });
 
   if (!expectedProfit.greaterThan(0)) {
     return {
@@ -114,6 +87,7 @@ export function calculateFixedAccrual(
     };
   }
 
+  const currentAccruedProfit = minDecimal(order.accruedProfit, expectedProfit);
   const accrualCutoff = minDecimal(
     order.maturityDate.getTime(),
     getAccrualCutoff(now).getTime(),
@@ -152,13 +126,19 @@ export function calculateFixedAccrual(
     };
   }
 
-  const totalAccruedProfit = minDecimal(
-    rawAccruedProfit.add(proportionalProfit),
+  let totalAccruedProfit = minDecimal(
+    currentAccruedProfit.add(proportionalProfit),
     expectedProfit,
   );
-  const accruedAmount = totalAccruedProfit.sub(rawAccruedProfit);
+  const matured = accrualUntil >= order.maturityDate;
 
-  if (!accruedAmount.greaterThan(0)) {
+  if (matured) {
+    totalAccruedProfit = expectedProfit;
+  }
+
+  const accruedAmount = totalAccruedProfit.sub(currentAccruedProfit);
+
+  if (!accruedAmount.greaterThan(0) && !matured) {
     return {
       status: "skipped" as const,
       reason: "already-at-cap",
@@ -166,14 +146,11 @@ export function calculateFixedAccrual(
     };
   }
 
-  const matured = accrualUntil >= order.maturityDate;
-
   return {
     status: "accrued" as const,
     orderId: order.id,
     accruedAmount,
     totalAccruedProfit,
-    simulationMultiplier,
     accruedUntil: accrualUntil,
     matured,
   };
@@ -188,18 +165,6 @@ export async function accrueFixedOrder(
   if (calculation.status === "skipped") {
     return calculation;
   }
-
-  const simulatedTotalAccruedProfit = applyProfitSimulation({
-    amount: order.amount,
-    profit: calculation.totalAccruedProfit,
-    tierLevel: order.investmentPlanTier.level,
-    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
-    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
-    simulationMultiplier: calculation.simulationMultiplier,
-  });
-  const simulatedAccruedAmount = simulatedTotalAccruedProfit.sub(
-    toDecimal(order.accruedProfit),
-  );
 
   const updateResult = await prisma.$transaction(async (tx) => {
     const orderUpdate = await tx.investmentOrder.updateMany({
@@ -219,27 +184,21 @@ export async function accrueFixedOrder(
         ],
       },
       data: {
-        accruedProfit: simulatedTotalAccruedProfit,
+        accruedProfit: calculation.totalAccruedProfit,
         lastAccruedAt: calculation.accruedUntil,
         isMatured: calculation.matured,
-        completedAt: calculation.matured ? calculation.accruedUntil : order.completedAt,
+        completedAt: calculation.matured
+          ? calculation.accruedUntil
+          : order.completedAt,
+        runtimeStatus: calculation.matured
+          ? RuntimeStatus.COMPLETED
+          : order.runtimeStatus,
       },
     });
 
     if (orderUpdate.count === 0) {
       return orderUpdate;
     }
-
-    await tx.investmentAccount.update({
-      where: {
-        id: order.investmentAccountId,
-      },
-      data: {
-        balance: {
-          increment: simulatedAccruedAmount,
-        },
-      },
-    });
 
     return orderUpdate;
   });
@@ -252,34 +211,31 @@ export async function accrueFixedOrder(
     };
   }
 
-  const formattedAmount = formatCurrency(
-    simulatedAccruedAmount.toNumber(),
-    order.currency,
-  );
+  if (calculation.accruedAmount.greaterThan(0)) {
+    const formattedAmount = formatCurrency(
+      calculation.accruedAmount.toNumber(),
+      order.currency,
+    );
 
-  await createRealtimeNotification({
-    userId: order.investorProfile.userId,
-    event: "INVESTMENT_ROI",
-    title: "Profit update recorded",
-    message: `A fixed-profit update of ${formattedAmount} has been posted to your investment order.`,
-    link: "/account/dashboard/user/investment-orders",
-    key: `fixed-profit:${order.id}:${calculation.accruedUntil.toISOString()}`,
-    metadata: {
-      investmentOrderId: order.id,
-      amount: simulatedAccruedAmount.toNumber(),
-      currency: order.currency,
-      totalAccruedProfit: simulatedTotalAccruedProfit.toNumber(),
-      accruedUntil: calculation.accruedUntil.toISOString(),
-      model: "FIXED",
-      tierLevel: order.investmentPlanTier.level,
-    },
-  });
+    await createRealtimeNotification({
+      userId: order.investorProfile.userId,
+      event: "INVESTMENT_ROI",
+      title: "Profit update recorded",
+      message: `A fixed-profit update of ${formattedAmount} has been posted to your investment order.`,
+      link: "/account/dashboard/user/investment-orders",
+      key: `fixed-profit:${order.id}:${calculation.accruedUntil.toISOString()}`,
+      metadata: {
+        investmentOrderId: order.id,
+        amount: calculation.accruedAmount.toNumber(),
+        currency: order.currency,
+        totalAccruedProfit: calculation.totalAccruedProfit.toNumber(),
+        accruedUntil: calculation.accruedUntil.toISOString(),
+        model: "FIXED",
+      },
+    });
+  }
 
-  return {
-    ...calculation,
-    accruedAmount: simulatedAccruedAmount,
-    totalAccruedProfit: simulatedTotalAccruedProfit,
-  };
+  return calculation;
 }
 
 export async function accrueFixedOrders(

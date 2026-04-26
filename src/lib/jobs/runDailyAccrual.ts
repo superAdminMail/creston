@@ -15,36 +15,30 @@ export async function runDailyAccrual() {
         investmentModel: "FIXED",
         isMatured: false,
       },
-      select: {
-        id: true,
-        investmentAccountId: true,
-        investmentModel: true,
-        amount: true,
-        currency: true,
-        accruedProfit: true,
-        expectedReturn: true,
-        startDate: true,
+        select: {
+          id: true,
+          investmentAccountId: true,
+          investmentModel: true,
+          runtimeStatus: true,
+          amount: true,
+          currency: true,
+          accruedProfit: true,
+          expectedReturn: true,
+          startDate: true,
         maturityDate: true,
         lastAccruedAt: true,
         completedAt: true,
         isMatured: true,
-        investorProfile: {
-          select: {
-            userId: true,
+          investorProfile: {
+            select: {
+              userId: true,
+            },
           },
-        },
-        investmentPlanTier: {
-          select: {
-            level: true,
-            projectedRoiMin: true,
-            projectedRoiMax: true,
+          investmentPlan: {
+            select: {
+              durationDays: true,
+            },
           },
-        },
-        investmentPlan: {
-          select: {
-            durationDays: true,
-          },
-        },
       },
       orderBy: {
         createdAt: "asc",
