@@ -11,6 +11,7 @@ import {
 import {
   applyProfitSimulation,
   removeProfitSimulation,
+  resolveSimulationMultiplier,
 } from "@/lib/services/simulation/profitSimulationService";
 
 export const FIXED_ACCRUAL_INTERVAL_MINUTES = 2;
@@ -33,6 +34,8 @@ export type FixedAccrualOrderRecord = {
   };
   investmentPlanTier: {
     level: InvestmentTierLevel;
+    projectedRoiMin: Prisma.Decimal | null;
+    projectedRoiMax: Prisma.Decimal | null;
   };
   investmentPlan: {
     durationDays: number;
@@ -50,6 +53,7 @@ export type FixedAccrualResult =
       orderId: string;
       accruedAmount: Prisma.Decimal;
       totalAccruedProfit: Prisma.Decimal;
+      simulationMultiplier: Prisma.Decimal;
       accruedUntil: Date;
       matured: boolean;
     };
@@ -88,10 +92,18 @@ export function calculateFixedAccrual(
   }
 
   const expectedProfit = toDecimal(order.expectedReturn);
+  const simulationMultiplier = resolveSimulationMultiplier({
+    tierLevel: order.investmentPlanTier.level,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
+  });
   const rawAccruedProfit = removeProfitSimulation({
     amount: order.amount,
     profit: order.accruedProfit,
     tierLevel: order.investmentPlanTier.level,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
+    simulationMultiplier,
   });
 
   if (!expectedProfit.greaterThan(0)) {
@@ -161,6 +173,7 @@ export function calculateFixedAccrual(
     orderId: order.id,
     accruedAmount,
     totalAccruedProfit,
+    simulationMultiplier,
     accruedUntil: accrualUntil,
     matured,
   };
@@ -180,6 +193,9 @@ export async function accrueFixedOrder(
     amount: order.amount,
     profit: calculation.totalAccruedProfit,
     tierLevel: order.investmentPlanTier.level,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
+    simulationMultiplier: calculation.simulationMultiplier,
   });
   const simulatedAccruedAmount = simulatedTotalAccruedProfit.sub(
     toDecimal(order.accruedProfit),

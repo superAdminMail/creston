@@ -33,6 +33,8 @@ export async function runDailyProfitSettlement() {
         investmentPlanTier: {
           select: {
             level: true,
+            projectedRoiMin: true,
+            projectedRoiMax: true,
           },
         },
         investmentPlan: {

@@ -36,6 +36,8 @@ export async function runDailyAccrual() {
         investmentPlanTier: {
           select: {
             level: true,
+            projectedRoiMin: true,
+            projectedRoiMax: true,
           },
         },
         investmentPlan: {

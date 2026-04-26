@@ -5,7 +5,10 @@ import { createRealtimeNotification } from "@/lib/notifications/createNotificati
 import { prisma } from "@/lib/prisma";
 import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
 import { toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
-import { applyProfitSimulation } from "@/lib/services/simulation/profitSimulationService";
+import {
+  applyProfitSimulation,
+  resolveSimulationMultiplier,
+} from "@/lib/services/simulation/profitSimulationService";
 
 export const MARKET_SETTLEMENT_INTERVAL_MINUTES = 2;
 
@@ -24,6 +27,8 @@ export type MarketSettlementOrderRecord = {
   };
   investmentPlanTier: {
     level: InvestmentTierLevel;
+    projectedRoiMin: Prisma.Decimal | null;
+    projectedRoiMax: Prisma.Decimal | null;
   };
   investmentPlan: {
     investment: {
@@ -129,10 +134,19 @@ export async function settleMarketProfit(
     return calculation;
   }
 
+  const simulationMultiplier = resolveSimulationMultiplier({
+    tierLevel: order.investmentPlanTier.level,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
+  });
+
   const simulatedProfit = applyProfitSimulation({
     amount: order.amount,
     profit: calculation.realizedProfit,
     tierLevel: order.investmentPlanTier.level,
+    projectedRoiMin: order.investmentPlanTier.projectedRoiMin,
+    projectedRoiMax: order.investmentPlanTier.projectedRoiMax,
+    simulationMultiplier,
   });
 
   const updateResult = await prisma.$transaction(async (tx) => {
