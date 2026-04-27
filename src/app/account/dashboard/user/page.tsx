@@ -4,6 +4,7 @@ import UserDashboardPage from "./_components/UserDashboardPage";
 import { TransactionTable } from "./_components/TransactionTable";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+import { TradingViewMarketChart } from "@/components/home/TradingViewMarketChart";
 
 export default async function Page() {
   const userId = await getCurrentUserId();
@@ -33,6 +34,7 @@ export default async function Page() {
         investmentProfileComplete={investmentProfile.profileComplete}
       />
       <TransactionTable transactions={transactions} />
+      <TradingViewMarketChart />
     </main>
   );
 }
