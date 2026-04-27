@@ -67,9 +67,8 @@ export default async function AssetCheckerPage() {
                 Asset checker
               </h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
-                Compare live market quotes for active platform investments and
-                preview fixed bond returns without exposing internal units or
-                unsupported assets.
+                Compare the performance of different assets in the market and
+                fixed investment plans.
               </p>
             </div>
           </div>
