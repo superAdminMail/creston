@@ -6,6 +6,7 @@ import { Bitcoin, Landmark, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestSavingsFundingBankInfo } from "@/actions/savings/requestSavingsFundingBankInfo";
+import CryptoQRCode from "@/components/payments/CryptoQRCode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -298,14 +299,12 @@ export default function SavingsFundingClient({
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
-              Choose a funding method to continue
+              Payment mode
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Select bank transfer to view transfer details and submit proof,
-              or choose crypto wallet to continue with the secure wallet
-              checkout flow.
+              Select either bank transfer or crypto to continue.
             </p>
           </CardContent>
         </Card>
@@ -528,6 +527,24 @@ export default function SavingsFundingClient({
                       value={getCheckoutPaymentModeLabel("FULL")}
                     />
                   </div>
+
+                  {bankMethod?.walletAddress ? (
+                    <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
+                        Platform wallet address
+                      </p>
+                      <p className="mt-2 break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
+                        {bankMethod.walletAddress}
+                      </p>
+
+                      <div className="mt-4 flex justify-center">
+                        <CryptoQRCode
+                          address={bankMethod.walletAddress}
+                          amount={selectedAmount}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-white/85 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04]">
                     <p className="text-sm leading-6 text-slate-700 dark:text-slate-300">

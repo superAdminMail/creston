@@ -27,8 +27,8 @@ function StatCard({
           <h3 className="text-2xl font-semibold text-white">{value}</h3>
           <p className="text-xs leading-6 text-slate-500">{hint}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-          <Icon className="h-5 w-5 text-[#8fd0ff]" />
+        <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+          <Icon className="h-5 w-5 text-[#8fd0ff] shrink-0" />
         </div>
       </div>
     </div>

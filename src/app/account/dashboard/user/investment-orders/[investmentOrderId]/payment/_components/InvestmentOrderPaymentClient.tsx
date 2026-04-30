@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
+import CryptoQRCode from "@/components/payments/CryptoQRCode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -110,7 +111,7 @@ export default function InvestmentOrderPaymentClient({
       ? "Payment under review"
       : isBankSelected &&
           latestBankPayment?.status === "APPROVED" &&
-        order.status === "PARTIALLY_PAID"
+          order.status === "PARTIALLY_PAID"
         ? "I've made this payment"
         : "I've made this payment";
   const bankInfoRequested =
@@ -307,10 +308,7 @@ export default function InvestmentOrderPaymentClient({
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4 text-sm text-slate-600 sm:px-6 sm:pb-6 dark:text-slate-300">
             <div className="grid gap-3 sm:grid-cols-2">
-              <SummaryChip
-                label="Paid amount"
-                value={order.amountPaidLabel}
-              />
+              <SummaryChip label="Paid amount" value={order.amountPaidLabel} />
               <SummaryChip
                 label="Order status"
                 value={order.status.replaceAll("_", " ")}
@@ -327,71 +325,76 @@ export default function InvestmentOrderPaymentClient({
 
       {!isOrderFullySettled ? (
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
-        <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
-          <div className="min-w-0">
-            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
-              {isCryptoSelected
-                ? "Crypto wallet funding"
-                : "Bank transfer funding"}
-            </CardTitle>
-            <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-              {isCryptoSelected
-                ? "This checkout is set to Bitcoin wallet funding."
-                : "Use the bank details below to send your transfer, then submit your funding proof for review."}
-            </p>
-          </div>
+          {selectedFundingMethod && (
+            <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+              <div className="min-w-0">
+                <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                  {isCryptoSelected
+                    ? "Crypto wallet funding"
+                    : "Bank transfer funding"}
+                </CardTitle>
+                <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+                  {isCryptoSelected
+                    ? "This checkout is set to Bitcoin wallet funding."
+                    : "Use the bank details below to send your transfer, then submit your funding proof for review."}
+                </p>
+              </div>
 
-          <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-            {isCryptoSelected ? (
-              <>
-                <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
-                <span className="truncate">Bitcoin</span>
-              </>
-            ) : (
-              <>
-                <Landmark className="h-4 w-4 shrink-0" />
-                <span className="truncate">Bank transfer</span>
-              </>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
-          <div className="grid gap-3 md:grid-cols-2">
-            <Button
-              type="button"
-              variant={
-                selectedFundingMethod === "BANK_TRANSFER"
-                  ? "default"
-                  : "outline"
-              }
-              onClick={() => handleFundingMethodChange("BANK_TRANSFER")}
-              className="rounded-2xl"
-            >
-              Bank transfer
-            </Button>
-            <Button
-              type="button"
-              variant={
-                selectedFundingMethod === "CRYPTO_PROVIDER"
-                  ? "default"
-                  : "outline"
-              }
-              onClick={() => handleFundingMethodChange("CRYPTO_PROVIDER")}
-              className="rounded-2xl"
-            >
-              Crypto wallet
-            </Button>
-          </div>
+              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                {isCryptoSelected ? (
+                  <>
+                    <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
+                    <span className="truncate">Bitcoin</span>
+                  </>
+                ) : (
+                  <>
+                    <Landmark className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Bank transfer</span>
+                  </>
+                )}
+              </div>
+            </CardHeader>
+          )}
+          <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+            {!selectedFundingMethod ? (
+              <div className="mb-4 rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Payment mode
+                </p>
+                <p className="mt-2">
+                  Select either bank transfer or crypto to continue.
+                </p>
+              </div>
+            ) : null}
 
-          {!selectedFundingMethod ? (
-            <div className="mt-4 rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-              Choose a funding method to continue. Bank transfer will show the
-              transfer details and proof upload, while crypto wallet will take
-              you to the secure checkout flow.
+            <div className="grid gap-3 md:grid-cols-2">
+              <Button
+                type="button"
+                variant={
+                  selectedFundingMethod === "BANK_TRANSFER"
+                    ? "default"
+                    : "outline"
+                }
+                onClick={() => handleFundingMethodChange("BANK_TRANSFER")}
+                className="rounded-2xl"
+              >
+                Bank transfer
+              </Button>
+              <Button
+                type="button"
+                variant={
+                  selectedFundingMethod === "CRYPTO_PROVIDER"
+                    ? "default"
+                    : "outline"
+                }
+                onClick={() => handleFundingMethodChange("CRYPTO_PROVIDER")}
+                className="rounded-2xl"
+              >
+                Crypto wallet
+              </Button>
             </div>
-          ) : null}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       ) : null}
 
       {!isOrderFullySettled && isBankSelected ? (
@@ -413,7 +416,9 @@ export default function InvestmentOrderPaymentClient({
         />
       ) : null}
 
-      {!isOrderFullySettled && selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+      {!isOrderFullySettled &&
+      selectedFundingMethod === "BANK_TRANSFER" &&
+      !bankMethod ? (
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -541,6 +546,24 @@ export default function InvestmentOrderPaymentClient({
                       value={getCheckoutPaymentModeLabel("FULL")}
                     />
                   </div>
+
+                  {bankMethod?.walletAddress ? (
+                    <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
+                        Platform wallet address
+                      </p>
+                      <p className="mt-2 break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
+                        {bankMethod.walletAddress}
+                      </p>
+
+                      <div className="mt-4 flex justify-center">
+                        <CryptoQRCode
+                          address={bankMethod.walletAddress}
+                          amount={selectedAmount}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
                     You will be redirected to a secure checkout to complete the

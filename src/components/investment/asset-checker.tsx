@@ -15,7 +15,13 @@ import type { AssetCheckerData } from "@/lib/services/asset-checker/getAssetChec
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -63,11 +69,11 @@ function statCard({
 
           <div
             className={cn(
-              "flex h-11 w-11 items-center justify-center rounded-2xl border",
+              "flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border",
               toneClasses[tone],
             )}
           >
-            <Icon className="h-5 w-5 text-[#8fd0ff]" />
+            <Icon className="h-5 w-5 text-[#8fd0ff] shrink-0" />
           </div>
         </div>
       </CardContent>
@@ -86,8 +92,8 @@ function OptionHeader({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-        <Icon className="h-5 w-5 text-[#8fd0ff]" />
+      <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
+        <Icon className="h-5 w-5 text-[#8fd0ff] shrink-0" />
       </div>
       <div>
         <p className="text-sm font-medium text-white">{title}</p>
@@ -102,7 +108,8 @@ function MarketAssetChecker({ assets }: { assets: MarketAsset[] }) {
   const [capitalAmount, setCapitalAmount] = useState("1000");
 
   const selectedAsset = useMemo(
-    () => assets.find((asset) => asset.id === selectedAssetId) ?? assets[0] ?? null,
+    () =>
+      assets.find((asset) => asset.id === selectedAssetId) ?? assets[0] ?? null,
     [assets, selectedAssetId],
   );
 
@@ -225,7 +232,8 @@ function MarketAssetChecker({ assets }: { assets: MarketAsset[] }) {
               <p className="mt-1 text-xs text-slate-500">
                 {selectedAsset?.priceRecordedAtLabel
                   ? `${selectedAsset.priceSourceLabel} • ${selectedAsset.priceRecordedAtLabel}`
-                  : selectedAsset?.priceSourceLabel ?? "Market quote unavailable"}
+                  : (selectedAsset?.priceSourceLabel ??
+                    "Market quote unavailable")}
               </p>
             </div>
 
@@ -463,7 +471,10 @@ function FixedReturnCalculator({ plans }: { plans: FixedPlan[] }) {
                 Expected profit
               </p>
               <p className="mt-2 text-lg font-semibold text-white">
-                {formatCurrency(expectedProfit, selectedPlan?.currency ?? "USD")}
+                {formatCurrency(
+                  expectedProfit,
+                  selectedPlan?.currency ?? "USD",
+                )}
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Calculated as capital × fixed ROI.
@@ -526,9 +537,7 @@ export function AssetChecker({ data }: AssetCheckerProps) {
               Asset checker
             </h2>
             <p className="max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-              Review only platform-supported market assets and fixed bond
-              plans before comparing live price previews or locked return
-              estimates.
+              Get a quick overview of your asset and its performance.
             </p>
           </div>
         </div>
