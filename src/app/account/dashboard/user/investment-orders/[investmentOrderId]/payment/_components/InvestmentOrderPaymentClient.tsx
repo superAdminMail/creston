@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bitcoin, Landmark, Loader2, Shield } from "lucide-react";
+import { Bitcoin, Copy, Landmark, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestInvestmentOrderBankInfo } from "@/actions/accounts/payments/requestInvestmentOrderBankInfo";
@@ -87,6 +87,7 @@ export default function InvestmentOrderPaymentClient({
   const [bankInfoRequestedLocal, setBankInfoRequestedLocal] = useState(false);
   const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
     useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const bankMethod = order.bankMethod;
   const latestBankPayment =
@@ -246,6 +247,19 @@ export default function InvestmentOrderPaymentClient({
       );
     } finally {
       setIsCreatingCryptoCheckout(false);
+    }
+  }
+
+  async function handleCopyWalletAddress(address: string | null | undefined) {
+    if (!address) return;
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setIsCopied(true);
+      toast.success("Copied.");
+      window.setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      toast.error("Unable to copy.");
     }
   }
 
@@ -552,9 +566,24 @@ export default function InvestmentOrderPaymentClient({
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Platform wallet address
                       </p>
-                      <p className="mt-2 break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
-                        {bankMethod.walletAddress}
-                      </p>
+                      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
+                          {bankMethod.walletAddress}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            void handleCopyWalletAddress(
+                              bankMethod.walletAddress,
+                            )
+                          }
+                          className="w-full rounded-full border-slate-200/80 bg-white/70 px-4 text-slate-700 shadow-sm hover:bg-white sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200"
+                        >
+                          <Copy className="h-4 w-4" />
+                          {isCopied ? "Copied" : "Copy"}
+                        </Button>
+                      </div>
 
                       <div className="mt-4 flex justify-center">
                         <CryptoQRCode
@@ -566,8 +595,9 @@ export default function InvestmentOrderPaymentClient({
                   ) : null}
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    You will be redirected to a secure checkout to complete the
-                    payment.
+                    Scan the QR code or paste the address above to pay at the
+                    Bitcoin ATM or in your wallet app. You can safely use the
+                    button below to open a secure checkout to pay.
                   </p>
 
                   <div className="flex justify-end">

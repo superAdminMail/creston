@@ -10,6 +10,7 @@ export type SavingsFundingBankMethod = {
   routingNumber: string | null;
   instructions: string | null;
   notes: string | null;
+  walletAddress: string | null;
   currency: string;
 };
 

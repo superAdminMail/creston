@@ -9,7 +9,8 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
-import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
+import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
+import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
@@ -19,6 +20,7 @@ function toNumber(value: { toNumber(): number } | number | null | undefined) {
 
 export async function getInvestmentOrderPaymentDetails(
   investmentOrderId: string,
+  fundingMethodType?: CheckoutFundingMethodType | null,
 ): Promise<InvestmentOrderPaymentDetails> {
   const user = await getCurrentSessionUser();
 
@@ -132,21 +134,33 @@ export async function getInvestmentOrderPaymentDetails(
 
   const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
 
-  const privateBankMethod = order.platformPaymentMethod
-    ? null
-    : await getUserPrivateBankInfo(user.id, order.currency);
+  const selectedFundingMethodType =
+    fundingMethodType ?? order.paymentMethodType ?? "BANK_TRANSFER";
+  const preferredPlatformPaymentMethodType =
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? "WALLET_ADDRESS"
+      : "BANK_INFO";
+  const orderPaymentMethodMatchesSelectedFundingMethod =
+    order.platformPaymentMethod?.type === preferredPlatformPaymentMethodType;
 
-  const fallbackBankMethod = await getPublicPlatformPaymentMethods().then(
-    (methods) =>
-      methods.find(
-        (method) =>
-          method.type === "BANK_INFO" &&
-          (method.currency === order.currency || method.currency === null),
-      ) ?? null,
-  );
+  const privateBankMethod =
+    orderPaymentMethodMatchesSelectedFundingMethod ||
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? null
+      : await getUserPrivateBankInfo(user.id, order.currency);
+
+  const fallbackBankMethod =
+    orderPaymentMethodMatchesSelectedFundingMethod ? null : privateBankMethod;
 
   const resolvedBankMethod =
-    order.platformPaymentMethod ?? privateBankMethod ?? fallbackBankMethod;
+    (orderPaymentMethodMatchesSelectedFundingMethod
+      ? order.platformPaymentMethod
+      : null) ??
+    fallbackBankMethod ??
+    (await getPublicPlatformPaymentMethodForCheckout({
+      currency: order.currency,
+      preferredType: preferredPlatformPaymentMethodType,
+    }));
 
   const amount = toNumber(order.amount);
   const amountPaid = toNumber(order.amountPaid);
@@ -216,7 +230,7 @@ export async function getInvestmentOrderPaymentDetails(
       ? {
           id: resolvedBankMethod.id,
           label: resolvedBankMethod.label,
-          type: "BANK_INFO",
+          type: resolvedBankMethod.type,
           providerName: resolvedBankMethod.providerName ?? null,
           bankName: resolvedBankMethod.bankName,
           bankCode: resolvedBankMethod.bankCode ?? null,

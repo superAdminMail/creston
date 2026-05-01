@@ -13,7 +13,10 @@ export default async function SavingsFunding({
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
 }) {
-  const details = await getSavingsFundingDetails(savingsAccountId);
+  const details = await getSavingsFundingDetails(
+    savingsAccountId,
+    fundingMethodType,
+  );
   const cryptoCheckoutLabel =
     details.latestIntent?.status === "PARTIALLY_PAID"
       ? "Complete Payment"

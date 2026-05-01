@@ -102,7 +102,10 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
 
   switch (routeInput.targetType) {
     case "INVESTMENT_ORDER": {
-      const order = await getInvestmentOrderPaymentDetails(routeInput.targetId);
+      const order = await getInvestmentOrderPaymentDetails(
+        routeInput.targetId,
+        routeInput.fundingMethodType,
+      );
       const isInvestmentOrderSettled =
         order.remainingAmount <= 0 ||
         order.status === "PAID" ||

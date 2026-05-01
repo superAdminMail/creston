@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bitcoin, Landmark, Shield, ShieldCheck } from "lucide-react";
+import { Bitcoin, Copy, Landmark, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { requestSavingsFundingBankInfo } from "@/actions/savings/requestSavingsFundingBankInfo";
@@ -104,6 +104,7 @@ export default function SavingsFundingClient({
   const [proofOpen, setProofOpen] = useState(false);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
   const [bankInfoRequestedLocal, setBankInfoRequestedLocal] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   async function handleRequestBankInfo() {
     if (isRequestingBankInfo || bankInfoRequested) return;
@@ -234,6 +235,19 @@ export default function SavingsFundingClient({
     hasPendingSubmission,
     effectivePaymentMode,
   ]);
+
+  async function handleCopyWalletAddress(address: string | null | undefined) {
+    if (!address) return;
+
+    try {
+      await navigator.clipboard.writeText(address);
+      setIsCopied(true);
+      toast.success("Copied.");
+      window.setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      toast.error("Unable to copy.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
@@ -533,9 +547,24 @@ export default function SavingsFundingClient({
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Platform wallet address
                       </p>
-                      <p className="mt-2 break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
-                        {bankMethod.walletAddress}
-                      </p>
+                      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
+                          {bankMethod.walletAddress}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() =>
+                            void handleCopyWalletAddress(
+                              bankMethod.walletAddress,
+                            )
+                          }
+                          className="w-full rounded-full border-slate-200/80 bg-white/70 px-4 text-slate-700 shadow-sm hover:bg-white sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200"
+                        >
+                          <Copy className="h-4 w-4" />
+                          {isCopied ? "Copied" : "Copy"}
+                        </Button>
+                      </div>
 
                       <div className="mt-4 flex justify-center">
                         <CryptoQRCode

@@ -5,7 +5,8 @@ import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
-import { getPublicPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
+import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
+import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
@@ -15,6 +16,7 @@ function toNumber(value: { toNumber(): number } | number | null | undefined) {
 
 export async function getSavingsFundingDetails(
   savingsAccountId: string,
+  fundingMethodType?: CheckoutFundingMethodType | null,
 ): Promise<SavingsFundingDetails> {
   const user = await getCurrentSessionUser();
 
@@ -71,6 +73,7 @@ export async function getSavingsFundingDetails(
           platformPaymentMethod: {
             select: {
               id: true,
+              type: true,
               label: true,
               bankName: true,
               bankCode: true,
@@ -81,6 +84,7 @@ export async function getSavingsFundingDetails(
               routingNumber: true,
               instructions: true,
               notes: true,
+              walletAddress: true,
               currency: true,
             },
           },
@@ -126,24 +130,33 @@ export async function getSavingsFundingDetails(
 
   const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
 
-  const privateBankMethod = latestIntent?.platformPaymentMethod
-    ? null
-    : await getUserPrivateBankInfo(user.id, account.currency);
+  const selectedFundingMethodType =
+    fundingMethodType ??
+    latestIntent?.fundingMethodType ??
+    "BANK_TRANSFER";
+  const preferredPlatformPaymentMethodType =
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? "WALLET_ADDRESS"
+      : "BANK_INFO";
+  const latestIntentPaymentMethodMatchesSelectedFundingMethod =
+    latestIntent?.platformPaymentMethod?.type ===
+    preferredPlatformPaymentMethodType;
 
-  const fallbackBankMethod = latestIntent?.platformPaymentMethod
-    ? null
-    : privateBankMethod ??
-      (await getPublicPlatformPaymentMethods().then(
-        (methods) =>
-          methods.find(
-            (method) =>
-              method.type === "BANK_INFO" &&
-              (method.currency === account.currency ||
-                method.currency === null),
-          ) ?? null,
-      ));
+  const privateBankMethod =
+    latestIntentPaymentMethodMatchesSelectedFundingMethod ||
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? null
+      : await getUserPrivateBankInfo(user.id, account.currency);
 
-  const bankMethod = latestIntent?.platformPaymentMethod ?? fallbackBankMethod;
+  const bankMethod =
+    (latestIntentPaymentMethodMatchesSelectedFundingMethod
+      ? latestIntent.platformPaymentMethod
+      : null) ??
+    privateBankMethod ??
+    (await getPublicPlatformPaymentMethodForCheckout({
+      currency: account.currency,
+      preferredType: preferredPlatformPaymentMethodType,
+    }));
   const balance = toNumber(account.balance);
   const targetAmount = account.targetAmount
     ? toNumber(account.targetAmount)
@@ -207,6 +220,7 @@ export async function getSavingsFundingDetails(
           routingNumber: bankMethod.routingNumber ?? null,
           instructions: bankMethod.instructions,
           notes: bankMethod.notes ?? null,
+          walletAddress: bankMethod.walletAddress ?? null,
           currency: bankMethod.currency ?? account.currency,
         }
       : null,
