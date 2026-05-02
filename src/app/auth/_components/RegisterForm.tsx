@@ -47,6 +47,7 @@ export default function RegisterForm({
     defaultValues: {
       email: "",
       password: "",
+      referralCode: referralCode ?? "",
     },
   });
 
@@ -58,7 +59,7 @@ export default function RegisterForm({
       const result = await registerUserAction({
         email: values.email,
         password: values.password,
-        referralCode,
+        referralCode: values.referralCode?.trim() || referralCode,
         promoCode,
       });
 
@@ -210,6 +211,42 @@ export default function RegisterForm({
                       <FieldDescription className="text-xs text-slate-500">
                         Choose a strong password to protect access to your
                         account.
+                      </FieldDescription>
+                    ) : null}
+
+                    {fieldState.error ? (
+                      <FieldError errors={[fieldState.error]} />
+                    ) : null}
+                  </FieldContent>
+                </Field>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="referralCode"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel className="text-sm font-medium text-slate-200">
+                    Referral code{" "}
+                    <span className="text-slate-500">(optional)</span>
+                  </FieldLabel>
+
+                  <FieldContent>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      type="text"
+                      autoComplete="off"
+                      placeholder="Enter a referral code"
+                      aria-invalid={fieldState.invalid}
+                      className="input-premium h-12 rounded-2xl border-white/10 bg-white/[0.03] px-4 text-white placeholder:text-slate-500 focus-visible:ring-[var(--ring)]"
+                    />
+
+                    {!fieldState.error ? (
+                      <FieldDescription className="text-xs text-slate-500">
+                        If you were invited, you can paste the referral code
+                        here or use the referral link.
                       </FieldDescription>
                     ) : null}
 

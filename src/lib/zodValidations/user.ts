@@ -15,6 +15,11 @@ export const registerUserSchema = z.object({
       message:
         "Password must contain at least one uppercase letter and one number.",
     }),
+  referralCode: z
+    .string()
+    .trim()
+    .max(64, { message: "Referral code is too long." })
+    .optional(),
 });
 
 export type RegisterUserSchemaType = z.infer<typeof registerUserSchema>;
