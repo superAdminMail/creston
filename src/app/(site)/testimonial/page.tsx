@@ -8,7 +8,7 @@ export async function generateMetadata() {
   const seo = resolveGenericPageSeo(site, {
     title: "Client Testimonials",
     description:
-      "Read how Havenstone supports disciplined investing, retirement planning, and confident long-term financial decision-making.",
+      `Read how ${site.siteName} supports disciplined investing, retirement planning, and confident long-term financial decision-making.`,
   });
 
   return buildSeoMetadata({

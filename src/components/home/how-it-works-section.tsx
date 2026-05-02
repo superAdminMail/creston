@@ -45,10 +45,7 @@ const steps = [
 
 export async function HowItWorksSection() {
   const site = await getSiteConfigurationCached();
-  const siteName = site?.siteName?.trim() || "Havenstone";
-  const siteTagline =
-    site?.siteTagline?.trim() ||
-    "Invest for the long term, achieve financial security.";
+  const siteName = site?.siteName?.trim() || "Company";
   const supportEmail = site?.supportEmail?.trim() || "support@example.com";
 
   return (

@@ -9,7 +9,7 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 export default async function Page() {
   const profile = await getCurrentUserInvestmentProfileData();
   const site = await getSiteConfigurationCached();
-  const siteName = site?.siteName ?? "";
+  const siteName = site?.siteName?.trim() || "Company";
 
   return (
     <div className="space-y-6">
@@ -53,12 +53,13 @@ export default async function Page() {
             onSubmitAction={updateCurrentUserInvestorProfileAction}
             submitLabel="Save profile updates"
             pendingLabel="Saving profile..."
-          successMessage="Profile updated successfully."
-          compactFields
-          redirectHref="/account/dashboard/profile"
-        />
-      </div>
-    </section>
+            successMessage="Profile updated successfully."
+            compactFields
+            redirectHref="/account/dashboard/profile"
+            siteName={siteName}
+          />
+        </div>
+      </section>
     </div>
   );
 }

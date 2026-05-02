@@ -7,8 +7,7 @@ export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
     title: "Secure account access",
-    description:
-      "Access your Havenstone account to manage your investments, view your portfolio, and utilize our secure personal retirement planning tools. Log in to experience a modern wealth platform designed for long-term financial confidence and stability.",
+    description: `Access your ${site.siteName} account to manage your investments, view your portfolio, and utilize our secure personal savings planning tools. Log in to experience a modern wealth platform designed for long-term financial confidence and stability.`,
   });
 
   return buildSeoMetadata({

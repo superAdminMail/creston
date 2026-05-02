@@ -15,6 +15,7 @@ import {
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
 import { redirect } from "next/navigation";
@@ -90,6 +91,8 @@ function toInvestmentOrderCreationKycStatus(
 
 export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrderCreationOptionsData> {
   const user = await getCurrentSessionUser();
+  const site = await getSiteSeoConfig();
+  const siteName = site.siteName?.trim() || "Company";
 
   if (!user?.id) {
     redirect("/auth/login");
@@ -249,7 +252,7 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
         slug: investment.slug,
         description:
           investment.description?.trim() ||
-          "Structured Havenstone investment option tailored for long-term financial growth.",
+          `Structured ${siteName} investment option tailored for long-term financial growth.`,
         type: investment.type,
         typeLabel: formatEnumLabel(investment.type),
         isActive: investment.isActive,

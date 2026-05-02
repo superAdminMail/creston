@@ -14,8 +14,7 @@ export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
     title: "Account",
-    description:
-      "Manage your Havenstone account, view your investments, and access secure personal retirement planning tools.",
+    description: `Manage your ${site.siteName} account, view your investments, and access secure personal savings planning tools.`,
   });
 
   return buildSeoMetadata({

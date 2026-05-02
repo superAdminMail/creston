@@ -32,11 +32,13 @@ type FieldErrors = {
 type PasswordFormProps = {
   embedded?: boolean;
   onSuccess?: () => void;
+  siteName?: string;
 };
 
 export default function PasswordForm({
   embedded = false,
   onSuccess,
+  siteName,
 }: PasswordFormProps) {
   const [isPending, startTransition] = useTransition();
   const [currentPassword, setCurrentPassword] = useState("");
@@ -110,7 +112,9 @@ export default function PasswordForm({
         <CardHeader>
           <CardTitle>Security</CardTitle>
           <CardDescription>
-            Update your account password and keep your Havenstone access secure.
+            {siteName?.trim()
+              ? `Update your account password and keep your ${siteName.trim()} access secure.`
+              : "Update your account password and keep your access secure."}
           </CardDescription>
         </CardHeader>
       ) : null}

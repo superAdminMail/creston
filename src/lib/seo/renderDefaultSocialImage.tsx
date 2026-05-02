@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
 export const socialImageSize = {
   width: 1200,
@@ -13,11 +14,12 @@ type RenderDefaultSocialImageOptions = {
   description?: string;
 };
 
-export function renderDefaultSocialImage(
+export async function renderDefaultSocialImage(
   options: RenderDefaultSocialImageOptions = {},
 ) {
+  const site = await getSiteSeoConfig();
   const eyebrow = options.eyebrow ?? "Secure wealth growth";
-  const title = options.title ?? "Havenstone";
+  const title = options.title ?? site.siteName;
   const description =
     options.description ?? "Long-term investing, and financial confidence.";
 
@@ -97,7 +99,7 @@ export function renderDefaultSocialImage(
           color: "#BFDBFE",
         }}
       >
-        <div>Havenstone</div>
+        <div>{site.siteName}</div>
         <div>Premium wealth platform</div>
       </div>
     </div>,

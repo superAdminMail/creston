@@ -45,7 +45,10 @@ export function OnboardingDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <InvestmentProfileForm onCreateLater={handleSkip} />
+          <InvestmentProfileForm
+            onCreateLater={handleSkip}
+            siteName={siteName}
+          />
         </DialogContent>
       </Dialog>
     </div>

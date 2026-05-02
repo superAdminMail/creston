@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { generateReferralCode } from "@/lib/referrals/generateReferralCode";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import ProfilePageView from "../_components/ProfilePageView";
 
 async function ensureReferralCode(userId: string, name: string | null) {
@@ -60,6 +61,7 @@ async function ensureReferralCode(userId: string, name: string | null) {
 
 export default async function Page() {
   const sessionUser = await getCurrentSessionUser();
+  const site = await getSiteConfigurationCached();
 
   if (!sessionUser?.id || !sessionUser.email) {
     return null;
@@ -93,7 +95,8 @@ export default async function Page() {
     dbUser.referralCode ?? (await ensureReferralCode(dbUser.id, dbUser.name));
 
   return (
-      <ProfilePageView
+    <ProfilePageView
+      siteName={site?.siteName?.trim() || "Company"}
       user={{
         name: dbUser.name,
         email: dbUser.email,

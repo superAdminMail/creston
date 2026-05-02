@@ -7,7 +7,7 @@ export async function generateMetadata() {
   const site = await getSiteSeoConfig();
   const seo = resolveGenericPageSeo(site, {
     title: "Access restricted",
-    description: "The requested Havenstone page is not available to your account.",
+    description: `The requested ${site.siteName} page is not available to your account.`,
   });
 
   return buildSeoMetadata({

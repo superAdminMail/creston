@@ -71,6 +71,7 @@ type InvestmentProfileFormProps = {
   successMessage?: string;
   compactFields?: boolean;
   redirectHref?: string;
+  siteName?: string;
 };
 
 export function InvestmentProfileForm({
@@ -82,6 +83,7 @@ export function InvestmentProfileForm({
   successMessage = "Investment profile saved.",
   compactFields = false,
   redirectHref,
+  siteName,
 }: InvestmentProfileFormProps) {
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
@@ -492,7 +494,9 @@ export function InvestmentProfileForm({
                     </span>
                     <FieldDescription className="text-sm text-slate-400">
                       {derivedAge && !isAdult
-                        ? "Havenstone onboarding is only available to adults age 18 and above."
+                        ? siteName?.trim()
+                          ? `${siteName.trim()} onboarding is only available to adults age 18 and above.`
+                          : "Onboarding is only available to adults age 18 and above."
                         : "We use this confirmation to verify age eligibility before account setup."}
                     </FieldDescription>
                   </div>

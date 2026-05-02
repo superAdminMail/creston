@@ -22,7 +22,7 @@ type WelcomeEmailTemplateProps = {
 export default function WelcomeEmailTemplate({
   firstName,
   onboardingUrl,
-  siteName = "Havenstone",
+  siteName = "Company",
   siteLogoUrl,
 }: WelcomeEmailTemplateProps) {
   return (

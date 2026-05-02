@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type ProfilePageProps = {
+  siteName?: string;
   user: {
     name: string;
     email: string;
@@ -20,7 +21,11 @@ type ProfilePageProps = {
   };
 };
 
-export default function ProfilePageView({ user }: ProfilePageProps) {
+export default function ProfilePageView({
+  siteName,
+  user,
+}: ProfilePageProps) {
+  const resolvedSiteName = siteName?.trim() || "Company";
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
   const avatarFallback = getUserInitials({
@@ -52,7 +57,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "Join me on Havenstone",
+          title: `Join me on ${resolvedSiteName}`,
           text: "Use my referral link to sign up.",
           url: referralUrl,
         });

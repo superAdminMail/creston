@@ -8,7 +8,7 @@ export const size = socialImageSize;
 
 export const contentType = socialImageContentType;
 
-export default function Image() {
+export default async function Image() {
   return renderDefaultSocialImage({
     eyebrow: "Investment-focused wealth platform",
   });

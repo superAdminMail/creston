@@ -19,6 +19,7 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const investmentAccountDetailsSelect =
@@ -228,7 +229,9 @@ function mapInvestmentAccountDetails(
       slug: account.investmentPlan.investment.slug,
       description:
         account.investmentPlan.investment.description?.trim() ||
-        "Curated investment product aligned to your Havenstone account strategy.",
+        `Curated investment product aligned to your ${
+          (await getSiteSeoConfig()).siteName?.trim() || "Company"
+        } account strategy.`,
       type: account.investmentPlan.investment.type,
       typeLabel: formatEnumLabel(account.investmentPlan.investment.type),
       status: account.investmentPlan.investment.status,

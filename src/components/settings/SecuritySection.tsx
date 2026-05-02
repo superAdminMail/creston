@@ -20,7 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import PasswordForm from "@/app/auth/_components/PasswordForm";
 
-export default function SecuritySection() {
+type SecuritySectionProps = {
+  siteName?: string;
+};
+
+export default function SecuritySection({ siteName }: SecuritySectionProps) {
   const [open, setOpen] = useState(false);
 
   const items = [
@@ -153,7 +157,11 @@ export default function SecuritySection() {
             </DialogDescription>
           </DialogHeader>
 
-          <PasswordForm embedded onSuccess={() => setOpen(false)} />
+          <PasswordForm
+            embedded
+            onSuccess={() => setOpen(false)}
+            siteName={siteName}
+          />
         </DialogContent>
       </Dialog>
     </>

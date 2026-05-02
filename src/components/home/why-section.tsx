@@ -35,7 +35,7 @@ export async function WhySection() {
   const site = await getSiteSeoConfig();
 
   return (
-    <SectionShell id="why-havenstone" className="py-20 sm:py-24">
+    <SectionShell id="why-platform" className="py-20 sm:py-24">
       <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         {/* LEFT */}
         <SectionHeading

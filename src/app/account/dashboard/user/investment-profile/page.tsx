@@ -7,11 +7,12 @@ import { UserInvestmentProfileDetailsPage } from "../_components/UserInvestmentP
 export default async function UserInvestmentProfilePage() {
   const profile = await getCurrentUserInvestmentProfileData();
   const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
 
   return (
     <UserInvestmentProfileDetailsPage
       profile={profile}
-      siteName={site?.siteName ?? ""}
+      siteName={siteName}
     />
   );
 }

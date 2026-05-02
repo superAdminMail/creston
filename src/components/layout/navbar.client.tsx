@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useId, useState } from "react";
@@ -14,7 +15,7 @@ export type NavbarClientProps = {
 };
 
 const marketingLinks = (siteName: string) => [
-  { href: "#why-havenstone", label: `Why ${siteName}` },
+    { href: "#why-platform", label: `Why ${siteName}` },
   { href: "#how-it-works", label: "How It Works" },
   { href: "#benefits", label: "Benefits" },
   { href: "#testimonials", label: "Testimonials" },
@@ -38,10 +39,12 @@ function BrandMark({
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
       {siteLogoUrl ? (
-        <img
+        <Image
           src={siteLogoUrl}
           alt={`${siteName} logo`}
-          className="h-9 w-9 rounded-2xl object-cover "
+          width={36}
+          height={36}
+          className="h-9 w-9 rounded-2xl object-cover"
         />
       ) : (
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white">

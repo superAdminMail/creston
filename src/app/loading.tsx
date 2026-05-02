@@ -4,9 +4,7 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 
 export default async function Loading() {
   const config = await getSiteConfigurationCached();
-  const siteName = config?.siteName?.trim() || "Havenstone";
-  const siteTagline =
-    config?.siteTagline?.trim() || "Securing your financial future";
+  const siteName = config?.siteName?.trim() || "Company";
   const logoUrl =
     config?.siteLogoFileAsset?.url ??
     "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuBkxrbXSXITnudeaK9QOqNCE546A1JZpjbHSU";

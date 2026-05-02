@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LockKeyhole, Building2 } from "lucide-react";
 
 import { getSiteConfiguration } from "@/actions/super-admin/site-settings/getSiteConfiguration";
@@ -47,7 +46,7 @@ export default async function SuperAdminSettingsPage() {
         </TabsContent>
 
         <TabsContent value="security" className="mt-0 outline-none">
-          <SecuritySection />
+          <SecuritySection siteName={data.values.siteName?.trim() || "Company"} />
         </TabsContent>
       </Tabs>
     </div>

@@ -14,7 +14,7 @@ export async function Footer() {
     {
       title: "Company",
       links: [
-        { href: "#why-havenstone", label: `Why ${site.siteName}` },
+      { href: "#why-platform", label: `Why ${site.siteName}` },
         { href: "/about", label: "About" },
         { href: "/contact", label: "Contact" },
       ],
