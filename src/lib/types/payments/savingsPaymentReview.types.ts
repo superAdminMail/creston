@@ -41,6 +41,7 @@ export type SavingsPaymentReviewDetails = {
   status: SavingsTransactionPaymentStatus;
   claimedAmount: number;
   approvedAmount: number | null;
+  canOfferPartialApproval: boolean;
   currency: string;
   depositorName: string | null;
   depositorAccountName: string | null;
@@ -89,6 +90,7 @@ export type SavingsPaymentReviewDetails = {
     status: SavingsFundingIntentStatus;
     targetAmount: number;
     creditedAmount: number;
+    remainingFundingAmount: number;
     paymentReference: string | null;
     paidAt: string | null;
     creditedAt: string | null;

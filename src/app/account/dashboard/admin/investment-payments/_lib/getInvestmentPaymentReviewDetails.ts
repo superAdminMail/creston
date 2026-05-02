@@ -115,6 +115,10 @@ export async function getInvestmentPaymentReviewDetails(
 
   const orderAmount = toNumber(payment.investmentOrder.amount);
   const amountPaid = toNumber(payment.investmentOrder.amountPaid);
+  const remainingAmount = Math.max(orderAmount - amountPaid, 0);
+  const canOfferPartialApproval =
+    payment.status === "PENDING_REVIEW" &&
+    toNumber(payment.claimedAmount) < remainingAmount;
 
   return {
     id: payment.id,
@@ -124,6 +128,7 @@ export async function getInvestmentPaymentReviewDetails(
     approvedAmount: payment.approvedAmount
       ? toNumber(payment.approvedAmount)
       : null,
+    canOfferPartialApproval,
     currency: payment.currency,
     depositorName: payment.depositorName ?? null,
     depositorAccountName: payment.depositorAccountName ?? null,
@@ -170,7 +175,7 @@ export async function getInvestmentPaymentReviewDetails(
       status: payment.investmentOrder.status,
       amount: orderAmount,
       amountPaid,
-      remainingAmount: Math.max(orderAmount - amountPaid, 0),
+      remainingAmount,
       currency: payment.investmentOrder.currency,
       paymentReference: payment.investmentOrder.paymentReference ?? null,
       paidAt: payment.investmentOrder.paidAt?.toISOString() ?? null,

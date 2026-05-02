@@ -32,6 +32,7 @@ export type InvestmentPaymentReviewDetails = {
   status: InvestmentOrderPaymentStatus;
   claimedAmount: number;
   approvedAmount: number | null;
+  canOfferPartialApproval: boolean;
   currency: string;
   depositorName: string | null;
   depositorAccountName: string | null;

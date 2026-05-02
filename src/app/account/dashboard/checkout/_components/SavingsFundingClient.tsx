@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bitcoin, Copy, Landmark, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -10,7 +10,6 @@ import CryptoQRCode from "@/components/payments/CryptoQRCode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters/formatters";
-import { calculateSavingsFundingChargeAmount } from "@/lib/payments/savings/calculateSavingsFundingChargeAmount";
 import type { SavingsFundingDetails } from "@/lib/types/payments/savingsFunding.types";
 import {
   getCheckoutFundingMethodLabel,
@@ -81,11 +80,13 @@ export default function SavingsFundingClient({
   details,
   fundingMethodType,
   paymentMode,
+  selectedAmount,
   cryptoCheckoutButton,
 }: {
   details: SavingsFundingDetails;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
+  selectedAmount: number;
   cryptoCheckoutButton?: ReactNode;
 }) {
   const router = useRouter();
@@ -156,7 +157,6 @@ export default function SavingsFundingClient({
   const bankMethod = details.bankMethod;
   const latestIntent = details.latestIntent;
   const latestBankPayment = latestIntent?.latestPayment ?? null;
-  const latestPaidAmount = latestIntent?.creditedAmount ?? 0;
   const latestPaymentShortfall =
     details.latestFundingPaymentShortfallAmount ?? 0;
   const hasExistingIntent = latestIntent !== null;
@@ -189,52 +189,6 @@ export default function SavingsFundingClient({
         : "I've made this payment";
   const bankProofActionDisabled =
     isSavingsFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
-
-  const selectedAmount = useMemo(() => {
-    const chargeBasis =
-      details.account.targetAmount ??
-      details.fundingAmountSuggestion ??
-      details.account.balance;
-
-    if (!effectivePaymentMode) {
-      return details.remainingToTargetAmount ?? chargeBasis;
-    }
-
-    try {
-      const calculatedAmount = calculateSavingsFundingChargeAmount({
-        totalAmount: chargeBasis,
-        amountPaid: latestPaidAmount,
-        usePartialPayment: bankSelected && effectivePaymentMode === "PARTIAL",
-        fundingMethodType: cryptoSelected ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
-        hasPendingSubmission: hasPendingSubmission,
-        hasActiveCryptoIntent: false,
-      }).chargeAmount.toNumber();
-
-      if (
-        bankSelected &&
-        latestIntent?.status === "PARTIALLY_PAID" &&
-        latestPaymentShortfall > 0
-      ) {
-        return calculatedAmount + latestPaymentShortfall;
-      }
-
-      return calculatedAmount;
-    } catch {
-      return details.remainingToTargetAmount ?? chargeBasis;
-    }
-  }, [
-    cryptoSelected,
-    details.account.balance,
-    details.account.targetAmount,
-    details.fundingAmountSuggestion,
-    details.remainingToTargetAmount,
-    bankSelected,
-    latestPaidAmount,
-    latestIntent?.status,
-    latestPaymentShortfall,
-    hasPendingSubmission,
-    effectivePaymentMode,
-  ]);
 
   async function handleCopyWalletAddress(address: string | null | undefined) {
     if (!address) return;

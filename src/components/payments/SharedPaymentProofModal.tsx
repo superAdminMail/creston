@@ -56,6 +56,7 @@ type Props = {
   amountMin: number;
   amountMax: number | null;
   amountHint?: ReactNode;
+  mode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
   submitLabel?: string;
   submit: (input: PaymentProofSubmitInput) => Promise<PaymentProofSubmitResult>;
 };
@@ -70,6 +71,7 @@ export default function SharedPaymentProofModal({
   amountMin,
   amountMax,
   amountHint,
+  mode = "BANK_TRANSFER",
   submitLabel = "Submit proof",
   submit,
 }: Props) {
@@ -165,11 +167,13 @@ export default function SharedPaymentProofModal({
       try {
         const result = await submit({
           claimedAmount,
-          depositorName,
-          depositorAccountName,
-          depositorAccountNo,
-          transferReference,
-          note,
+          depositorName: mode === "BANK_TRANSFER" ? depositorName : "",
+          depositorAccountName:
+            mode === "BANK_TRANSFER" ? depositorAccountName : "",
+          depositorAccountNo:
+            mode === "BANK_TRANSFER" ? depositorAccountNo : "",
+          transferReference: mode === "BANK_TRANSFER" ? transferReference : "",
+          note: mode === "BANK_TRANSFER" ? note : "",
           receiptFileId: receiptFileId || undefined,
         });
 
@@ -207,7 +211,13 @@ export default function SharedPaymentProofModal({
         </div>
 
         <div className="space-y-5 px-4 py-4 sm:px-6 sm:py-6">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div
+            className={
+              mode === "CRYPTO_PROVIDER"
+                ? "grid gap-4"
+                : "grid gap-4 sm:grid-cols-2"
+            }
+          >
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
                 {amountLabel}
@@ -226,54 +236,62 @@ export default function SharedPaymentProofModal({
               {amountHint ? <div>{amountHint}</div> : null}
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                Transfer reference
-              </label>
-              <Input
-                value={transferReference}
-                onChange={(event) => setTransferReference(event.target.value)}
-                placeholder="Bank transfer reference"
-                className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-              />
-            </div>
+            {mode === "BANK_TRANSFER" ? (
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Transfer reference
+                </label>
+                <Input
+                  value={transferReference}
+                  onChange={(event) => setTransferReference(event.target.value)}
+                  placeholder="Bank transfer reference"
+                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                />
+              </div>
+            ) : null}
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Depositor name
-            </label>
-            <Input
-              value={depositorName}
-              onChange={(event) => setDepositorName(event.target.value)}
-              placeholder="Enter depositor name"
-              className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-            />
-          </div>
+          {mode === "BANK_TRANSFER" ? (
+            <>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Depositor name
+                </label>
+                <Input
+                  value={depositorName}
+                  onChange={(event) => setDepositorName(event.target.value)}
+                  placeholder="Enter depositor name"
+                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                />
+              </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Depositor account name
-            </label>
-            <Input
-              value={depositorAccountName}
-              onChange={(event) => setDepositorAccountName(event.target.value)}
-              placeholder="Enter depositor account name"
-              className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-            />
-          </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Depositor account name
+                </label>
+                <Input
+                  value={depositorAccountName}
+                  onChange={(event) =>
+                    setDepositorAccountName(event.target.value)
+                  }
+                  placeholder="Enter depositor account name"
+                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                />
+              </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Depositor account number
-            </label>
-            <Input
-              value={depositorAccountNo}
-              onChange={(event) => setDepositorAccountNo(event.target.value)}
-              placeholder="Enter depositor account number"
-              className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-            />
-          </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  Depositor account number
+                </label>
+                <Input
+                  value={depositorAccountNo}
+                  onChange={(event) => setDepositorAccountNo(event.target.value)}
+                  placeholder="Enter depositor account number"
+                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                />
+              </div>
+            </>
+          ) : null}
 
           <div className="grid gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -372,21 +390,23 @@ export default function SharedPaymentProofModal({
             )}
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Note{" "}
-              <span className="text-slate-400 dark:text-slate-500">
-                (optional)
-              </span>
-            </label>
-            <Textarea
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
-              placeholder="Add any useful details for admin review"
-              rows={4}
-              className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
-            />
-          </div>
+          {mode === "BANK_TRANSFER" ? (
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                Note{" "}
+                <span className="text-slate-400 dark:text-slate-500">
+                  (optional)
+                </span>
+              </label>
+              <Textarea
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder="Add any useful details for admin review"
+                rows={4}
+                className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
             <Button

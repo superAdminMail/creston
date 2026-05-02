@@ -1,4 +1,5 @@
 import {
+  Prisma,
   InvestmentOrderPaymentStatus,
   InvestmentOrderPaymentType,
   InvestmentOrderStatus,
@@ -8,11 +9,14 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
+import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 
 type CreateInvestmentOrderBankDepositSubmissionInput = {
   investmentOrderId: string;
   userId: string;
   platformPaymentMethodId?: string | null;
+  proofMode?: CheckoutFundingMethodType;
+  claimedAmount?: number;
   usePartialPayment?: boolean;
   depositorName?: string | null;
   depositorAccountName?: string | null;
@@ -37,6 +41,8 @@ export async function createInvestmentOrderBankDepositSubmission({
   investmentOrderId,
   userId,
   platformPaymentMethodId,
+  proofMode = "BANK_TRANSFER",
+  claimedAmount,
   usePartialPayment = false,
   depositorName,
   depositorAccountName,
@@ -69,7 +75,12 @@ export async function createInvestmentOrderBankDepositSubmission({
       payments: {
         where: {
           status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
-          type: InvestmentOrderPaymentType.BANK_DEPOSIT,
+          type: {
+            in: [
+              InvestmentOrderPaymentType.BANK_DEPOSIT,
+              InvestmentOrderPaymentType.CRYPTO_PROVIDER,
+            ],
+          },
         },
         select: {
           id: true,
@@ -102,11 +113,14 @@ export async function createInvestmentOrderBankDepositSubmission({
 
   if (order.payments.length > 0) {
     throw new Error(
-      "There is already a pending bank payment submission for this order",
+      "There is already a pending payment submission for this order",
     );
   }
 
-  const privateBankMethod = await getUserPrivateBankInfo(userId, order.currency);
+  const privateBankMethod =
+    proofMode === "CRYPTO_PROVIDER"
+      ? null
+      : await getUserPrivateBankInfo(userId, order.currency);
   const selectedPlatformPaymentMethodId =
     platformPaymentMethodId?.trim() ||
     order.platformPaymentMethodId ||
@@ -114,18 +128,22 @@ export async function createInvestmentOrderBankDepositSubmission({
     null;
 
   if (!selectedPlatformPaymentMethodId) {
-    throw new Error("No bank payment method is configured for this order");
+    throw new Error("No payment method is configured for this order");
   }
 
   const allowPrivateMethod =
-    selectedPlatformPaymentMethodId === order.platformPaymentMethodId ||
-    selectedPlatformPaymentMethodId === privateBankMethod?.id;
+    proofMode !== "CRYPTO_PROVIDER" &&
+    (selectedPlatformPaymentMethodId === order.platformPaymentMethodId ||
+      selectedPlatformPaymentMethodId === privateBankMethod?.id);
 
   const platformPaymentMethod = await prisma.platformPaymentMethod.findFirst({
     where: {
       id: selectedPlatformPaymentMethodId,
       isActive: true,
-      type: PlatformPaymentMethodType.BANK_INFO,
+      type:
+        proofMode === "CRYPTO_PROVIDER"
+          ? PlatformPaymentMethodType.WALLET_ADDRESS
+          : PlatformPaymentMethodType.BANK_INFO,
       OR: allowPrivateMethod
         ? [
             {
@@ -154,7 +172,7 @@ export async function createInvestmentOrderBankDepositSubmission({
   });
 
   if (!platformPaymentMethod) {
-    throw new Error("Selected bank transfer method is not available");
+    throw new Error("Selected payment method is not available");
   }
 
   const admins = await prisma.user.findMany({
@@ -169,24 +187,54 @@ export async function createInvestmentOrderBankDepositSubmission({
     },
   });
 
-  const chargeCalculation = calculateInvestmentOrderBankChargeAmount({
-    totalAmount: order.amount,
-    amountPaid: order.amountPaid,
-    usePartialPayment,
-    hasPendingSubmission: false,
-  });
+  const chargeCalculation =
+    proofMode === "CRYPTO_PROVIDER"
+      ? null
+      : calculateInvestmentOrderBankChargeAmount({
+          totalAmount: order.amount,
+          amountPaid: order.amountPaid,
+          usePartialPayment,
+          hasPendingSubmission: false,
+        });
 
-  const paymentMode = chargeCalculation.isPartialPayment ? "PARTIAL" : "FULL";
+  const paymentMode =
+    proofMode === "CRYPTO_PROVIDER"
+      ? "FULL"
+      : chargeCalculation!.isPartialPayment
+        ? "PARTIAL"
+        : "FULL";
+
+  const submittedClaimedAmount =
+    proofMode === "CRYPTO_PROVIDER"
+      ? new Prisma.Decimal(claimedAmount ?? 0)
+      : chargeCalculation!.chargeAmount;
+
+  if (proofMode === "CRYPTO_PROVIDER") {
+    const remainingAmount = new Prisma.Decimal(order.amount).minus(
+      order.amountPaid,
+    );
+
+    if (!claimedAmount || claimedAmount <= 0) {
+      throw new Error("Claim amount is required");
+    }
+
+    if (new Prisma.Decimal(claimedAmount).gt(remainingAmount)) {
+      throw new Error("Claim amount cannot exceed the remaining order amount");
+    }
+  }
 
   const payment = await prisma.$transaction(async (tx) => {
     const createdPayment = await tx.investmentOrderPayment.create({
       data: {
         investmentOrderId: order.id,
-        type: InvestmentOrderPaymentType.BANK_DEPOSIT,
+        type:
+          proofMode === "CRYPTO_PROVIDER"
+            ? InvestmentOrderPaymentType.CRYPTO_PROVIDER
+            : InvestmentOrderPaymentType.BANK_DEPOSIT,
         status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
         platformPaymentMethodId: platformPaymentMethod.id,
         submittedByUserId: userId,
-        claimedAmount: chargeCalculation.chargeAmount,
+        claimedAmount: submittedClaimedAmount,
         currency: order.currency,
         depositorName: depositorName?.trim() || null,
         depositorAccountName: depositorAccountName?.trim() || null,
@@ -196,9 +244,10 @@ export async function createInvestmentOrderBankDepositSubmission({
         note: note?.trim() || null,
         metadata: {
           paymentMode,
-          splitNumber: chargeCalculation.splitNumber,
+          proofMode,
+          splitNumber: chargeCalculation?.splitNumber ?? null,
           remainingBeforeCharge:
-            chargeCalculation.remainingBeforeCharge.toString(),
+            chargeCalculation?.remainingBeforeCharge.toString() ?? null,
           investmentPlanId: order.investmentPlanId,
           investmentPlanName: order.investmentPlan.name,
           investmentName: order.investmentPlan.investment.name,
@@ -218,12 +267,13 @@ export async function createInvestmentOrderBankDepositSubmission({
         lastPaymentSubmittedAt: new Date(),
         paymentReference: transferReference?.trim() || createdPayment.id,
         paymentMetadata: {
-          provider: "BANK_TRANSFER",
+          provider: proofMode,
           paymentId: createdPayment.id,
           paymentMode,
-          splitNumber: chargeCalculation.splitNumber,
+          proofMode,
+          splitNumber: chargeCalculation?.splitNumber ?? null,
           remainingBeforeCharge:
-            chargeCalculation.remainingBeforeCharge.toString(),
+            chargeCalculation?.remainingBeforeCharge.toString() ?? null,
         },
       },
     });

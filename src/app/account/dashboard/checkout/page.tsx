@@ -110,23 +110,31 @@ export default async function CheckoutPage({ searchParams }: PageProps) {
         order.remainingAmount <= 0 ||
         order.status === "PAID" ||
         order.status === "CONFIRMED";
-      const partialPaymentAmount = isInvestmentOrderSettled
-        ? 0
-        : calculateInvestmentOrderBankChargeAmount({
-            totalAmount: order.amount,
-            amountPaid: order.amountPaid,
-            usePartialPayment: true,
-            hasPendingSubmission: order.recentPayments.some(
-              (payment) =>
-                payment.type === "BANK_DEPOSIT" &&
-                payment.status === "PENDING_REVIEW",
-            ),
-          }).chargeAmount.toNumber();
+      const selectedFundingMethodType =
+        routeInput.fundingMethodType ??
+        order.paymentMethodType ??
+        "BANK_TRANSFER";
+      const selectedAmount =
+        isInvestmentOrderSettled
+          ? 0
+          : routeInput.paymentMode === "PARTIAL" &&
+              selectedFundingMethodType === "BANK_TRANSFER"
+            ? calculateInvestmentOrderBankChargeAmount({
+                totalAmount: order.amount,
+                amountPaid: order.amountPaid,
+                usePartialPayment: true,
+                hasPendingSubmission: order.recentPayments.some(
+                  (payment) =>
+                    payment.type === "BANK_DEPOSIT" &&
+                    payment.status === "PENDING_REVIEW",
+                ),
+              }).chargeAmount.toNumber()
+            : order.remainingAmount;
 
       return (
         <InvestmentOrderPaymentClient
           order={order}
-          partialPaymentAmount={partialPaymentAmount}
+          selectedAmount={selectedAmount}
           isSettled={isInvestmentOrderSettled}
           fundingMethodType={routeInput.fundingMethodType}
           paymentMode={routeInput.paymentMode}

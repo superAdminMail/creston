@@ -11,10 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type Props = {
-  remainingAmount: number;
-  currency: string;
   mode: "FULL" | "PARTIAL" | null;
-  partialAmount: number;
   onModeChange: (mode: "FULL" | "PARTIAL") => void;
   className?: string;
 };

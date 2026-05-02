@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bitcoin, Copy, Landmark, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -58,13 +58,13 @@ function SummaryChip({ label, value }: { label: string; value: string }) {
 
 export default function InvestmentOrderPaymentClient({
   order,
-  partialPaymentAmount,
+  selectedAmount,
   isSettled,
   fundingMethodType,
   paymentMode,
 }: {
   order: InvestmentOrderPaymentDetails;
-  partialPaymentAmount: number;
+  selectedAmount: number;
   isSettled: boolean;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
@@ -81,12 +81,8 @@ export default function InvestmentOrderPaymentClient({
     );
   const [selectedPaymentMode, setSelectedPaymentMode] =
     useState<CheckoutPaymentMode | null>(normalizePaymentMode(paymentMode));
-  const [partialAmount, setPartialAmount] =
-    useState<number>(partialPaymentAmount);
   const [isRequestingBankInfo, setIsRequestingBankInfo] = useState(false);
   const [bankInfoRequestedLocal, setBankInfoRequestedLocal] = useState(false);
-  const [isCreatingCryptoCheckout, setIsCreatingCryptoCheckout] =
-    useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const bankMethod = order.bankMethod;
@@ -119,23 +115,6 @@ export default function InvestmentOrderPaymentClient({
     order.hasExistingBankInfoRequest || bankInfoRequestedLocal;
   const bankProofActionDisabled =
     isOrderFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
-
-  const selectedAmount = useMemo(() => {
-    if (isCryptoSelected || effectivePaymentMode === "FULL") {
-      return order.remainingAmount;
-    }
-
-    if (effectivePaymentMode === "PARTIAL") {
-      return Math.min(Math.max(partialAmount || 0, 0), order.remainingAmount);
-    }
-
-    return 0;
-  }, [
-    effectivePaymentMode,
-    isCryptoSelected,
-    order.remainingAmount,
-    partialAmount,
-  ]);
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -194,60 +173,6 @@ export default function InvestmentOrderPaymentClient({
     }
 
     toast.error(res.message);
-  }
-
-  async function handleCryptoCheckout() {
-    if (!selectedFundingMethod) {
-      toast.error("Choose a funding method first.");
-      return;
-    }
-
-    if (!selectedPaymentMode) {
-      toast.error("Choose a payment mode first.");
-      return;
-    }
-
-    if (isCryptoSelected && selectedPaymentMode !== "FULL") {
-      setSelectedPaymentMode("FULL");
-      updateCheckoutParams({ nextPaymentMode: "FULL" });
-      return;
-    }
-
-    if (isCreatingCryptoCheckout) return;
-
-    setIsCreatingCryptoCheckout(true);
-    try {
-      const response = await fetch("/api/payments/paymento/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          investmentOrderId: order.id,
-          paymentMode: "FULL",
-        }),
-      });
-
-      const data = (await response.json().catch(() => null)) as {
-        redirectUrl?: string;
-        error?: string;
-      } | null;
-
-      if (!response.ok || !data?.redirectUrl) {
-        toast.error(data?.error ?? "Unable to open crypto checkout.");
-        return;
-      }
-
-      window.location.assign(data.redirectUrl);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to open crypto checkout.",
-      );
-    } finally {
-      setIsCreatingCryptoCheckout(false);
-    }
   }
 
   async function handleCopyWalletAddress(address: string | null | undefined) {
@@ -413,19 +338,10 @@ export default function InvestmentOrderPaymentClient({
 
       {!isOrderFullySettled && isBankSelected ? (
         <OrderPaymentSelector
-          remainingAmount={order.remainingAmount}
-          currency={order.currency}
           mode={selectedPaymentMode}
-          partialAmount={partialAmount}
           onModeChange={(nextMode) => {
             setSelectedPaymentMode(nextMode);
             updateCheckoutParams({ nextPaymentMode: nextMode });
-            if (nextMode === "FULL") {
-              setPartialAmount(order.remainingAmount);
-            }
-            if (nextMode === "PARTIAL") {
-              setPartialAmount(partialPaymentAmount);
-            }
           }}
         />
       ) : null}
@@ -595,29 +511,21 @@ export default function InvestmentOrderPaymentClient({
                   ) : null}
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Scan the QR code or paste the address above to pay at the
-                    Bitcoin ATM or in your wallet app. You can safely use the
-                    button below to open a secure checkout to pay.
+                    Scan the QR code or paste the address above to pay from
+                    your wallet app, then confirm the payment below.
                   </p>
 
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      onClick={() => void handleCryptoCheckout()}
-                      disabled={isCreatingCryptoCheckout}
-                      aria-busy={isCreatingCryptoCheckout}
-                      className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                    >
-                      {isCreatingCryptoCheckout ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Opening secure checkout...
-                        </span>
-                      ) : (
-                        "Continue"
-                      )}
-                    </Button>
-                  </div>
+                  {bankMethod?.walletAddress ? (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        onClick={() => setShowModal(true)}
+                        className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                      >
+                        I&apos;ve made this payment
+                      </Button>
+                    </div>
+                  ) : null}
                 </CardContent>
               </Card>
             ) : null
@@ -647,6 +555,19 @@ export default function InvestmentOrderPaymentClient({
           currency={order.currency}
           defaultAmount={selectedAmount}
           maxAmount={order.remainingAmount}
+        />
+      ) : showModal &&
+        selectedFundingMethod === "CRYPTO_PROVIDER" &&
+        bankMethod ? (
+        <PaymentProofModal
+          open={showModal}
+          onOpenChange={setShowModal}
+          orderId={order.id}
+          platformPaymentMethodId={bankMethod.id}
+          currency={order.currency}
+          defaultAmount={selectedAmount}
+          maxAmount={order.remainingAmount}
+          proofMode="CRYPTO_PROVIDER"
         />
       ) : null}
       <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">

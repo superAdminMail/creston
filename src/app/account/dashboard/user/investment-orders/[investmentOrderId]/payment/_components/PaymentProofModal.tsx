@@ -10,6 +10,7 @@ type Props = {
   currency: string;
   defaultAmount: number;
   maxAmount: number;
+  proofMode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
 };
 
 export default function PaymentProofModal({
@@ -20,23 +21,31 @@ export default function PaymentProofModal({
   currency,
   defaultAmount,
   maxAmount,
+  proofMode = "BANK_TRANSFER",
 }: Props) {
+  const isCryptoMode = proofMode === "CRYPTO_PROVIDER";
+
   return (
     <SharedPaymentProofModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Submit payment proof"
-      description="Attach proof for review"
+      title={isCryptoMode ? "Confirm crypto payment" : "Submit payment proof"}
+      description={
+        isCryptoMode
+          ? "Enter the amount you sent and attach a receipt image."
+          : "Attach proof for review"
+      }
       defaultAmount={defaultAmount}
-      amountLabel={`Claimed amount (${currency})`}
+      amountLabel={`Claim amount (${currency})`}
       amountMin={1}
       amountMax={maxAmount}
       submitLabel="Submit proof"
+      mode={proofMode}
       submit={async (input) => {
         if (!platformPaymentMethodId) {
           return {
             ok: false,
-            message: "No bank payment method is currently available.",
+            message: "No payment method is currently available.",
           };
         }
 
@@ -47,6 +56,7 @@ export default function PaymentProofModal({
         return submitInvestmentBankPaymentProof({
           orderId,
           platformPaymentMethodId,
+          proofMode: isCryptoMode ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
           claimedAmount: input.claimedAmount,
           depositorName: input.depositorName,
           depositorAccountName: input.depositorAccountName,

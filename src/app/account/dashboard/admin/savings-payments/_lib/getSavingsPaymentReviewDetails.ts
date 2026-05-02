@@ -103,14 +103,23 @@ export async function getSavingsPaymentReviewDetails(
     notFound();
   }
 
+  const claimedAmount = toNumber(payment.claimedAmount);
+  const targetAmount = toNumber(payment.savingsFundingIntent.targetAmount);
+  const creditedAmount = toNumber(payment.savingsFundingIntent.creditedAmount);
+  const remainingFundingAmount = Math.max(targetAmount - creditedAmount, 0);
+  const canOfferPartialApproval =
+    payment.status === "PENDING_REVIEW" &&
+    claimedAmount < remainingFundingAmount;
+
   return {
     id: payment.id,
     type: payment.type,
     status: payment.status,
-    claimedAmount: toNumber(payment.claimedAmount),
+    claimedAmount,
     approvedAmount: payment.approvedAmount
       ? toNumber(payment.approvedAmount)
       : null,
+    canOfferPartialApproval,
     currency: payment.currency,
     depositorName: payment.depositorName ?? null,
     depositorAccountName: payment.depositorAccountName ?? null,
@@ -158,8 +167,9 @@ export async function getSavingsPaymentReviewDetails(
     fundingIntent: {
       id: payment.savingsFundingIntent.id,
       status: payment.savingsFundingIntent.status,
-      targetAmount: toNumber(payment.savingsFundingIntent.targetAmount),
-      creditedAmount: toNumber(payment.savingsFundingIntent.creditedAmount),
+      targetAmount,
+      creditedAmount,
+      remainingFundingAmount,
       paymentReference: payment.savingsFundingIntent.paymentReference ?? null,
       paidAt: payment.savingsFundingIntent.paidAt?.toISOString() ?? null,
       creditedAt: payment.savingsFundingIntent.creditedAt?.toISOString() ?? null,
