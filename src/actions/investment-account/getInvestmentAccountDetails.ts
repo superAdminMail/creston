@@ -154,6 +154,7 @@ export type InvestmentAccountDetailsViewModel = {
 
 function mapInvestmentAccountDetails(
   account: NonNullable<InvestmentAccountDetailsRecord>,
+  siteName: string,
 ): InvestmentAccountDetailsViewModel {
   const statusLabel = formatEnumLabel(account.status);
   const openedAt = formatDateLabel(account.openedAt, "Not opened yet");
@@ -229,9 +230,7 @@ function mapInvestmentAccountDetails(
       slug: account.investmentPlan.investment.slug,
       description:
         account.investmentPlan.investment.description?.trim() ||
-        `Curated investment product aligned to your ${
-          (await getSiteSeoConfig()).siteName?.trim() || "Company"
-        } account strategy.`,
+        `Curated investment product aligned to your ${siteName} account strategy.`,
       type: account.investmentPlan.investment.type,
       typeLabel: formatEnumLabel(account.investmentPlan.investment.type),
       status: account.investmentPlan.investment.status,
@@ -293,6 +292,7 @@ export async function getInvestmentAccountDetails(
   investmentAccountId: string,
 ): Promise<InvestmentAccountDetailsViewModel | null> {
   const user = await getCurrentSessionUser();
+  const site = await getSiteSeoConfig();
 
   if (!user?.id) {
     return null;
@@ -312,5 +312,5 @@ export async function getInvestmentAccountDetails(
     return null;
   }
 
-  return mapInvestmentAccountDetails(account);
+  return mapInvestmentAccountDetails(account, site.siteName?.trim() || "Company");
 }
