@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import {
   AddressAutofillCore,
   type AddressAutofillSuggestion,
@@ -48,6 +49,17 @@ import { CURRENT_USER_QUERY_KEY } from "@/stores/useCurrentUserQuery";
 
 const MAPBOX_PUBLIC_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? "";
 
+function createAddressSessionToken() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  const fallbackBytes = new Uint32Array(2);
+  globalThis.crypto?.getRandomValues?.(fallbackBytes);
+
+  return `${fallbackBytes[0].toString(36)}-${fallbackBytes[1].toString(36)}`;
+}
+
 type InvestmentProfileFormProps = {
   onCreateLater?: () => Promise<void>;
   initialValues?: Partial<OnboardingSchemaInput>;
@@ -58,6 +70,7 @@ type InvestmentProfileFormProps = {
   pendingLabel?: string;
   successMessage?: string;
   compactFields?: boolean;
+  redirectHref?: string;
 };
 
 export function InvestmentProfileForm({
@@ -68,9 +81,11 @@ export function InvestmentProfileForm({
   pendingLabel = "Saving...",
   successMessage = "Investment profile saved.",
   compactFields = false,
+  redirectHref,
 }: InvestmentProfileFormProps) {
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const initialCountry = initialValues?.country ?? "United States";
   const previousCountryRef = useRef(initialCountry);
   const addressAutofill = useMemo(
@@ -80,10 +95,7 @@ export function InvestmentProfileForm({
         : null,
     [],
   );
-  const addressSessionTokenRef = useRef(
-    globalThis.crypto?.randomUUID?.() ??
-      `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
+  const addressSessionTokenRef = useRef(createAddressSessionToken());
   const selectedAddressLineRef = useRef("");
   const hasPrefilledAddressDetails = Boolean(
     initialValues?.addressLine1?.trim() ||
@@ -225,8 +237,10 @@ export function InvestmentProfileForm({
     const query = watchedAddressLine1?.trim() ?? "";
 
     if (query.length < 3) {
-      setAddressSuggestions([]);
-      setIsSearchingAddress(false);
+      queueMicrotask(() => {
+        setAddressSuggestions([]);
+        setIsSearchingAddress(false);
+      });
       return;
     }
 
@@ -288,6 +302,11 @@ export function InvestmentProfileForm({
       }
 
       toast.success(successMessage);
+
+      if (redirectHref) {
+        router.push(redirectHref);
+        router.refresh();
+      }
     });
   };
 

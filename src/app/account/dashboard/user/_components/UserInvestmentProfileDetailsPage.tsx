@@ -239,7 +239,7 @@ export function UserInvestmentProfileDetailsPage({
               icon={MapPin}
             />
             <DetailCard
-              label="Address line 1"
+              label="Address"
               value={profile.details.addressLine1}
               icon={MapPin}
             />

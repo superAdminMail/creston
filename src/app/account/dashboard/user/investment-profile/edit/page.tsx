@@ -53,11 +53,12 @@ export default async function Page() {
             onSubmitAction={updateCurrentUserInvestorProfileAction}
             submitLabel="Save profile updates"
             pendingLabel="Saving profile..."
-            successMessage="Profile updated successfully."
-            compactFields
-          />
-        </div>
-      </section>
+          successMessage="Profile updated successfully."
+          compactFields
+          redirectHref="/account/dashboard/profile"
+        />
+      </div>
+    </section>
     </div>
   );
 }
