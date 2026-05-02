@@ -11,21 +11,21 @@ import {
   FieldDescription,
 } from "@/components/ui/field";
 
-type Props<T extends FieldValues> = {
+type Props<T extends FieldValues, TName extends Path<T>> = {
   control: Control<T>;
-  name: Path<T>;
+  name: TName;
   label?: string;
   description?: string;
-  children: (field: ControllerRenderProps<T, Path<T>>) => React.ReactNode;
+  children: (field: ControllerRenderProps<T, TName>) => React.ReactNode;
 };
 
-export function FormFieldWrapper<T extends FieldValues>({
+export function FormFieldWrapper<T extends FieldValues, TName extends Path<T>>({
   control,
   name,
   label,
   description,
   children,
-}: Props<T>) {
+}: Props<T, TName>) {
   return (
     <Controller
       control={control}

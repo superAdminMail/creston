@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -43,6 +43,10 @@ export default function ProfileForm({ userData }: Props) {
 
   const { control, handleSubmit, setValue, getValues, clearErrors, setError } =
     form;
+  const profileAvatar = useWatch({
+    control,
+    name: "profileAvatar",
+  });
 
   const onSubmit = (values: updateUserSchemaType) => {
     startTransition(async () => {
@@ -134,7 +138,7 @@ export default function ProfileForm({ userData }: Props) {
   };
 
   const avatar =
-    form.watch("profileAvatar")?.url ?? userData.profileAvatar?.url ?? userData.image ?? null;
+    profileAvatar?.url ?? userData.profileAvatar?.url ?? userData.image ?? null;
 
   const initials = getUserInitials({
     name: userData.name ?? null,
@@ -242,9 +246,7 @@ export default function ProfileForm({ userData }: Props) {
                   <Button
                     type="button"
                     variant="ghost"
-                    disabled={deletingKeys.has(
-                      form.watch("profileAvatar")?.key ?? "",
-                    )}
+                    disabled={deletingKeys.has(profileAvatar?.key ?? "")}
                     onClick={deleteProfileImage}
                     className="text-sm text-red-600"
                   >
