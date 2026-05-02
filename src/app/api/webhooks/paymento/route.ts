@@ -3,6 +3,7 @@ import {
   CryptoFundingProvider,
   CryptoWebhookSource,
   Prisma,
+  SavingsFundingIntentStatus,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { applySuccessfulCryptoFunding } from "@/lib/payments/crypto/settlement/applySuccessfulCryptoFunding";
@@ -23,6 +24,11 @@ import {
 import {
   ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES,
 } from "@/lib/payments/crypto/calculateInvestmentOrderCryptoChargeAmount";
+
+const ACTIVE_SAVINGS_FUNDING_INTENT_STATUSES: SavingsFundingIntentStatus[] = [
+  SavingsFundingIntentStatus.PENDING,
+  SavingsFundingIntentStatus.SUBMITTED,
+];
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -195,7 +201,7 @@ async function resolvePaymentoTarget(
         provider: CryptoFundingProvider.PAYMENTO,
         savingsAccountId: orderId,
         status: {
-          in: ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES,
+          in: ACTIVE_SAVINGS_FUNDING_INTENT_STATUSES,
         },
       },
       include: {

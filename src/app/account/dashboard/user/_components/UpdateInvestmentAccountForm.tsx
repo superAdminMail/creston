@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -81,7 +81,10 @@ export function UpdateInvestmentAccountForm({
       status: currentStatus,
     },
   });
-  const selectedStatus = form.watch("status");
+  const selectedStatus = useWatch({
+    control: form.control,
+    name: "status",
+  });
 
   useEffect(() => {
     if (state.status === "success") {
