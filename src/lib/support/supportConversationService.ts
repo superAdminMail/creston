@@ -536,24 +536,23 @@ export async function getSupportInboxConversations(input: {
     input.viewerRole,
   );
 
-  const decorated = await Promise.all(
-    conversations.map(async (conversation) => {
-      const viewerMember = conversation.members.find(
-        (member) => member.userId === input.viewerUserId,
-      );
-      const unreadMessages = unreadMessagesByConversationId.get(conversation.id) ?? [];
-      const unreadCount = unreadMessages.filter((createdAt) =>
-        viewerMember?.lastReadAt ? createdAt > viewerMember.lastReadAt : true,
-      ).length;
+  const decorated = conversations.map((conversation) => {
+    const viewerMember = conversation.members.find(
+      (member) => member.userId === input.viewerUserId,
+    );
+    const unreadMessages =
+      unreadMessagesByConversationId.get(conversation.id) ?? [];
+    const unreadCount = unreadMessages.filter((createdAt) =>
+      viewerMember?.lastReadAt ? createdAt > viewerMember.lastReadAt : true,
+    ).length;
 
-      return buildPreview(
-        conversation,
-        input.viewerUserId,
-        unreadCount,
-        senderDirectory,
-      );
-    }),
-  );
+    return buildPreview(
+      conversation,
+      input.viewerUserId,
+      unreadCount,
+      senderDirectory,
+    );
+  });
 
   const query = input.query?.trim().toLowerCase() ?? "";
   const filtered = decorated.filter((ticket) => {

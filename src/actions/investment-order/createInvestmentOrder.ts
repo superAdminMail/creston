@@ -13,6 +13,7 @@ import {
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 import {
   createInvestmentOrderSchema,

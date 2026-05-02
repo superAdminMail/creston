@@ -75,12 +75,29 @@ function toNumberOrUndefined(value: string | null) {
 }
 
 function buildDeleteResponse(results: CleanupResultItem[]) {
+  const summary = results.reduce(
+    (acc, item) => {
+      acc.deletedFromStorage += item.deletedFromStorage ? 1 : 0;
+      acc.deletedFromDatabase += item.deletedFromDatabase ? 1 : 0;
+      acc.skipped += item.status === "skipped" ? 1 : 0;
+      acc.failed += item.status === "failed" ? 1 : 0;
+
+      return acc;
+    },
+    {
+      deletedFromStorage: 0,
+      deletedFromDatabase: 0,
+      skipped: 0,
+      failed: 0,
+    },
+  );
+
   return {
     scanned: results.length,
-    deletedFromStorage: results.filter((item) => item.deletedFromStorage).length,
-    deletedFromDatabase: results.filter((item) => item.deletedFromDatabase).length,
-    skipped: results.filter((item) => item.status === "skipped").length,
-    failed: results.filter((item) => item.status === "failed").length,
+    deletedFromStorage: summary.deletedFromStorage,
+    deletedFromDatabase: summary.deletedFromDatabase,
+    skipped: summary.skipped,
+    failed: summary.failed,
     results,
   };
 }
