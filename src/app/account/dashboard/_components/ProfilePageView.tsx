@@ -152,7 +152,7 @@ export default function ProfilePageView({ user }: ProfilePageProps) {
                   Account Information
                 </h3>
                 <p className="mt-1 text-sm text-slate-400">
-                  Your personal account details from the User model.
+                  Manage your personal account details here.
                 </p>
 
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
