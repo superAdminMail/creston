@@ -4,7 +4,11 @@ import { formatCurrency } from "@/lib/formatters/formatters";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
 import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
-import { toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
+import {
+  decimalToNumber,
+  toDecimal,
+  ZERO_DECIMAL,
+} from "@/lib/services/investment/decimal";
 import {
   applyProfitSimulation,
   resolveSimulationMultiplier,
@@ -219,7 +223,7 @@ export async function settleMarketProfit(
 
   if (simulatedProfit.greaterThan(0)) {
     const formattedAmount = formatCurrency(
-      simulatedProfit.toNumber(),
+      decimalToNumber(simulatedProfit),
       order.currency,
     );
 
@@ -232,7 +236,7 @@ export async function settleMarketProfit(
       key: `market-profit:${order.id}:${calculation.settledAt.toISOString()}`,
       metadata: {
         investmentOrderId: order.id,
-        amount: simulatedProfit.toNumber(),
+        amount: decimalToNumber(simulatedProfit),
         currency: order.currency,
         settledAt: calculation.settledAt.toISOString(),
         model: "MARKET",

@@ -3,6 +3,7 @@
 import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -123,8 +124,8 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     investorName: order.investorProfile.user.name?.trim() || "Unnamed investor",
     investorEmail: order.investorProfile.user.email,
     investorKycStatus: formatEnumLabel(order.investorProfile.kycStatus),
-    amount: formatCurrency(order.amount.toNumber(), order.currency),
-    amountValue: order.amount.toNumber(),
+    amount: formatCurrency(decimalToNumber(order.amount), order.currency),
+    amountValue: decimalToNumber(order.amount),
     currency: order.currency,
     status: order.status,
     statusLabel: formatStatusLabel(order.status),
@@ -149,20 +150,20 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
       const roiPercent = resolveInvestmentTierRoiPercentValue({
         investmentModel: order.investmentModel,
         fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
-          ? order.investmentPlanTier.fixedRoiPercent.toNumber()
+          ? decimalToNumber(order.investmentPlanTier.fixedRoiPercent)
           : null,
         projectedRoiMin: order.investmentPlanTier.projectedRoiMin
-          ? order.investmentPlanTier.projectedRoiMin.toNumber()
+          ? decimalToNumber(order.investmentPlanTier.projectedRoiMin)
           : null,
         projectedRoiMax: order.investmentPlanTier.projectedRoiMax
-          ? order.investmentPlanTier.projectedRoiMax.toNumber()
+          ? decimalToNumber(order.investmentPlanTier.projectedRoiMax)
           : null,
       });
 
       return roiPercent !== null ? `${roiPercent.toFixed(2)}%` : "Not configured";
     })(),
-    expectedReturn: formatCurrency(order.expectedReturn?.toNumber() ?? 0, order.currency),
-    accruedProfit: formatCurrency(order.accruedProfit.toNumber(), order.currency),
+    expectedReturn: formatCurrency(decimalToNumber(order.expectedReturn), order.currency),
+    accruedProfit: formatCurrency(decimalToNumber(order.accruedProfit), order.currency),
     startDate: formatDateLabel(order.startDate, "Not started"),
     maturityDate: formatDateLabel(order.maturityDate, "Not set"),
     adminNotes: order.adminNotes ?? "",

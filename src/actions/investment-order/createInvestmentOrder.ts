@@ -13,7 +13,7 @@ import {
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { createRealtimeNotification } from "@/lib/notifications/createNotification";
+import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 import {
   createInvestmentOrderSchema,
   parseInvestmentOrderAmount,
@@ -23,6 +23,7 @@ import type {
   OrderFieldName,
 } from "./createInvestmentOrder.state";
 import { getPrice } from "@/lib/services/price/priceService";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 function getFormValue(formData: FormData, key: OrderFieldName) {
   const value = formData.get(key);
@@ -42,11 +43,6 @@ function createErrorState(
     message,
     fieldErrors,
   };
-}
-
-function toNumber(value: { toNumber(): number } | number) {
-  if (typeof value === "number") return value;
-  return value.toNumber();
 }
 
 async function assertUserCanCreateInvestmentOrder(input: {
@@ -105,38 +101,32 @@ async function notifyAdminsAboutInvestmentOrderCreated(input: {
     input.planName || input.investmentName || "an investment order"
   } for ${formatCurrency(input.amount, input.currency)}.`;
 
-  const results = await Promise.allSettled(
-    admins.map((admin) =>
-      createRealtimeNotification({
-        userId: admin.id,
-        event: "INVESTMENT_ORDER",
-        title,
-        message,
-        link,
-        key: `investment-order-created:${input.orderId}:${admin.id}`,
-        metadata: {
-          kind: "investment_order_created",
-          orderId: input.orderId,
-          investorId: input.investorId,
-          investorName: input.investorName,
-          investmentName: input.investmentName,
-          planName: input.planName,
-          amount: input.amount,
-          currency: input.currency,
-          adminRole: admin.role,
-        },
-      }),
-    ),
-  );
-
-  const failed = results.filter((result) => result.status === "rejected");
-
-  if (failed.length > 0) {
-    console.error("Failed to notify some admins about investment order", {
+  await notifyManyRealtimeNotifications({
+    recipients: admins,
+    buildNotification: (admin) => ({
+      userId: admin.id,
+      event: "INVESTMENT_ORDER",
+      title,
+      message,
+      link,
+      key: `investment-order-created:${input.orderId}:${admin.id}`,
+      metadata: {
+        kind: "investment_order_created",
+        orderId: input.orderId,
+        investorId: input.investorId,
+        investorName: input.investorName,
+        investmentName: input.investmentName,
+        planName: input.planName,
+        amount: input.amount,
+        currency: input.currency,
+        adminRole: admin.role,
+      },
+    }),
+    failureMessage: "Failed to notify some admins about investment order",
+    failureContext: {
       orderId: input.orderId,
-      failedCount: failed.length,
-    });
-  }
+    },
+  });
 }
 
 async function notifyInvestorAboutInvestmentOrderCreated(input: {
@@ -322,8 +312,8 @@ export async function createInvestmentOrder(
     return orderLimitError;
   }
 
-  const minAmount = toNumber(selectedTier.minAmount);
-  const maxAmount = toNumber(selectedTier.maxAmount);
+  const minAmount = decimalToNumber(selectedTier.minAmount);
+  const maxAmount = decimalToNumber(selectedTier.maxAmount);
 
   if (amount < minAmount || amount > maxAmount) {
     return createErrorState(

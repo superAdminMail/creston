@@ -8,6 +8,7 @@ import {
 } from "@/lib/referrals/referralRewardService";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import {
   calculateFixedExpectedReturn,
   resolveFixedOrderSchedule,
@@ -71,7 +72,7 @@ export async function confirmInvestmentOrder(
   }
 
   const now = new Date();
-  const amount = order.amount.toNumber();
+  const amount = decimalToNumber(order.amount);
   const roiPercent = order.investmentPlanTier.fixedRoiPercent;
   const expectedReturn =
     order.investmentModel === "FIXED"

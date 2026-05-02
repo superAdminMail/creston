@@ -1,11 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { AdminDepositItem } from "@/lib/types/payments/adminDeposits.types";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
 
 function getPaymentMethodLabel(paymentMethod: {
   label: string | null;
@@ -181,7 +177,7 @@ export async function getAdminDeposits(): Promise<AdminDepositItem[]> {
     id: `savings-${payment.id}`,
     source: "SAVINGS",
     status: payment.status,
-    amount: toNumber(payment.approvedAmount ?? payment.claimedAmount),
+    amount: decimalToNumber(payment.approvedAmount ?? payment.claimedAmount),
     currency: payment.currency,
     submittedAt: payment.submittedAt.toISOString(),
     reviewedAt: payment.reviewedAt?.toISOString() ?? null,
@@ -212,7 +208,7 @@ export async function getAdminDeposits(): Promise<AdminDepositItem[]> {
     id: `investment-${payment.id}`,
     source: "INVESTMENT",
     status: payment.status,
-    amount: toNumber(payment.approvedAmount ?? payment.claimedAmount),
+    amount: decimalToNumber(payment.approvedAmount ?? payment.claimedAmount),
     currency: payment.currency,
     submittedAt: payment.submittedAt.toISOString(),
     reviewedAt: payment.reviewedAt?.toISOString() ?? null,

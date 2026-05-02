@@ -19,10 +19,7 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const investmentAccountDetailsSelect =
   Prisma.validator<Prisma.InvestmentAccountSelect>()({
@@ -168,12 +165,6 @@ export type SuperAdminInvestmentAccountDetailsViewModel = {
   }>;
 };
 
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
-
 function mapInvestmentAccountDetails(
   account: NonNullable<InvestmentAccountDetailsRecord>,
 ): SuperAdminInvestmentAccountDetailsViewModel {
@@ -185,31 +176,31 @@ function mapInvestmentAccountDetails(
   const tiers = account.investmentPlan.tiers.map((tier) => ({
     id: tier.id,
     levelLabel: formatEnumLabel(tier.level),
-    minAmount: toNumber(tier.minAmount),
-    maxAmount: toNumber(tier.maxAmount),
+    minAmount: decimalToNumber(tier.minAmount),
+    maxAmount: decimalToNumber(tier.maxAmount),
     roiPercent:
       resolveInvestmentTierRoiPercentValue({
         investmentModel: account.investmentPlan.investmentModel,
         fixedRoiPercent: tier.fixedRoiPercent
-          ? toNumber(tier.fixedRoiPercent)
+          ? decimalToNumber(tier.fixedRoiPercent)
           : null,
         projectedRoiMin: tier.projectedRoiMin
-          ? toNumber(tier.projectedRoiMin)
+          ? decimalToNumber(tier.projectedRoiMin)
           : null,
         projectedRoiMax: tier.projectedRoiMax
-          ? toNumber(tier.projectedRoiMax)
+          ? decimalToNumber(tier.projectedRoiMax)
           : null,
       }) ?? 0,
     returnLabel: formatInvestmentTierReturnLabel({
       investmentModel: account.investmentPlan.investmentModel,
       fixedRoiPercent: tier.fixedRoiPercent
-        ? toNumber(tier.fixedRoiPercent)
+        ? decimalToNumber(tier.fixedRoiPercent)
         : null,
       projectedRoiMin: tier.projectedRoiMin
-        ? toNumber(tier.projectedRoiMin)
+        ? decimalToNumber(tier.projectedRoiMin)
         : null,
       projectedRoiMax: tier.projectedRoiMax
-        ? toNumber(tier.projectedRoiMax)
+        ? decimalToNumber(tier.projectedRoiMax)
         : null,
     }),
     isActive: tier.isActive,
@@ -236,7 +227,7 @@ function mapInvestmentAccountDetails(
     createdAt,
     updatedAt,
     currency: account.currency,
-    balance: toNumber(account.balance),
+    balance: decimalToNumber(account.balance),
     owner: {
       name: account.investorProfile.user.name?.trim() || "Unnamed investor",
       email: account.investorProfile.user.email,

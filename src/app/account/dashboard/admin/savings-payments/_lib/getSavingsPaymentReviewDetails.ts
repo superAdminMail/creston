@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import type { SavingsPaymentReviewDetails } from "@/lib/types/payments/savingsPaymentReview.types";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
+import {
+  decimalToNumber,
+  mapReviewReceipt,
+  reviewReceiptSelect,
+  reviewUserSelect,
+} from "@/lib/payments/review/paymentReviewMappers";
 
 export async function getSavingsPaymentReviewDetails(
   paymentId: string,
@@ -34,25 +35,13 @@ export async function getSavingsPaymentReviewDetails(
       submittedAt: true,
       reviewedAt: true,
       submittedByUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        ...reviewUserSelect,
       },
       reviewedByUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        ...reviewUserSelect,
       },
       receiptFile: {
-        select: {
-          id: true,
-          fileName: true,
-          url: true,
-        },
+        ...reviewReceiptSelect,
       },
       platformPaymentMethod: {
         select: {
@@ -103,9 +92,9 @@ export async function getSavingsPaymentReviewDetails(
     notFound();
   }
 
-  const claimedAmount = toNumber(payment.claimedAmount);
-  const targetAmount = toNumber(payment.savingsFundingIntent.targetAmount);
-  const creditedAmount = toNumber(payment.savingsFundingIntent.creditedAmount);
+  const claimedAmount = decimalToNumber(payment.claimedAmount);
+  const targetAmount = decimalToNumber(payment.savingsFundingIntent.targetAmount);
+  const creditedAmount = decimalToNumber(payment.savingsFundingIntent.creditedAmount);
   const remainingFundingAmount = Math.max(targetAmount - creditedAmount, 0);
   const canOfferPartialApproval =
     payment.status === "PENDING_REVIEW" &&
@@ -117,7 +106,7 @@ export async function getSavingsPaymentReviewDetails(
     status: payment.status,
     claimedAmount,
     approvedAmount: payment.approvedAmount
-      ? toNumber(payment.approvedAmount)
+      ? decimalToNumber(payment.approvedAmount)
       : null,
     canOfferPartialApproval,
     currency: payment.currency,
@@ -143,13 +132,7 @@ export async function getSavingsPaymentReviewDetails(
           email: payment.reviewedByUser.email ?? null,
         }
       : null,
-    receipt: payment.receiptFile
-      ? {
-          id: payment.receiptFile.id,
-          fileName: payment.receiptFile.fileName,
-          url: payment.receiptFile.url ?? null,
-        }
-      : null,
+    receipt: mapReviewReceipt(payment.receiptFile),
     bankMethod: payment.platformPaymentMethod
       ? {
           id: payment.platformPaymentMethod.id,
@@ -177,9 +160,9 @@ export async function getSavingsPaymentReviewDetails(
         id: payment.savingsFundingIntent.savingsAccount.id,
         name: payment.savingsFundingIntent.savingsAccount.name,
         status: payment.savingsFundingIntent.savingsAccount.status,
-        balance: toNumber(payment.savingsFundingIntent.savingsAccount.balance),
+        balance: decimalToNumber(payment.savingsFundingIntent.savingsAccount.balance),
         targetAmount: payment.savingsFundingIntent.savingsAccount.targetAmount
-          ? toNumber(payment.savingsFundingIntent.savingsAccount.targetAmount)
+          ? decimalToNumber(payment.savingsFundingIntent.savingsAccount.targetAmount)
           : null,
         currency: payment.savingsFundingIntent.savingsAccount.currency,
         product: {
@@ -187,7 +170,7 @@ export async function getSavingsPaymentReviewDetails(
           name: payment.savingsFundingIntent.savingsAccount.savingsProduct.name,
           maxBalance:
             payment.savingsFundingIntent.savingsAccount.savingsProduct.maxBalance
-              ? toNumber(
+              ? decimalToNumber(
                   payment.savingsFundingIntent.savingsAccount.savingsProduct
                     .maxBalance,
                 )

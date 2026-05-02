@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   isDiditActiveStatus,
   isDiditRetryableStatus,
+  isDiditRemoteReconcilableStatus,
   isDiditResumableStatus,
   isDiditSessionStale,
   retrieveDiditSession,
@@ -177,10 +178,6 @@ export async function markKycVerificationSessionStatus(params: {
   };
 }
 
-function canRemoteReconcileDiditStatus(status: string | null | undefined) {
-  return isDiditResumableStatus(status) || status === "In Review";
-}
-
 export async function syncLatestKycSessionIfNeeded(
   investorProfileId: string,
   options: { forceRemote?: boolean } = {},
@@ -203,7 +200,7 @@ export async function syncLatestKycSessionIfNeeded(
     (profile.kycStatus !== finalState.appStatus ||
       profile.isVerified !== finalState.isVerified);
   const shouldAttemptRemoteSync =
-    canRemoteReconcileDiditStatus(session.status) &&
+    isDiditRemoteReconcilableStatus(session.status) &&
     (options.forceRemote || isDiditSessionStale(sessionAgeAnchor));
 
   if (shouldAttemptRemoteSync) {
@@ -236,7 +233,7 @@ export async function syncLatestKycSessionIfNeeded(
   if (
     profileNeedsSync &&
     finalState.appStatus !== "NOT_STARTED" &&
-    !canRemoteReconcileDiditStatus(session.status)
+    !isDiditRemoteReconcilableStatus(session.status)
   ) {
     try {
       const refreshed = await markKycVerificationSessionStatus({

@@ -1,6 +1,7 @@
 "use client";
 
 import { Controller, Control, FieldValues, Path } from "react-hook-form";
+import type { ControllerRenderProps } from "react-hook-form";
 
 import {
   Field,
@@ -15,7 +16,7 @@ type Props<T extends FieldValues> = {
   name: Path<T>;
   label?: string;
   description?: string;
-  children: (field: any) => React.ReactNode;
+  children: (field: ControllerRenderProps<T, Path<T>>) => React.ReactNode;
 };
 
 export function FormFieldWrapper<T extends FieldValues>({

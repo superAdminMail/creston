@@ -19,10 +19,7 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const investmentAccountDetailsSelect =
   Prisma.validator<Prisma.InvestmentAccountSelect>()({
@@ -154,12 +151,6 @@ export type InvestmentAccountDetailsViewModel = {
   }>;
 };
 
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
-
 function mapInvestmentAccountDetails(
   account: NonNullable<InvestmentAccountDetailsRecord>,
 ): InvestmentAccountDetailsViewModel {
@@ -171,20 +162,20 @@ function mapInvestmentAccountDetails(
   const tiers = account.investmentPlan.tiers.map((tier) => ({
     id: tier.id,
     levelLabel: formatEnumLabel(tier.level),
-    minAmount: toNumber(tier.minAmount),
-    maxAmount: toNumber(tier.maxAmount),
+    minAmount: decimalToNumber(tier.minAmount),
+    maxAmount: decimalToNumber(tier.maxAmount),
     roiPercent:
       resolveInvestmentTierRoiPercentValue({
         investmentModel: account.investmentPlan.investmentModel,
-        fixedRoiPercent: tier.fixedRoiPercent ? toNumber(tier.fixedRoiPercent) : null,
-        projectedRoiMin: tier.projectedRoiMin ? toNumber(tier.projectedRoiMin) : null,
-        projectedRoiMax: tier.projectedRoiMax ? toNumber(tier.projectedRoiMax) : null,
+        fixedRoiPercent: tier.fixedRoiPercent ? decimalToNumber(tier.fixedRoiPercent) : null,
+        projectedRoiMin: tier.projectedRoiMin ? decimalToNumber(tier.projectedRoiMin) : null,
+        projectedRoiMax: tier.projectedRoiMax ? decimalToNumber(tier.projectedRoiMax) : null,
         }) ?? 0,
     returnLabel: formatInvestmentTierReturnLabel({
       investmentModel: account.investmentPlan.investmentModel,
-      fixedRoiPercent: tier.fixedRoiPercent ? toNumber(tier.fixedRoiPercent) : null,
-      projectedRoiMin: tier.projectedRoiMin ? toNumber(tier.projectedRoiMin) : null,
-      projectedRoiMax: tier.projectedRoiMax ? toNumber(tier.projectedRoiMax) : null,
+      fixedRoiPercent: tier.fixedRoiPercent ? decimalToNumber(tier.fixedRoiPercent) : null,
+      projectedRoiMin: tier.projectedRoiMin ? decimalToNumber(tier.projectedRoiMin) : null,
+      projectedRoiMax: tier.projectedRoiMax ? decimalToNumber(tier.projectedRoiMax) : null,
     }),
     isActive: tier.isActive,
   }));
@@ -210,7 +201,7 @@ function mapInvestmentAccountDetails(
     createdAt,
     updatedAt,
     currency: account.currency,
-    balance: toNumber(account.balance),
+    balance: decimalToNumber(account.balance),
     plan: {
       id: account.investmentPlan.id,
       name: account.investmentPlan.name,

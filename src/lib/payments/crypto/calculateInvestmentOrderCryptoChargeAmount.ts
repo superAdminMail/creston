@@ -1,5 +1,13 @@
 import { Prisma, CryptoFundingIntentStatus } from "@/generated/prisma";
 
+export const ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES: CryptoFundingIntentStatus[] =
+  [
+    CryptoFundingIntentStatus.PENDING,
+    CryptoFundingIntentStatus.REQUIRES_ACTION,
+    CryptoFundingIntentStatus.PROCESSING,
+    CryptoFundingIntentStatus.AWAITING_PROVIDER_CONFIRMATION,
+  ];
+
 type CalculateInvestmentOrderCryptoChargeAmountInput = {
   totalAmount: Prisma.Decimal | string | number;
   amountPaid: Prisma.Decimal | string | number;
@@ -51,12 +59,5 @@ export function calculateInvestmentOrderCryptoChargeAmount({
 export function isActiveCryptoFundingIntentStatus(
   status: CryptoFundingIntentStatus,
 ): boolean {
-  const activeStatuses: CryptoFundingIntentStatus[] = [
-    CryptoFundingIntentStatus.PENDING,
-    CryptoFundingIntentStatus.REQUIRES_ACTION,
-    CryptoFundingIntentStatus.PROCESSING,
-    CryptoFundingIntentStatus.AWAITING_PROVIDER_CONFIRMATION,
-  ];
-
-  return activeStatuses.includes(status);
+  return ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES.includes(status);
 }

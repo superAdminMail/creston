@@ -66,56 +66,68 @@ export async function getUserConversations(userId: string) {
     },
   });
 
-  const results = await Promise.all(
-    conversations.map(async (conversation) => {
-      const currentMember = conversation.members.find(
-        (m) => m.userId === userId,
-      );
+  const unreadMessages = await prisma.message.findMany({
+    where: {
+      conversationId: {
+        in: conversations.map((conversation) => conversation.id),
+      },
+      senderType: {
+        in: ["SUPPORT", "SYSTEM"],
+      },
+    },
+    select: {
+      conversationId: true,
+      createdAt: true,
+    },
+  });
 
-      const lastReadAt = currentMember?.lastReadAt ?? new Date(0);
+  const unreadCountsByConversationId = new Map<string, number>();
 
-      const unreadCount = await prisma.message.count({
-        where: {
-          conversationId: conversation.id,
-          createdAt: {
-            gt: lastReadAt,
-          },
-          senderType: {
-            in: ["SUPPORT", "SYSTEM"],
-          },
-        },
-      });
+  for (const conversation of conversations) {
+    const currentMember = conversation.members.find(
+      (member) => member.userId === userId,
+    );
 
-      const otherMember = conversation.members.find((m) => m.userId !== userId);
+    const lastReadAt = currentMember?.lastReadAt ?? new Date(0);
 
-      return {
-        id: conversation.id,
-        type: conversation.type,
-        subject: conversation.subject ?? "Conversation",
+    unreadCountsByConversationId.set(
+      conversation.id,
+      unreadMessages.filter(
+        (message) =>
+          message.conversationId === conversation.id &&
+          message.createdAt > lastReadAt,
+      ).length,
+    );
+  }
 
-        agentId: conversation.agent?.id ?? null,
-        agentName: conversation.agent?.name ?? "Support Agent",
+  return conversations.map((conversation) => {
+    const otherMember = conversation.members.find((member) => member.userId !== userId);
 
-        participantName:
-          otherMember?.user.name ?? otherMember?.user.email ?? null,
+    return {
+      id: conversation.id,
+      type: conversation.type,
+      subject: conversation.subject ?? "Conversation",
 
-        participantRole: otherMember?.user.role ?? null,
+      agentId: conversation.agent?.id ?? null,
+      agentName: conversation.agent?.name ?? "Support Agent",
 
-        canDelete:
-          conversation.type === "SUPPORT" || conversation._count.members <= 1,
+      participantName:
+        otherMember?.user.name ?? otherMember?.user.email ?? null,
 
-        unreadCount,
+      participantRole: otherMember?.user.role ?? null,
 
-        lastMessage: conversation.messages[0]
-          ? {
-              content: conversation.messages[0].content,
-              senderType: conversation.messages[0].senderType,
-              createdAt: conversation.messages[0].createdAt.toISOString(),
-            }
-          : undefined,
-      };
-    }),
-  );
+      canDelete:
+        conversation.type === "SUPPORT" || conversation._count.members <= 1,
 
-  return results;
+      unreadCount: unreadCountsByConversationId.get(conversation.id) ?? 0,
+
+      lastMessage: conversation.messages[0]
+        ? {
+            content: conversation.messages[0].content,
+            senderType: conversation.messages[0].senderType,
+            createdAt: conversation.messages[0].createdAt.toISOString(),
+          }
+        : undefined,
+    };
+  });
 }

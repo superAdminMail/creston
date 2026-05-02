@@ -3,6 +3,7 @@ import type { UserRole } from "@/generated/prisma";
 import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 type DirectoryVerificationStatus = "VERIFIED" | "PENDING" | "REJECTED";
 type DirectoryAccountStatus = "ACTIVE" | "SUSPENDED" | "REVIEW";
@@ -163,7 +164,7 @@ export async function getDashboardUserDirectoryByHref(
   const directoryUsers = users.map((user) => {
     const walletBalance =
       user.investorProfile?.savingsAccounts.reduce(
-        (sum, account) => sum + account.balance.toNumber(),
+        (sum, account) => sum + decimalToNumber(account.balance),
         0,
       ) ?? 0;
 
@@ -173,7 +174,7 @@ export async function getDashboardUserDirectoryByHref(
           sum +
           account.transactions.reduce(
             (transactionSum, transaction) =>
-              transactionSum + transaction.amount.toNumber(),
+              transactionSum + decimalToNumber(transaction.amount),
             0,
           ),
         0,
@@ -182,7 +183,7 @@ export async function getDashboardUserDirectoryByHref(
     const totalInvested =
       user.investorProfile?.investmentOrders.reduce((sum, order) => {
         return ACTIVE_INVESTMENT_ORDER_STATUSES.has(order.status)
-          ? sum + order.amount.toNumber()
+          ? sum + decimalToNumber(order.amount)
           : sum;
       }, 0) ?? 0;
 

@@ -12,6 +12,7 @@ import {
 } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
+import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 import formatTicketId from "@/lib/support/formatTicketId";
 import {
   createSupportParticipant,
@@ -301,29 +302,47 @@ async function loadSenderDirectory(
   );
 }
 
-async function countUnreadMessages(
-  conversationId: string,
+async function loadUnreadMessagesForConversations(
+  conversationIds: string[],
   viewerRole: UserRole,
-  lastReadAt: Date | null | undefined,
   db: SupportDbClient = prisma,
 ) {
+  const uniqueIds = [...new Set(conversationIds.filter(Boolean))];
+
+  if (!uniqueIds.length) {
+    return new Map<string, Date[]>();
+  }
+
   const incomingSenderTypes = getAllowedIncomingSenderTypes(viewerRole);
 
-  return db.message.count({
+  const messages = await db.message.findMany({
     where: {
-      conversationId,
+      conversationId: {
+        in: uniqueIds,
+      },
       senderType: {
         in: [...incomingSenderTypes],
       },
-      ...(lastReadAt
-        ? {
-            createdAt: {
-              gt: lastReadAt,
-            },
-          }
-        : {}),
+    },
+    select: {
+      conversationId: true,
+      createdAt: true,
     },
   });
+
+  const byConversationId = new Map<string, Date[]>();
+
+  for (const message of messages) {
+    const existing = byConversationId.get(message.conversationId);
+
+    if (existing) {
+      existing.push(message.createdAt);
+    } else {
+      byConversationId.set(message.conversationId, [message.createdAt]);
+    }
+  }
+
+  return byConversationId;
 }
 
 function canViewConversation(
@@ -512,17 +531,20 @@ export async function getSupportInboxConversations(input: {
       .map((conversation) => conversation.messages[0]?.senderId)
       .filter((senderId): senderId is string => Boolean(senderId)),
   );
+  const unreadMessagesByConversationId = await loadUnreadMessagesForConversations(
+    conversations.map((conversation) => conversation.id),
+    input.viewerRole,
+  );
 
   const decorated = await Promise.all(
     conversations.map(async (conversation) => {
       const viewerMember = conversation.members.find(
         (member) => member.userId === input.viewerUserId,
       );
-      const unreadCount = await countUnreadMessages(
-        conversation.id,
-        input.viewerRole,
-        viewerMember?.lastReadAt,
-      );
+      const unreadMessages = unreadMessagesByConversationId.get(conversation.id) ?? [];
+      const unreadCount = unreadMessages.filter((createdAt) =>
+        viewerMember?.lastReadAt ? createdAt > viewerMember.lastReadAt : true,
+      ).length;
 
       return buildPreview(
         conversation,
@@ -604,12 +626,15 @@ export async function getSupportConversationThread(input: {
   const viewerMember = conversation.members.find(
     (member) => member.userId === input.viewerUserId,
   );
-  const unreadCount = await countUnreadMessages(
-    conversation.id,
+  const unreadMessagesByConversationId = await loadUnreadMessagesForConversations(
+    [conversation.id],
     input.viewerRole,
-    viewerMember?.lastReadAt ?? null,
     db,
   );
+  const unreadMessages = unreadMessagesByConversationId.get(conversation.id) ?? [];
+  const unreadCount = unreadMessages.filter((createdAt) =>
+    viewerMember?.lastReadAt ? createdAt > viewerMember.lastReadAt : true,
+  ).length;
   const senderDirectory = await loadSenderDirectory(
     conversation.messages
       .map((message) => message.senderId)
@@ -1215,33 +1240,37 @@ async function notifySupportStaffOfTicket(conversation: {
     },
   });
 
-  await Promise.all(
-    staff.map((user) =>
-      {
-        const supportPath =
-          user.role === UserRole.SUPER_ADMIN
-            ? "/account/dashboard/super-admin/support"
-            : "/account/dashboard/admin/support";
+  await notifyManyRealtimeNotifications({
+    recipients: staff,
+    buildNotification: (user) => {
+      const supportPath =
+        user.role === UserRole.SUPER_ADMIN
+          ? "/account/dashboard/super-admin/support"
+          : "/account/dashboard/admin/support";
 
-        return createRealtimeNotification({
-          userId: user.id,
-          event: "SYSTEM",
-          title: "New support ticket",
-          message: `${conversation.openedBy.name}: ${conversation.subject}`,
-          link: `${supportPath}?conversation=${conversation.id}`,
-          key: `support-ticket:${conversation.id}:${user.id}`,
-          metadata: {
-            kind: "support_ticket",
-            conversationId: conversation.id,
-            ticketId: conversation.ticketId,
-            subject: conversation.subject,
-            openedBy: conversation.openedBy.name,
-            priority: conversation.priority,
-          },
-        });
-      },
-    ),
-  );
+      return {
+        userId: user.id,
+        event: "SYSTEM",
+        title: "New support ticket",
+        message: `${conversation.openedBy.name}: ${conversation.subject}`,
+        link: `${supportPath}?conversation=${conversation.id}`,
+        key: `support-ticket:${conversation.id}:${user.id}`,
+        metadata: {
+          kind: "support_ticket",
+          conversationId: conversation.id,
+          ticketId: conversation.ticketId,
+          subject: conversation.subject,
+          openedBy: conversation.openedBy.name,
+          priority: conversation.priority,
+        },
+      };
+    },
+    failureMessage: "Failed to notify some support staff about ticket",
+    failureContext: {
+      conversationId: conversation.id,
+      ticketId: conversation.ticketId,
+    },
+  });
 }
 
 async function notifySupportUserOfReply(input: {

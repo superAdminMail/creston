@@ -48,25 +48,24 @@ export async function persistConversationMessage(
 
   const unreadRecipientRole = input.senderType === SenderType.USER ? "SUPPORT" : "USER";
 
-  await Promise.all([
-    db.conversation.update({
-      where: { id: input.conversationId },
-      data: {
-        lastMessageAt: message.createdAt,
+  await db.conversation.update({
+    where: { id: input.conversationId },
+    data: {
+      lastMessageAt: message.createdAt,
+    },
+  });
+
+  await db.conversationMember.updateMany({
+    where: {
+      conversationId: input.conversationId,
+      role: unreadRecipientRole,
+    },
+    data: {
+      unreadCount: {
+        increment: 1,
       },
-    }),
-    db.conversationMember.updateMany({
-      where: {
-        conversationId: input.conversationId,
-        role: unreadRecipientRole,
-      },
-      data: {
-        unreadCount: {
-          increment: 1,
-        },
-      },
-    }),
-  ]);
+    },
+  });
 
   return message;
 }

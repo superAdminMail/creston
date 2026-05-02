@@ -4,11 +4,8 @@ import { type AccountStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { redirect } from "next/navigation";
-
-type Decimalish = {
-  toNumber(): number;
-};
 
 export type UserInvestmentAccountListItem = {
   id: string;
@@ -42,12 +39,6 @@ export type UserInvestmentAccountsPageData = {
     canOpenAnotherAccount: boolean;
   };
 };
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
 
 export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInvestmentAccountsPageData> {
   const user = await getCurrentSessionUser();
@@ -110,7 +101,7 @@ export async function getCurrentUserInvestmentAccountsAction(): Promise<UserInve
       id: account.id,
       status: account.status,
       statusLabel: formatEnumLabel(account.status),
-      balance: toNumber(account.balance),
+      balance: decimalToNumber(account.balance),
       currency: account.currency || "USD",
       planName: account.investmentPlan.name,
       planDescription:

@@ -6,6 +6,7 @@ import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import {
   SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
   SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
@@ -80,17 +81,13 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
   const adminRequestUrl = `/account/dashboard/admin/payment-methods?requestKind=SAVINGS_FUNDING_BANK_INFO&savingsAccountId=${encodeURIComponent(account.id)}&requesterId=${encodeURIComponent(user.id)}&requesterName=${encodeURIComponent(user.name ?? "")}&requesterEmail=${encodeURIComponent(user.email ?? "")}&savingsProductName=${encodeURIComponent(account.savingsProduct.name)}&currency=${encodeURIComponent(account.currency)}`;
 
   await prisma.$transaction(async (tx) => {
-    await tx.notification.upsert({
-      where: {
+    await upsertSystemNotifications(tx, [
+      {
         key: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
-      },
-      create: {
         userId: user.id,
         title: "Bank info request sent",
         message:
           "We sent your savings bank info request to the admin team. We'll notify you when the transfer details are ready.",
-        type: "SYSTEM",
-        key: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,
         link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${account.id}&fundingMethodType=BANK_TRANSFER`,
         metadata: {
           kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
@@ -98,61 +95,24 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
           requesterId: user.id,
         },
       },
-      update: {
-        title: "Bank info request sent",
-        message:
-          "We sent your savings bank info request to the admin team. We'll notify you when the transfer details are ready.",
-        type: "SYSTEM",
-        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${account.id}&fundingMethodType=BANK_TRANSFER`,
+      ...admins.map((admin) => ({
+        key: `savings-funding-bank-info-request:${account.id}:${admin.id}`,
+        userId: admin.id,
+        title: "Savings bank info request",
+        message: requestMessage,
+        link: adminRequestUrl,
         metadata: {
-          kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
+          kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
           savingsAccountId: account.id,
           requesterId: user.id,
-        },
-      },
-    });
-
-    for (const admin of admins) {
-      await tx.notification.upsert({
-        where: {
-          key: `savings-funding-bank-info-request:${account.id}:${admin.id}`,
-        },
-        create: {
-          userId: admin.id,
-          title: "Savings bank info request",
-          message: requestMessage,
-          type: "SYSTEM",
-          key: `savings-funding-bank-info-request:${account.id}:${admin.id}`,
-          link: adminRequestUrl,
-          metadata: {
-            kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
-            savingsAccountId: account.id,
-            requesterId: user.id,
-            requesterName: user.name,
-          requesterEmail: user.email,
-          savingsProductName: account.savingsProduct.name,
-          currency: account.currency,
-          requestUrl: adminRequestUrl,
-        },
-      },
-      update: {
-          title: "Savings bank info request",
-          message: requestMessage,
-          type: "SYSTEM",
-          link: adminRequestUrl,
-          metadata: {
-            kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
-            savingsAccountId: account.id,
-            requesterId: user.id,
           requesterName: user.name,
           requesterEmail: user.email,
           savingsProductName: account.savingsProduct.name,
           currency: account.currency,
           requestUrl: adminRequestUrl,
         },
-      },
-    });
-  }
+      })),
+    ]);
   });
 
   revalidatePath("/account/dashboard/checkout");

@@ -5,10 +5,8 @@ import {
 } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
-import { toDecimal } from "@/lib/services/investment/decimal";
-import {
-  resolveInvestmentOrderWithdrawalAmount,
-} from "@/lib/service/getAvailableWithdrawalBalance";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { resolveInvestmentOrderWithdrawalAmount } from "@/lib/service/getAvailableWithdrawalBalance";
 
 export type AvailableWithdrawalSource =
   | {
@@ -162,9 +160,9 @@ export async function getWithdrawalSourceOptions(
     sources.push({
       type: "INVESTMENT_ORDER",
       id: availableInvestmentOrder.id,
-      amount: resolveInvestmentOrderWithdrawalAmount(
-        availableInvestmentOrder,
-      ).toNumber(),
+      amount: decimalToNumber(
+        resolveInvestmentOrderWithdrawalAmount(availableInvestmentOrder),
+      ),
       currency: availableInvestmentOrder.currency,
       label: earlyWithdrawal
         ? `Early withdrawal: ${availableInvestmentOrder.investmentPlan.name}`
@@ -183,7 +181,7 @@ export async function getWithdrawalSourceOptions(
     sources.push({
       type: "SAVINGS_ACCOUNT",
       id: availableSavings.id,
-      amount: toDecimal(availableSavings.balance).toNumber(),
+      amount: decimalToNumber(availableSavings.balance),
       currency: availableSavings.currency,
       label: `Savings account: ${availableSavings.name}`,
       investmentAccountId: null,

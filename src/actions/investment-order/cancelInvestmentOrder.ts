@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { InvestmentOrderStatus, UserRole } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { createRealtimeNotification } from "@/lib/notifications/createNotification";
+import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 import { prisma } from "@/lib/prisma";
 
 async function notifyAdminsAboutInvestmentOrderCancellation(input: {
@@ -39,38 +39,33 @@ async function notifyAdminsAboutInvestmentOrderCancellation(input: {
     2,
   )}.`;
 
-  const results = await Promise.allSettled(
-    admins.map((admin) =>
-      createRealtimeNotification({
-        userId: admin.id,
-        event: "INVESTMENT_ORDER",
-        title,
-        message,
-        link,
-        key: `investment-order-cancelled:${input.orderId}:${admin.id}`,
-        metadata: {
-          kind: "investment_order_cancelled",
-          orderId: input.orderId,
-          investorId: input.investorId,
-          investorName: input.investorName,
-          investmentName: input.investmentName,
-          planName: input.planName,
-          amount: input.amount,
-          currency: input.currency,
-          adminRole: admin.role,
-        },
-      }),
-    ),
-  );
-
-  const failed = results.filter((result) => result.status === "rejected");
-
-  if (failed.length > 0) {
-    console.error("Failed to notify some admins about investment order cancellation", {
+  await notifyManyRealtimeNotifications({
+    recipients: admins,
+    buildNotification: (admin) => ({
+      userId: admin.id,
+      event: "INVESTMENT_ORDER",
+      title,
+      message,
+      link,
+      key: `investment-order-cancelled:${input.orderId}:${admin.id}`,
+      metadata: {
+        kind: "investment_order_cancelled",
+        orderId: input.orderId,
+        investorId: input.investorId,
+        investorName: input.investorName,
+        investmentName: input.investmentName,
+        planName: input.planName,
+        amount: input.amount,
+        currency: input.currency,
+        adminRole: admin.role,
+      },
+    }),
+    failureMessage:
+      "Failed to notify some admins about investment order cancellation",
+    failureContext: {
       orderId: input.orderId,
-      failedCount: failed.length,
-    });
-  }
+    },
+  });
 }
 
 export async function cancelUserInvestmentOrder(orderId: string) {

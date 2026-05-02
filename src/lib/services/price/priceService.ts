@@ -2,6 +2,7 @@ import YahooFinance from "yahoo-finance2";
 
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const yahooFinance = new YahooFinance();
 
@@ -317,7 +318,7 @@ export async function getPrices(
       persisted &&
       isFreshRecordedAt(persisted.recordedAt)
     ) {
-      const price = persisted.price.toNumber();
+      const price = decimalToNumber(persisted.price);
       setMemoryCache(symbol, price);
       results.set(symbol, {
         symbol,
@@ -354,7 +355,7 @@ export async function getPrices(
     const persisted = persistedLatestBySymbol.get(symbol);
 
     if (persisted) {
-      const persistedPrice = persisted.price.toNumber();
+      const persistedPrice = decimalToNumber(persisted.price);
       setMemoryCache(symbol, persistedPrice);
       results.set(symbol, {
         symbol,

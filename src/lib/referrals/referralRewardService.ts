@@ -15,6 +15,7 @@ import {
 } from "@/generated/prisma";
 
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import { prisma } from "@/lib/prisma";
 import { toDecimal } from "@/lib/services/investment/decimal";
 
@@ -186,26 +187,16 @@ async function upsertReferralNotification(tx: Prisma.TransactionClient, input: {
   link: string;
   metadata: Prisma.InputJsonValue;
 }) {
-  await tx.notification.upsert({
-    where: { key: input.key },
-    create: {
+  await upsertSystemNotifications(tx, [
+    {
       userId: input.userId,
-      type: "SYSTEM",
       key: input.key,
       title: input.title,
       message: input.message,
       link: input.link,
       metadata: input.metadata,
     },
-    update: {
-      userId: input.userId,
-      type: "SYSTEM",
-      title: input.title,
-      message: input.message,
-      link: input.link,
-      metadata: input.metadata,
-    },
-  });
+  ]);
 }
 
 async function writeReferralAudit(

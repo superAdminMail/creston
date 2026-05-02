@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { InvestmentPaymentReviewListItem } from "@/lib/types/payments/investmentPaymentReview.types";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
+import {
+  mapReviewUser,
+  decimalToNumber,
+  reviewUserSelect,
+} from "@/lib/payments/review/paymentReviewMappers";
 
 export async function getInvestmentPaymentReviewList(): Promise<
   InvestmentPaymentReviewListItem[]
@@ -27,11 +27,7 @@ export async function getInvestmentPaymentReviewList(): Promise<
       transferReference: true,
       submittedAt: true,
       submittedByUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        ...reviewUserSelect,
       },
       investmentOrder: {
         select: {
@@ -54,18 +50,16 @@ export async function getInvestmentPaymentReviewList(): Promise<
     orderStatus: payment.investmentOrder.status,
     paymentStatus: payment.status,
     type: payment.type,
-    claimedAmount: toNumber(payment.claimedAmount),
+    claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
-      ? toNumber(payment.approvedAmount)
+      ? decimalToNumber(payment.approvedAmount)
       : null,
     currency: payment.currency,
     depositorName: payment.depositorName ?? null,
     transferReference: payment.transferReference ?? null,
     submittedAt: payment.submittedAt.toISOString(),
     submittedBy: {
-      id: payment.submittedByUser?.id ?? null,
-      name: payment.submittedByUser?.name ?? null,
-      email: payment.submittedByUser?.email ?? null,
+      ...mapReviewUser(payment.submittedByUser),
     },
     plan: {
       name: payment.investmentOrder.investmentPlan.name,

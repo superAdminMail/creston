@@ -1,15 +1,16 @@
 import {
   Prisma,
-  PrismaClient,
   SavingsFundingIntentStatus,
   SavingsStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
+import {
+  asJsonObject,
+  pickNonEmptyString,
+  toJsonValue,
+} from "@/lib/payments/paymentJson";
 
-type TxClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
+type TxClient = Prisma.TransactionClient;
 
 type ApplySuccessfulCryptoFundingToSavingsAccountInput = {
   fundingIntentId: string;
@@ -17,16 +18,6 @@ type ApplySuccessfulCryptoFundingToSavingsAccountInput = {
   creditedFiatAmount: Prisma.Decimal | string | number;
   creditedAt?: Date;
 };
-
-function asPlainObject(
-  value: Prisma.JsonValue | null | undefined,
-): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-
-  return value as Record<string, unknown>;
-}
 
 export async function applySuccessfulCryptoFundingToSavingsAccount(
   tx: TxClient,
@@ -86,30 +77,31 @@ export async function applySuccessfulCryptoFundingToSavingsAccount(
   }
 
   const nextTimestamp = creditedAt ?? new Date();
-  const existingMetadata = asPlainObject(fundingIntent.metadata);
+  const existingMetadata = asJsonObject(fundingIntent.metadata);
   const updatedFundingAmount = new Prisma.Decimal(
     fundingIntent.creditedAmount,
   ).plus(creditedAmountDecimal);
+  const paymentReference = pickNonEmptyString(providerReference) ?? fundingIntent.id;
 
   const updatedFundingIntent = await tx.savingsFundingIntent.update({
     where: { id: fundingIntent.id },
     data: {
       status: SavingsFundingIntentStatus.CREDITED,
-      providerReference,
-      providerExternalId: providerReference,
-      paymentReference: providerReference,
+      providerReference: paymentReference,
+      providerExternalId: pickNonEmptyString(providerReference),
+      paymentReference,
       paidAt: fundingIntent.paidAt ?? nextTimestamp,
       creditedAt: fundingIntent.creditedAt ?? nextTimestamp,
       creditedAmount: updatedFundingAmount,
       failureCode: null,
       failureMessage: null,
-      metadata: {
+      metadata: toJsonValue({
         ...existingMetadata,
         providerReference,
         creditedFiatAmount: creditedAmountDecimal.toString(),
         creditedAt: nextTimestamp.toISOString(),
         lastWebhookAt: nextTimestamp.toISOString(),
-      },
+      }),
     },
   });
 
@@ -130,14 +122,14 @@ export async function applySuccessfulCryptoFundingToSavingsAccount(
       currency: fundingIntent.currency,
       balanceBefore: currentBalance,
       balanceAfter: newBalance,
-      reference: providerReference,
+      reference: paymentReference,
       note: "Paymento crypto funding credited",
-      metadata: {
+      metadata: toJsonValue({
         provider: fundingIntent.provider,
-        providerReference,
+        providerReference: paymentReference,
         fundingIntentId: fundingIntent.id,
         creditedFiatAmount: creditedAmountDecimal.toString(),
-      },
+      }),
     },
   });
 

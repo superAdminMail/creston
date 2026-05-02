@@ -1,6 +1,5 @@
 import type {
   InvestmentCatalogStatus,
-  InvestmentPeriod,
   InvestmentType,
 } from "@/generated/prisma";
 
@@ -58,6 +57,8 @@ export async function getSuperAdminInvestments(
 ): Promise<SuperAdminInvestmentsData> {
   await requireSuperAdminAccess();
 
+  const isActiveFilter = parseBooleanFilter(filters.isActive);
+
   const [investments, iconAssets] = await Promise.all([
     prisma.investment.findMany({
       where: {
@@ -65,9 +66,7 @@ export async function getSuperAdminInvestments(
         ...(filters.status
           ? { status: filters.status as InvestmentCatalogStatus }
           : {}),
-        ...(typeof parseBooleanFilter(filters.isActive) === "boolean"
-          ? { isActive: parseBooleanFilter(filters.isActive) }
-          : {}),
+        ...(typeof isActiveFilter === "boolean" ? { isActive: isActiveFilter } : {}),
       },
       orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
       select: {

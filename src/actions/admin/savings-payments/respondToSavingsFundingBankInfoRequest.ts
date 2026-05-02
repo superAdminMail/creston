@@ -8,6 +8,7 @@ import {
   getFriendlyServerError,
 } from "@/lib/forms/actionState";
 import { SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND } from "@/lib/notifications/savingsFundingBankInfo";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { prisma } from "@/lib/prisma";
 import {
@@ -169,16 +170,12 @@ export async function respondToSavingsFundingBankInfoRequest(
         },
       });
 
-      await tx.notification.upsert({
-        where: {
+      await upsertSystemNotifications(tx, [
+        {
           key: `savings-funding-bank-info-request-ack:${account.id}:${account.investorProfile.user.id}`,
-        },
-        create: {
           userId: account.investorProfile.user.id,
           title: "Bank details are ready",
           message: `Bank transfer details for your savings account ${account.id} are now available.`,
-          type: "SYSTEM",
-          key: `savings-funding-bank-info-request-ack:${account.id}:${account.investorProfile.user.id}`,
           link: checkoutUrl,
           metadata: {
             kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
@@ -187,19 +184,7 @@ export async function respondToSavingsFundingBankInfoRequest(
             platformPaymentMethodId: platformPaymentMethod.id,
           },
         },
-        update: {
-          title: "Bank details are ready",
-          message: `Bank transfer details for your savings account ${account.id} are now available.`,
-          type: "SYSTEM",
-          link: checkoutUrl,
-          metadata: {
-            kind: SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
-            savingsAccountId: account.id,
-            requesterId: account.investorProfile.user.id,
-            platformPaymentMethodId: platformPaymentMethod.id,
-          },
-        },
-      });
+      ]);
     });
 
     revalidatePath("/account/dashboard/checkout");

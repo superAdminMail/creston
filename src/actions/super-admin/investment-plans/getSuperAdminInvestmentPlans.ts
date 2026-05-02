@@ -75,6 +75,8 @@ export async function getSuperAdminInvestmentPlans(
 ): Promise<SuperAdminInvestmentPlansData> {
   await requireSuperAdminAccess();
 
+  const isActiveFilter = parseBooleanFilter(filters.isActive);
+
   const [plans, investments] = await Promise.all([
     prisma.investmentPlan.findMany({
       where: {
@@ -83,9 +85,7 @@ export async function getSuperAdminInvestmentPlans(
         ...(filters.currency
           ? { currency: filters.currency.trim().toUpperCase() }
           : {}),
-        ...(typeof parseBooleanFilter(filters.isActive) === "boolean"
-          ? { isActive: parseBooleanFilter(filters.isActive) }
-          : {}),
+        ...(typeof isActiveFilter === "boolean" ? { isActive: isActiveFilter } : {}),
       },
       orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
       select: {

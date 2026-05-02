@@ -8,7 +8,9 @@ import { prisma } from "@/lib/prisma";
 import { applySuccessfulCryptoFunding } from "@/lib/payments/crypto/settlement/applySuccessfulCryptoFunding";
 import {
   getPaymentoSignature,
+  getPaymentoAdditionalDataValue,
   paymentoVerifyPayment,
+  parsePaymentoAdditionalData,
   verifyPaymentoSignature,
   type PaymentoCallbackBody,
 } from "@/lib/payments/crypto/paymento";
@@ -18,6 +20,9 @@ import {
   mapPaymentoStatusToSavingsFundingIntentStatus,
   resolvePaymentoStatus,
 } from "@/lib/payments/crypto/paymentoStatus";
+import {
+  ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES,
+} from "@/lib/payments/crypto/calculateInvestmentOrderCryptoChargeAmount";
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -59,7 +64,64 @@ type ResolvedTarget =
         : never;
     };
 
-async function resolvePaymentoTarget(token: string, orderId: string) {
+async function resolvePaymentoTarget(
+  token: string,
+  orderId: string,
+  fundingIntentId?: string | null,
+) {
+  if (fundingIntentId) {
+    const investmentFundingIntentById = await prisma.cryptoFundingIntent.findUnique(
+      {
+        where: { id: fundingIntentId },
+        include: {
+          investmentOrder: {
+            select: {
+              id: true,
+              paymentMetadata: true,
+            },
+          },
+        },
+      },
+    );
+
+    if (
+      investmentFundingIntentById &&
+      investmentFundingIntentById.investmentOrderId === orderId
+    ) {
+      return {
+        kind: "INVESTMENT_ORDER" as const,
+        fundingIntent: investmentFundingIntentById,
+      } satisfies ResolvedTarget;
+    }
+
+    const savingsFundingIntentById = await prisma.savingsFundingIntent.findUnique(
+      {
+        where: { id: fundingIntentId },
+        include: {
+          savingsAccount: {
+            include: {
+              savingsProduct: {
+                select: {
+                  maxBalance: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    );
+
+    if (
+      savingsFundingIntentById &&
+      savingsFundingIntentById.savingsAccountId === orderId
+    ) {
+      return {
+        kind: "SAVINGS_FUNDING" as const,
+        fundingIntent: savingsFundingIntentById,
+      } satisfies ResolvedTarget;
+    }
+  }
+
   const [investmentFundingIntent, savingsFundingIntent] = await Promise.all([
     prisma.cryptoFundingIntent.findFirst({
       where: {
@@ -110,6 +172,60 @@ async function resolvePaymentoTarget(token: string, orderId: string) {
     } satisfies ResolvedTarget;
   }
 
+  const [fallbackInvestmentIntent, fallbackSavingsIntent] = await Promise.all([
+    prisma.cryptoFundingIntent.findFirst({
+      where: {
+        provider: CryptoFundingProvider.PAYMENTO,
+        investmentOrderId: orderId,
+        status: {
+          in: ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES,
+        },
+      },
+      include: {
+        investmentOrder: {
+          select: {
+            id: true,
+            paymentMetadata: true,
+          },
+        },
+      },
+    }),
+    prisma.savingsFundingIntent.findFirst({
+      where: {
+        provider: CryptoFundingProvider.PAYMENTO,
+        savingsAccountId: orderId,
+        status: {
+          in: ACTIVE_CRYPTO_FUNDING_INTENT_STATUSES,
+        },
+      },
+      include: {
+        savingsAccount: {
+          include: {
+            savingsProduct: {
+              select: {
+                maxBalance: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+
+  if (fallbackInvestmentIntent) {
+    return {
+      kind: "INVESTMENT_ORDER" as const,
+      fundingIntent: fallbackInvestmentIntent,
+    } satisfies ResolvedTarget;
+  }
+
+  if (fallbackSavingsIntent) {
+    return {
+      kind: "SAVINGS_FUNDING" as const,
+      fundingIntent: fallbackSavingsIntent,
+    } satisfies ResolvedTarget;
+  }
+
   return null;
 }
 
@@ -137,6 +253,10 @@ export async function POST(req: Request) {
   const paymentId = String(payload.PaymentId ?? "").trim() || null;
   const orderId = String(payload.OrderId ?? "").trim();
   const paymentoStatus = resolvePaymentoStatus(payload.OrderStatus);
+  const fundingIntentId = getPaymentoAdditionalDataValue(
+    parsePaymentoAdditionalData(payload.AdditionalData),
+    "fundingIntentId",
+  );
 
   if (!token || !orderId) {
     return NextResponse.json(
@@ -155,7 +275,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
-  const target = await resolvePaymentoTarget(token, orderId);
+  const target = await resolvePaymentoTarget(token, orderId, fundingIntentId);
 
   if (!target) {
     await prisma.cryptoWebhookEvent.create({
@@ -207,7 +327,7 @@ export async function POST(req: Request) {
       });
 
       if (paymentoStatus.shouldSettle) {
-        const settled = await applySuccessfulCryptoFunding({
+        await applySuccessfulCryptoFunding({
           tx,
           provider: CryptoFundingProvider.PAYMENTO,
           providerSessionId: token,
@@ -219,12 +339,6 @@ export async function POST(req: Request) {
           processedAt: now,
         });
 
-        console.log("[paymento.webhook.settled]", {
-          targetType: settled.targetType,
-          providerReference,
-          creditedAmount: settled.creditedAmount,
-          paymentoStatus: paymentoStatus.status,
-        });
       } else if (target.kind === "INVESTMENT_ORDER") {
         const mappedIntentStatus = mapPaymentoStatusToCryptoFundingIntentStatus(
           paymentoStatus.status,
@@ -348,7 +462,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("[paymento.webhook]", error);
+    console.error(
+      "[paymento.webhook]",
+      error instanceof Error ? error.message : "Unknown webhook error",
+    );
 
     await prisma.cryptoWebhookEvent.create({
       data: {

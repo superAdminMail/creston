@@ -79,18 +79,34 @@ export async function getSuperAdminInvestors(): Promise<SuperAdminInvestorsPageD
     updatedDate: formatDateLabel(investor.updatedAt),
   }));
 
+  const summary = mappedInvestors.reduce(
+    (acc, investor) => {
+      if (investor.kycStatus === "VERIFIED" || investor.isVerified) {
+        acc.verifiedInvestorsCount += 1;
+      }
+
+      if (investor.kycStatus === "PENDING_REVIEW") {
+        acc.pendingReviewCount += 1;
+      }
+
+      if (investor.savingsAccountsCount > 0 || investor.investmentAccountsCount > 0) {
+        acc.investorsWithAccountsCount += 1;
+      }
+
+      return acc;
+    },
+    {
+      verifiedInvestorsCount: 0,
+      pendingReviewCount: 0,
+      investorsWithAccountsCount: 0,
+    },
+  );
+
   return {
     totalInvestorsCount: mappedInvestors.length,
-    verifiedInvestorsCount: mappedInvestors.filter(
-      (investor) => investor.kycStatus === "VERIFIED" || investor.isVerified,
-    ).length,
-    pendingReviewCount: mappedInvestors.filter(
-      (investor) => investor.kycStatus === "PENDING_REVIEW",
-    ).length,
-    investorsWithAccountsCount: mappedInvestors.filter(
-      (investor) =>
-        investor.savingsAccountsCount > 0 || investor.investmentAccountsCount > 0,
-    ).length,
+    verifiedInvestorsCount: summary.verifiedInvestorsCount,
+    pendingReviewCount: summary.pendingReviewCount,
+    investorsWithAccountsCount: summary.investorsWithAccountsCount,
     investors: mappedInvestors,
   };
 }

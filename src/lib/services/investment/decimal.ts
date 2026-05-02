@@ -2,6 +2,8 @@ import { Prisma } from "@/generated/prisma";
 
 export const ZERO_DECIMAL = new Prisma.Decimal(0);
 
+type DecimalLike = Prisma.Decimal | { toNumber(): number };
+
 export function toDecimal(
   value: Prisma.Decimal | number | string | null | undefined,
 ): Prisma.Decimal {
@@ -17,8 +19,16 @@ export function toDecimal(
 }
 
 export function decimalToNumber(
-  value: Prisma.Decimal | number | string | null | undefined,
+  value: DecimalLike | number | string | null | undefined,
 ): number {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (value && typeof value === "object" && "toNumber" in value) {
+    return value.toNumber();
+  }
+
   return toDecimal(value).toNumber();
 }
 

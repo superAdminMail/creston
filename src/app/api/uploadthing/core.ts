@@ -17,64 +17,40 @@ export const ourFileRouter = {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  })
+    })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.user.id);
-
-      console.log("file url", file.ufsUrl);
-
-      return { uploadedBy: metadata.user.id };
-    }),
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
 
   siteLogo: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  })
+    })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.user.id);
-
-      console.log("file url", file.ufsUrl);
-
-      return { uploadedBy: metadata.user.id };
-    }),
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
 
   photoManager: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  })
+    })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.user.id);
-
-      console.log("file url", file.ufsUrl);
-
-      return { uploadedBy: metadata.user.id };
-    }),
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
 
   conversationImage: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  })
+    })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.user.id);
-
-      console.log("file url", file.ufsUrl);
-
-      return { uploadedBy: metadata.user.id };
-    }),
+    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

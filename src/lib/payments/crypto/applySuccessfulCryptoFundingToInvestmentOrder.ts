@@ -2,13 +2,14 @@ import {
   CryptoFundingIntentStatus,
   InvestmentOrderStatus,
   Prisma,
-  PrismaClient,
 } from "@/generated/prisma";
+import {
+  asJsonObject,
+  pickNonEmptyString,
+  toJsonValue,
+} from "@/lib/payments/paymentJson";
 
-type TxClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
+type TxClient = Prisma.TransactionClient;
 
 type ApplySuccessfulCryptoFundingToInvestmentOrderInput = {
   fundingIntentId: string;
@@ -69,8 +70,8 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
     where: { id: fundingIntent.id },
     data: {
       status: CryptoFundingIntentStatus.FUNDED,
-      providerExternalId: providerReference,
-      providerReference,
+      providerExternalId: pickNonEmptyString(providerReference),
+      providerReference: pickNonEmptyString(providerReference) ?? fundingIntent.id,
       fundedAt: fundingIntent.fundedAt ?? creditedAt ?? new Date(),
       creditedAt: fundingIntent.creditedAt ?? creditedAt ?? new Date(),
       creditedFiatAmount: creditedAmountDecimal,
@@ -83,33 +84,28 @@ export async function applySuccessfulCryptoFundingToInvestmentOrder(
     },
   });
 
-  const existingPaymentMetadata =
-    fundingIntent.investmentOrder.paymentMetadata &&
-    typeof fundingIntent.investmentOrder.paymentMetadata === "object" &&
-    !Array.isArray(fundingIntent.investmentOrder.paymentMetadata)
-      ? (fundingIntent.investmentOrder.paymentMetadata as Record<
-          string,
-          unknown
-        >)
-      : {};
+  const existingPaymentMetadata = asJsonObject(
+    fundingIntent.investmentOrder.paymentMetadata,
+  );
+  const paymentReference = pickNonEmptyString(providerReference) ?? fundingIntent.id;
 
   const updatedInvestmentOrder = await tx.investmentOrder.update({
     where: { id: fundingIntent.investmentOrderId },
     data: {
       amountPaid: newAmountPaid,
       status: InvestmentOrderStatus.PAID,
-      paymentReference: providerReference,
+      paymentReference,
       paidAt: fundingIntent.investmentOrder.paidAt ?? creditedAt ?? new Date(),
-      paymentMetadata: {
+      paymentMetadata: toJsonValue({
         ...existingPaymentMetadata,
         provider: fundingIntent.provider,
-        providerReference,
+        providerReference: paymentReference,
         fundingIntentId: fundingIntent.id,
         creditedFiatAmount: creditedAmountDecimal.toString(),
         asset: fundingIntent.asset,
         network: fundingIntent.network,
         creditedAt: (creditedAt ?? new Date()).toISOString(),
-      },
+      }),
     },
   });
 

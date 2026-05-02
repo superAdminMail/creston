@@ -6,6 +6,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 type DashboardResourceKey =
   | "users"
@@ -87,192 +88,191 @@ const DASHBOARD_RESOURCE_ROUTE_MAP = {
 
 type DashboardResourceRouteHref = keyof typeof DASHBOARD_RESOURCE_ROUTE_MAP;
 
-async function fetchUsersByRole(role?: "USER" | "MODERATOR" | "ADMIN") {
-  const users = await prisma.user.findMany({
-    where: role ? { role } : undefined,
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-    },
-  });
-
-  const total = await prisma.user.count({
-    where: role ? { role } : undefined,
-  });
-
-  const items = users.map((user) => ({
-    id: user.id,
-    title: user.name?.trim() || "Unnamed user",
-    subtitle: user.email,
-    meta: `${formatEnumLabel(user.role)} | Joined ${formatDateLabel(user.createdAt)}`,
-  }));
+async function fetchResourceCollection<TItem>(input: {
+  itemsPromise: Promise<TItem[]>;
+  totalPromise: Promise<number>;
+  mapItem: (item: TItem) => DashboardResourceItem;
+}) {
+  const [items, total] = await Promise.all([
+    input.itemsPromise,
+    input.totalPromise,
+  ]);
 
   return {
     total,
-    items,
+    items: items.map(input.mapItem),
   };
+}
+
+async function fetchUsersByRole(role?: "USER" | "MODERATOR" | "ADMIN") {
+  return fetchResourceCollection({
+    itemsPromise: prisma.user.findMany({
+      where: role ? { role } : undefined,
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    }),
+    totalPromise: prisma.user.count({
+      where: role ? { role } : undefined,
+    }),
+    mapItem: (user) => ({
+      id: user.id,
+      title: user.name?.trim() || "Unnamed user",
+      subtitle: user.email,
+      meta: `${formatEnumLabel(user.role)} | Joined ${formatDateLabel(user.createdAt)}`,
+    }),
+  });
 }
 
 async function fetchInvestorProfiles() {
-  const profiles = await prisma.investorProfile.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      kycStatus: true,
-      createdAt: true,
-      user: {
-        select: {
-          name: true,
-          email: true,
+  return fetchResourceCollection({
+    itemsPromise: prisma.investorProfile.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        kycStatus: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
         },
       },
-    },
+    }),
+    totalPromise: prisma.investorProfile.count(),
+    mapItem: (profile) => ({
+      id: profile.id,
+      title: profile.user.name?.trim() || "Unnamed investor",
+      subtitle: profile.user.email,
+      meta: `${formatEnumLabel(profile.kycStatus)} | Created ${formatDateLabel(profile.createdAt)}`,
+    }),
   });
-
-  const items = profiles.map((profile) => ({
-    id: profile.id,
-    title: profile.user.name?.trim() || "Unnamed investor",
-    subtitle: profile.user.email,
-    meta: `${formatEnumLabel(profile.kycStatus)} | Created ${formatDateLabel(profile.createdAt)}`,
-  }));
-
-  return {
-    total: await prisma.investorProfile.count(),
-    items,
-  };
 }
 
 async function fetchInvestmentAccounts() {
-  const accounts = await prisma.investmentAccount.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      status: true,
-      balance: true,
-      currency: true,
-      createdAt: true,
-      investorProfile: {
-        select: {
-          user: {
-            select: {
-              name: true,
-              email: true,
+  return fetchResourceCollection({
+    itemsPromise: prisma.investmentAccount.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        status: true,
+        balance: true,
+        currency: true,
+        createdAt: true,
+        investorProfile: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
             },
           },
         },
-      },
-      investmentPlan: {
-        select: {
-          name: true,
+        investmentPlan: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
+    }),
+    totalPromise: prisma.investmentAccount.count(),
+    mapItem: (account) => ({
+      id: account.id,
+      title: account.investorProfile.user.name?.trim() || "Unnamed investor",
+      subtitle: `${account.investmentPlan.name} | ${account.investorProfile.user.email}`,
+      meta: `${formatCurrency(decimalToNumber(account.balance), account.currency)} | ${formatEnumLabel(account.status)} | Opened ${formatDateLabel(account.createdAt)}`,
+    }),
   });
-
-  const items = accounts.map((account) => ({
-    id: account.id,
-    title: account.investorProfile.user.name?.trim() || "Unnamed investor",
-    subtitle: `${account.investmentPlan.name} | ${account.investorProfile.user.email}`,
-    meta: `${formatCurrency(account.balance.toNumber(), account.currency)} | ${formatEnumLabel(account.status)} | Opened ${formatDateLabel(account.createdAt)}`,
-  }));
-
-  return {
-    total: await prisma.investmentAccount.count(),
-    items,
-  };
 }
 
 async function fetchSavingsAccounts() {
-  const accounts = await prisma.savingsAccount.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      status: true,
-      balance: true,
-      savingsProduct: {
-        select: {
-          name: true,
-          currency: true,
-        },
+  return fetchResourceCollection({
+    itemsPromise: prisma.savingsAccount.findMany({
+      orderBy: {
+        createdAt: "desc",
       },
-      investorProfile: {
-        select: {
-          user: {
-            select: {
-              name: true,
-              email: true,
+      select: {
+        id: true,
+        status: true,
+        balance: true,
+        savingsProduct: {
+          select: {
+            name: true,
+            currency: true,
+          },
+        },
+        investorProfile: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
             },
           },
         },
       },
-    },
+    }),
+    totalPromise: prisma.savingsAccount.count(),
+    mapItem: (account) => ({
+      id: account.id,
+      title: account.investorProfile.user.name?.trim() || "Unnamed saver",
+      subtitle: `${account.savingsProduct.name} | ${account.investorProfile.user.email}`,
+      meta: `${formatCurrency(decimalToNumber(account.balance), account.savingsProduct.currency)} | ${formatEnumLabel(account.status)}`,
+    }),
   });
-
-  const items = accounts.map((account) => ({
-    id: account.id,
-    title: account.investorProfile.user.name?.trim() || "Unnamed saver",
-    subtitle: `${account.savingsProduct.name} | ${account.investorProfile.user.email}`,
-    meta: `${formatCurrency(account.balance.toNumber(), account.savingsProduct.currency)} | ${formatEnumLabel(account.status)}`,
-  }));
-
-  return {
-    total: await prisma.savingsAccount.count(),
-    items,
-  };
 }
 
 async function fetchInvestmentOrders() {
-  const orders = await prisma.investmentOrder.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    select: {
-      id: true,
-      amount: true,
-      currency: true,
-      status: true,
-      createdAt: true,
-      investorProfile: {
-        select: {
-          user: {
-            select: {
-              name: true,
-              email: true,
+  return fetchResourceCollection({
+    itemsPromise: prisma.investmentOrder.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        amount: true,
+        currency: true,
+        status: true,
+        createdAt: true,
+        investorProfile: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
             },
           },
         },
-      },
-      investmentPlan: {
-        select: {
-          name: true,
+        investmentPlan: {
+          select: {
+            name: true,
+          },
         },
       },
-    },
+    }),
+    totalPromise: prisma.investmentOrder.count(),
+    mapItem: (order) => ({
+      id: order.id,
+      title: order.investorProfile.user.name?.trim() || "Unnamed investor",
+      subtitle: `${order.investmentPlan.name} | ${order.investorProfile.user.email}`,
+      meta: `${formatCurrency(decimalToNumber(order.amount), order.currency)} | ${formatEnumLabel(order.status)} | ${formatDateLabel(order.createdAt)}`,
+    }),
   });
-
-  const items = orders.map((order) => ({
-    id: order.id,
-    title: order.investorProfile.user.name?.trim() || "Unnamed investor",
-    subtitle: `${order.investmentPlan.name} | ${order.investorProfile.user.email}`,
-    meta: `${formatCurrency(order.amount.toNumber(), order.currency)} | ${formatEnumLabel(order.status)} | ${formatDateLabel(order.createdAt)}`,
-  }));
-
-  return {
-    total: await prisma.investmentOrder.count(),
-    items,
-  };
 }
 
 async function fetchDashboardResourceCollection(

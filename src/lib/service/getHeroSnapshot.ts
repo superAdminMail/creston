@@ -9,7 +9,7 @@ import {
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
-import { toDecimal } from "@/lib/services/investment/decimal";
+import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 
 type HeroSnapshot = {
   statusLabel: string;
@@ -154,14 +154,14 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
     const existingType = typeTotals.get(typeLabel);
     typeTotals.set(typeLabel, {
       label: typeLabel,
-      total: (existingType?.total ?? 0) + resolvedValue.toNumber(),
+      total: (existingType?.total ?? 0) + decimalToNumber(resolvedValue),
     });
 
     const planName = order.investmentPlan.name;
     const existingPlan = planTotals.get(planName);
     planTotals.set(planName, {
       label: planName,
-      total: (existingPlan?.total ?? 0) + resolvedValue.toNumber(),
+      total: (existingPlan?.total ?? 0) + decimalToNumber(resolvedValue),
       durationDays: order.investmentPlan.durationDays,
     });
   }
@@ -175,7 +175,7 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   return {
     statusLabel: "Active",
-    totalValueLabel: formatCompactDollar(headlineTotalValue.toNumber()),
+    totalValueLabel: formatCompactDollar(decimalToNumber(headlineTotalValue)),
     topLabel: topType?.label ?? "Savings",
     planLabel: topPlan?.label ?? site.siteName,
     durationLabel: resolveDurationLabel(topPlan?.durationDays ?? null),

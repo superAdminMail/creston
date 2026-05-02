@@ -7,16 +7,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type SuperAdminInvestmentAccountListItem = {
   id: string;
@@ -99,7 +90,7 @@ export async function getSuperAdminInvestmentAccounts(): Promise<SuperAdminInves
     id: account.id,
     status: account.status,
     statusLabel: formatEnumLabel(account.status),
-    balance: toNumber(account.balance),
+    balance: decimalToNumber(account.balance),
     currency: account.currency || "USD",
     planName: account.investmentPlan.name,
     planDescription:
@@ -119,31 +110,43 @@ export async function getSuperAdminInvestmentAccounts(): Promise<SuperAdminInves
     ownerEmail: account.investorProfile.user.email,
   }));
 
-  const totalAccountsCount = mappedAccounts.length;
-  const activeAccountsCount = mappedAccounts.filter(
-    (account) => account.status === "ACTIVE",
-  ).length;
-  const pendingAccountsCount = mappedAccounts.filter(
-    (account) => account.status === "PENDING",
-  ).length;
-  const totalBalance = mappedAccounts.reduce(
-    (sum, account) => sum + account.balance,
-    0,
+  const summary = mappedAccounts.reduce(
+    (acc, account) => {
+      if (account.status === "ACTIVE") {
+        acc.activeAccountsCount += 1;
+      }
+
+      if (account.status === "PENDING") {
+        acc.pendingAccountsCount += 1;
+      }
+
+      if (account.investmentModelLabel === "Market") {
+        acc.marketAccountsCount += 1;
+      }
+
+      if (account.investmentModelLabel === "Fixed") {
+        acc.fixedAccountsCount += 1;
+      }
+
+      acc.totalBalance += account.balance;
+      return acc;
+    },
+    {
+      activeAccountsCount: 0,
+      pendingAccountsCount: 0,
+      marketAccountsCount: 0,
+      fixedAccountsCount: 0,
+      totalBalance: 0,
+    },
   );
-  const marketAccountsCount = mappedAccounts.filter(
-    (account) => account.investmentModelLabel === "Market",
-  ).length;
-  const fixedAccountsCount = mappedAccounts.filter(
-    (account) => account.investmentModelLabel === "Fixed",
-  ).length;
 
   return {
-    totalAccountsCount,
-    activeAccountsCount,
-    pendingAccountsCount,
-    totalBalance,
-    marketAccountsCount,
-    fixedAccountsCount,
+    totalAccountsCount: mappedAccounts.length,
+    activeAccountsCount: summary.activeAccountsCount,
+    pendingAccountsCount: summary.pendingAccountsCount,
+    totalBalance: summary.totalBalance,
+    marketAccountsCount: summary.marketAccountsCount,
+    fixedAccountsCount: summary.fixedAccountsCount,
     accounts: mappedAccounts,
   };
 }

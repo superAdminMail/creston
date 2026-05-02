@@ -3,7 +3,6 @@ import {
   InvestmentOrderStatus,
   SavingsFundingIntentStatus,
 } from "@/generated/prisma";
-import { parsePaymentoStatus } from "@/lib/payments/crypto/paymento";
 
 export type PaymentoNormalizedStatus =
   | "PENDING"
@@ -27,6 +26,31 @@ export type PaymentoStatusResolution = {
   isPending: boolean;
 };
 
+const PAYMENTO_TEXT_STATUSES = new Set<PaymentoNormalizedStatus>([
+  "PENDING",
+  "PROCESSING",
+  "REQUIRES_ACTION",
+  "AWAITING_PROVIDER_CONFIRMATION",
+  "PAID",
+  "FAILED",
+  "EXPIRED",
+  "CANCELLED",
+]);
+
+const PAYMENTO_NUMERIC_STATUS_MAP: Partial<
+  Record<number, PaymentoNormalizedStatus>
+> = {
+  0: "PENDING",
+  1: "PROCESSING",
+  2: "PROCESSING",
+  3: "AWAITING_PROVIDER_CONFIRMATION",
+  4: "EXPIRED",
+  5: "CANCELLED",
+  7: "PAID",
+  8: "PAID",
+  9: "FAILED",
+};
+
 function normalizeStatusText(value: string) {
   return value
     .trim()
@@ -36,45 +60,26 @@ function normalizeStatusText(value: string) {
 }
 
 function mapNumericStatus(statusCode: number | null): PaymentoNormalizedStatus {
-  switch (statusCode) {
-    case 0:
-      return "PENDING";
-    case 1:
-      return "PROCESSING";
-    case 2:
-      return "PROCESSING";
-    case 3:
-      return "AWAITING_PROVIDER_CONFIRMATION";
-    case 4:
-      return "EXPIRED";
-    case 5:
-      return "CANCELLED";
-    case 7:
-    case 8:
-      return "PAID";
-    case 9:
-      return "FAILED";
-    default:
-      return "UNKNOWN";
-  }
+  return statusCode === null
+    ? "UNKNOWN"
+    : PAYMENTO_NUMERIC_STATUS_MAP[statusCode] ?? "UNKNOWN";
 }
 
 function mapTextStatus(value: string): PaymentoNormalizedStatus {
   const normalized = normalizeStatusText(value);
 
-  switch (normalized) {
-    case "PENDING":
-    case "PROCESSING":
-    case "REQUIRES_ACTION":
-    case "AWAITING_PROVIDER_CONFIRMATION":
-    case "PAID":
-    case "FAILED":
-    case "EXPIRED":
-    case "CANCELLED":
-      return normalized;
-    default:
-      return "UNKNOWN";
+  return PAYMENTO_TEXT_STATUSES.has(normalized as PaymentoNormalizedStatus)
+    ? (normalized as PaymentoNormalizedStatus)
+    : "UNKNOWN";
+}
+
+function parsePaymentoStatus(value: unknown): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = Number(value);
+    return Number.isNaN(n) ? null : n;
   }
+  return null;
 }
 
 export function resolvePaymentoStatus(

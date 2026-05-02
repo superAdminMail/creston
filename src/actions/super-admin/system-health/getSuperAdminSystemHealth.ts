@@ -328,6 +328,9 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     latestCronDailyAccrualJob,
     latestCronProfitSettlementJob,
     latestUpload,
+    stalePendingReviewKyc,
+    missingSavingsProviderReferences,
+    approvedSavingsNotReflected,
   ] = await Promise.all([
     prisma.investmentOrderPayment.count({
       where: {
@@ -576,6 +579,38 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
         createdAt: true,
       },
     }),
+    prisma.investorProfile.count({
+      where: {
+        kycStatus: "PENDING_REVIEW",
+        updatedAt: {
+          lt: pendingReviewKycStaleBefore,
+        },
+      },
+    }),
+    prisma.savingsFundingIntent.count({
+      where: {
+        fundingMethodType: "CRYPTO_PROVIDER",
+        provider: "PAYMENTO",
+        OR: [
+          {
+            providerSessionId: null,
+          },
+          {
+            providerReference: null,
+          },
+        ],
+      },
+    }),
+    prisma.savingsTransactionPayment.count({
+      where: {
+        status: "APPROVED",
+        savingsFundingIntent: {
+          status: {
+            notIn: ["PARTIALLY_PAID", "CREDITED"],
+          },
+        },
+      },
+    }),
   ]);
 
   const staleVerificationSessions = sessions.filter((session) => {
@@ -592,15 +627,6 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     );
   }).length;
 
-  const stalePendingReviewKyc = await prisma.investorProfile.count({
-    where: {
-      kycStatus: "PENDING_REVIEW",
-      updatedAt: {
-        lt: pendingReviewKycStaleBefore,
-      },
-    },
-  });
-
   const staleKycSessions = staleVerificationSessions + stalePendingReviewKyc;
 
   const underfundedPaidInvestmentOrders = investmentOrders.filter((order) =>
@@ -611,38 +637,8 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     (intent) => intent.transactions.length === 0,
   ).length;
 
-  const missingSavingsProviderReferences = await prisma.savingsFundingIntent.count(
-    {
-      where: {
-        fundingMethodType: "CRYPTO_PROVIDER",
-        provider: "PAYMENTO",
-        OR: [
-          {
-            providerSessionId: null,
-          },
-          {
-            providerReference: null,
-          },
-        ],
-      },
-    },
-  );
-
   const missingProviderReferenceCount =
     missingProviderReferences + missingSavingsProviderReferences;
-
-  const approvedSavingsNotReflected = await prisma.savingsTransactionPayment.count(
-    {
-      where: {
-        status: "APPROVED",
-        savingsFundingIntent: {
-          status: {
-            notIn: ["PARTIALLY_PAID", "CREDITED"],
-          },
-        },
-      },
-    },
-  );
 
   const approvedBankSubmissionsNotReflectedTotal =
     approvedInvestmentBankSubmissionsNotReflected + approvedSavingsNotReflected;

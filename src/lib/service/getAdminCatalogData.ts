@@ -7,11 +7,7 @@ import type {
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type AdminSavingsProductItem = {
   id: string;
@@ -101,13 +97,13 @@ export async function getAdminSavingsProducts(): Promise<
     name: product.name,
     description: product.description,
     interestRatePercent: product.interestRatePercent
-      ? toNumber(product.interestRatePercent)
+      ? decimalToNumber(product.interestRatePercent)
       : null,
     interestPayoutFrequency: product.interestPayoutFrequency,
     allowsWithdrawals: product.allowsWithdrawals,
     allowsDeposits: product.allowsDeposits,
-    minBalance: product.minBalance ? toNumber(product.minBalance) : null,
-    maxBalance: product.maxBalance ? toNumber(product.maxBalance) : null,
+    minBalance: product.minBalance ? decimalToNumber(product.minBalance) : null,
+    maxBalance: product.maxBalance ? decimalToNumber(product.maxBalance) : null,
     currency: product.currency,
     isActive: product.isActive,
     sortOrder: product.sortOrder,
@@ -164,13 +160,13 @@ export async function getAdminInvestmentPlans(): Promise<
     investmentType: plan.investment.type,
     investmentModel: plan.investmentModel,
     period: plan.period,
-    durationDays: plan.durationDays,
-    expectedReturnMin: plan.expectedReturnMin
-      ? toNumber(plan.expectedReturnMin)
-      : null,
-    expectedReturnMax: plan.expectedReturnMax
-      ? toNumber(plan.expectedReturnMax)
-      : null,
+      durationDays: plan.durationDays,
+      expectedReturnMin: plan.expectedReturnMin
+        ? decimalToNumber(plan.expectedReturnMin)
+        : null,
+      expectedReturnMax: plan.expectedReturnMax
+        ? decimalToNumber(plan.expectedReturnMax)
+        : null,
     allowWithdrawal: plan.allowWithdrawal,
     isLocked: plan.isLocked,
     currency: plan.currency,

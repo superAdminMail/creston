@@ -7,7 +7,7 @@ import {
 } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
-import { toDecimal } from "@/lib/services/investment/decimal";
+import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 
 export type AvailableWithdrawalInvestmentOrder = {
   id: string;
@@ -112,11 +112,11 @@ export async function getAvailableWithdrawalBalance(
       id: order.id,
       investmentAccountId: order.investmentAccountId,
       investmentModel: order.investmentModel,
-      principal: principal.toNumber(),
-      profit: availableAmount.minus(principal).toNumber(),
-      availableAmount: availableAmount.toNumber(),
+      principal: decimalToNumber(principal),
+      profit: decimalToNumber(availableAmount.minus(principal)),
+      availableAmount: decimalToNumber(availableAmount),
       currentValue: order.currentValue
-        ? toDecimal(order.currentValue).toNumber()
+        ? decimalToNumber(order.currentValue)
         : null,
       currency: order.currency,
     };
@@ -124,12 +124,12 @@ export async function getAvailableWithdrawalBalance(
 
   const investmentBalance = eligibleInvestmentOrders.reduce(
     (sum, order) =>
-      sum + resolveInvestmentOrderWithdrawalAmount(order).toNumber(),
+      sum + decimalToNumber(resolveInvestmentOrderWithdrawalAmount(order)),
     0,
   );
 
   const savingsBalance = savingsAccounts.reduce(
-    (sum, account) => sum + toDecimal(account.balance).toNumber(),
+    (sum, account) => sum + decimalToNumber(account.balance),
     0,
   );
 

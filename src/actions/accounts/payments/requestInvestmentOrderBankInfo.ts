@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import {
   INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
   INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
@@ -84,17 +85,13 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
   const requestMessage = `Bank transfer details requested for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`;
 
   await prisma.$transaction(async (tx) => {
-    await tx.notification.upsert({
-      where: {
+    await upsertSystemNotifications(tx, [
+      {
         key: `investment-order-bank-info-request-ack:${order.id}:${user.id}`,
-      },
-      create: {
         userId: user.id,
         title: "Bank info request sent",
         message:
           "We sent your bank info request to the admin team. We'll notify you when the transfer details are ready.",
-        type: "SYSTEM",
-        key: `investment-order-bank-info-request-ack:${order.id}:${user.id}`,
         link: `/account/dashboard/user/investment-orders/${order.id}/payment`,
         metadata: {
           kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
@@ -102,59 +99,23 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
           requesterId: user.id,
         },
       },
-      update: {
-        title: "Bank info request sent",
-        message:
-          "We sent your bank info request to the admin team. We'll notify you when the transfer details are ready.",
-        type: "SYSTEM",
-        link: `/account/dashboard/user/investment-orders/${order.id}/payment`,
+      ...admins.map((admin) => ({
+        key: `investment-order-bank-info-request:${order.id}:${admin.id}`,
+        userId: admin.id,
+        title: "Investment bank info request",
+        message: requestMessage,
+        link: "/account/dashboard/admin/investment-payments",
         metadata: {
-          kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
+          kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
           orderId: order.id,
           requesterId: user.id,
+          requesterName: user.name,
+          requesterEmail: user.email,
+          investmentPlanName: order.investmentPlan.name,
+          currency: order.currency,
         },
-      },
-    });
-
-    for (const admin of admins) {
-      await tx.notification.upsert({
-        where: {
-          key: `investment-order-bank-info-request:${order.id}:${admin.id}`,
-        },
-        create: {
-          userId: admin.id,
-          title: "Investment bank info request",
-          message: requestMessage,
-          type: "SYSTEM",
-          key: `investment-order-bank-info-request:${order.id}:${admin.id}`,
-          link: "/account/dashboard/admin/investment-payments",
-          metadata: {
-            kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
-            orderId: order.id,
-            requesterId: user.id,
-            requesterName: user.name,
-            requesterEmail: user.email,
-            investmentPlanName: order.investmentPlan.name,
-            currency: order.currency,
-          },
-        },
-        update: {
-          title: "Investment bank info request",
-          message: requestMessage,
-          type: "SYSTEM",
-          link: "/account/dashboard/admin/investment-payments",
-          metadata: {
-            kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
-            orderId: order.id,
-            requesterId: user.id,
-            requesterName: user.name,
-            requesterEmail: user.email,
-            investmentPlanName: order.investmentPlan.name,
-            currency: order.currency,
-          },
-        },
-      });
-    }
+      })),
+    ]);
   });
 
   revalidatePath(

@@ -88,70 +88,74 @@ export async function getUserPrivateBankInfo(
       createdAt: "desc",
     },
     select: {
-      id: true,
-      type: true,
       metadata: true,
-      createdAt: true,
     },
   });
 
-  for (const notification of notifications) {
-    const kind = getNotificationKind(notification);
-    const isReadyNotification =
-      kind === INVESTMENT_ORDER_BANK_INFO_READY_KIND ||
-      kind === SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND;
+  const readyNotificationIds = notifications
+    .filter((notification) => {
+      const kind = getNotificationKind(notification);
+      return (
+        kind === INVESTMENT_ORDER_BANK_INFO_READY_KIND ||
+        kind === SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND
+      );
+    })
+    .map((notification) => getPlatformPaymentMethodId(notification))
+    .filter((id): id is string => Boolean(id));
 
-    if (!isReadyNotification) {
-      continue;
-    }
+  if (readyNotificationIds.length === 0) {
+    return null;
+  }
 
-    const platformPaymentMethodId = getPlatformPaymentMethodId(notification);
-    if (!platformPaymentMethodId) {
-      continue;
-    }
+  const currencyFilter = currency ? [{ currency }, { currency: null }] : undefined;
 
-    const currencyFilter = currency
-      ? [{ currency }, { currency: null }]
-      : undefined;
-
-    const paymentMethod = await prisma.platformPaymentMethod.findFirst({
-      where: {
-        id: platformPaymentMethodId,
-        isActive: true,
-        isPrivate: true,
-        type: "BANK_INFO",
-        ...(currencyFilter ? { OR: currencyFilter } : {}),
+  const paymentMethods = await prisma.platformPaymentMethod.findMany({
+    where: {
+      id: {
+        in: readyNotificationIds,
       },
-      select: {
-        id: true,
-        label: true,
-        type: true,
-        providerName: true,
-        bankName: true,
-        bankCode: true,
-        accountName: true,
-        reference: true,
-        bankAddress: true,
-        accountNumber: true,
-        iban: true,
-        swiftCode: true,
-        routingNumber: true,
-        branchName: true,
-        country: true,
-        instructions: true,
-        notes: true,
-        isPrivate: true,
-        isActive: true,
-        isDefault: true,
-        sortOrder: true,
-        verificationStatus: true,
-        cryptoAsset: true,
-        cryptoNetwork: true,
-        walletAddress: true,
-        walletTag: true,
-        currency: true,
-      },
-    });
+      isActive: true,
+      isPrivate: true,
+      type: "BANK_INFO",
+      ...(currencyFilter ? { OR: currencyFilter } : {}),
+    },
+    select: {
+      id: true,
+      label: true,
+      type: true,
+      providerName: true,
+      bankName: true,
+      bankCode: true,
+      accountName: true,
+      reference: true,
+      bankAddress: true,
+      accountNumber: true,
+      iban: true,
+      swiftCode: true,
+      routingNumber: true,
+      branchName: true,
+      country: true,
+      instructions: true,
+      notes: true,
+      isPrivate: true,
+      isActive: true,
+      isDefault: true,
+      sortOrder: true,
+      verificationStatus: true,
+      cryptoAsset: true,
+      cryptoNetwork: true,
+      walletAddress: true,
+      walletTag: true,
+      currency: true,
+    },
+  });
+
+  const paymentMethodById = new Map(
+    paymentMethods.map((paymentMethod) => [paymentMethod.id, paymentMethod]),
+  );
+
+  for (const platformPaymentMethodId of readyNotificationIds) {
+    const paymentMethod = paymentMethodById.get(platformPaymentMethodId);
 
     if (paymentMethod) {
       return paymentMethod;

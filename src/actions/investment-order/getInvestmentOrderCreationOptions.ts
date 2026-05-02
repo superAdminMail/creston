@@ -15,12 +15,9 @@ import {
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { InvestmentOrderCreationKycStatus } from "@/lib/types/investment-order";
 import { redirect } from "next/navigation";
-
-type Decimalish = {
-  toNumber(): number;
-};
 
 export type InvestmentOrderCreationTierOption = {
   id: string;
@@ -76,12 +73,6 @@ export type InvestmentOrderCreationOptionsData = {
   totalActiveTiers: number;
   investments: InvestmentOrderCreationInvestmentOption[];
 };
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === "number") return value;
-  return value.toNumber();
-}
 
 function toInvestmentOrderCreationKycStatus(
   value: string | null | undefined,
@@ -204,18 +195,18 @@ export async function getInvestmentOrderCreationOptions(): Promise<InvestmentOrd
             id: tier.id,
             level: tier.level,
             levelLabel: formatTierLevel(tier.level),
-            minAmount: toNumber(tier.minAmount),
-            maxAmount: toNumber(tier.maxAmount),
+            minAmount: decimalToNumber(tier.minAmount),
+            maxAmount: decimalToNumber(tier.maxAmount),
             returnLabel: formatInvestmentTierReturnLabel({
               investmentModel: plan.investmentModel,
               fixedRoiPercent: tier.fixedRoiPercent
-                ? toNumber(tier.fixedRoiPercent)
+                ? decimalToNumber(tier.fixedRoiPercent)
                 : null,
               projectedRoiMin: tier.projectedRoiMin
-                ? toNumber(tier.projectedRoiMin)
+                ? decimalToNumber(tier.projectedRoiMin)
                 : null,
               projectedRoiMax: tier.projectedRoiMax
-                ? toNumber(tier.projectedRoiMax)
+                ? decimalToNumber(tier.projectedRoiMax)
                 : null,
             }),
             isActive: tier.isActive,

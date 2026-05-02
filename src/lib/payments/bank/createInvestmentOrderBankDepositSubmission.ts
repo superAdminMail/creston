@@ -7,6 +7,7 @@ import {
   UserRole,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { upsertBankDepositSubmissionNotifications } from "@/lib/payments/bank/bankDepositSubmissionNotifications";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
@@ -72,24 +73,6 @@ export async function createInvestmentOrderBankDepositSubmission({
           },
         },
       },
-      payments: {
-        where: {
-          status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
-          type: {
-            in: [
-              InvestmentOrderPaymentType.BANK_DEPOSIT,
-              InvestmentOrderPaymentType.CRYPTO_PROVIDER,
-            ],
-          },
-        },
-        select: {
-          id: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 1,
-      },
     },
   });
 
@@ -109,12 +92,6 @@ export async function createInvestmentOrderBankDepositSubmission({
     order.status === InvestmentOrderStatus.REJECTED
   ) {
     throw new Error("This investment order can no longer be paid");
-  }
-
-  if (order.payments.length > 0) {
-    throw new Error(
-      "There is already a pending payment submission for this order",
-    );
   }
 
   const privateBankMethod =
@@ -224,6 +201,28 @@ export async function createInvestmentOrderBankDepositSubmission({
   }
 
   const payment = await prisma.$transaction(async (tx) => {
+    const pendingPayment = await tx.investmentOrderPayment.findFirst({
+      where: {
+        investmentOrderId: order.id,
+        status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
+        type: {
+          in: [
+            InvestmentOrderPaymentType.BANK_DEPOSIT,
+            InvestmentOrderPaymentType.CRYPTO_PROVIDER,
+          ],
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (pendingPayment) {
+      throw new Error(
+        "There is already a pending payment submission for this order",
+      );
+    }
+
     const createdPayment = await tx.investmentOrderPayment.create({
       data: {
         investmentOrderId: order.id,
@@ -278,45 +277,28 @@ export async function createInvestmentOrderBankDepositSubmission({
       },
     });
 
-    for (const admin of admins) {
-      await tx.notification.upsert({
-        where: {
-          key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
+    await upsertBankDepositSubmissionNotifications(
+      tx,
+      admins.map((admin) => ({
+        key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
+        userId: admin.id,
+        title: "Investment payment proof submitted",
+        message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
+        link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
+        metadata: {
+          kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
+          orderId: order.id,
+          paymentId: createdPayment.id,
+          submittedByUserId: userId,
+          investmentPlanName: order.investmentPlan.name,
+          currency: order.currency,
         },
-        create: {
-          userId: admin.id,
-          title: "Investment payment proof submitted",
-          message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
-          type: "SYSTEM",
-          key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
-          link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
-          metadata: {
-            kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
-            orderId: order.id,
-            paymentId: createdPayment.id,
-            submittedByUserId: userId,
-            investmentPlanName: order.investmentPlan.name,
-            currency: order.currency,
-          },
-        },
-        update: {
-          title: "Investment payment proof submitted",
-          message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
-          type: "SYSTEM",
-          link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
-          metadata: {
-            kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
-            orderId: order.id,
-            paymentId: createdPayment.id,
-            submittedByUserId: userId,
-            investmentPlanName: order.investmentPlan.name,
-            currency: order.currency,
-          },
-        },
-      });
-    }
+      })),
+    );
 
     return createdPayment;
+  }, {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
   });
 
   return {

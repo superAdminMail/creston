@@ -13,17 +13,12 @@ import {
 } from "@/lib/formatters/formatters";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 type DecimalLike = {
   toNumber(): number;
   toFixed(precision?: number): string;
 };
-
-function toNumber(value: DecimalLike | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
 
 function formatDateTimeLabel(value: Date | string | null | undefined) {
   if (!value) return "—";
@@ -159,9 +154,9 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
     network: intent.network,
     networkLabel: intent.network,
     fiatCurrency: intent.fiatCurrency,
-    fiatAmount: toNumber(intent.fiatAmount),
+    fiatAmount: decimalToNumber(intent.fiatAmount),
     fiatAmountLabel: formatCurrency(
-      toNumber(intent.fiatAmount),
+      decimalToNumber(intent.fiatAmount),
       intent.fiatCurrency,
     ),
     expectedCryptoAmountLabel: `${formatCryptoAmount(intent.expectedCryptoAmount)} ${intent.asset}`,
@@ -169,10 +164,10 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
       ? `${formatCryptoAmount(intent.receivedCryptoAmount)} ${intent.asset}`
       : null,
     creditedFiatAmountLabel: intent.creditedFiatAmount
-      ? formatCurrency(toNumber(intent.creditedFiatAmount), intent.fiatCurrency)
+      ? formatCurrency(decimalToNumber(intent.creditedFiatAmount), intent.fiatCurrency)
       : null,
     creditedFiatAmount: intent.creditedFiatAmount
-      ? toNumber(intent.creditedFiatAmount)
+      ? decimalToNumber(intent.creditedFiatAmount)
       : null,
     status: intent.status,
     statusLabel: formatEnumLabel(intent.status),
@@ -190,15 +185,15 @@ export async function getSuperAdminFundingIntents(): Promise<SuperAdminFundingIn
     investmentOrderStatus: intent.investmentOrder.status,
     investmentOrderStatusLabel: formatEnumLabel(intent.investmentOrder.status),
     investmentOrderAmountLabel: formatCurrency(
-      toNumber(intent.investmentOrder.amount),
+      decimalToNumber(intent.investmentOrder.amount),
       intent.investmentOrder.currency,
     ),
-    investmentOrderAmount: toNumber(intent.investmentOrder.amount),
+    investmentOrderAmount: decimalToNumber(intent.investmentOrder.amount),
     investmentOrderAmountPaidLabel: formatCurrency(
-      toNumber(intent.investmentOrder.amountPaid),
+      decimalToNumber(intent.investmentOrder.amountPaid),
       intent.investmentOrder.currency,
     ),
-    investmentOrderAmountPaid: toNumber(intent.investmentOrder.amountPaid),
+    investmentOrderAmountPaid: decimalToNumber(intent.investmentOrder.amountPaid),
     investmentOrderPaymentMethodTypeLabel: intent.investmentOrder.paymentMethodType
       ? formatEnumLabel(intent.investmentOrder.paymentMethodType)
       : "Not set",

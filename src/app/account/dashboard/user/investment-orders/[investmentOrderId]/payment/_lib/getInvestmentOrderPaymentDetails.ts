@@ -10,12 +10,12 @@ import {
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
+  return decimalToNumber(value as Parameters<typeof decimalToNumber>[0]);
 }
 
 export async function getInvestmentOrderPaymentDetails(

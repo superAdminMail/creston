@@ -23,13 +23,38 @@ async function createNotificationRecord({
   metadata,
 }: CreateNotificationInput) {
   if (key) {
-    const existing = await prisma.notification.findUnique({
-      where: { key },
-    });
+    try {
+      const notification = await prisma.notification.create({
+        data: {
+          userId,
+          title,
+          message,
+          link,
+          type: event,
+          key,
+          metadata,
+        },
+      });
 
-    if (existing) {
       return {
-        notification: existing,
+        notification,
+        created: true,
+      };
+    } catch (error) {
+      if ((error as { code?: string } | null)?.code !== "P2002") {
+        throw error;
+      }
+
+      const notification = await prisma.notification.findUnique({
+        where: { key },
+      });
+
+      if (!notification) {
+        throw error;
+      }
+
+      return {
+        notification,
         created: false,
       };
     }

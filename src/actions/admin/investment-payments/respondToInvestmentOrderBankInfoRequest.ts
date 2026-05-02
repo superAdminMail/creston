@@ -10,6 +10,7 @@ import {
 import {
   INVESTMENT_ORDER_BANK_INFO_READY_KIND,
 } from "@/lib/notifications/investmentOrderBankInfo";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { prisma } from "@/lib/prisma";
 import {
@@ -179,16 +180,12 @@ export async function respondToInvestmentOrderBankInfoRequest(
         },
       });
 
-      await tx.notification.upsert({
-        where: {
+      await upsertSystemNotifications(tx, [
+        {
           key: `investment-order-bank-info-ready:${order.id}`,
-        },
-        create: {
           userId: order.investorProfile.user.id,
           title: "Bank details are ready",
           message: `Bank transfer details for your investment order ${order.id} are now available.`,
-          type: "INVESTMENT_ORDER",
-          key: `investment-order-bank-info-ready:${order.id}`,
           link: `/account/dashboard/user/investment-orders/${order.id}/payment`,
           metadata: {
             kind: INVESTMENT_ORDER_BANK_INFO_READY_KIND,
@@ -199,21 +196,7 @@ export async function respondToInvestmentOrderBankInfoRequest(
             respondedByRole: role,
           },
         },
-        update: {
-          title: "Bank details are ready",
-          message: `Bank transfer details for your investment order ${order.id} are now available.`,
-          type: "INVESTMENT_ORDER",
-          link: `/account/dashboard/user/investment-orders/${order.id}/payment`,
-          metadata: {
-            kind: INVESTMENT_ORDER_BANK_INFO_READY_KIND,
-            orderId: order.id,
-            requesterId: order.investorProfile.user.id,
-            platformPaymentMethodId: platformPaymentMethod.id,
-            respondedByUserId: userId,
-            respondedByRole: role,
-          },
-        },
-      });
+      ]);
     });
 
     revalidatePath("/account/dashboard/admin/investment-payments");

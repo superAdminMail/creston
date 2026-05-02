@@ -10,6 +10,7 @@ import {
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
 import type { SavingsInterestFrequency } from "@/generated/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type SuperAdminSavingsProductDetails = {
   id: string;
@@ -54,11 +55,6 @@ export type SuperAdminSavingsProductDetails = {
   frequencyLabel: string;
 };
 
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
-
 export async function getSuperAdminSavingsProductById(
   savingsProductId: string,
 ): Promise<SuperAdminSavingsProductDetails> {
@@ -98,10 +94,10 @@ export async function getSuperAdminSavingsProductById(
   }
 
   const interestRatePercent = product.interestRatePercent
-    ? toNumber(product.interestRatePercent)
+    ? decimalToNumber(product.interestRatePercent)
     : null;
-  const minBalance = product.minBalance ? toNumber(product.minBalance) : null;
-  const maxBalance = product.maxBalance ? toNumber(product.maxBalance) : null;
+  const minBalance = product.minBalance ? decimalToNumber(product.minBalance) : null;
+  const maxBalance = product.maxBalance ? decimalToNumber(product.maxBalance) : null;
   const minimumLockDays = product.minimumLockDays ?? null;
   const maximumLockDays = product.maximumLockDays ?? null;
 

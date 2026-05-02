@@ -9,6 +9,12 @@ import {
   SavingsStatus,
   SavingsTransactionType,
 } from "@/generated/prisma";
+import {
+  asJsonObject,
+  pickNonEmptyString,
+  toJsonValue,
+  toNullableJsonValue,
+} from "@/lib/payments/paymentJson";
 
 type Tx = Prisma.TransactionClient;
 
@@ -41,27 +47,6 @@ type ApplySuccessfulCryptoFundingResult =
       fundingStatus: SavingsFundingIntentStatus;
       creditedAmount: string;
     };
-
-function asObject(
-  value: Prisma.JsonValue | null | undefined,
-): Record<string, unknown> {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return {};
-  }
-  return value as Record<string, unknown>;
-}
-
-function toJsonValue(value: unknown): Prisma.InputJsonValue {
-  return value as Prisma.InputJsonValue;
-}
-
-function toNullableJsonValue(
-  value: unknown,
-): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput | undefined {
-  if (value === undefined) return undefined;
-  if (value === null) return Prisma.JsonNull;
-  return value as Prisma.InputJsonValue;
-}
 
 function minDecimal(
   first: Prisma.Decimal,
@@ -169,16 +154,20 @@ async function applyInvestmentCryptoFunding({
   const safeCreditedAmount = clampToUpperBound(creditedAmount, remaining);
   const newAmountPaid = currentAmountPaid.plus(safeCreditedAmount);
 
-  const existingOrderPaymentMetadata = asObject(order.paymentMetadata);
-  const existingFundingMetadata = asObject(fundingIntent.metadata);
+  const existingOrderPaymentMetadata = asJsonObject(order.paymentMetadata);
+  const existingFundingMetadata = asJsonObject(fundingIntent.metadata);
+  const paymentReference = pickNonEmptyString(providerExternalId, providerReference) ?? fundingIntent.id;
+  const providerExternalReference = pickNonEmptyString(
+    providerExternalId,
+    fundingIntent.providerExternalId,
+  );
 
   await tx.cryptoFundingIntent.update({
     where: { id: fundingIntent.id },
     data: {
       status: CryptoFundingIntentStatus.FUNDED,
-      providerExternalId:
-        providerExternalId ?? fundingIntent.providerExternalId,
-      providerReference: providerReference ?? fundingIntent.id,
+      providerExternalId: providerExternalReference,
+      providerReference: paymentReference,
       creditedFiatAmount: safeCreditedAmount,
       fundedAt: processedAt,
       failedAt: null,
@@ -198,8 +187,7 @@ async function applyInvestmentCryptoFunding({
     where: {
       investmentOrderId: order.id,
       type: InvestmentOrderPaymentType.CRYPTO_PROVIDER,
-      providerReference:
-        providerExternalId ?? providerReference ?? fundingIntent.id,
+      providerReference: paymentReference,
       status: InvestmentOrderPaymentStatus.APPROVED,
     },
     select: { id: true },
@@ -216,8 +204,7 @@ async function applyInvestmentCryptoFunding({
         claimedAmount: safeCreditedAmount,
         approvedAmount: safeCreditedAmount,
         currency: fundingIntent.fiatCurrency,
-        providerReference:
-          providerExternalId ?? providerReference ?? fundingIntent.id,
+        providerReference: paymentReference,
         providerPayload: toJsonValue({
           callback: callbackPayload,
           verify: verifiedPayload,
@@ -234,8 +221,7 @@ async function applyInvestmentCryptoFunding({
       paymentMethodType: "CRYPTO_PROVIDER",
       status: InvestmentOrderStatus.PAID,
       amountPaid: newAmountPaid,
-      paymentReference:
-        providerExternalId ?? providerReference ?? fundingIntent.id,
+      paymentReference,
       paidAt: order.paidAt ?? processedAt,
       confirmedAt: order.confirmedAt ?? processedAt,
       lastPaymentSubmittedAt: processedAt,
@@ -260,7 +246,7 @@ async function applyInvestmentCryptoFunding({
       message: "Your crypto payment was confirmed successfully.",
       type: "INVESTMENT_PAYMENT_CONFIRMED",
       link: `/account/dashboard/user/investment-orders/${order.id}`,
-      key: `investment-payment-confirmed:${order.id}:${providerExternalId ?? providerReference ?? fundingIntent.id}`,
+      key: `investment-payment-confirmed:${order.id}:${paymentReference}`,
       metadata: toNullableJsonValue({
         investmentOrderId: order.id,
         fundingIntentId: fundingIntent.id,
@@ -364,16 +350,20 @@ async function applySavingsCryptoFunding({
   }
   const newBalance = currentBalance.plus(safeCreditedAmount);
 
-  const existingFundingMetadata = asObject(fundingIntent.metadata);
-  const existingAccountMetadata = asObject(fundingIntent.savingsAccount.metadata);
+  const existingFundingMetadata = asJsonObject(fundingIntent.metadata);
+  const existingAccountMetadata = asJsonObject(fundingIntent.savingsAccount.metadata);
+  const paymentReference = pickNonEmptyString(providerExternalId, providerReference) ?? fundingIntent.id;
+  const providerExternalReference = pickNonEmptyString(
+    providerExternalId,
+    fundingIntent.providerExternalId,
+  );
 
   await tx.savingsFundingIntent.update({
     where: { id: fundingIntent.id },
     data: {
       status: SavingsFundingIntentStatus.CREDITED,
-      providerExternalId:
-        providerExternalId ?? fundingIntent.providerExternalId,
-      providerReference: providerReference ?? fundingIntent.id,
+      providerExternalId: providerExternalReference,
+      providerReference: paymentReference,
       creditedAmount: safeCreditedAmount,
       paidAt: processedAt,
       creditedAt: processedAt,
@@ -413,7 +403,7 @@ async function applySavingsCryptoFunding({
       currency: fundingIntent.currency,
       balanceBefore: currentBalance,
       balanceAfter: newBalance,
-      reference: providerExternalId ?? providerReference ?? fundingIntent.id,
+      reference: paymentReference,
       note: "Crypto funding credited via PAYMENTO",
       metadata: toNullableJsonValue({
         callback: callbackPayload,

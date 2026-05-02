@@ -7,16 +7,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type SuperAdminSavingsAccountListItem = {
   id: string;
@@ -114,9 +105,9 @@ export async function getSuperAdminSavingsAccounts(): Promise<SuperAdminSavingsA
       "Savings account linked to a live savings product.",
     status: account.status,
     statusLabel: formatEnumLabel(account.status),
-    balance: toNumber(account.balance),
+    balance: decimalToNumber(account.balance),
     currency: account.currency || "USD",
-    targetAmount: account.targetAmount ? toNumber(account.targetAmount) : null,
+    targetAmount: account.targetAmount ? decimalToNumber(account.targetAmount) : null,
     isLocked: account.isLocked,
     lockedUntil: formatDateLabel(account.lockedUntil, "Not locked"),
     latestFundingIntentStatus:
@@ -135,16 +126,37 @@ export async function getSuperAdminSavingsAccounts(): Promise<SuperAdminSavingsA
     updatedDate: formatDateLabel(account.updatedAt),
   }));
 
+  const summary = mappedAccounts.reduce(
+    (acc, account) => {
+      if (account.status === "ACTIVE") {
+        acc.activeAccountsCount += 1;
+      }
+
+      if (account.isLocked) {
+        acc.lockedAccountsCount += 1;
+      }
+
+      if (account.targetAmount !== null) {
+        acc.targetLinkedAccountsCount += 1;
+      }
+
+      acc.totalBalance += account.balance;
+      return acc;
+    },
+    {
+      activeAccountsCount: 0,
+      lockedAccountsCount: 0,
+      targetLinkedAccountsCount: 0,
+      totalBalance: 0,
+    },
+  );
+
   return {
     totalAccountsCount: mappedAccounts.length,
-    activeAccountsCount: mappedAccounts.filter(
-      (account) => account.status === "ACTIVE",
-    ).length,
-    lockedAccountsCount: mappedAccounts.filter((account) => account.isLocked).length,
-    targetLinkedAccountsCount: mappedAccounts.filter(
-      (account) => account.targetAmount !== null,
-    ).length,
-    totalBalance: mappedAccounts.reduce((sum, account) => sum + account.balance, 0),
+    activeAccountsCount: summary.activeAccountsCount,
+    lockedAccountsCount: summary.lockedAccountsCount,
+    targetLinkedAccountsCount: summary.targetLinkedAccountsCount,
+    totalBalance: summary.totalBalance,
     accounts: mappedAccounts,
   };
 }

@@ -4,16 +4,7 @@ import { Prisma, type KycStatus } from "@/generated/prisma";
 import { formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const investorDetailsSelect =
   Prisma.validator<Prisma.InvestorProfileSelect>()({
@@ -217,7 +208,7 @@ export async function getSuperAdminInvestorById(
     recentInvestmentAccounts: investor.investmentAccounts.map((account) => ({
       id: account.id,
       status: account.status,
-      balance: toNumber(account.balance),
+      balance: decimalToNumber(account.balance),
       currency: account.currency,
       investmentPlanName: account.investmentPlan.name,
       periodLabel: formatEnumLabel(account.investmentPlan.period),
@@ -229,7 +220,7 @@ export async function getSuperAdminInvestorById(
       id: account.id,
       name: account.name,
       status: account.status,
-      balance: toNumber(account.balance),
+      balance: decimalToNumber(account.balance),
       currency: account.currency,
       productName: account.savingsProduct.name,
       interestEnabled: account.savingsProduct.interestEnabled,

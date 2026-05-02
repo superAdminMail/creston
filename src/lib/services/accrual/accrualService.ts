@@ -3,7 +3,12 @@ import { InvestmentModel, Prisma, RuntimeStatus } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
-import { minDecimal, toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
+import {
+  decimalToNumber,
+  minDecimal,
+  toDecimal,
+  ZERO_DECIMAL,
+} from "@/lib/services/investment/decimal";
 
 export const FIXED_ACCRUAL_INTERVAL_MINUTES = 2;
 
@@ -92,7 +97,7 @@ export function calculateFixedAccrual(
     order.maturityDate.getTime(),
     getAccrualCutoff(now).getTime(),
   );
-  const accrualUntil = new Date(accrualCutoff.toNumber());
+  const accrualUntil = new Date(decimalToNumber(accrualCutoff));
   const accrualFrom = order.lastAccruedAt ?? order.startDate;
 
   if (accrualUntil <= accrualFrom) {
@@ -213,7 +218,7 @@ export async function accrueFixedOrder(
 
   if (calculation.accruedAmount.greaterThan(0)) {
     const formattedAmount = formatCurrency(
-      calculation.accruedAmount.toNumber(),
+      decimalToNumber(calculation.accruedAmount),
       order.currency,
     );
 
@@ -226,9 +231,9 @@ export async function accrueFixedOrder(
       key: `fixed-profit:${order.id}:${calculation.accruedUntil.toISOString()}`,
       metadata: {
         investmentOrderId: order.id,
-        amount: calculation.accruedAmount.toNumber(),
+        amount: decimalToNumber(calculation.accruedAmount),
         currency: order.currency,
-        totalAccruedProfit: calculation.totalAccruedProfit.toNumber(),
+        totalAccruedProfit: decimalToNumber(calculation.totalAccruedProfit),
         accruedUntil: calculation.accruedUntil.toISOString(),
         model: "FIXED",
       },

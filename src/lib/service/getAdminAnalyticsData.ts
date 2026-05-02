@@ -7,6 +7,7 @@ import {
 } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 
@@ -50,11 +51,6 @@ export type AdminAnalyticsData = {
   monthly: AdminAnalyticsMonthlyPoint[];
   reviewQueue: AdminAnalyticsQueueItem[];
 };
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
 
 function getMonthKeyUtc(date: Date) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -304,23 +300,23 @@ export async function getAdminAnalyticsData(): Promise<AdminAnalyticsData> {
 
   for (const item of monthlySavingsTransactions) {
     const bucket = monthly[monthIndex.get(getMonthKeyUtc(item.createdAt)) ?? -1];
-    if (bucket) bucket.savingsDeposits += toNumber(item.amount);
+    if (bucket) bucket.savingsDeposits += decimalToNumber(item.amount);
   }
 
   for (const item of monthlyInvestmentOrders) {
     const bucketDate = item.confirmedAt ?? item.paidAt ?? item.createdAt;
     const bucket = monthly[monthIndex.get(getMonthKeyUtc(bucketDate)) ?? -1];
-    if (bucket) bucket.investmentFunding += toNumber(item.amount);
+    if (bucket) bucket.investmentFunding += decimalToNumber(item.amount);
   }
 
   for (const item of monthlyWithdrawals) {
     const bucket = monthly[monthIndex.get(getMonthKeyUtc(item.requestedAt)) ?? -1];
-    if (bucket) bucket.withdrawalVolume += toNumber(item.amount);
+    if (bucket) bucket.withdrawalVolume += decimalToNumber(item.amount);
   }
 
   for (const item of monthlyEarnings) {
     const bucket = monthly[monthIndex.get(getMonthKeyUtc(item.date)) ?? -1];
-    if (bucket) bucket.earnings += toNumber(item.amount);
+    if (bucket) bucket.earnings += decimalToNumber(item.amount);
   }
 
   for (const item of monthlyPaymentReviews) {
@@ -328,10 +324,10 @@ export async function getAdminAnalyticsData(): Promise<AdminAnalyticsData> {
     if (bucket) bucket.paymentReviews += 1;
   }
 
-  const totalSavingsVolume = toNumber(totalSavingsDeposits._sum.amount);
-  const totalInvestmentVolume = toNumber(totalFundedInvestmentVolume._sum.amount);
+  const totalSavingsVolume = decimalToNumber(totalSavingsDeposits._sum.amount);
+  const totalInvestmentVolume = decimalToNumber(totalFundedInvestmentVolume._sum.amount);
   const totalCapitalTracked = totalSavingsVolume + totalInvestmentVolume;
-  const totalEarningsVolume = toNumber(totalEarnings._sum.amount);
+  const totalEarningsVolume = decimalToNumber(totalEarnings._sum.amount);
   const openReviewQueue =
     pendingWithdrawals +
     pendingKyc +

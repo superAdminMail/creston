@@ -3,6 +3,7 @@
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -99,8 +100,8 @@ export async function getAdminInvestmentOrders(): Promise<AdminInvestmentOrdersD
     id: order.id,
     investorName: order.investorProfile.user.name?.trim() || "Unnamed investor",
     investorEmail: order.investorProfile.user.email,
-    amount: formatCurrency(order.amount.toNumber(), order.currency),
-    amountValue: order.amount.toNumber(),
+    amount: formatCurrency(decimalToNumber(order.amount), order.currency),
+    amountValue: decimalToNumber(order.amount),
     currency: order.currency,
     status: order.status,
     statusLabel: formatStatusLabel(order.status),

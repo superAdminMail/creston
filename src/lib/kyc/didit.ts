@@ -20,6 +20,31 @@ export type AppKycStatus =
   | "VERIFIED"
   | "REJECTED";
 
+const DIDIT_RESUMABLE_STATUSES = new Set<DiditStatus>([
+  DIDIT_STATUSES.NOT_STARTED,
+  DIDIT_STATUSES.IN_PROGRESS,
+  DIDIT_STATUSES.RESUBMITTED,
+]);
+
+const DIDIT_INACTIVE_STATUSES = new Set<DiditStatus>([
+  DIDIT_STATUSES.EXPIRED,
+  DIDIT_STATUSES.ABANDONED,
+]);
+
+const DIDIT_RETRYABLE_STATUSES = new Set<DiditStatus>([
+  DIDIT_STATUSES.EXPIRED,
+  DIDIT_STATUSES.ABANDONED,
+  DIDIT_STATUSES.DECLINED,
+  DIDIT_STATUSES.KYC_EXPIRED,
+]);
+
+const DIDIT_STATUS_TO_APP_KYC_STATUS = new Map<DiditStatus, AppKycStatus>([
+  [DIDIT_STATUSES.APPROVED, "VERIFIED"],
+  [DIDIT_STATUSES.DECLINED, "REJECTED"],
+  [DIDIT_STATUSES.IN_REVIEW, "PENDING_REVIEW"],
+  [DIDIT_STATUSES.KYC_EXPIRED, "NOT_STARTED"],
+]);
+
 type CreateDiditSessionParams = {
   vendorData: string;
   callbackUrl: string;
@@ -78,18 +103,11 @@ function getRequiredEnv(name: string) {
 export function mapDiditStatusToAppKycStatus(
   diditStatus: string | null | undefined,
 ): AppKycStatus | null {
-  switch (diditStatus) {
-    case DIDIT_STATUSES.APPROVED:
-      return "VERIFIED";
-    case DIDIT_STATUSES.DECLINED:
-      return "REJECTED";
-    case DIDIT_STATUSES.IN_REVIEW:
-      return "PENDING_REVIEW";
-    case DIDIT_STATUSES.KYC_EXPIRED:
-      return "NOT_STARTED";
-    default:
-      return null;
+  if (typeof diditStatus !== "string") {
+    return null;
   }
+
+  return DIDIT_STATUS_TO_APP_KYC_STATUS.get(diditStatus as DiditStatus) ?? null;
 }
 
 export function resolveDiditKycFinalState(
@@ -115,30 +133,24 @@ export function resolveDiditKycFinalState(
 }
 
 export function isDiditResumableStatus(status: string | null | undefined) {
-  return (
-    status === DIDIT_STATUSES.NOT_STARTED ||
-    status === DIDIT_STATUSES.IN_PROGRESS ||
-    status === DIDIT_STATUSES.RESUBMITTED
-  );
+  return typeof status === "string" && DIDIT_RESUMABLE_STATUSES.has(status as DiditStatus);
 }
 
 export function isDiditInactiveStatus(status: string | null | undefined) {
-  return (
-    status === DIDIT_STATUSES.EXPIRED || status === DIDIT_STATUSES.ABANDONED
-  );
+  return typeof status === "string" && DIDIT_INACTIVE_STATUSES.has(status as DiditStatus);
 }
 
 export function isDiditRetryableStatus(status: string | null | undefined) {
-  return (
-    !status ||
-    status === DIDIT_STATUSES.EXPIRED ||
-    status === DIDIT_STATUSES.ABANDONED ||
-    status === DIDIT_STATUSES.DECLINED ||
-    status === DIDIT_STATUSES.KYC_EXPIRED
-  );
+  return !status || (typeof status === "string" && DIDIT_RETRYABLE_STATUSES.has(status as DiditStatus));
 }
 
 export function isDiditActiveStatus(status: string | null | undefined) {
+  return isDiditResumableStatus(status) || status === DIDIT_STATUSES.IN_REVIEW;
+}
+
+export function isDiditRemoteReconcilableStatus(
+  status: string | null | undefined,
+) {
   return isDiditResumableStatus(status) || status === DIDIT_STATUSES.IN_REVIEW;
 }
 

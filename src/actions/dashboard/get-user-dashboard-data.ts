@@ -108,7 +108,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
         : sumDecimals(order.investmentEarnings.map((earning) => earning.amount));
     const principal = toDecimal(order.amount);
     const profitPercent = principal.greaterThan(0)
-      ? realizedProfit.div(principal).mul(100).toNumber()
+      ? decimalToNumber(realizedProfit.div(principal).mul(100))
       : 0;
 
     return {

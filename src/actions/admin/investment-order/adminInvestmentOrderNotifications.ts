@@ -1,6 +1,7 @@
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type AdminInvestmentOrderNotificationContext = {
   orderId: string;
@@ -63,7 +64,7 @@ export async function getAdminInvestmentOrderNotificationContext(
       order.investorProfile.user.email ||
       "Investor",
     investorEmail: order.investorProfile.user.email,
-    amount: order.amount.toNumber(),
+    amount: decimalToNumber(order.amount),
     currency: order.currency,
     planName: order.investmentPlan.name,
     investmentName: order.investmentPlan.investment.name,

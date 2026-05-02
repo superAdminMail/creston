@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { InvestmentPaymentReviewDetails } from "@/lib/types/payments/investmentPaymentReview.types";
 import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
+import {
+  decimalToNumber,
+  mapReviewReceipt,
+  reviewReceiptSelect,
+  reviewUserSelect,
+} from "@/lib/payments/review/paymentReviewMappers";
 
 export async function getInvestmentPaymentReviewDetails(
   paymentId: string,
@@ -35,25 +36,13 @@ export async function getInvestmentPaymentReviewDetails(
       submittedAt: true,
       reviewedAt: true,
       submittedByUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        ...reviewUserSelect,
       },
       reviewedByUser: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        ...reviewUserSelect,
       },
       receiptFile: {
-        select: {
-          id: true,
-          fileName: true,
-          url: true,
-        },
+        ...reviewReceiptSelect,
       },
       platformPaymentMethod: {
         select: {
@@ -76,23 +65,23 @@ export async function getInvestmentPaymentReviewDetails(
           paymentReference: true,
           paidAt: true,
           confirmedAt: true,
-      investmentPlan: {
-        select: {
-          id: true,
-          name: true,
-          period: true,
-          investmentModel: true,
-        },
-      },
-      investmentPlanTier: {
-        select: {
-          id: true,
-          level: true,
-          fixedRoiPercent: true,
-          projectedRoiMin: true,
-          projectedRoiMax: true,
-        },
-      },
+          investmentPlan: {
+            select: {
+              id: true,
+              name: true,
+              period: true,
+              investmentModel: true,
+            },
+          },
+          investmentPlanTier: {
+            select: {
+              id: true,
+              level: true,
+              fixedRoiPercent: true,
+              projectedRoiMin: true,
+              projectedRoiMax: true,
+            },
+          },
           investorProfile: {
             select: {
               user: {
@@ -113,20 +102,20 @@ export async function getInvestmentPaymentReviewDetails(
     notFound();
   }
 
-  const orderAmount = toNumber(payment.investmentOrder.amount);
-  const amountPaid = toNumber(payment.investmentOrder.amountPaid);
+  const orderAmount = decimalToNumber(payment.investmentOrder.amount);
+  const amountPaid = decimalToNumber(payment.investmentOrder.amountPaid);
   const remainingAmount = Math.max(orderAmount - amountPaid, 0);
   const canOfferPartialApproval =
     payment.status === "PENDING_REVIEW" &&
-    toNumber(payment.claimedAmount) < remainingAmount;
+    decimalToNumber(payment.claimedAmount) < remainingAmount;
 
   return {
     id: payment.id,
     type: payment.type,
     status: payment.status,
-    claimedAmount: toNumber(payment.claimedAmount),
+    claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
-      ? toNumber(payment.approvedAmount)
+      ? decimalToNumber(payment.approvedAmount)
       : null,
     canOfferPartialApproval,
     currency: payment.currency,
@@ -152,13 +141,7 @@ export async function getInvestmentPaymentReviewDetails(
           email: payment.reviewedByUser.email ?? null,
         }
       : null,
-    receipt: payment.receiptFile
-      ? {
-          id: payment.receiptFile.id,
-          fileName: payment.receiptFile.fileName,
-          url: payment.receiptFile.url ?? null,
-        }
-      : null,
+    receipt: mapReviewReceipt(payment.receiptFile),
     bankMethod: payment.platformPaymentMethod
       ? {
           id: payment.platformPaymentMethod.id,
@@ -192,13 +175,13 @@ export async function getInvestmentPaymentReviewDetails(
           resolveInvestmentTierRoiPercentValue({
             investmentModel: payment.investmentOrder.investmentPlan.investmentModel,
             fixedRoiPercent: payment.investmentOrder.investmentPlanTier.fixedRoiPercent
-              ? toNumber(payment.investmentOrder.investmentPlanTier.fixedRoiPercent)
+              ? decimalToNumber(payment.investmentOrder.investmentPlanTier.fixedRoiPercent)
               : null,
             projectedRoiMin: payment.investmentOrder.investmentPlanTier.projectedRoiMin
-              ? toNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMin)
+              ? decimalToNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMin)
               : null,
             projectedRoiMax: payment.investmentOrder.investmentPlanTier.projectedRoiMax
-              ? toNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMax)
+              ? decimalToNumber(payment.investmentOrder.investmentPlanTier.projectedRoiMax)
               : null,
           }) ?? 0,
       },

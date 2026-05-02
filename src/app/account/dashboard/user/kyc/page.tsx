@@ -70,7 +70,7 @@ export default async function Page({
 
   if (diditCallback) {
     try {
-      const finalized = await markKycVerificationSessionStatus({
+      await markKycVerificationSessionStatus({
         providerSessionId: diditCallback.verificationSessionId,
         status: diditCallback.status,
         rawPayload: {
@@ -78,15 +78,6 @@ export default async function Page({
           status: diditCallback.status,
           source: "didit-callback",
         },
-      });
-
-      console.log("[DIDIT_CALLBACK_FINALIZED]", {
-        sessionId: diditCallback.verificationSessionId,
-        providerStatus: finalized.providerStatus,
-        appStatus: finalized.appStatus,
-        sessionUpdated: finalized.sessionUpdated,
-        profileUpdated: finalized.profileUpdated,
-        changed: finalized.changed,
       });
     } catch (error) {
       console.error("[DIDIT_CALLBACK_FINALIZATION_ERROR]", error);

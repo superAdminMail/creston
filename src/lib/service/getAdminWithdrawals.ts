@@ -1,6 +1,7 @@
 import type { PaymentMethodType, WithdrawalStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type AdminWithdrawalItem = {
   id: string;
@@ -36,11 +37,6 @@ export type AdminWithdrawalItem = {
     isVerified: boolean;
   } | null;
 };
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
 
 export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
@@ -117,12 +113,12 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     externalReference: withdrawal.externalReference,
     reference: withdrawal.reference,
     status: withdrawal.status,
-    amount: toNumber(withdrawal.amount),
+    amount: decimalToNumber(withdrawal.amount),
     currency: withdrawal.currency,
     hasCommissionFees: withdrawal.hasCommissionFees,
-    commissionPercent: toNumber(withdrawal.commissionPercent),
+    commissionPercent: decimalToNumber(withdrawal.commissionPercent),
     savingsFeeAmount: withdrawal.savingsFeeAmount
-      ? toNumber(withdrawal.savingsFeeAmount)
+      ? decimalToNumber(withdrawal.savingsFeeAmount)
       : null,
     requestedAt: withdrawal.requestedAt.toISOString(),
     processedAt: withdrawal.processedAt?.toISOString() ?? null,

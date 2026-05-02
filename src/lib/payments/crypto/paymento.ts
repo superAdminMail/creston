@@ -64,6 +64,39 @@ export type PaymentoCallbackBody = {
   [key: string]: unknown;
 };
 
+export function parsePaymentoAdditionalData(
+  value: PaymentoCallbackBody["AdditionalData"],
+) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as PaymentoAdditionalDataItem[]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+export function getPaymentoAdditionalDataValue(
+  additionalData: PaymentoAdditionalDataItem[],
+  key: string,
+) {
+  const match = additionalData.find((item) => item.key === key);
+
+  if (!match) {
+    return null;
+  }
+
+  const value = match.value?.trim();
+  return value ? value : null;
+}
+
 export async function paymentoCreatePayment(
   payload: PaymentoCreatePaymentPayload,
 ) {
@@ -147,11 +180,3 @@ export function verifyPaymentoSignature(rawBody: string, signature: string) {
   }
 }
 
-export function parsePaymentoStatus(value: unknown): number | null {
-  if (typeof value === "number") return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const n = Number(value);
-    return Number.isNaN(n) ? null : n;
-  }
-  return null;
-}

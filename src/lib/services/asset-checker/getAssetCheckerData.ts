@@ -4,10 +4,7 @@ import { formatCurrency, formatDateLabel, formatEnumLabel, formatTierLevel } fro
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
 import { getPrices } from "@/lib/services/price/priceService";
-
-type Decimalish = {
-  toNumber(): number;
-};
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 type AssetCheckerMarketAsset = {
   id: string;
@@ -69,12 +66,6 @@ export type AssetCheckerData = {
     liveQuotesCount: number;
   };
 };
-
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
 
 function formatDurationDays(durationDays: number) {
   if (durationDays % 365 === 0) {
@@ -236,13 +227,13 @@ export async function getAssetCheckerData(): Promise<AssetCheckerData> {
           id: tier.id,
           level: tier.level,
           levelLabel: formatTierLevel(tier.level),
-          minAmount: toNumber(tier.minAmount),
-          maxAmount: toNumber(tier.maxAmount),
-          fixedRoiPercent: tier.fixedRoiPercent ? toNumber(tier.fixedRoiPercent) : null,
+          minAmount: decimalToNumber(tier.minAmount),
+          maxAmount: decimalToNumber(tier.maxAmount),
+          fixedRoiPercent: tier.fixedRoiPercent ? decimalToNumber(tier.fixedRoiPercent) : null,
           fixedRoiLabel: formatInvestmentTierReturnLabel({
             investmentModel: plan.investmentModel,
             fixedRoiPercent: tier.fixedRoiPercent
-              ? toNumber(tier.fixedRoiPercent)
+              ? decimalToNumber(tier.fixedRoiPercent)
               : null,
             projectedRoiMin: null,
             projectedRoiMax: null,

@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import {
   CryptoFundingProvider,
+  Prisma,
   SavingsFundingIntentStatus,
   SavingsFundingMethodType,
   SavingsStatus,
@@ -14,6 +15,7 @@ import { getAppBaseUrl } from "@/lib/config/appUrl";
 import { prisma } from "@/lib/prisma";
 import { paymentoCreatePayment } from "@/lib/payments/crypto/paymento";
 import { calculateSavingsFundingChargeAmount } from "@/lib/payments/savings/calculateSavingsFundingChargeAmount";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { createSavingsFundingCryptoCheckoutSchema as schema } from "@/lib/zodValidations/savings-funding-crypto-checkout";
 
 type Input = z.infer<typeof schema>;
@@ -27,6 +29,8 @@ const CREDITED_INTENT_STATUSES: SavingsFundingIntentStatus[] = [
   SavingsFundingIntentStatus.PAID,
   SavingsFundingIntentStatus.CREDITED,
 ];
+
+const RESERVATION_FAILED_CODE = "PAYMENTO_CREATE_FAILED";
 
 export type CreateSavingsFundingCryptoCheckoutResult =
   | {
@@ -145,8 +149,7 @@ export async function createSavingsFundingCryptoCheckout(
     },
   );
 
-  const amountPaid =
-    creditedFundingIntentTotals._sum.creditedAmount?.toNumber() ?? 0;
+  const amountPaid = decimalToNumber(creditedFundingIntentTotals._sum.creditedAmount);
 
   const chargeCalculation = calculateSavingsFundingChargeAmount({
     totalAmount: account.targetAmount ?? account.balance,
@@ -157,6 +160,90 @@ export async function createSavingsFundingCryptoCheckout(
     hasActiveCryptoIntent: false,
   });
   const paymentMode = "FULL" as const;
+  const reservationMetadata = {
+    source: "savings_checkout",
+    paymentMode,
+    chargeAmount: chargeCalculation.chargeAmount.toString(),
+    remainingBeforeCharge: chargeCalculation.remainingBeforeCharge.toString(),
+    splitNumber: chargeCalculation.splitNumber,
+    fundingMethodType: "CRYPTO_PROVIDER" as const,
+  };
+
+  let reservedIntentId: string | null = null;
+
+  try {
+    const reservation = await prisma.$transaction(
+      async (tx) => {
+        const activeIntent = await tx.savingsFundingIntent.findFirst({
+          where: {
+            savingsAccountId: account.id,
+            fundingMethodType: SavingsFundingMethodType.CRYPTO_PROVIDER,
+            status: {
+              in: ACTIVE_INTENT_STATUSES,
+            },
+          },
+          select: {
+            id: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        if (activeIntent) {
+          return { kind: "active" as const, intentId: activeIntent.id };
+        }
+
+        const intent = await tx.savingsFundingIntent.create({
+          data: {
+            savingsAccountId: account.id,
+            userId: user.id,
+            fundingMethodType: SavingsFundingMethodType.CRYPTO_PROVIDER,
+            status: SavingsFundingIntentStatus.PENDING,
+            provider: CryptoFundingProvider.PAYMENTO,
+            currency: account.currency,
+            targetAmount: chargeCalculation.chargeAmount,
+            creditedAmount: 0,
+            submittedAt: new Date(),
+            metadata: reservationMetadata,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        return { kind: "reserved" as const, intentId: intent.id };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    if (reservation.kind === "active") {
+      return {
+        ok: false,
+        message:
+          "There is already an active crypto payment session for this savings account.",
+      };
+    }
+
+    reservedIntentId = reservation.intentId;
+  } catch (error) {
+    console.error("[createSavingsFundingCryptoCheckout:reserve]", error);
+
+    return {
+      ok: false,
+      message:
+        "Unable to reserve a crypto checkout session. Please try again.",
+    };
+  }
+
+  if (!reservedIntentId) {
+    return {
+      ok: false,
+      message: "Unable to reserve a crypto checkout session. Please try again.",
+    };
+  }
 
   const appBaseUrl = getAppBaseUrl();
   const returnUrl = new URL(
@@ -178,6 +265,7 @@ export async function createSavingsFundingCryptoCheckout(
       ReturnUrl: returnUrl.toString(),
       additionalData: [
         { key: "savingsAccountId", value: account.id },
+        { key: "fundingIntentId", value: reservedIntentId },
         {
           key: "userId",
           value: user.id,
@@ -194,30 +282,24 @@ export async function createSavingsFundingCryptoCheckout(
       EmailAddress: account.investorProfile.user.email,
     });
 
-    const intent = await prisma.savingsFundingIntent.create({
+    const intent = await prisma.savingsFundingIntent.update({
+      where: { id: reservedIntentId },
       data: {
-        savingsAccountId: account.id,
-        userId: user.id,
-        fundingMethodType: SavingsFundingMethodType.CRYPTO_PROVIDER,
         status: SavingsFundingIntentStatus.SUBMITTED,
         provider: CryptoFundingProvider.PAYMENTO,
         providerSessionId: created.token,
         providerReference: created.token,
         providerExternalId: created.token,
         paymentReference: created.token,
-        currency: account.currency,
-        targetAmount: chargeCalculation.chargeAmount,
-        creditedAmount: 0,
         submittedAt: new Date(),
         metadata: {
+          ...reservationMetadata,
           createPaymentResponse: created.raw,
-          paymentMode,
-          chargeAmount: chargeCalculation.chargeAmount.toString(),
-          remainingBeforeCharge:
-            chargeCalculation.remainingBeforeCharge.toString(),
-          splitNumber: chargeCalculation.splitNumber,
-          source: "savings_checkout",
         },
+        failureCode: null,
+        failureMessage: null,
+        failedAt: null,
+        canceledAt: null,
       },
       select: {
         id: true,
@@ -235,6 +317,26 @@ export async function createSavingsFundingCryptoCheckout(
     };
   } catch (error) {
     console.error("[createSavingsFundingCryptoCheckout]", error);
+
+    if (reservedIntentId) {
+      await prisma.savingsFundingIntent
+        .update({
+          where: { id: reservedIntentId },
+          data: {
+            status: SavingsFundingIntentStatus.FAILED,
+            failedAt: new Date(),
+            failureCode: RESERVATION_FAILED_CODE,
+            failureMessage:
+              error instanceof Error ? error.message : "Unable to create crypto checkout.",
+          },
+        })
+        .catch((reservationError) => {
+          console.error(
+            "[createSavingsFundingCryptoCheckout:cleanup]",
+            reservationError,
+          );
+        });
+    }
 
     return {
       ok: false,

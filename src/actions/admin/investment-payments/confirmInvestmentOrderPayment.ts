@@ -14,43 +14,41 @@ function addDays(date: Date, days: number) {
 export async function confirmInvestmentOrderPayment(orderId: string) {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
 
-  const order = await prisma.investmentOrder.findUnique({
-    where: { id: orderId },
-    select: {
-      id: true,
-      status: true,
-      amount: true,
-      amountPaid: true,
-      confirmedAt: true,
-      investmentPlan: {
-        select: {
-          durationDays: true,
-        },
-      },
-      investmentAccountId: true,
-    },
-  });
-
-  if (!order) {
-    return { ok: false, message: "Investment order not found." };
-  }
-
-  if (order.status === "CONFIRMED") {
-    return { ok: false, message: "This order is already confirmed." };
-  }
-
-  if (order.status !== "PAID") {
-    return {
-      ok: false,
-      message: "Only fully paid orders can be confirmed.",
-    };
-  }
-
   const confirmedAt = new Date();
-  const startDate = confirmedAt;
-  const maturityDate = addDays(confirmedAt, order.investmentPlan.durationDays);
+  const result = await prisma.$transaction(async (tx) => {
+    const order = await tx.investmentOrder.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+        amountPaid: true,
+        investmentPlan: {
+          select: {
+            durationDays: true,
+          },
+        },
+        investmentAccountId: true,
+      },
+    });
 
-  await prisma.$transaction(async (tx) => {
+    if (!order) {
+      return { ok: false as const, message: "Investment order not found." };
+    }
+
+    if (order.status === "CONFIRMED") {
+      return { ok: false as const, message: "This order is already confirmed." };
+    }
+
+    if (order.status !== "PAID") {
+      return {
+        ok: false as const,
+        message: "Only fully paid orders can be confirmed.",
+      };
+    }
+
+    const startDate = confirmedAt;
+    const maturityDate = addDays(confirmedAt, order.investmentPlan.durationDays);
+
     await tx.investmentOrder.update({
       where: { id: order.id },
       data: {
@@ -72,11 +70,17 @@ export async function confirmInvestmentOrderPayment(orderId: string) {
         },
       },
     });
+
+    return { ok: true as const, orderId: order.id };
   });
+
+  if (!result.ok) {
+    return result;
+  }
 
   revalidatePath("/account/dashboard/admin/investment-payments");
   revalidatePath(
-    `/account/dashboard/user/investment-orders/${order.id}/payment`,
+    `/account/dashboard/user/investment-orders/${result.orderId}/payment`,
   );
 
   return {

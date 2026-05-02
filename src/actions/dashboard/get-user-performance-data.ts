@@ -331,7 +331,7 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
         principal: decimalToNumber(principal),
         profit: decimalToNumber(realizedProfit),
         profitPercent: principal.greaterThan(0)
-          ? realizedProfit.div(principal).mul(100).toNumber()
+          ? decimalToNumber(realizedProfit.div(principal).mul(100))
           : 0,
         isMatured: order.isMatured,
       };

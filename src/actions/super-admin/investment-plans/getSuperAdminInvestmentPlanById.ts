@@ -18,6 +18,7 @@ import {
   getSuperAdminInvestmentPlans,
   type SuperAdminInvestmentOption,
 } from "./getSuperAdminInvestmentPlans";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 export type SuperAdminInvestmentPlanDetails = {
   id: string;
@@ -134,6 +135,41 @@ type SuperAdminInvestmentPlanRecord = {
     isActive: boolean;
   }>;
 };
+
+function decimalValue(value: Prisma.Decimal | null | undefined) {
+  return value ? decimalToNumber(value) : null;
+}
+
+function formatTierReturnLabel(
+  investmentModel: InvestmentModel,
+  tier: {
+    fixedRoiPercent: Prisma.Decimal | null;
+    projectedRoiMin: Prisma.Decimal | null;
+    projectedRoiMax: Prisma.Decimal | null;
+  },
+) {
+  const fixedRoiPercent = decimalValue(tier.fixedRoiPercent);
+  const projectedRoiMin = decimalValue(tier.projectedRoiMin);
+  const projectedRoiMax = decimalValue(tier.projectedRoiMax);
+
+  if (investmentModel === InvestmentModel.FIXED) {
+    return fixedRoiPercent !== null
+      ? `${fixedRoiPercent.toFixed(2)}% ROI`
+      : null;
+  }
+
+  if (projectedRoiMin === null && projectedRoiMax === null) {
+    return null;
+  }
+
+  if (projectedRoiMin !== null && projectedRoiMax !== null) {
+    return projectedRoiMin === projectedRoiMax
+      ? `${projectedRoiMin.toFixed(2)}% projected ROI`
+      : `${projectedRoiMin.toFixed(2)}% - ${projectedRoiMax.toFixed(2)}% projected ROI`;
+  }
+
+  return `${(projectedRoiMin ?? projectedRoiMax ?? 0).toFixed(2)}% projected ROI`;
+}
 
 async function loadSuperAdminInvestmentPlanRecord(
   investmentPlanId: string,
@@ -345,36 +381,15 @@ export async function getSuperAdminInvestmentPlanById(
     id: tier.id,
     level: tier.level,
     levelLabel: formatTierLevel(tier.level),
-    minAmount: Number(tier.minAmount),
-    maxAmount: Number(tier.maxAmount),
-    fixedRoiPercent: tier.fixedRoiPercent
-      ? Number(tier.fixedRoiPercent)
-      : null,
-    projectedRoiMin: tier.projectedRoiMin
-      ? Number(tier.projectedRoiMin)
-      : null,
-    projectedRoiMax: tier.projectedRoiMax
-      ? Number(tier.projectedRoiMax)
-      : null,
-    returnLabel:
-      plan.investmentModel === InvestmentModel.FIXED
-        ? tier.fixedRoiPercent
-          ? `${Number(tier.fixedRoiPercent).toFixed(2)}% ROI`
-          : null
-        : tier.projectedRoiMin || tier.projectedRoiMax
-          ? tier.projectedRoiMin && tier.projectedRoiMax
-            ? Number(tier.projectedRoiMin) === Number(tier.projectedRoiMax)
-              ? `${Number(tier.projectedRoiMin).toFixed(2)}% projected ROI`
-              : `${Number(tier.projectedRoiMin).toFixed(2)}% - ${Number(
-                  tier.projectedRoiMax,
-                ).toFixed(2)}% projected ROI`
-            : `${Number(
-                tier.projectedRoiMin ?? tier.projectedRoiMax,
-              ).toFixed(2)}% projected ROI`
-          : null,
+    minAmount: decimalToNumber(tier.minAmount),
+    maxAmount: decimalToNumber(tier.maxAmount),
+    fixedRoiPercent: decimalValue(tier.fixedRoiPercent),
+    projectedRoiMin: decimalValue(tier.projectedRoiMin),
+    projectedRoiMax: decimalValue(tier.projectedRoiMax),
+    returnLabel: formatTierReturnLabel(plan.investmentModel, tier),
     isActive: tier.isActive,
-    minAmountLabel: formatCurrency(Number(tier.minAmount), plan.currency),
-    maxAmountLabel: formatCurrency(Number(tier.maxAmount), plan.currency),
+    minAmountLabel: formatCurrency(decimalToNumber(tier.minAmount), plan.currency),
+    maxAmountLabel: formatCurrency(decimalToNumber(tier.maxAmount), plan.currency),
   }));
   const activeTiers = tiers.filter((tier) => tier.isActive);
 
@@ -389,14 +404,12 @@ export async function getSuperAdminInvestmentPlanById(
     periodLabel: formatEnumLabel(plan.period),
     currency: plan.currency,
     investmentModel: plan.investmentModel,
-        penaltyPeriodDays: plan.penaltyPeriodDays,
+    penaltyPeriodDays: plan.penaltyPeriodDays,
     penaltyType: plan.penaltyType,
-    earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
-      ? Number(plan.earlyWithdrawalPenaltyValue)
-      : null,
-    maxPenaltyAmount: plan.maxPenaltyAmount ? Number(plan.maxPenaltyAmount) : null,
-    expectedReturnMin: plan.expectedReturnMin ? Number(plan.expectedReturnMin) : null,
-    expectedReturnMax: plan.expectedReturnMax ? Number(plan.expectedReturnMax) : null,
+    earlyWithdrawalPenaltyValue: decimalValue(plan.earlyWithdrawalPenaltyValue),
+    maxPenaltyAmount: decimalValue(plan.maxPenaltyAmount),
+    expectedReturnMin: decimalValue(plan.expectedReturnMin),
+    expectedReturnMax: decimalValue(plan.expectedReturnMax),
     isLocked: plan.isLocked,
     allowWithdrawal: plan.allowWithdrawal,
     seoTitle: plan.seoTitle ?? "",
@@ -428,20 +441,20 @@ export async function getSuperAdminInvestmentPlanById(
       slug: plan.slug,
       description: plan.description ?? "",
       period: plan.period,
-    investmentModel: plan.investmentModel,
-    penaltyPeriodDays: String(plan.penaltyPeriodDays),
-    penaltyType: plan.penaltyType ?? "",
-    earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
-      ? Number(plan.earlyWithdrawalPenaltyValue).toFixed(2)
-      : "",
+      investmentModel: plan.investmentModel,
+      penaltyPeriodDays: String(plan.penaltyPeriodDays),
+      penaltyType: plan.penaltyType ?? "",
+      earlyWithdrawalPenaltyValue: plan.earlyWithdrawalPenaltyValue
+        ? decimalToNumber(plan.earlyWithdrawalPenaltyValue).toFixed(2)
+        : "",
       maxPenaltyAmount: plan.maxPenaltyAmount
-        ? Number(plan.maxPenaltyAmount).toFixed(2)
+        ? decimalToNumber(plan.maxPenaltyAmount).toFixed(2)
         : "",
       expectedReturnMin: plan.expectedReturnMin
-        ? Number(plan.expectedReturnMin).toFixed(2)
+        ? decimalToNumber(plan.expectedReturnMin).toFixed(2)
         : "",
       expectedReturnMax: plan.expectedReturnMax
-        ? Number(plan.expectedReturnMax).toFixed(2)
+        ? decimalToNumber(plan.expectedReturnMax).toFixed(2)
         : "",
       isLocked: plan.isLocked,
       allowWithdrawal: plan.allowWithdrawal,

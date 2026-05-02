@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/formatters/formatters";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 type DashboardOverviewRoute =
   | "/account/dashboard/admin"
@@ -153,10 +154,6 @@ function formatActivityTime(value: Date | null | undefined) {
   if (!value) return "Live";
 
   return formatDistanceToNow(value, { addSuffix: true });
-}
-
-function toNumber(value: { toNumber(): number } | null | undefined) {
-  return value?.toNumber() ?? 0;
 }
 
 function getStatusTone(
@@ -510,8 +507,8 @@ export async function getDashboardOverviewByHref(
     }),
   ]);
 
-  const savingsDeposits = toNumber(savingsDepositAggregate._sum.amount);
-  const fundedInvestments = toNumber(fundedInvestmentAggregate._sum.amount);
+  const savingsDeposits = decimalToNumber(savingsDepositAggregate._sum.amount);
+  const fundedInvestments = decimalToNumber(fundedInvestmentAggregate._sum.amount);
   const totalDeposits = savingsDeposits + fundedInvestments;
   const monthlyGrowth = getMonthlyGrowthLabel(
     currentMonthUsers,
@@ -600,7 +597,7 @@ export async function getDashboardOverviewByHref(
             detail: `${
               latestPendingWithdrawal.investorProfile.user.name ?? "An investor"
             } requested ${formatCurrency(
-              latestPendingWithdrawal.amount.toNumber(),
+              decimalToNumber(latestPendingWithdrawal.amount),
               latestPendingWithdrawal.currency,
             )}.`,
             time: formatActivityTime(latestPendingWithdrawal.requestedAt),
@@ -850,7 +847,7 @@ export async function getDashboardOverviewByHref(
           detail: `${
             latestPendingWithdrawal.investorProfile.user.name ?? "An investor"
           } requested ${formatCurrency(
-            latestPendingWithdrawal.amount.toNumber(),
+            decimalToNumber(latestPendingWithdrawal.amount),
             latestPendingWithdrawal.currency,
           )}.`,
           time: formatActivityTime(latestPendingWithdrawal.requestedAt),
@@ -869,7 +866,7 @@ export async function getDashboardOverviewByHref(
             latestDeposit.savingsAccount.investorProfile.user.name ??
             "An investor"
           } funded ${latestDeposit.savingsAccount.name} with ${formatCurrency(
-            latestDeposit.amount.toNumber(),
+            decimalToNumber(latestDeposit.amount),
             latestDeposit.currency,
           )}.`,
           time: formatActivityTime(latestDeposit.createdAt),
@@ -887,7 +884,7 @@ export async function getDashboardOverviewByHref(
           detail: `${
             latestInvestmentOrder.investorProfile.user.name ?? "An investor"
           } funded ${latestInvestmentOrder.investmentPlan.name} with ${formatCurrency(
-            latestInvestmentOrder.amount.toNumber(),
+            decimalToNumber(latestInvestmentOrder.amount),
             latestInvestmentOrder.currency,
           )}.`,
           time: formatActivityTime(latestInvestmentOrder.createdAt),

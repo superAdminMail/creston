@@ -1,15 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import {
   isInvestmentOrderBankInfoRequestNotification,
   type InvestmentOrderBankInfoRequestMetadata,
 } from "@/lib/notifications/investmentOrderBankInfo";
 import type { InvestmentBankInfoRequestItem } from "@/lib/types/payments/investmentPaymentReview.types";
-
-function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  if (typeof value === "number") return value;
-  return value?.toNumber?.() ?? 0;
-}
 
 function getRequestMetadata(
   metadata: unknown,
@@ -135,8 +131,8 @@ export async function getInvestmentBankInfoRequests(): Promise<
       return [];
     }
 
-    const amount = toNumber(order.amount);
-    const amountPaid = toNumber(order.amountPaid);
+    const amount = decimalToNumber(order.amount);
+    const amountPaid = decimalToNumber(order.amountPaid);
 
     const item = {
       requestNotificationId: notification.id,

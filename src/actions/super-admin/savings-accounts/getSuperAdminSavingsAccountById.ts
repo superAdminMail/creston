@@ -8,10 +8,7 @@ import {
 } from "@/lib/formatters/formatters";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
-
-type Decimalish = {
-  toNumber(): number;
-};
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 
 const savingsAccountDetailsSelect =
   Prisma.validator<Prisma.SavingsAccountSelect>()({
@@ -170,19 +167,13 @@ export type SuperAdminSavingsAccountDetailsViewModel = {
   };
 };
 
-function toNumber(value: Decimalish | number | null | undefined) {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
-
 function mapSavingsAccountDetails(
   account: NonNullable<SavingsAccountDetailsRecord>,
 ): SuperAdminSavingsAccountDetailsViewModel {
-  const balance = toNumber(account.balance);
-  const targetAmount = account.targetAmount ? toNumber(account.targetAmount) : null;
+  const balance = decimalToNumber(account.balance);
+  const targetAmount = account.targetAmount ? decimalToNumber(account.targetAmount) : null;
   const interestRatePercent = account.savingsProduct.interestRatePercent
-    ? toNumber(account.savingsProduct.interestRatePercent)
+    ? decimalToNumber(account.savingsProduct.interestRatePercent)
     : null;
   const minimumLockDays = account.savingsProduct.minimumLockDays ?? null;
   const maximumLockDays = account.savingsProduct.maximumLockDays ?? null;
@@ -227,10 +218,10 @@ function mapSavingsAccountDetails(
       allowsWithdrawals: account.savingsProduct.allowsWithdrawals,
       allowsDeposits: account.savingsProduct.allowsDeposits,
       minBalance: account.savingsProduct.minBalance
-        ? toNumber(account.savingsProduct.minBalance)
+        ? decimalToNumber(account.savingsProduct.minBalance)
         : null,
       maxBalance: account.savingsProduct.maxBalance
-        ? toNumber(account.savingsProduct.maxBalance)
+        ? decimalToNumber(account.savingsProduct.maxBalance)
         : null,
       currency: account.savingsProduct.currency,
       isActive: account.savingsProduct.isActive,
@@ -249,17 +240,17 @@ function mapSavingsAccountDetails(
       id: intent.id,
       status: intent.status,
       fundingMethodType: intent.fundingMethodType,
-      targetAmount: toNumber(intent.targetAmount),
-      creditedAmount: toNumber(intent.creditedAmount),
+      targetAmount: decimalToNumber(intent.targetAmount),
+      creditedAmount: decimalToNumber(intent.creditedAmount),
       createdAt: formatDateLabel(intent.createdAt),
       updatedAt: formatDateLabel(intent.updatedAt),
     })),
     recentTransactions: account.transactions.map((transaction) => ({
       id: transaction.id,
       type: transaction.type,
-      amount: toNumber(transaction.amount),
-      balanceBefore: toNumber(transaction.balanceBefore),
-      balanceAfter: toNumber(transaction.balanceAfter),
+      amount: decimalToNumber(transaction.amount),
+      balanceBefore: decimalToNumber(transaction.balanceBefore),
+      balanceAfter: decimalToNumber(transaction.balanceAfter),
       reference: transaction.reference?.trim() || "Not set",
       note: transaction.note?.trim() || "No note",
       createdAt: formatDateLabel(transaction.createdAt),

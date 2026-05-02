@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma";
+import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 
 type ReviewNotificationInput = {
   tx: Prisma.TransactionClient;
@@ -19,24 +20,14 @@ export async function createReviewNotification({
   link,
   metadata,
 }: ReviewNotificationInput) {
-  await tx.notification.upsert({
-    where: { key },
-    create: {
+  await upsertSystemNotifications(tx, [
+    {
       userId,
-      type: "SYSTEM",
       key,
       title,
       message,
       link,
       metadata,
     },
-    update: {
-      userId,
-      type: "SYSTEM",
-      title,
-      message,
-      link,
-      metadata,
-    },
-  });
+  ]);
 }

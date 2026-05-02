@@ -8,11 +8,8 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { redirect } from "next/navigation";
-
-type Decimalish = {
-  toNumber(): number;
-};
 
 type UserInvestmentOrderListItem = {
   id: string;
@@ -60,12 +57,6 @@ export type UserInvestmentOrdersData = {
   counts: Record<InvestmentOrderStatus, number>;
   orders: UserInvestmentOrderListItem[];
 };
-
-function safeToNumber(value: Decimalish | number | null | undefined): number {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  return value.toNumber();
-}
 
 function getPrimaryAction(
   order: Pick<
@@ -187,7 +178,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
   const orders = investorProfile.investmentOrders.map((order) => {
     const normalizedOrder: UserInvestmentOrderListItem = {
       id: order.id,
-      amount: safeToNumber(order.amount),
+      amount: decimalToNumber(order.amount),
       currency: order.currency,
       status: order.status,
       statusLabel: formatEnumLabel(order.status),
@@ -211,25 +202,25 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           resolveInvestmentTierRoiPercentValue({
             investmentModel: order.investmentPlan.investmentModel,
             fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
-              ? safeToNumber(order.investmentPlanTier.fixedRoiPercent)
+              ? decimalToNumber(order.investmentPlanTier.fixedRoiPercent)
               : null,
             projectedRoiMin: order.investmentPlanTier.projectedRoiMin
-              ? safeToNumber(order.investmentPlanTier.projectedRoiMin)
+              ? decimalToNumber(order.investmentPlanTier.projectedRoiMin)
               : null,
             projectedRoiMax: order.investmentPlanTier.projectedRoiMax
-              ? safeToNumber(order.investmentPlanTier.projectedRoiMax)
+              ? decimalToNumber(order.investmentPlanTier.projectedRoiMax)
               : null,
-            }) ?? 0,
+          }) ?? 0,
         returnLabel: formatInvestmentTierReturnLabel({
           investmentModel: order.investmentPlan.investmentModel,
           fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
-            ? safeToNumber(order.investmentPlanTier.fixedRoiPercent)
+            ? decimalToNumber(order.investmentPlanTier.fixedRoiPercent)
             : null,
           projectedRoiMin: order.investmentPlanTier.projectedRoiMin
-            ? safeToNumber(order.investmentPlanTier.projectedRoiMin)
+            ? decimalToNumber(order.investmentPlanTier.projectedRoiMin)
             : null,
           projectedRoiMax: order.investmentPlanTier.projectedRoiMax
-            ? safeToNumber(order.investmentPlanTier.projectedRoiMax)
+            ? decimalToNumber(order.investmentPlanTier.projectedRoiMax)
             : null,
         }),
       },

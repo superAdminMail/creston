@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  Prisma,
   PlatformPaymentMethodType,
   SavingsFundingIntentStatus,
   SavingsFundingMethodType,
@@ -10,6 +11,7 @@ import {
   UserRole,
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { upsertBankDepositSubmissionNotifications } from "@/lib/payments/bank/bankDepositSubmissionNotifications";
 
 type CreateSavingsFundingDepositSubmissionInput = {
   savingsAccountId: string;
@@ -133,6 +135,25 @@ export async function createSavingsFundingDepositSubmission({
       );
     }
 
+    const pendingPayment = await tx.savingsTransactionPayment.findFirst({
+      where: {
+        savingsFundingIntent: {
+          savingsAccountId: account.id,
+        },
+        status: SavingsTransactionPaymentStatus.PENDING_REVIEW,
+        type: SavingsTransactionPaymentType.BANK_DEPOSIT,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (pendingPayment) {
+      throw new Error(
+        "There is already a pending payment submission for this savings account",
+      );
+    }
+
     const fundingIntent = await tx.savingsFundingIntent.create({
       data: {
         savingsAccountId: account.id,
@@ -191,43 +212,24 @@ export async function createSavingsFundingDepositSubmission({
       },
     });
 
-    for (const admin of admins) {
-      await tx.notification.upsert({
-        where: {
-          key: `savings-funding-bank-deposit-submitted:${payment.id}:${admin.id}`,
+    await upsertBankDepositSubmissionNotifications(
+      tx,
+      admins.map((admin) => ({
+        key: `savings-funding-bank-deposit-submitted:${payment.id}:${admin.id}`,
+        userId: admin.id,
+        title: "Savings funding proof submitted",
+        message: `A payment proof was submitted for savings account ${account.id} in ${account.currency}.`,
+        link: `/account/dashboard/admin/savings-payments/${payment.id}`,
+        metadata: {
+          kind: "SAVINGS_FUNDING_BANK_DEPOSIT_SUBMITTED",
+          savingsAccountId: account.id,
+          fundingIntentId: fundingIntent.id,
+          paymentId: payment.id,
+          submittedByUserId: userId,
+          currency: account.currency,
         },
-        create: {
-          userId: admin.id,
-          title: "Savings funding proof submitted",
-          message: `A payment proof was submitted for savings account ${account.id} in ${account.currency}.`,
-          type: "SYSTEM",
-          key: `savings-funding-bank-deposit-submitted:${payment.id}:${admin.id}`,
-          link: `/account/dashboard/admin/savings-payments/${payment.id}`,
-          metadata: {
-            kind: "SAVINGS_FUNDING_BANK_DEPOSIT_SUBMITTED",
-            savingsAccountId: account.id,
-            fundingIntentId: fundingIntent.id,
-            paymentId: payment.id,
-            submittedByUserId: userId,
-            currency: account.currency,
-          },
-        },
-        update: {
-          title: "Savings funding proof submitted",
-          message: `A payment proof was submitted for savings account ${account.id} in ${account.currency}.`,
-          type: "SYSTEM",
-          link: `/account/dashboard/admin/savings-payments/${payment.id}`,
-          metadata: {
-            kind: "SAVINGS_FUNDING_BANK_DEPOSIT_SUBMITTED",
-            savingsAccountId: account.id,
-            fundingIntentId: fundingIntent.id,
-            paymentId: payment.id,
-            submittedByUserId: userId,
-            currency: account.currency,
-          },
-        },
-      });
-    }
+      })),
+    );
 
     return {
       fundingIntentId: fundingIntent.id,
@@ -239,6 +241,8 @@ export async function createSavingsFundingDepositSubmission({
       platformPaymentMethodId: paymentMethod.id,
       platformPaymentMethodLabel: paymentMethod.label,
     };
+  }, {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
   });
 
   return {
