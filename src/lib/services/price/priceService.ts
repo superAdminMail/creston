@@ -99,7 +99,7 @@ function isFreshRecordedAt(recordedAt: Date) {
   return Date.now() - recordedAt.getTime() <= PRICE_CACHE_TTL_MS;
 }
 
-async function getLatestPersistedPrices(
+export async function getLatestPersistedPrices(
   symbols: string[],
 ): Promise<Map<string, PersistedPriceRecord>> {
   const normalizedSymbols = Array.from(new Set(symbols.map(normalizeSymbol)));

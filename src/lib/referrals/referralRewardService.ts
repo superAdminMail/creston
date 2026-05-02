@@ -1311,20 +1311,22 @@ export const creditRewardToInvestmentOrder =
   creditPlatformPromoRewardToInvestment;
 
 async function syncReferralStatus(tx: Prisma.TransactionClient, referralId: string) {
-  const [pendingCount, creditedCount] = await Promise.all([
-    tx.referralReward.count({
-      where: {
-        referralId,
-        status: ReferralRewardStatus.PENDING,
+  const rewardStatuses = await tx.referralReward.findMany({
+    where: {
+      referralId,
+      status: {
+        in: [ReferralRewardStatus.PENDING, ReferralRewardStatus.CREDITED],
       },
-    }),
-    tx.referralReward.count({
-      where: {
-        referralId,
-        status: ReferralRewardStatus.CREDITED,
-      },
-    }),
-  ]);
+    },
+    select: {
+      status: true,
+    },
+  });
+
+  const pendingCount = rewardStatuses.filter(
+    (reward) => reward.status === ReferralRewardStatus.PENDING,
+  ).length;
+  const creditedCount = rewardStatuses.length - pendingCount;
 
   if (creditedCount === 0) {
     return;
