@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma";
+import type { Prisma, PrismaClient } from "@/generated/prisma";
 
 import { prisma } from "@/lib/prisma";
 
@@ -17,6 +17,7 @@ type LogAuditEventInput = {
   entityId?: string | null;
   description?: string | null;
   metadata?: Prisma.InputJsonObject | AuditJsonValue | null;
+  db?: Prisma.TransactionClient | PrismaClient;
 };
 
 export async function logAuditEvent({
@@ -26,8 +27,9 @@ export async function logAuditEvent({
   entityId,
   description,
   metadata,
+  db = prisma,
 }: LogAuditEventInput) {
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
       actorUserId: actorUserId ?? null,
       action,

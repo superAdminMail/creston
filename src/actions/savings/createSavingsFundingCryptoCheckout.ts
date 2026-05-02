@@ -299,7 +299,7 @@ export async function createSavingsFundingCryptoCheckout(
         failureCode: null,
         failureMessage: null,
         failedAt: null,
-        canceledAt: null,
+        cancelledAt: null,
       },
       select: {
         id: true,

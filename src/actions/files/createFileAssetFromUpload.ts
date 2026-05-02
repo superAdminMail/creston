@@ -1,7 +1,9 @@
 "use server";
 
+import type { PrismaClient } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import type { Prisma } from "@/generated/prisma";
 
 export async function createFileAssetFromUpload(file: {
   url: string;
@@ -9,6 +11,7 @@ export async function createFileAssetFromUpload(file: {
   name?: string;
   size?: number;
   type?: string;
+  db?: Prisma.TransactionClient | PrismaClient;
 }) {
   const user = await getCurrentSessionUser();
 
@@ -16,7 +19,7 @@ export async function createFileAssetFromUpload(file: {
     throw new Error("Unauthorized");
   }
 
-  const asset = await prisma.fileAsset.create({
+  const asset = await (file.db ?? prisma).fileAsset.create({
     data: {
       fileName: file.name ?? file.key,
       originalName: file.name ?? file.key,

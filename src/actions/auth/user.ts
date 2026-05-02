@@ -145,6 +145,7 @@ export async function updateUserProfile(
             const asset = await createFileAssetFromUpload({
               url: profileAvatar.url,
               key: profileAvatar.key,
+              db: tx,
             });
             nextProfileAvatarFileAssetId = asset.id;
           }

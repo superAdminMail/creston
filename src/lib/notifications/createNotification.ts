@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NotificationEvent } from "./notificationEvents";
-import { Prisma } from "@/generated/prisma";
+import { Prisma, PrismaClient } from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
 
 type CreateNotificationInput = {
@@ -11,6 +11,7 @@ type CreateNotificationInput = {
   link?: string;
   key?: string;
   metadata?: Prisma.InputJsonValue;
+  db?: Prisma.TransactionClient | PrismaClient;
 };
 
 async function createNotificationRecord({
@@ -21,10 +22,11 @@ async function createNotificationRecord({
   link,
   key,
   metadata,
+  db = prisma,
 }: CreateNotificationInput) {
   if (key) {
     try {
-      const notification = await prisma.notification.create({
+      const notification = await db.notification.create({
         data: {
           userId,
           title,
@@ -45,7 +47,7 @@ async function createNotificationRecord({
         throw error;
       }
 
-      const notification = await prisma.notification.findUnique({
+      const notification = await db.notification.findUnique({
         where: { key },
       });
 
@@ -60,7 +62,7 @@ async function createNotificationRecord({
     }
   }
 
-  const notification = await prisma.notification.create({
+  const notification = await db.notification.create({
     data: {
       userId,
       title,
@@ -86,6 +88,7 @@ export async function createNotification({
   link,
   key,
   metadata,
+  db,
 }: CreateNotificationInput) {
   const result = await createNotificationRecord({
     userId,
@@ -95,15 +98,21 @@ export async function createNotification({
     link,
     key,
     metadata,
+    db,
   });
 
   return result.notification;
 }
 
+type CreateRealtimeNotificationInput = Omit<CreateNotificationInput, "db">;
+
 export async function createRealtimeNotification(
-  input: CreateNotificationInput,
+  input: CreateRealtimeNotificationInput,
 ) {
-  const result = await createNotificationRecord(input);
+  const result = await createNotificationRecord({
+    ...input,
+    db: prisma,
+  });
 
   if (result.created) {
     await pusherServer.trigger(
