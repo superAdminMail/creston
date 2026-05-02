@@ -69,7 +69,7 @@ export default function LoginForm({
     <AuthShell
       eyebrow="Secure Sign In"
       title={`Sign in to ${siteName}`}
-      description="Access your account and manage your investments with ease. Enter your credentials below to get started."
+      description="Enter your credentials below to sign in."
       siteName={siteName}
       siteLogoUrl={siteLogoUrl}
       footer={

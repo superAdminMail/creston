@@ -82,7 +82,7 @@ export default function RegisterForm({
     <AuthShell
       eyebrow="Secure Onboarding"
       title={`Create your ${siteName} account`}
-      description="Get started with a secure account to manage your investment profile. Your information is protected with industry-leading security measures."
+      description="Get started with a secure account to manage your investment profile."
       siteName={siteName}
       siteLogoUrl={siteLogoUrl}
       footer={
