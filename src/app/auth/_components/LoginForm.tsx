@@ -87,7 +87,7 @@ export default function LoginForm({
           </p>
 
           <p className="text-sm text-slate-400">
-            New to {siteName}?{" "}
+            New to {siteName}?
             <Link
               href="/auth/get-started"
               className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"

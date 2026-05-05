@@ -20,6 +20,7 @@ import {
 import type { InvestmentOrderPaymentDetails } from "@/lib/types/payments/investmentOrderPayment.types";
 
 import BankTransferInstructionsCard from "./BankTransferInstructionsCard";
+import InvestmentOrderCryptoCheckoutButton from "./InvestmentOrderCryptoCheckoutButton";
 import OrderPaymentSelector from "./OrderPaymentSelector";
 import PaymentProofModal from "./PaymentProofModal";
 
@@ -516,7 +517,7 @@ export default function InvestmentOrderPaymentClient({
                   </p>
 
                   {bankMethod?.walletAddress ? (
-                    <div className="flex justify-end">
+                    <div className="flex flex-col gap-3 sm:items-end">
                       <Button
                         type="button"
                         onClick={() => setShowModal(true)}
@@ -524,6 +525,11 @@ export default function InvestmentOrderPaymentClient({
                       >
                         I&apos;ve made this payment
                       </Button>
+
+                      <InvestmentOrderCryptoCheckoutButton
+                        investmentOrderId={order.id}
+                        className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+                      />
                     </div>
                   ) : null}
                 </CardContent>
