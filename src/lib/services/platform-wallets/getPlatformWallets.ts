@@ -109,8 +109,6 @@ export async function getPublicPlatformPaymentMethodForCheckout({
     ) ?? null;
 
   return (
-    findByType(preferredType) ??
-    findByType("BANK_INFO") ??
-    findByType("WALLET_ADDRESS")
+    findByType(preferredType)
   );
 }
