@@ -14,7 +14,7 @@ type Props = {
 
 export default function InvestmentOrderCryptoCheckoutButton({
   investmentOrderId,
-  label = "Pay with Paymento",
+  label = "Pay now",
   className,
 }: Props) {
   const [pending, setPending] = useState(false);
@@ -36,9 +36,11 @@ export default function InvestmentOrderCryptoCheckoutButton({
         }),
       });
 
-      const result = (await response.json().catch(() => null)) as
-        | { success?: boolean; redirectUrl?: string; error?: string }
-        | null;
+      const result = (await response.json().catch(() => null)) as {
+        success?: boolean;
+        redirectUrl?: string;
+        error?: string;
+      } | null;
 
       if (!response.ok || !result?.success || !result.redirectUrl) {
         toast.error(result?.error ?? "Unable to open Paymento checkout.");

@@ -42,41 +42,40 @@ export default async function SavingsFunding({
     details.account.targetAmount ??
     details.fundingAmountSuggestion ??
     details.account.balance;
-  const selectedAmount =
-    !effectivePaymentMode
-      ? details.remainingToTargetAmount ?? chargeBasis
-      : (() => {
-          try {
-            const calculatedAmount = calculateSavingsFundingChargeAmount({
-              totalAmount: chargeBasis,
-              amountPaid: details.latestIntent?.creditedAmount ?? 0,
-              usePartialPayment:
-                selectedFundingMethod === "BANK_TRANSFER" &&
-                effectivePaymentMode === "PARTIAL",
-              fundingMethodType: selectedFundingMethod,
-              hasPendingSubmission: details.hasPendingSubmission,
-              hasActiveCryptoIntent: false,
-            }).chargeAmount.toNumber();
-
-            if (
+  const selectedAmount = !effectivePaymentMode
+    ? (details.remainingToTargetAmount ?? chargeBasis)
+    : (() => {
+        try {
+          const calculatedAmount = calculateSavingsFundingChargeAmount({
+            totalAmount: chargeBasis,
+            amountPaid: details.latestIntent?.creditedAmount ?? 0,
+            usePartialPayment:
               selectedFundingMethod === "BANK_TRANSFER" &&
-              details.latestIntent?.status === "PARTIALLY_PAID" &&
-              details.latestFundingPaymentShortfallAmount > 0
-            ) {
-              return (
-                calculatedAmount + details.latestFundingPaymentShortfallAmount
-              );
-            }
+              effectivePaymentMode === "PARTIAL",
+            fundingMethodType: selectedFundingMethod,
+            hasPendingSubmission: details.hasPendingSubmission,
+            hasActiveCryptoIntent: false,
+          }).chargeAmount.toNumber();
 
-            return calculatedAmount;
-          } catch {
-            return details.remainingToTargetAmount ?? chargeBasis;
+          if (
+            selectedFundingMethod === "BANK_TRANSFER" &&
+            details.latestIntent?.status === "PARTIALLY_PAID" &&
+            details.latestFundingPaymentShortfallAmount > 0
+          ) {
+            return (
+              calculatedAmount + details.latestFundingPaymentShortfallAmount
+            );
           }
-        })();
+
+          return calculatedAmount;
+        } catch {
+          return details.remainingToTargetAmount ?? chargeBasis;
+        }
+      })();
   const cryptoCheckoutLabel =
     details.latestIntent?.status === "PARTIALLY_PAID"
       ? "Complete Payment"
-      : "Pay with Paymento";
+      : "Pay now";
 
   return (
     <SavingsFundingClient
