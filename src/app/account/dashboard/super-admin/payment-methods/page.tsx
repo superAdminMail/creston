@@ -1,10 +1,10 @@
 import PlatformWalletsClient from "@/app/account/dashboard/_components/PlatformWalletsClient";
-import { getPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
+import { getAdminPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 
 export const dynamic = "force-dynamic";
 
 export default async function SuperAdminPaymentMethodsPage() {
-  const paymentMethods = await getPlatformPaymentMethods();
+  const paymentMethods = await getAdminPlatformPaymentMethods();
 
   return (
     <PlatformWalletsClient

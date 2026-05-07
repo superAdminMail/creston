@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 type PublicPlatformPaymentMethodType = "BANK_INFO" | "WALLET_ADDRESS";
 
-export const getPlatformPaymentMethods = cache(async () => {
+export const getAdminPlatformPaymentMethods = cache(async () => {
   return prisma.platformPaymentMethod.findMany({
     orderBy: [
       { isDefault: "desc" },
@@ -90,7 +90,9 @@ export const getPublicPlatformPaymentMethods = cache(async () => {
   });
 });
 
-export const getPlatformWallets = getPlatformPaymentMethods;
+export const getPlatformPaymentMethods = getPublicPlatformPaymentMethods;
+
+export const getPlatformWallets = getPublicPlatformPaymentMethods;
 
 export async function getPublicPlatformPaymentMethodForCheckout({
   currency,

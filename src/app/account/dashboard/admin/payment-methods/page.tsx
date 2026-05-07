@@ -1,6 +1,6 @@
 import PlatformWalletsClient from "@/app/account/dashboard/_components/PlatformWalletsClient";
 import SavingsBankInfoRequestForm from "@/app/account/dashboard/admin/payment-methods/_components/SavingsBankInfoRequestForm";
-import { getPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
+import { getAdminPlatformPaymentMethods } from "@/lib/services/platform-wallets/getPlatformWallets";
 import type { ReactNode } from "react";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -15,7 +15,7 @@ export default async function PlatformWalletsAdminPage({
   searchParams?: SearchParams;
 }) {
   const params = searchParams ? await searchParams : {};
-  const wallets = await getPlatformPaymentMethods();
+  const wallets = await getAdminPlatformPaymentMethods();
 
   const requestKind = single(params.requestKind);
   const savingsAccountId = single(params.savingsAccountId);
