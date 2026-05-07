@@ -240,6 +240,28 @@ export async function accrueFixedOrder(
     });
   }
 
+  if (calculation.matured) {
+    const maturityLabel =
+      order.maturityDate?.toLocaleDateString() ??
+      calculation.accruedUntil.toLocaleDateString();
+
+    await createRealtimeNotification({
+      userId: order.investorProfile.userId,
+      event: "INVESTMENT_MATURED",
+      title: "Investment matured",
+      message: `Your fixed investment matured on ${maturityLabel}. You can review the order details and accrued profit.`,
+      link: `/account/dashboard/user/investment-orders/${order.id}`,
+      key: `fixed-maturity:${order.id}:${calculation.accruedUntil.toISOString()}`,
+      metadata: {
+        investmentOrderId: order.id,
+        currency: order.currency,
+        maturedAt: calculation.accruedUntil.toISOString(),
+        model: "FIXED",
+        totalAccruedProfit: decimalToNumber(calculation.totalAccruedProfit),
+      },
+    });
+  }
+
   return calculation;
 }
 

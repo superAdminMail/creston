@@ -10,6 +10,8 @@ export type WithdrawalRequestItemDto = {
   amount: string;
   currency: string;
   status: string;
+  hasCommissionFees: boolean;
+  commissionStatus: string;
   requestedAt: string;
   payoutMethod: WithdrawalRequestPaymentMethodDto | null;
   payoutSnapshot: {

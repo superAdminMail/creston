@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { ShoppingBag, CreditCard, Megaphone, Bell } from "lucide-react";
+import { ShoppingBag, CreditCard, Megaphone, Bell, Trophy } from "lucide-react";
 
 import type { NotificationDTO } from "@/lib/types/notification";
 import {
@@ -49,6 +49,9 @@ export function getNotificationIcon(
 
     case "INVESTMENT_ROI":
       return CreditCard;
+
+    case "INVESTMENT_MATURED":
+      return Trophy;
 
     case "WITHDRAWAL":
       return CreditCard;

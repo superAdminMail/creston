@@ -83,6 +83,7 @@ export type SavingsPaymentReviewDetails = {
     bankAddress: string | null;
     routingNumber: string | null;
     instructions: string | null;
+    walletAddress: string | null;
   } | null;
 
   fundingIntent: {

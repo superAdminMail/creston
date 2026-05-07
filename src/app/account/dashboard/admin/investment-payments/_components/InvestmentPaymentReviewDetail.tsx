@@ -48,6 +48,10 @@ export default function InvestmentPaymentReviewDetail({
         paymentId: payment.id,
         approvedAmount: approvedAmountValue,
         approvalMode,
+        proofMode:
+          payment.type === "CRYPTO_PROVIDER"
+            ? "CRYPTO_PROVIDER"
+            : "BANK_TRANSFER",
         reviewNote,
       });
 

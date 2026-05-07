@@ -46,6 +46,7 @@ export async function getSavingsPaymentReviewDetails(
       platformPaymentMethod: {
         select: {
           id: true,
+          type: true,
           label: true,
           bankName: true,
           bankCode: true,
@@ -55,6 +56,7 @@ export async function getSavingsPaymentReviewDetails(
           bankAddress: true,
           routingNumber: true,
           instructions: true,
+          walletAddress: true,
         },
       },
       savingsFundingIntent: {
@@ -145,6 +147,7 @@ export async function getSavingsPaymentReviewDetails(
           bankAddress: payment.platformPaymentMethod.bankAddress ?? null,
           routingNumber: payment.platformPaymentMethod.routingNumber ?? null,
           instructions: payment.platformPaymentMethod.instructions,
+          walletAddress: payment.platformPaymentMethod.walletAddress ?? null,
         }
       : null,
     fundingIntent: {

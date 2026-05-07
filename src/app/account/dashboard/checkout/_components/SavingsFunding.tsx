@@ -35,9 +35,7 @@ export default async function SavingsFunding({
   const effectivePaymentMode =
     details.latestIntent?.status === "PARTIALLY_PAID"
       ? "PARTIAL"
-      : selectedFundingMethod === "CRYPTO_PROVIDER"
-        ? "FULL"
-        : paymentMode;
+      : paymentMode;
   const chargeBasis =
     details.account.targetAmount ??
     details.fundingAmountSuggestion ??
@@ -75,7 +73,7 @@ export default async function SavingsFunding({
   const cryptoCheckoutLabel =
     details.latestIntent?.status === "PARTIALLY_PAID"
       ? "Complete Payment"
-      : "Pay now";
+      : "Pay with Paymento";
 
   return (
     <SavingsFundingClient

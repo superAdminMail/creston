@@ -5,7 +5,10 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
-import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
+import {
+  getNotificationActionLabel,
+  getNotificationDisplayType,
+} from "@/lib/notifications/notificationPresentation";
 import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
@@ -70,6 +73,7 @@ export default async function NotificationDetailsPage({
     isSupportNotification && supportConversationId
       ? `${supportBasePath}?conversation=${supportConversationId}`
       : null;
+  const actionLabel = getNotificationActionLabel(dto);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
@@ -92,7 +96,7 @@ export default async function NotificationDetailsPage({
             className="w-full rounded-2xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08] sm:w-auto"
           >
             <Link href={supportLink ?? dto.link!}>
-              Open linked page
+              {actionLabel ?? "Open linked page"}
               <ExternalLink className="h-4 w-4" />
             </Link>
           </Button>

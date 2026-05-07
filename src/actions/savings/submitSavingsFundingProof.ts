@@ -27,6 +27,7 @@ export async function submitSavingsFundingProof(input: Input) {
       savingsAccountId: parsed.data.savingsAccountId,
       userId: user.id,
       claimedAmount: parsed.data.claimedAmount,
+      proofMode: parsed.data.proofMode,
       depositorName: parsed.data.depositorName,
       depositorAccountName: parsed.data.depositorAccountName,
       depositorAccountNo: parsed.data.depositorAccountNo,

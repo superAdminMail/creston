@@ -27,6 +27,7 @@ export async function approveSavingsTransactionPayment(
       paymentId: parsed.data.paymentId,
       approvedAmount: parsed.data.approvedAmount,
       approvalMode: parsed.data.approvalMode,
+      proofMode: parsed.data.proofMode,
       reviewNote: parsed.data.reviewNote,
       adminUserId: admin.userId,
     });

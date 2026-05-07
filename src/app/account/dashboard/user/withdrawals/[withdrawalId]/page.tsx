@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
+import { Button } from "@/components/ui/button";
+import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 
 type Props = {
   params: Promise<{
@@ -34,6 +36,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
       amount: true,
       currency: true,
       status: true,
+      commissionStatus: true,
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
@@ -230,6 +233,21 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                 </p>
               </div>
             ) : null
+          ) : null}
+
+          {withdrawal.hasCommissionFees &&
+          withdrawal.commissionStatus !== "PAID" &&
+          withdrawal.commissionStatus !== "VOID" ? (
+            <div className="md:col-span-2">
+              <Button
+                asChild
+                className="rounded-full bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+              >
+                <Link href={buildWithdrawalCommissionCheckoutUrl(withdrawal.id)}>
+                  Pay commission
+                </Link>
+              </Button>
+            </div>
           ) : null}
 
           {payoutSnapshot?.withdrawalMode === "EARLY_WITHDRAWAL" ? (

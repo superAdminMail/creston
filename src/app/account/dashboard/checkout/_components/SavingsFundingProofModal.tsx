@@ -11,6 +11,7 @@ type Props = {
   currency: string;
   defaultAmount: number;
   maxAmount: number | null;
+  mode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
 };
 
 export default function SavingsFundingProofModal({
@@ -21,15 +22,22 @@ export default function SavingsFundingProofModal({
   currency,
   defaultAmount,
   maxAmount,
+  mode = "BANK_TRANSFER",
 }: Props) {
+  const isCryptoMode = mode === "CRYPTO_PROVIDER";
+
   return (
     <SharedPaymentProofModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Submit savings funding proof"
-      description="Attach proof for review"
+      title={isCryptoMode ? "Confirm crypto payment" : "Submit savings funding proof"}
+      description={
+        isCryptoMode
+          ? "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
+          : "Attach proof for review"
+      }
       defaultAmount={defaultAmount}
-      amountLabel={`Deposit amount (${currency})`}
+      amountLabel={`${isCryptoMode ? "Claim" : "Deposit"} amount (${currency})`}
       amountMin={0.01}
       amountMax={maxAmount}
       amountHint={
@@ -40,6 +48,7 @@ export default function SavingsFundingProofModal({
         ) : null
       }
       submitLabel="Submit proof"
+      mode={mode}
       submit={async (input) => {
         const { submitSavingsFundingProof } = await import(
           "@/actions/savings/submitSavingsFundingProof"
@@ -48,6 +57,7 @@ export default function SavingsFundingProofModal({
         return submitSavingsFundingProof({
           savingsAccountId,
           platformPaymentMethodId,
+          proofMode: isCryptoMode ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
           claimedAmount: input.claimedAmount,
           depositorName: input.depositorName,
           depositorAccountName: input.depositorAccountName,

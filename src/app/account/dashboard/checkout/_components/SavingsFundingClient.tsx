@@ -159,7 +159,6 @@ export default function SavingsFundingClient({
   const latestBankPayment = latestIntent?.latestPayment ?? null;
   const latestPaymentShortfall =
     details.latestFundingPaymentShortfallAmount ?? 0;
-  const hasExistingIntent = latestIntent !== null;
   const isCompletingPayment = latestIntent?.status === "PARTIALLY_PAID";
   const isSavingsFullySettled =
     (details.account.targetAmount !== null &&
@@ -170,25 +169,23 @@ export default function SavingsFundingClient({
 
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const bankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const effectivePaymentMode = hasExistingIntent
-    ? isCompletingPayment
-      ? "PARTIAL"
-      : "FULL"
-    : cryptoSelected
-      ? "FULL"
-      : selectedPaymentMode;
+  const effectivePaymentMode = isCompletingPayment
+    ? "PARTIAL"
+    : selectedPaymentMode;
   const bankInfoRequested =
     details.hasExistingBankInfoRequest || bankInfoRequestedLocal;
-  const canOpenProof = bankSelected && effectivePaymentMode !== null;
-  const bankProofActionLabel = isSavingsFullySettled
+  const canOpenProof = effectivePaymentMode !== null;
+  const proofActionLabel = isSavingsFullySettled
     ? "Payment complete"
     : latestBankPayment?.status === "PENDING_REVIEW" || hasPendingSubmission
       ? "Payment under review"
       : isCompletingPayment
         ? "Complete Payment"
         : "I've made this payment";
-  const bankProofActionDisabled =
-    isSavingsFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
+  const proofActionDisabled =
+    isSavingsFullySettled ||
+    hasPendingSubmission ||
+    effectivePaymentMode === null;
 
   async function handleCopyWalletAddress(address: string | null | undefined) {
     if (!address) return;
@@ -215,8 +212,9 @@ export default function SavingsFundingClient({
               {details.account.product.name}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-              Choose a funding method, then continue with a full payment for
-              crypto wallet or a full or partial payment for bank transfer.
+              Choose a funding method, then use Paymento for full crypto
+              payments or submit crypto proof for partial payments. Bank
+              transfer still supports full or partial payments.
             </p>
           </div>
         </div>
@@ -250,15 +248,6 @@ export default function SavingsFundingClient({
         value={selectedFundingMethod}
         onChange={(next) => {
           setSelectedFundingMethod(next);
-          if (next === "CRYPTO_PROVIDER") {
-            setSelectedPaymentMode("FULL");
-            updateCheckoutParams({
-              nextFundingMethod: next,
-              nextPaymentMode: "FULL",
-            });
-            return;
-          }
-
           updateCheckoutParams({ nextFundingMethod: next });
         }}
       />
@@ -278,7 +267,7 @@ export default function SavingsFundingClient({
         </Card>
       ) : null}
 
-      {bankSelected && !hasExistingIntent && !isSavingsFullySettled ? (
+      {selectedFundingMethod && !isSavingsFullySettled ? (
         <CheckoutPaymentModeSelector
           value={selectedPaymentMode}
           onChange={(next) => {
@@ -534,10 +523,33 @@ export default function SavingsFundingClient({
                       Continue with the crypto checkout flow using the amount
                       selected above.
                     </p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                      Partial payments are available when you submit crypto
+                      proof. Paymento checkout stays full payment only.
+                    </p>
                   </div>
 
-                  <div className="flex justify-start">
-                    {cryptoCheckoutButton}
+                  <div className="flex flex-col gap-3 sm:items-end">
+                    <Button
+                      type="button"
+                      onClick={() => setProofOpen(true)}
+                      disabled={effectivePaymentMode === null}
+                      className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                    >
+                      {effectivePaymentMode === null
+                        ? "Choose payment mode first"
+                        : "I&apos;ve made this payment"}
+                    </Button>
+
+                    {effectivePaymentMode === "FULL" ? (
+                      cryptoCheckoutButton
+                    ) : (
+                      <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                        Paymento checkout is available for full payment only.
+                        Use the proof button above for partial crypto
+                        submissions.
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -608,10 +620,10 @@ export default function SavingsFundingClient({
                       <Button
                         type="button"
                         onClick={() => setProofOpen(true)}
-                        disabled={!canOpenProof || bankProofActionDisabled}
+                        disabled={!canOpenProof || proofActionDisabled}
                         className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                       >
-                        {bankProofActionLabel}
+                        {proofActionLabel}
                       </Button>
                     </div>
                   ) : null}
@@ -659,6 +671,20 @@ export default function SavingsFundingClient({
           currency={details.account.currency}
           defaultAmount={selectedAmount}
           maxAmount={details.remainingToTargetAmount}
+        />
+      ) : proofOpen &&
+        selectedFundingMethod === "CRYPTO_PROVIDER" &&
+        effectivePaymentMode &&
+        bankMethod ? (
+        <SavingsFundingProofModal
+          open={proofOpen}
+          onOpenChange={setProofOpen}
+          savingsAccountId={details.account.id}
+          platformPaymentMethodId={bankMethod.id}
+          currency={details.account.currency}
+          defaultAmount={selectedAmount}
+          maxAmount={details.remainingToTargetAmount}
+          mode="CRYPTO_PROVIDER"
         />
       ) : null}
 

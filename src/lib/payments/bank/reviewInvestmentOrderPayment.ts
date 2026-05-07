@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { reconcileInvestmentOrderPaymentState } from "@/app/account/dashboard/admin/investment-payments/_lib/reconcileInvestmentOrderPaymentState";
+import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 
 type ReviewInvestmentOrderPaymentBase = {
   paymentId: string;
@@ -11,6 +12,7 @@ type ReviewInvestmentOrderPaymentBase = {
 };
 
 type InvestmentApprovalMode = "FULL" | "PARTIAL";
+type InvestmentProofMode = CheckoutFundingMethodType;
 
 export async function approveInvestmentOrderPaymentReview({
   paymentId,
@@ -18,9 +20,11 @@ export async function approveInvestmentOrderPaymentReview({
   approvedAmount,
   reviewNote,
   approvalMode,
+  proofMode,
 }: ReviewInvestmentOrderPaymentBase & {
   approvedAmount: number;
   approvalMode: InvestmentApprovalMode;
+  proofMode?: InvestmentProofMode;
 }): Promise<{ ok: true; investmentOrderId: string }> {
   const payment = await prisma.investmentOrderPayment.findUnique({
     where: { id: paymentId },
@@ -72,6 +76,9 @@ export async function approveInvestmentOrderPaymentReview({
   if (approvedAmount > remaining) {
     throw new Error("Approved amount cannot exceed the remaining order balance.");
   }
+  const isCryptoProof =
+    proofMode === "CRYPTO_PROVIDER" ||
+    payment.type === "CRYPTO_PROVIDER";
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.investmentOrderPayment.updateMany({
@@ -101,17 +108,26 @@ export async function approveInvestmentOrderPaymentReview({
       key: `investment-payment-review:${payment.id}:${approvalMode}`,
       title:
         approvalMode === "FULL"
-          ? "Investment payment approved"
-          : "Investment payment partially approved",
+          ? isCryptoProof
+            ? "Investment crypto payment approved"
+            : "Investment payment approved"
+          : isCryptoProof
+            ? "Investment crypto payment partially approved"
+            : "Investment payment partially approved",
       message:
         approvalMode === "FULL"
-          ? "Your investment payment proof was approved."
-          : "Your investment payment proof was partially approved.",
+          ? isCryptoProof
+            ? "Your crypto payment proof was approved."
+            : "Your investment payment proof was approved."
+          : isCryptoProof
+            ? "Your crypto payment proof was partially approved."
+            : "Your investment payment proof was partially approved.",
       link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
       metadata: {
         paymentId: payment.id,
         investmentOrderId: payment.investmentOrderId,
         approvalMode,
+        proofMode: proofMode ?? payment.type,
         approvedAmount,
         reviewedByUserId: adminUserId,
       },

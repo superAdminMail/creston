@@ -5,10 +5,12 @@ import {
   SavingsFundingIntentStatus,
   SavingsStatus,
   SavingsTransactionPaymentStatus,
+  SavingsTransactionPaymentType,
   SavingsTransactionType,
 } from "@/generated/prisma";
 import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { prisma } from "@/lib/prisma";
+import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 
 type ReviewSavingsTransactionPaymentBase = {
   paymentId: string;
@@ -17,6 +19,7 @@ type ReviewSavingsTransactionPaymentBase = {
 };
 
 type SavingsApprovalMode = "FULL" | "PARTIAL";
+type SavingsProofMode = CheckoutFundingMethodType;
 
 export async function approveSavingsTransactionPaymentReview({
   paymentId,
@@ -24,14 +27,17 @@ export async function approveSavingsTransactionPaymentReview({
   approvedAmount,
   reviewNote,
   approvalMode,
+  proofMode,
 }: ReviewSavingsTransactionPaymentBase & {
   approvedAmount: number;
   approvalMode: SavingsApprovalMode;
+  proofMode?: SavingsProofMode;
 }): Promise<{ ok: true }> {
   const payment = await prisma.savingsTransactionPayment.findUnique({
     where: { id: paymentId },
     select: {
       id: true,
+      type: true,
       status: true,
       claimedAmount: true,
       currency: true,
@@ -156,6 +162,9 @@ export async function approveSavingsTransactionPaymentReview({
     approvalMode === "FULL"
       ? SavingsFundingIntentStatus.CREDITED
       : SavingsFundingIntentStatus.PARTIALLY_PAID;
+  const isCryptoProof =
+    proofMode === "CRYPTO_PROVIDER" ||
+    payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER;
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.savingsTransactionPayment.updateMany({
@@ -237,18 +246,27 @@ export async function approveSavingsTransactionPaymentReview({
       key: `savings-payment-review:${payment.id}:${approvalMode}`,
       title:
         approvalMode === "FULL"
-          ? "Savings payment approved"
-          : "Savings payment partially approved",
+          ? isCryptoProof
+            ? "Savings crypto payment approved"
+            : "Savings payment approved"
+          : isCryptoProof
+            ? "Savings crypto payment partially approved"
+            : "Savings payment partially approved",
       message:
         approvalMode === "FULL"
-          ? "Your savings deposit proof was approved and credited."
-          : "Your savings deposit proof was partially approved and credited.",
-      link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}`,
+          ? isCryptoProof
+            ? "Your crypto payment proof was approved and credited."
+            : "Your savings deposit proof was approved and credited."
+          : isCryptoProof
+            ? "Your crypto payment proof was partially approved and credited."
+            : "Your savings deposit proof was partially approved and credited.",
+      link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}&fundingMethodType=${payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER ? "CRYPTO_PROVIDER" : "BANK_TRANSFER"}`,
       metadata: {
         paymentId: payment.id,
         savingsAccountId: payment.savingsFundingIntent.savingsAccount.id,
         fundingIntentId: payment.savingsFundingIntent.id,
         approvalMode,
+        proofMode: proofMode ?? payment.type,
         approvedAmount: approvedAmountDecimal.toString(),
         reviewedByUserId: adminUserId,
       },
@@ -270,6 +288,7 @@ export async function rejectSavingsTransactionPaymentReview({
     where: { id: paymentId },
     select: {
       id: true,
+      type: true,
       status: true,
       savingsFundingIntentId: true,
     },
@@ -336,7 +355,7 @@ export async function rejectSavingsTransactionPaymentReview({
         key: `savings-payment-review:${payment.id}:REJECTED`,
         title: "Savings payment rejected",
         message: "Your savings deposit proof was rejected by the admin team.",
-        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${intent.savingsAccountId}`,
+        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${intent.savingsAccountId}&fundingMethodType=${payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER ? "CRYPTO_PROVIDER" : "BANK_TRANSFER"}`,
         metadata: {
           paymentId: payment.id,
           savingsAccountId: intent.savingsAccountId,

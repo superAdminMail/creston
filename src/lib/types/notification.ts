@@ -1,6 +1,7 @@
 export type NotificationType =
   | "INVESTMENT_ORDER"
   | "INVESTMENT_ROI"
+  | "INVESTMENT_MATURED"
   | "WITHDRAWAL"
   | "SYSTEM"
   | "PROMOTION";

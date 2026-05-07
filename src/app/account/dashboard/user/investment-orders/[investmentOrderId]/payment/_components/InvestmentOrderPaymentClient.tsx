@@ -102,7 +102,7 @@ export default function InvestmentOrderPaymentClient({
     (order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID");
   const isCryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const isBankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const effectivePaymentMode = isCryptoSelected ? "FULL" : selectedPaymentMode;
+  const effectivePaymentMode = selectedPaymentMode;
   const bankProofActionLabel = isOrderFullySettled
     ? "Payment complete"
     : latestBankPayment?.status === "PENDING_REVIEW"
@@ -115,7 +115,9 @@ export default function InvestmentOrderPaymentClient({
   const bankInfoRequested =
     order.hasExistingBankInfoRequest || bankInfoRequestedLocal;
   const bankProofActionDisabled =
-    isOrderFullySettled || latestBankPayment?.status === "PENDING_REVIEW";
+    isOrderFullySettled ||
+    latestBankPayment?.status === "PENDING_REVIEW" ||
+    selectedPaymentMode === null;
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -151,11 +153,7 @@ export default function InvestmentOrderPaymentClient({
     setShowModal(false);
 
     if (nextFundingMethod === "CRYPTO_PROVIDER") {
-      setSelectedPaymentMode("FULL");
-      updateCheckoutParams({
-        nextFundingMethod,
-        nextPaymentMode: "FULL",
-      });
+      updateCheckoutParams({ nextFundingMethod });
       return;
     }
 
@@ -337,7 +335,7 @@ export default function InvestmentOrderPaymentClient({
         </Card>
       ) : null}
 
-      {!isOrderFullySettled && isBankSelected ? (
+      {!isOrderFullySettled && selectedFundingMethod ? (
         <OrderPaymentSelector
           mode={selectedPaymentMode}
           onModeChange={(nextMode) => {
@@ -474,8 +472,19 @@ export default function InvestmentOrderPaymentClient({
                     />
                     <SummaryChip
                       label="Payment mode"
-                      value={getCheckoutPaymentModeLabel("FULL")}
+                      value={getCheckoutPaymentModeLabel(effectivePaymentMode)}
                     />
+                  </div>
+
+                  <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 p-4 text-sm text-slate-700 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-sky-700/80 dark:text-sky-200/80">
+                      Crypto proof mode
+                    </p>
+                    <p className="mt-2 leading-6">
+                      Partial payments are available when you submit crypto
+                      proof. The Pay now checkout button below stays full
+                      payment only.
+                    </p>
                   </div>
 
                   {bankMethod?.walletAddress ? (
@@ -512,8 +521,8 @@ export default function InvestmentOrderPaymentClient({
                   ) : null}
 
                   <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Scan the QR code or paste the address above to pay from
-                    your wallet app, then confirm the payment below.
+                    Scan the QR code or paste the address above to pay from your
+                    wallet app, then confirm the payment below.
                   </p>
 
                   {bankMethod?.walletAddress ? (
@@ -521,15 +530,26 @@ export default function InvestmentOrderPaymentClient({
                       <Button
                         type="button"
                         onClick={() => setShowModal(true)}
+                        disabled={selectedPaymentMode === null}
                         className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                       >
-                        I&apos;ve made this payment
+                        {selectedPaymentMode === null
+                          ? "Choose payment mode first"
+                          : "I&apos;ve made this payment"}
                       </Button>
 
-                      <InvestmentOrderCryptoCheckoutButton
-                        investmentOrderId={order.id}
-                        className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
-                      />
+                      {selectedPaymentMode === "FULL" ? (
+                        <InvestmentOrderCryptoCheckoutButton
+                          investmentOrderId={order.id}
+                          className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+                        />
+                      ) : (
+                        <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                          Paymento checkout is available for full payment
+                          only. Use the proof button above for partial crypto
+                          submissions.
+                        </div>
+                      )}
                     </div>
                   ) : null}
                 </CardContent>

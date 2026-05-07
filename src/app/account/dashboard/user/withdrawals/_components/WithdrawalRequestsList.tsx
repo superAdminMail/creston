@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
+import { Button } from "@/components/ui/button";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
+import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 
 type Props = {
   withdrawalOrders: WithdrawalRequestItemDto[];
@@ -30,6 +32,14 @@ function getSourceLabel(order: WithdrawalRequestItemDto) {
   );
 }
 
+function canPayCommission(order: WithdrawalRequestItemDto) {
+  return (
+    order.hasCommissionFees &&
+    order.commissionStatus !== "PAID" &&
+    order.commissionStatus !== "VOID"
+  );
+}
+
 export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
   return (
     <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -43,9 +53,8 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
       {withdrawalOrders.length > 0 ? (
         <div className="grid gap-3 md:grid-cols-2">
           {withdrawalOrders.map((order) => (
-            <Link
+            <div
               key={order.id}
-              href={`/account/dashboard/user/withdrawals/${order.id}`}
               className="block rounded-2xl border border-white/10 bg-[#09111f]/70 p-4 transition hover:border-[#3c9ee0]/40 hover:bg-[#0d1729]"
             >
               <div className="flex items-start justify-between gap-3">
@@ -81,6 +90,31 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                 </div>
               </div>
 
+              {canPayCommission(order) ? (
+                <div className="mt-4">
+                  <Button
+                    asChild
+                    className="w-full rounded-full bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                  >
+                    <Link href={buildWithdrawalCommissionCheckoutUrl(order.id)}>
+                      Pay commission
+                    </Link>
+                  </Button>
+                </div>
+              ) : null}
+
+              <div className="mt-4 flex justify-end">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+                >
+                  <Link href={`/account/dashboard/user/withdrawals/${order.id}`}>
+                    View details
+                  </Link>
+                </Button>
+              </div>
+
               {order.payoutSnapshot?.withdrawalMode ? (
                 <p className="mt-3 text-xs text-slate-500">
                   {order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
@@ -91,7 +125,7 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                   : "Normal withdrawal request"}
                 </p>
               ) : null}
-            </Link>
+            </div>
           ))}
         </div>
       ) : (

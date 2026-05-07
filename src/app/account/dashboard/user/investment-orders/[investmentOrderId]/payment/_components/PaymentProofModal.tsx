@@ -32,7 +32,7 @@ export default function PaymentProofModal({
       title={isCryptoMode ? "Confirm crypto payment" : "Submit payment proof"}
       description={
         isCryptoMode
-          ? "Enter the amount you sent and attach a receipt image."
+          ? "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
           : "Attach proof for review"
       }
       defaultAmount={defaultAmount}

@@ -120,10 +120,21 @@ export async function getUserTransactions(userId: string) {
   }));
 
   const savingsTx: TransactionItem[] = savingsTransactions.map((transaction) => {
+    const adjustmentDirection =
+      transaction.type === "ADJUSTMENT" &&
+      transaction.metadata &&
+      typeof transaction.metadata === "object" &&
+      "adjustmentDirection" in transaction.metadata &&
+      (transaction.metadata as { adjustmentDirection?: unknown }).adjustmentDirection;
+
     const direction =
       transaction.type === "WITHDRAWAL" || transaction.type === "FEE"
         ? "DEBIT"
-        : "CREDIT";
+        : transaction.type === "ADJUSTMENT"
+          ? adjustmentDirection === "DEDUCT"
+            ? "DEBIT"
+            : "CREDIT"
+          : "CREDIT";
 
     return {
       id: transaction.id,
@@ -137,7 +148,11 @@ export async function getUserTransactions(userId: string) {
         transaction.reference ??
         `SAV-${transaction.id.slice(0, 6).toUpperCase()}`,
       planName: transaction.savingsAccount.name,
-      description: transaction.note ?? `Savings ${transaction.type.toLowerCase()}`,
+      description:
+        transaction.note ??
+        (transaction.type === "ADJUSTMENT"
+          ? "Manual balance adjustment"
+          : `Savings ${transaction.type.toLowerCase()}`),
       direction,
     };
   });

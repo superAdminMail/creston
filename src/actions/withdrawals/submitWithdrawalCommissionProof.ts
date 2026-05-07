@@ -1,0 +1,66 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { createWithdrawalCommissionSubmission } from "@/lib/payments/withdrawals/createWithdrawalCommissionSubmission";
+import { submitWithdrawalCommissionProofSchema as schema } from "@/lib/zodValidations/withdrawal-commission-proof";
+
+type Input = z.infer<typeof schema>;
+
+export async function submitWithdrawalCommissionProof(input: Input) {
+  const user = await getCurrentSessionUser();
+
+  if (!user?.id) {
+    return { ok: false, message: "Unauthorized." };
+  }
+
+  const parsed = schema.safeParse(input);
+
+  if (!parsed.success) {
+    return { ok: false, message: "Invalid withdrawal commission submission." };
+  }
+
+  try {
+    const result = await createWithdrawalCommissionSubmission({
+      withdrawalId: parsed.data.withdrawalId,
+      userId: user.id,
+      claimedAmount: parsed.data.claimedAmount,
+      proofMode: parsed.data.proofMode,
+      depositorName: parsed.data.depositorName,
+      depositorAccountName: parsed.data.depositorAccountName,
+      depositorAccountNo: parsed.data.depositorAccountNo,
+      transferReference: parsed.data.transferReference,
+      note: parsed.data.note,
+      receiptFileId: parsed.data.receiptFileId,
+      platformPaymentMethodId: parsed.data.platformPaymentMethodId,
+    });
+
+    revalidatePath("/account/dashboard/user/withdrawals");
+    revalidatePath(`/account/dashboard/user/withdrawals/${result.withdrawalId}`);
+    revalidatePath("/account/dashboard/checkout");
+    revalidatePath("/account/dashboard/admin/Withdrawals");
+    revalidatePath(`/account/dashboard/admin/Withdrawals/${result.withdrawalId}`);
+    revalidatePath("/account/dashboard/notifications");
+
+    return {
+      ok: true,
+      message:
+        result.commissionStatus === "PAID"
+          ? "Withdrawal commission marked as paid."
+          : "Withdrawal commission proof submitted.",
+      data: result,
+    };
+  } catch (error) {
+    console.error("submitWithdrawalCommissionProof error:", error);
+
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to submit withdrawal commission proof",
+    };
+  }
+}

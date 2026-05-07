@@ -28,6 +28,7 @@ export async function approveInvestmentOrderPayment(
       paymentId: data.paymentId,
       approvedAmount: data.approvedAmount,
       approvalMode: data.approvalMode,
+      proofMode: data.proofMode,
       reviewNote: data.reviewNote,
       adminUserId: admin.userId,
     });

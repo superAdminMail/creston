@@ -67,6 +67,8 @@ export default async function Page() {
       amount: order.amount.toString(),
       currency: order.currency,
       status: order.status,
+      hasCommissionFees: order.hasCommissionFees,
+      commissionStatus: order.commissionStatus,
       requestedAt: order.requestedAt.toISOString(),
       payoutMethod: order.payoutMethod
         ? {

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ArrowRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -234,6 +236,7 @@ export default function AdminWithdrawalsClient({
                     <th className="px-6 py-4">Payout Method</th>
                     <th className="px-6 py-4">Amount</th>
                     <th className="px-6 py-4">Fees</th>
+                    <th className="px-6 py-4">Actions</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Requested</th>
                   </tr>
@@ -294,6 +297,15 @@ export default function AdminWithdrawalsClient({
                         ) : (
                           <span className="text-slate-500">No commission fees</span>
                         )}
+                      </td>
+                      <td className="px-6 py-5">
+                        <Link
+                          href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                        >
+                          <ArrowRight className="h-3.5 w-3.5" />
+                          {withdrawal.status === "PENDING" ? "Manage commission" : "View"}
+                        </Link>
                       </td>
                       <td className="px-6 py-5">
                         <Badge
@@ -395,6 +407,14 @@ export default function AdminWithdrawalsClient({
                       <p className="text-slate-500">No commission fees applied</p>
                     )}
                   </div>
+
+                  <Link
+                    href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                    {withdrawal.status === "PENDING" ? "Manage commission" : "View"}
+                  </Link>
 
                   {withdrawal.rejectionReason ? (
                     <div className="rounded-2xl border border-red-400/20 bg-red-500/5 p-3 text-sm text-red-200">

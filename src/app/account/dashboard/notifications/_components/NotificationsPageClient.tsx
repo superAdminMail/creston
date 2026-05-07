@@ -9,7 +9,10 @@ import { useMemo, useState, useTransition } from "react";
 import { markNotificationRead } from "@/actions/notifications/markNotificationRead";
 import { clearNotifications } from "@/actions/notifications/clearNotifications";
 import { renderNotificationIcon } from "@/lib/notifications/getNotificationIcon";
-import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
+import {
+  getNotificationActionLabel,
+  getNotificationDisplayType,
+} from "@/lib/notifications/notificationPresentation";
 import type { NotificationDTO } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -374,7 +377,9 @@ export default function NotificationsPageClient({
                     {getNotificationDisplayType(notification)}
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-300">
-                    {notification.link ? "Open" : "Viewed"}
+                    {notification.link
+                      ? getNotificationActionLabel(notification) ?? "Open"
+                      : "Viewed"}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </span>
                 </div>

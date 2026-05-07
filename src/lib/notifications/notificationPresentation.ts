@@ -76,6 +76,22 @@ export function getNotificationDisplayType(
     .join(" ");
 }
 
+export function getNotificationActionLabel(
+  notification?: Pick<NotificationDTO, "link" | "metadata"> | null,
+) {
+  const actionLabel = notification?.metadata?.actionLabel;
+
+  if (typeof actionLabel === "string" && actionLabel.trim()) {
+    return actionLabel.trim();
+  }
+
+  if (notification?.link) {
+    return "Open linked page";
+  }
+
+  return null;
+}
+
 export function isPromotionNotificationType(
   notification?: Pick<NotificationDTO, "type" | "metadata"> | null,
 ) {
