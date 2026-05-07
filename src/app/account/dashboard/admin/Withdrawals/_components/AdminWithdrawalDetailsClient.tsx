@@ -1,19 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { approveWithdrawalCommission } from "@/actions/admin/withdrawals/approveWithdrawalCommission";
+import { rejectWithdrawalCommission } from "@/actions/admin/withdrawals/rejectWithdrawalCommission";
 import { updateWithdrawalCommission } from "@/actions/admin/withdrawals/updateWithdrawalCommission";
 import type { AdminWithdrawalDetails } from "@/actions/admin/withdrawals/getAdminWithdrawalDetails";
 import { createInitialFormState } from "@/lib/forms/actionState";
-import { formatCurrency } from "@/lib/formatters/formatters";
+import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
@@ -70,7 +73,19 @@ export function AdminWithdrawalDetailsClient({
       ? withdrawal.savingsFeeAmount.toFixed(2)
       : "",
   );
+  const [reviewAmount, setReviewAmount] = useState(
+    withdrawal.commissionPayment?.claimedAmount
+      ? withdrawal.commissionPayment.claimedAmount.toFixed(2)
+      : "",
+  );
+  const [reviewNote, setReviewNote] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [rejectionReasonError, setRejectionReasonError] = useState("");
+  const [reviewPending, startReviewTransition] = useTransition();
   const lastToast = useRef<string | null>(null);
+  const commissionReviewStatus =
+    withdrawal.commissionPayment?.reviewStatus ?? null;
+  const canReviewCommission = commissionReviewStatus === "PENDING_REVIEW";
 
   useEffect(() => {
     if (state.status === "idle" || !state.message) {
@@ -93,6 +108,64 @@ export function AdminWithdrawalDetailsClient({
 
     toast.error(state.message);
   }, [lastToast, router, state.message, state.status, withdrawal.id]);
+
+  function submitCommissionReview(input: {
+    approvalMode: "FULL" | "PARTIAL" | "REJECT";
+    approvedAmount?: number;
+    rejectionReason?: string;
+  }) {
+    startReviewTransition(async () => {
+      const result =
+        input.approvalMode === "REJECT"
+          ? await rejectWithdrawalCommission({
+              withdrawalId: withdrawal.id,
+              rejectionReason: input.rejectionReason ?? "",
+              reviewNote,
+            })
+          : await approveWithdrawalCommission({
+              withdrawalId: withdrawal.id,
+              approvedAmount: input.approvedAmount ?? 0,
+              approvalMode: input.approvalMode,
+              reviewNote,
+            });
+
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
+      router.refresh();
+    });
+  }
+
+  function handleApproveFull() {
+    submitCommissionReview({
+      approvalMode: "FULL",
+      approvedAmount: withdrawal.commissionPayment?.claimedAmount ?? 0,
+    });
+  }
+
+  function handleApprovePartial() {
+    submitCommissionReview({
+      approvalMode: "PARTIAL",
+      approvedAmount: Number(reviewAmount),
+    });
+  }
+
+  function handleReject() {
+    if (!rejectionReason.trim()) {
+      setRejectionReasonError("Rejection reason is required.");
+      toast.error("Rejection reason is required.");
+      return;
+    }
+
+    setRejectionReasonError("");
+    submitCommissionReview({
+      approvalMode: "REJECT",
+      rejectionReason,
+    });
+  }
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
@@ -138,6 +211,14 @@ export function AdminWithdrawalDetailsClient({
         <InfoCard
           label="Commission status"
           value={withdrawal.commissionStatusLabel}
+        />
+        <InfoCard
+          label="Commission review"
+          value={
+            commissionReviewStatus
+              ? formatEnumLabel(commissionReviewStatus)
+              : "Not submitted"
+          }
         />
         <InfoCard label="Amount" value={withdrawal.amount} />
         <InfoCard label="Currency" value={withdrawal.currency} />
@@ -348,6 +429,212 @@ export function AdminWithdrawalDetailsClient({
               </div>
             </CardContent>
           </Card>
+
+          {canReviewCommission ? (
+            <Card className="rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10">
+              <CardContent className="space-y-5 p-6">
+                <h2 className="text-lg font-semibold text-white">
+                  Commission proof review
+                </h2>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InfoCard
+                    label="Submitted amount"
+                    value={
+                      withdrawal.commissionPayment
+                        ? formatCurrency(
+                            withdrawal.commissionPayment.claimedAmount,
+                            withdrawal.currency,
+                          )
+                        : "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Proof mode"
+                    value={
+                      withdrawal.commissionPayment?.proofMode
+                        ? formatEnumLabel(
+                            withdrawal.commissionPayment.proofMode,
+                          )
+                        : "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Approved so far"
+                    value={
+                      withdrawal.commissionPayment
+                        ? formatCurrency(
+                            withdrawal.commissionPayment.paidAmount,
+                            withdrawal.currency,
+                          )
+                        : "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Remaining commission"
+                    value={
+                      withdrawal.commissionPayment
+                        ? formatCurrency(
+                            Math.max(
+                              0,
+                              withdrawal.commissionPayment.remainingAmount,
+                            ),
+                            withdrawal.currency,
+                          )
+                        : "Not available"
+                    }
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InfoCard
+                    label="Depositor"
+                    value={
+                      withdrawal.commissionPayment?.depositorName ??
+                      "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Account name"
+                    value={
+                      withdrawal.commissionPayment?.depositorAccountName ??
+                      "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Account number"
+                    value={
+                      withdrawal.commissionPayment?.depositorAccountNo ??
+                      "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Transfer reference"
+                    value={
+                      withdrawal.commissionPayment?.transferReference ??
+                      "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Receipt file"
+                    value={
+                      withdrawal.commissionPayment?.receiptFileId ??
+                      "Not available"
+                    }
+                  />
+                  <InfoCard
+                    label="Submitted at"
+                    value={
+                      withdrawal.commissionPayment?.submittedAt
+                        ? formatDateTime(
+                            withdrawal.commissionPayment.submittedAt,
+                          )
+                        : "Not available"
+                    }
+                  />
+                </div>
+
+                <div className="grid max-w-sm gap-2">
+                  <Label
+                    htmlFor="commissionReviewAmount"
+                    className="text-sm font-medium text-white"
+                  >
+                    Review amount
+                  </Label>
+                  <Input
+                    id="commissionReviewAmount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={reviewAmount}
+                    onChange={(event) => setReviewAmount(event.target.value)}
+                    disabled={reviewPending}
+                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-slate-300">
+                    Enter the amount that was actually received. Use the full
+                    button for the submitted amount or reduce it before marking
+                    partial.
+                  </p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label
+                    htmlFor="commissionReviewNote"
+                    className="text-sm font-medium text-white"
+                  >
+                    Review note
+                  </Label>
+                  <Textarea
+                    id="commissionReviewNote"
+                    rows={4}
+                    value={reviewNote}
+                    onChange={(event) => setReviewNote(event.target.value)}
+                    disabled={reviewPending}
+                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label
+                    htmlFor="commissionRejectionReason"
+                    className="text-sm font-medium text-white"
+                  >
+                    Rejection reason
+                  </Label>
+                  <Textarea
+                    id="commissionRejectionReason"
+                    rows={4}
+                    value={rejectionReason}
+                    onChange={(event) => {
+                      setRejectionReason(event.target.value);
+                      if (rejectionReasonError) {
+                        setRejectionReasonError("");
+                      }
+                    }}
+                    aria-invalid={Boolean(rejectionReasonError)}
+                    disabled={reviewPending}
+                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                  />
+                  {rejectionReasonError ? (
+                    <p className="text-xs text-rose-300">
+                      {rejectionReasonError}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    onClick={handleApproveFull}
+                    disabled={reviewPending}
+                    className="rounded-2xl bg-emerald-600 hover:bg-emerald-500"
+                  >
+                    {reviewPending ? "Saving..." : "Approve full payment"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleApprovePartial}
+                    disabled={reviewPending}
+                    className="rounded-2xl"
+                  >
+                    Mark partially paid
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleReject}
+                    disabled={reviewPending}
+                    className="rounded-2xl"
+                  >
+                    Reject payment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
 
         <div className="space-y-6">

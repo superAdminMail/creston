@@ -4,6 +4,7 @@ import type { AvailableWithdrawalBalanceSummary } from "@/lib/service/getAvailab
 import { getAvailableWithdrawalBalance } from "@/lib/service/getAvailableWithdrawalBalance";
 import { getWithdrawalSourceOptions } from "@/lib/service/getAvailableWithdrawalSource";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
+import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 import WithdrawalsClient from "../_components/WithdrawalsClient";
 
 export default async function Page() {
@@ -62,63 +63,72 @@ export default async function Page() {
       } satisfies AvailableWithdrawalBalanceSummary);
 
   const withdrawalOrders: WithdrawalRequestItemDto[] =
-    profile?.withdrawalOrders?.map((order) => ({
-      id: order.id,
-      amount: order.amount.toString(),
-      currency: order.currency,
-      status: order.status,
-      hasCommissionFees: order.hasCommissionFees,
-      commissionStatus: order.commissionStatus,
-      requestedAt: order.requestedAt.toISOString(),
-      payoutMethod: order.payoutMethod
-        ? {
-            id: order.payoutMethod.id,
-            type: order.payoutMethod.type,
-            bankName: order.payoutMethod.bankName,
-            network: order.payoutMethod.network,
-          }
-        : null,
-      payoutSnapshot: order.payoutSnapshot
-        ? {
-            withdrawalMode:
-              typeof order.payoutSnapshot === "object" &&
-              order.payoutSnapshot &&
-              "withdrawalMode" in order.payoutSnapshot &&
-              order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
-                ? "EARLY_WITHDRAWAL"
-                : typeof order.payoutSnapshot === "object" &&
-                    order.payoutSnapshot &&
-                    "withdrawalMode" in order.payoutSnapshot &&
-                    order.payoutSnapshot.withdrawalMode === "NORMAL"
-                  ? "NORMAL"
+    profile?.withdrawalOrders?.map((order) => {
+      const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
+        order.payoutSnapshot,
+      );
+
+      return {
+        id: order.id,
+        amount: order.amount.toString(),
+        currency: order.currency,
+        status: order.status,
+        hasCommissionFees: order.hasCommissionFees,
+        commissionStatus: order.commissionStatus,
+        requestedAt: order.requestedAt.toISOString(),
+        payoutMethod: order.payoutMethod
+          ? {
+              id: order.payoutMethod.id,
+              type: order.payoutMethod.type,
+              bankName: order.payoutMethod.bankName,
+              network: order.payoutMethod.network,
+            }
+          : null,
+        payoutSnapshot: order.payoutSnapshot
+          ? {
+              withdrawalMode:
+                typeof order.payoutSnapshot === "object" &&
+                order.payoutSnapshot &&
+                "withdrawalMode" in order.payoutSnapshot &&
+                order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
+                  ? "EARLY_WITHDRAWAL"
+                  : typeof order.payoutSnapshot === "object" &&
+                      order.payoutSnapshot &&
+                      "withdrawalMode" in order.payoutSnapshot &&
+                      order.payoutSnapshot.withdrawalMode === "NORMAL"
+                    ? "NORMAL"
+                    : null,
+              earlyWithdrawalPenalty:
+                typeof order.payoutSnapshot === "object" &&
+                order.payoutSnapshot &&
+                "earlyWithdrawalPenalty" in order.payoutSnapshot
+                  ? String(order.payoutSnapshot.earlyWithdrawalPenalty ?? "")
                   : null,
-            earlyWithdrawalPenalty:
-              typeof order.payoutSnapshot === "object" &&
-              order.payoutSnapshot &&
-              "earlyWithdrawalPenalty" in order.payoutSnapshot
-                ? String(order.payoutSnapshot.earlyWithdrawalPenalty ?? "")
+            }
+          : null,
+        commissionReviewStatus: commissionPayment?.reviewStatus ?? null,
+        commissionSubmittedAmount:
+          commissionPayment?.claimedAmount?.toString() ?? null,
+        investmentOrder: order.investmentOrder
+          ? {
+              investmentPlan: order.investmentOrder.investmentPlan
+                ? {
+                    name: order.investmentOrder.investmentPlan.name,
+                  }
                 : null,
-          }
-        : null,
-      investmentOrder: order.investmentOrder
-        ? {
-            investmentPlan: order.investmentOrder.investmentPlan
-              ? {
-                  name: order.investmentOrder.investmentPlan.name,
-                }
-              : null,
-          }
-        : null,
-      investmentAccount: order.investmentAccount
-        ? {
-            investmentPlan: order.investmentAccount.investmentPlan
-              ? {
-                  name: order.investmentAccount.investmentPlan.name,
-                }
-              : null,
-          }
-        : null,
-    })) ?? [];
+            }
+          : null,
+        investmentAccount: order.investmentAccount
+          ? {
+              investmentPlan: order.investmentAccount.investmentPlan
+                ? {
+                    name: order.investmentAccount.investmentPlan.name,
+                  }
+                : null,
+            }
+          : null,
+      };
+    }) ?? [];
 
   return (
     <WithdrawalsClient

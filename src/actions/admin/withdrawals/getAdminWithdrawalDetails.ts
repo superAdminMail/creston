@@ -7,6 +7,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import type { WithdrawalCommissionPaymentSnapshot } from "@/lib/types/payments/withdrawalCommission.types";
+import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
 export type AdminWithdrawalDetails = {
   id: string;
@@ -19,6 +21,7 @@ export type AdminWithdrawalDetails = {
   hasCommissionFees: boolean;
   commissionPercent: number;
   savingsFeeAmount: number | null;
+  commissionPayment: WithdrawalCommissionPaymentSnapshot | null;
   requestedAt: string;
   processedAt: string | null;
   completedAt: string | null;
@@ -62,6 +65,7 @@ export async function getAdminWithdrawalDetails(
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
+      payoutSnapshot: true,
       requestedAt: true,
       processedAt: true,
       completedAt: true,
@@ -117,6 +121,10 @@ export async function getAdminWithdrawalDetails(
     return null;
   }
 
+  const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
+    withdrawal.payoutSnapshot,
+  );
+
   return {
     id: withdrawal.id,
     status: withdrawal.status,
@@ -130,6 +138,7 @@ export async function getAdminWithdrawalDetails(
     savingsFeeAmount: withdrawal.savingsFeeAmount
       ? decimalToNumber(withdrawal.savingsFeeAmount)
       : null,
+    commissionPayment,
     requestedAt: withdrawal.requestedAt.toISOString(),
     processedAt: withdrawal.processedAt?.toISOString() ?? null,
     completedAt: withdrawal.completedAt?.toISOString() ?? null,

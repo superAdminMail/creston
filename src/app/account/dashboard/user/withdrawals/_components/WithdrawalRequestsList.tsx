@@ -36,7 +36,8 @@ function canPayCommission(order: WithdrawalRequestItemDto) {
   return (
     order.hasCommissionFees &&
     order.commissionStatus !== "PAID" &&
-    order.commissionStatus !== "VOID"
+    order.commissionStatus !== "VOID" &&
+    order.commissionReviewStatus !== "PENDING_REVIEW"
   );
 }
 
@@ -89,6 +90,21 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                   </p>
                 </div>
               </div>
+
+              {order.commissionReviewStatus === "PENDING_REVIEW" ? (
+                <div className="mt-3 rounded-xl border border-amber-200/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+                  Withdrawal commission proof is waiting for admin review.
+                  {order.commissionSubmittedAmount ? (
+                    <span className="block mt-1 text-amber-100/80">
+                      Submitted amount:{" "}
+                      {formatCurrency(
+                        Number(order.commissionSubmittedAmount),
+                        order.currency,
+                      )}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
 
               {canPayCommission(order) ? (
                 <div className="mt-4">

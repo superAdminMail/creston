@@ -4,6 +4,9 @@ import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platfo
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionCheckoutDetails } from "@/lib/types/payments/withdrawalCommission.types";
+import {
+  readWithdrawalCommissionPaymentSnapshot,
+} from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
 function normalizeFundingMethodType(
   value: string | null | undefined,
@@ -13,25 +16,6 @@ function normalizeFundingMethodType(
   }
 
   return null;
-}
-
-function readCommissionPaymentSnapshot(payoutSnapshot: unknown) {
-  if (!payoutSnapshot || typeof payoutSnapshot !== "object") {
-    return 0;
-  }
-
-  const snapshot = payoutSnapshot as Record<string, unknown>;
-  const commissionPayment =
-    snapshot.commissionPayment && typeof snapshot.commissionPayment === "object"
-      ? (snapshot.commissionPayment as Record<string, unknown>)
-      : null;
-
-  if (!commissionPayment) {
-    return 0;
-  }
-
-  const paidAmount = Number(commissionPayment.paidAmount ?? 0);
-  return Number.isFinite(paidAmount) && paidAmount > 0 ? paidAmount : 0;
 }
 
 export async function getWithdrawalCommissionCheckoutDetails(
@@ -112,13 +96,16 @@ export async function getWithdrawalCommissionCheckoutDetails(
       : decimalToNumber(withdrawal.amount) *
         (decimalToNumber(withdrawal.commissionPercent) / 100);
 
-  const paidCommissionAmount = readCommissionPaymentSnapshot(
+  const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,
   );
+  const paidCommissionAmount = commissionPayment?.paidAmount ?? 0;
   const remainingCommissionAmount = Math.max(
     0,
     commissionAmount - paidCommissionAmount,
   );
+  const isUnderReview =
+    commissionPayment?.reviewStatus === "PENDING_REVIEW";
 
   const selectedFundingMethod =
     normalizeFundingMethodType(fundingMethodType) ?? "BANK_TRANSFER";
@@ -160,13 +147,15 @@ export async function getWithdrawalCommissionCheckoutDetails(
           instructions: paymentMethod.instructions,
           notes: paymentMethod.notes,
           walletAddress: paymentMethod.walletAddress,
-          currency: paymentMethod.currency ?? withdrawal.currency,
-        }
+        currency: paymentMethod.currency ?? withdrawal.currency,
+      }
       : null,
+    commissionPayment,
     commissionAmount,
     paidCommissionAmount,
     remainingCommissionAmount,
     isSettled:
       remainingCommissionAmount <= 0 || withdrawal.commissionStatus === "PAID",
+    isUnderReview,
   };
 }

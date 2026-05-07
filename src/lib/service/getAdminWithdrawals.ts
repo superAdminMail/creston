@@ -2,6 +2,7 @@ import type { PaymentMethodType, WithdrawalStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
 export type AdminWithdrawalItem = {
   id: string;
@@ -13,6 +14,8 @@ export type AdminWithdrawalItem = {
   hasCommissionFees: boolean;
   commissionPercent: number;
   savingsFeeAmount: number | null;
+  commissionReviewStatus: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | null;
+  commissionSubmittedAmount: number | null;
   requestedAt: string;
   processedAt: string | null;
   completedAt: string | null;
@@ -56,6 +59,7 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
+      payoutSnapshot: true,
       requestedAt: true,
       processedAt: true,
       completedAt: true,
@@ -108,48 +112,56 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     },
   });
 
-  return withdrawals.map((withdrawal) => ({
-    id: withdrawal.id,
-    externalReference: withdrawal.externalReference,
-    reference: withdrawal.reference,
-    status: withdrawal.status,
-    amount: decimalToNumber(withdrawal.amount),
-    currency: withdrawal.currency,
-    hasCommissionFees: withdrawal.hasCommissionFees,
-    commissionPercent: decimalToNumber(withdrawal.commissionPercent),
-    savingsFeeAmount: withdrawal.savingsFeeAmount
-      ? decimalToNumber(withdrawal.savingsFeeAmount)
-      : null,
-    requestedAt: withdrawal.requestedAt.toISOString(),
-    processedAt: withdrawal.processedAt?.toISOString() ?? null,
-    completedAt: withdrawal.completedAt?.toISOString() ?? null,
-    rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
-    rejectionReason: withdrawal.rejectionReason,
-    adminNotes: withdrawal.adminNotes,
-    sourceType: withdrawal.investmentOrder
-      ? "INVESTMENT_ORDER"
-      : "SAVINGS_ACCOUNT",
-    sourceLabel: withdrawal.investmentOrder
-      ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-      : withdrawal.investmentAccount
-        ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
-        : "Direct withdrawal request",
-    requester: {
-      id: withdrawal.investorProfile.user.id,
-      name: withdrawal.investorProfile.user.name,
-      email: withdrawal.investorProfile.user.email,
-    },
-    payoutMethod: withdrawal.payoutMethod
-      ? {
-          id: withdrawal.payoutMethod.id,
-          type: withdrawal.payoutMethod.type,
-          bankName: withdrawal.payoutMethod.bankName,
-          accountName: withdrawal.payoutMethod.accountName,
-          accountNumber: withdrawal.payoutMethod.accountNumber,
-          network: withdrawal.payoutMethod.network,
-          address: withdrawal.payoutMethod.address,
-          isVerified: withdrawal.payoutMethod.isVerified,
-        }
-      : null,
-  }));
+  return withdrawals.map((withdrawal) => {
+    const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
+      withdrawal.payoutSnapshot,
+    );
+
+    return {
+      id: withdrawal.id,
+      externalReference: withdrawal.externalReference,
+      reference: withdrawal.reference,
+      status: withdrawal.status,
+      amount: decimalToNumber(withdrawal.amount),
+      currency: withdrawal.currency,
+      hasCommissionFees: withdrawal.hasCommissionFees,
+      commissionPercent: decimalToNumber(withdrawal.commissionPercent),
+      savingsFeeAmount: withdrawal.savingsFeeAmount
+        ? decimalToNumber(withdrawal.savingsFeeAmount)
+        : null,
+      commissionReviewStatus: commissionPayment?.reviewStatus ?? null,
+      commissionSubmittedAmount: commissionPayment?.claimedAmount ?? null,
+      requestedAt: withdrawal.requestedAt.toISOString(),
+      processedAt: withdrawal.processedAt?.toISOString() ?? null,
+      completedAt: withdrawal.completedAt?.toISOString() ?? null,
+      rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
+      rejectionReason: withdrawal.rejectionReason,
+      adminNotes: withdrawal.adminNotes,
+      sourceType: withdrawal.investmentOrder
+        ? "INVESTMENT_ORDER"
+        : "SAVINGS_ACCOUNT",
+      sourceLabel: withdrawal.investmentOrder
+        ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
+        : withdrawal.investmentAccount
+          ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+          : "Direct withdrawal request",
+      requester: {
+        id: withdrawal.investorProfile.user.id,
+        name: withdrawal.investorProfile.user.name,
+        email: withdrawal.investorProfile.user.email,
+      },
+      payoutMethod: withdrawal.payoutMethod
+        ? {
+            id: withdrawal.payoutMethod.id,
+            type: withdrawal.payoutMethod.type,
+            bankName: withdrawal.payoutMethod.bankName,
+            accountName: withdrawal.payoutMethod.accountName,
+            accountNumber: withdrawal.payoutMethod.accountNumber,
+            network: withdrawal.payoutMethod.network,
+            address: withdrawal.payoutMethod.address,
+            isVerified: withdrawal.payoutMethod.isVerified,
+          }
+        : null,
+    };
+  });
 }

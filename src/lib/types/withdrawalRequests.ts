@@ -12,6 +12,8 @@ export type WithdrawalRequestItemDto = {
   status: string;
   hasCommissionFees: boolean;
   commissionStatus: string;
+  commissionReviewStatus: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | null;
+  commissionSubmittedAmount: string | null;
   requestedAt: string;
   payoutMethod: WithdrawalRequestPaymentMethodDto | null;
   payoutSnapshot: {

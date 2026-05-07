@@ -114,7 +114,10 @@ export default function WithdrawalCommissionFunding({
 
   const bankMethod = details.paymentMethod;
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
-  const canOpenProof = details.remainingCommissionAmount > 0 && !!bankMethod;
+  const canOpenProof =
+    details.remainingCommissionAmount > 0 &&
+    !!bankMethod &&
+    !details.isUnderReview;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
@@ -169,7 +172,25 @@ export default function WithdrawalCommissionFunding({
         description="Select bank transfer or crypto to continue paying your withdrawal commission."
       />
 
-      {!details.isSettled && selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+      {details.isUnderReview ? (
+        <Card className="w-full rounded-[1.35rem] border border-amber-200/70 bg-amber-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-amber-400/20 dark:bg-white/[0.04]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Commission under review
+            </CardTitle>
+            <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
+              Your commission proof has been submitted and is waiting for admin
+              confirmation. You cannot submit another payment while it is being
+              reviewed.
+            </p>
+          </CardHeader>
+        </Card>
+      ) : null}
+
+      {!details.isSettled &&
+      !details.isUnderReview &&
+      selectedFundingMethod === "BANK_TRANSFER" &&
+      !bankMethod ? (
         <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -377,7 +398,9 @@ export default function WithdrawalCommissionFunding({
                       disabled={!canOpenProof}
                       className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                     >
-                      {canOpenProof
+                      {details.isUnderReview
+                        ? "Awaiting admin review"
+                        : canOpenProof
                         ? "I&apos;ve made this payment"
                         : "Commission unavailable"}
                     </Button>
@@ -434,18 +457,20 @@ export default function WithdrawalCommissionFunding({
 
                   {bankMethod ? (
                     <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        onClick={() => setProofOpen(true)}
-                        disabled={!canOpenProof}
-                        className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                      >
-                        {canOpenProof
+                    <Button
+                      type="button"
+                      onClick={() => setProofOpen(true)}
+                      disabled={!canOpenProof}
+                      className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                    >
+                        {details.isUnderReview
+                          ? "Awaiting admin review"
+                          : canOpenProof
                           ? "I&apos;ve made this payment"
                           : "Commission unavailable"}
-                      </Button>
-                    </div>
-                  ) : null}
+                    </Button>
+                  </div>
+                ) : null}
                 </div>
               )}
             </CardContent>

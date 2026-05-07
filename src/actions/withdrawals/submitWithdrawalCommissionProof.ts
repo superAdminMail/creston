@@ -46,10 +46,7 @@ export async function submitWithdrawalCommissionProof(input: Input) {
 
     return {
       ok: true,
-      message:
-        result.commissionStatus === "PAID"
-          ? "Withdrawal commission marked as paid."
-          : "Withdrawal commission proof submitted.",
+      message: "Withdrawal commission proof submitted for admin review.",
       data: result,
     };
   } catch (error) {

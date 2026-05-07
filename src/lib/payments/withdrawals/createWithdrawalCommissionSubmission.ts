@@ -1,10 +1,13 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma";
+import { UserRole } from "@/generated/prisma";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
+import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 
 type CreateWithdrawalCommissionSubmissionInput = {
   withdrawalId: string;
@@ -23,16 +26,18 @@ type CreateWithdrawalCommissionSubmissionInput = {
 export type CreateWithdrawalCommissionSubmissionResult = {
   withdrawalId: string;
   commissionStatus: string;
+  commissionReviewStatus: "PENDING_REVIEW";
   claimedAmount: string;
   remainingAmount: string;
   currency: string;
+  submittedAt: string;
   platformPaymentMethodId: string;
   platformPaymentMethodLabel: string;
 };
 
 function readCommissionPaymentSnapshot(payoutSnapshot: unknown) {
   if (!payoutSnapshot || typeof payoutSnapshot !== "object") {
-    return 0;
+    return null;
   }
 
   const snapshot = payoutSnapshot as Record<string, unknown>;
@@ -42,12 +47,23 @@ function readCommissionPaymentSnapshot(payoutSnapshot: unknown) {
       : null;
 
   if (!commissionPayment) {
-    return 0;
+    return null;
   }
 
   const paidAmount = Number(commissionPayment.paidAmount ?? 0);
+  const reviewStatus =
+    commissionPayment.reviewStatus === "PENDING_REVIEW"
+      ? "PENDING_REVIEW"
+      : commissionPayment.reviewStatus === "APPROVED"
+        ? "APPROVED"
+        : commissionPayment.reviewStatus === "REJECTED"
+          ? "REJECTED"
+          : null;
 
-  return Number.isFinite(paidAmount) && paidAmount > 0 ? paidAmount : 0;
+  return {
+    paidAmount: Number.isFinite(paidAmount) && paidAmount > 0 ? paidAmount : 0,
+    reviewStatus,
+  };
 }
 
 export async function createWithdrawalCommissionSubmission({
@@ -149,9 +165,17 @@ export async function createWithdrawalCommissionSubmission({
             })()
           : decimalToNumber(withdrawal.amount) *
             (decimalToNumber(withdrawal.commissionPercent) / 100);
-      const alreadyPaidAmount = readCommissionPaymentSnapshot(
+      const commissionSnapshot = readCommissionPaymentSnapshot(
         withdrawal.payoutSnapshot,
       );
+      const alreadyPaidAmount = commissionSnapshot?.paidAmount ?? 0;
+      const isPendingReview =
+        commissionSnapshot?.reviewStatus === "PENDING_REVIEW";
+
+      if (isPendingReview) {
+        throw new Error("This withdrawal commission proof is already awaiting review");
+      }
+
       const remainingBeforeClaim = Math.max(
         0,
         commissionDueAmount - alreadyPaidAmount,
@@ -166,9 +190,7 @@ export async function createWithdrawalCommissionSubmission({
       }
 
       const now = new Date();
-      const nextPaidAmount = alreadyPaidAmount + claimedAmount;
-      const nextRemainingAmount = Math.max(0, commissionDueAmount - nextPaidAmount);
-      const nextStatus = nextRemainingAmount <= 0 ? "PAID" : "PARTIALLY_PAID";
+      const nextRemainingAmount = remainingBeforeClaim;
 
       const updatedSnapshot =
         withdrawal.payoutSnapshot && typeof withdrawal.payoutSnapshot === "object"
@@ -176,7 +198,8 @@ export async function createWithdrawalCommissionSubmission({
               ...(withdrawal.payoutSnapshot as Record<string, unknown>),
               commissionPayment: {
                 claimedAmount,
-                paidAmount: nextPaidAmount,
+                submittedAmount: claimedAmount,
+                paidAmount: alreadyPaidAmount,
                 remainingAmount: nextRemainingAmount,
                 proofMode,
                 platformPaymentMethodId,
@@ -187,12 +210,19 @@ export async function createWithdrawalCommissionSubmission({
                 note: note?.trim() || null,
                 receiptFileId: receiptFileId?.trim() || null,
                 submittedAt: now.toISOString(),
+                reviewStatus: "PENDING_REVIEW",
+                approvedAmount: null,
+                reviewedAt: null,
+                reviewedByUserId: null,
+                reviewNote: null,
+                rejectionReason: null,
               },
             }
           : {
               commissionPayment: {
                 claimedAmount,
-                paidAmount: nextPaidAmount,
+                submittedAmount: claimedAmount,
+                paidAmount: alreadyPaidAmount,
                 remainingAmount: nextRemainingAmount,
                 proofMode,
                 platformPaymentMethodId,
@@ -203,23 +233,30 @@ export async function createWithdrawalCommissionSubmission({
                 note: note?.trim() || null,
                 receiptFileId: receiptFileId?.trim() || null,
                 submittedAt: now.toISOString(),
+                reviewStatus: "PENDING_REVIEW",
+                approvedAmount: null,
+                reviewedAt: null,
+                reviewedByUserId: null,
+                reviewNote: null,
+                rejectionReason: null,
               },
             };
 
       await tx.withdrawalOrder.update({
         where: { id: withdrawal.id },
         data: {
-          commissionStatus: nextStatus,
           payoutSnapshot: updatedSnapshot as Prisma.InputJsonValue,
         },
       });
 
       return {
         withdrawalId: withdrawal.id,
-        commissionStatus: nextStatus,
+        commissionStatus: withdrawal.commissionStatus,
+        commissionReviewStatus: "PENDING_REVIEW" as const,
         claimedAmount: claimedAmount.toString(),
         remainingAmount: nextRemainingAmount.toString(),
         currency: withdrawal.currency,
+        submittedAt: now.toISOString(),
         platformPaymentMethodId: paymentMethod.id,
         platformPaymentMethodLabel: paymentMethod.label,
       };
@@ -228,6 +265,49 @@ export async function createWithdrawalCommissionSubmission({
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     },
   );
+
+  const admins = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      role: {
+        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      },
+    },
+    select: {
+      id: true,
+      role: true,
+    },
+  });
+
+  if (admins.length > 0) {
+    await notifyManyRealtimeNotifications({
+      recipients: admins,
+      buildNotification: (admin) => ({
+        userId: admin.id,
+        event: "WITHDRAWAL",
+        title: "Withdrawal commission proof submitted",
+        message: `A withdrawal commission proof for ${formatCurrency(
+          claimedAmount,
+          result.currency,
+        )} is waiting for review.`,
+        link: `/account/dashboard/admin/Withdrawals/${withdrawalId}`,
+        key: `withdrawal-commission-review:${withdrawalId}:${admin.id}:${proofMode}:${claimedAmount.toFixed(2)}:${result.submittedAt}`,
+        metadata: {
+          kind: "withdrawal_commission_review_submitted",
+          withdrawalId,
+          claimedAmount,
+          currency: result.currency,
+          proofMode,
+          submittedAt: result.submittedAt,
+          recipientRole: admin.role,
+        },
+      }),
+      failureMessage: "Failed to notify some admins about withdrawal commission review",
+      failureContext: {
+        withdrawalId,
+      },
+    });
+  }
 
   return result;
 }

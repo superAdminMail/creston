@@ -6,6 +6,7 @@ import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
+import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
 type Props = {
   params: Promise<{
@@ -84,8 +85,11 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
           requestedAmount?: string | null;
           earlyWithdrawalPenalty?: string | null;
           netPayoutAmount?: string | null;
-        })
+      })
       : null;
+  const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
+    withdrawal.payoutSnapshot,
+  );
 
   const sourceLabel =
     withdrawal.investmentOrder?.investmentPlan?.name ??
@@ -235,9 +239,24 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
             ) : null
           ) : null}
 
+          {commissionPayment?.reviewStatus === "PENDING_REVIEW" ? (
+            <div className="rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-5 text-amber-50 shadow-xl md:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
+                Commission under review
+              </p>
+              <p className="mt-2 text-lg font-medium">
+                Your withdrawal commission proof is waiting for admin review.
+              </p>
+              <p className="mt-1 text-sm text-amber-100/80">
+                You can check back once the admin team confirms the payment.
+              </p>
+            </div>
+          ) : null}
+
           {withdrawal.hasCommissionFees &&
           withdrawal.commissionStatus !== "PAID" &&
-          withdrawal.commissionStatus !== "VOID" ? (
+          withdrawal.commissionStatus !== "VOID" &&
+          commissionPayment?.reviewStatus !== "PENDING_REVIEW" ? (
             <div className="md:col-span-2">
               <Button
                 asChild

@@ -280,6 +280,12 @@ export default function AdminWithdrawalsClient({
                               <p className="text-slate-200">
                                 Commission: {withdrawal.commissionPercent}%
                               </p>
+                              {withdrawal.commissionReviewStatus ===
+                              "PENDING_REVIEW" ? (
+                                <p className="text-xs text-amber-300">
+                                  Awaiting commission review
+                                </p>
+                              ) : null}
                             </div>
                           ) : withdrawal.savingsFeeAmount != null ? (
                             <div className="space-y-1">
@@ -290,6 +296,12 @@ export default function AdminWithdrawalsClient({
                                   withdrawal.currency,
                                 )}
                               </p>
+                              {withdrawal.commissionReviewStatus ===
+                              "PENDING_REVIEW" ? (
+                                <p className="text-xs text-amber-300">
+                                  Awaiting commission review
+                                </p>
+                              ) : null}
                             </div>
                           ) : (
                             <span className="text-slate-500">Not available</span>
@@ -389,6 +401,12 @@ export default function AdminWithdrawalsClient({
                           <span className="text-slate-100">
                             {withdrawal.commissionPercent}%
                           </span>
+                          {withdrawal.commissionReviewStatus ===
+                          "PENDING_REVIEW" ? (
+                            <span className="mt-1 block text-xs text-amber-300">
+                              Awaiting commission review
+                            </span>
+                          ) : null}
                         </p>
                       ) : withdrawal.savingsFeeAmount != null ? (
                         <p>
@@ -399,6 +417,12 @@ export default function AdminWithdrawalsClient({
                               withdrawal.currency,
                             )}
                           </span>
+                          {withdrawal.commissionReviewStatus ===
+                          "PENDING_REVIEW" ? (
+                            <span className="mt-1 block text-xs text-amber-300">
+                              Awaiting commission review
+                            </span>
+                          ) : null}
                         </p>
                       ) : (
                         <p className="text-slate-500">Fee details unavailable</p>
