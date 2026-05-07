@@ -48,7 +48,9 @@ function buildNotificationMessage(
   return `Withdrawal commission has been updated to ${commissionPercent ?? "0"}%.`;
 }
 
-function normalizeDecimalInput(value: FormDataEntryValue | null) {
+function normalizeDecimalInput(
+  value: string | null | undefined,
+) {
   if (typeof value !== "string") {
     return null;
   }
