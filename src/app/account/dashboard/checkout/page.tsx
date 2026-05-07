@@ -1,1 +1,3 @@
-export { dynamic, default } from "./_components/CheckoutPageView";
+export const dynamic = "force-dynamic";
+
+export { default } from "./_components/CheckoutPageView";

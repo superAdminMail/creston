@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-
 import { notFound } from "next/navigation";
 
 import InvestmentOrderPaymentClient from "../../user/investment-orders/[investmentOrderId]/payment/_components/InvestmentOrderPaymentClient";
