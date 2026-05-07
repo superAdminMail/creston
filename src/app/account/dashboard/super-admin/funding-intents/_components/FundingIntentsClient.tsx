@@ -27,6 +27,11 @@ type FundingIntentFilter = "ALL" | "FUNDED" | "PROCESSING" | "EXCEPTION";
 
 type FundingIntentsClientProps = {
   initialData: SuperAdminFundingIntentsPageData;
+  detailsBaseHref: string;
+  secondaryAction?: {
+    href: string;
+    label: string;
+  } | null;
 };
 
 function getStatusClasses(status: SuperAdminFundingIntentListItem["status"]) {
@@ -91,6 +96,8 @@ function maskReference(reference: string | null | undefined) {
 
 export function FundingIntentsClient({
   initialData,
+  detailsBaseHref,
+  secondaryAction,
 }: FundingIntentsClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -142,13 +149,15 @@ export function FundingIntentsClient({
                 />
                 Refresh feed
               </button>
-              <Link
-                href="/account/dashboard/super-admin/system-health"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] sm:w-auto"
-              >
-                <ArrowUpRight className="h-4 w-4 shrink-0" />
-                View Webhooks
-              </Link>
+              {secondaryAction ? (
+                <Link
+                  href={secondaryAction.href}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] sm:w-auto"
+                >
+                  <ArrowUpRight className="h-4 w-4 shrink-0" />
+                  {secondaryAction.label}
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -382,7 +391,7 @@ export function FundingIntentsClient({
 
                           <div className="flex w-full shrink-0 flex-wrap gap-2 overflow-hidden xl:w-[220px] xl:flex-col">
                             <Link
-                              href={`/account/dashboard/super-admin/investment-orders/${intent.investmentOrderId}`}
+                              href={`${detailsBaseHref}/${intent.investmentOrderId}`}
                               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white hover:bg-white/[0.08]"
                             >
                               <ExternalLink className="h-4 w-4 shrink-0" />
