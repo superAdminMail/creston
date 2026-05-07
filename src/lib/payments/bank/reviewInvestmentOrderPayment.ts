@@ -31,6 +31,7 @@ export async function approveInvestmentOrderPaymentReview({
     select: {
       id: true,
       status: true,
+      type: true,
       claimedAmount: true,
       investmentOrderId: true,
       investmentOrder: {
