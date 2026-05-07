@@ -78,6 +78,7 @@ export async function createWithdrawalCommissionSubmission({
       id: true,
       currency: true,
       hasCommissionFees: true,
+      investmentOrderId: true,
     },
   });
 
@@ -88,6 +89,10 @@ export async function createWithdrawalCommissionSubmission({
   if (!initialWithdrawal.hasCommissionFees) {
     throw new Error("This withdrawal does not have commission fees enabled");
   }
+
+  const sourceType = initialWithdrawal.investmentOrderId
+    ? "INVESTMENT_ORDER"
+    : "SAVINGS_ACCOUNT";
 
   const paymentMethod = await getPublicPlatformPaymentMethodForCheckout({
     currency: initialWithdrawal.currency,
@@ -134,8 +139,14 @@ export async function createWithdrawalCommissionSubmission({
       }
 
       const commissionDueAmount =
-        withdrawal.savingsFeeAmount !== null
-          ? decimalToNumber(withdrawal.savingsFeeAmount)
+        sourceType === "SAVINGS_ACCOUNT"
+          ? (() => {
+              if (withdrawal.savingsFeeAmount === null) {
+                throw new Error("Withdrawal fee amount is not configured");
+              }
+
+              return decimalToNumber(withdrawal.savingsFeeAmount);
+            })()
           : decimalToNumber(withdrawal.amount) *
             (decimalToNumber(withdrawal.commissionPercent) / 100);
       const alreadyPaidAmount = readCommissionPaymentSnapshot(

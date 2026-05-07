@@ -278,7 +278,7 @@ export async function createSavingsFundingDepositSubmission({
             savingsAccountId: account.id,
             fundingIntentId: fundingIntent.id,
             paymentId: payment.id,
-            submittedByUserId: user.id,
+            submittedByUserId: userId,
             currency: account.currency,
             proofMode,
           },

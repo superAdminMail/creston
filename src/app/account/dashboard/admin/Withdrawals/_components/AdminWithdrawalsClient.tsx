@@ -284,7 +284,7 @@ export default function AdminWithdrawalsClient({
                           ) : withdrawal.savingsFeeAmount != null ? (
                             <div className="space-y-1">
                               <p className="text-slate-200">
-                                Savings fee:{" "}
+                                Fee amount:{" "}
                                 {formatCurrency(
                                   withdrawal.savingsFeeAmount,
                                   withdrawal.currency,
@@ -392,7 +392,7 @@ export default function AdminWithdrawalsClient({
                         </p>
                       ) : withdrawal.savingsFeeAmount != null ? (
                         <p>
-                          Savings fee:{" "}
+                          Fee amount:{" "}
                           <span className="text-slate-100">
                             {formatCurrency(
                               withdrawal.savingsFeeAmount,

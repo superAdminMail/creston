@@ -17,7 +17,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
-type FieldName = "withdrawalId" | "hasCommissionFees" | "commissionPercent";
+type FieldName =
+  | "withdrawalId"
+  | "hasCommissionFees"
+  | "commissionPercent"
+  | "feeAmount";
 
 const initialState = createInitialFormState<FieldName>();
 
@@ -55,8 +59,15 @@ export function AdminWithdrawalDetailsClient({
     withdrawal.hasCommissionFees,
   );
   const [commissionPercent, setCommissionPercent] = useState(
+    withdrawal.sourceType === "INVESTMENT_ORDER" &&
     withdrawal.commissionPercent > 0
       ? withdrawal.commissionPercent.toFixed(2)
+      : "",
+  );
+  const [feeAmount, setFeeAmount] = useState(
+    withdrawal.sourceType === "SAVINGS_ACCOUNT" &&
+    withdrawal.savingsFeeAmount !== null
+      ? withdrawal.savingsFeeAmount.toFixed(2)
       : "",
   );
   const lastToast = useRef<string | null>(null);
@@ -155,7 +166,7 @@ export function AdminWithdrawalDetailsClient({
                         Charge commission
                       </Label>
                       <p className="text-sm text-slate-400">
-                        Enable this to apply a percentage commission to the withdrawal.
+                        Enable this to apply a commission to the withdrawal.
                       </p>
                     </div>
 
@@ -166,43 +177,86 @@ export function AdminWithdrawalDetailsClient({
                     />
                   </div>
 
-                  <div className="grid max-w-sm gap-2">
-                    <Label
-                      htmlFor="commissionPercent"
-                      className="text-sm font-medium text-white"
-                    >
-                      Commission percent
-                    </Label>
-                    <Input
-                      id="commissionPercent"
-                      name="commissionPercent"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      value={commissionPercent}
-                      onChange={(event) => setCommissionPercent(event.target.value)}
-                      disabled={
-                        !withdrawal.canEditCommission || pending || !hasCommissionFees
-                      }
-                      className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
-                      placeholder="5.00"
-                    />
-                    <p className="text-xs text-slate-400">
-                      {hasCommissionFees
-                        ? "Enter a percent between 0 and 100."
-                        : "Enable commission to edit the percent."}
-                    </p>
-                    {state.fieldErrors?.commissionPercent?.length ? (
-                      <p className="text-xs text-rose-300">
-                        {state.fieldErrors.commissionPercent[0]}
+                  {withdrawal.sourceType === "INVESTMENT_ORDER" ? (
+                    <div className="grid max-w-sm gap-2">
+                      <Label
+                        htmlFor="commissionPercent"
+                        className="text-sm font-medium text-white"
+                      >
+                        Commission percent
+                      </Label>
+                      <Input
+                        id="commissionPercent"
+                        name="commissionPercent"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={commissionPercent}
+                        onChange={(event) =>
+                          setCommissionPercent(event.target.value)
+                        }
+                        disabled={
+                          !withdrawal.canEditCommission ||
+                          pending ||
+                          !hasCommissionFees
+                        }
+                        className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                        placeholder="5.00"
+                      />
+                      <p className="text-xs text-slate-400">
+                        {hasCommissionFees
+                          ? "Enter a percent between 0 and 100."
+                          : "Enable commission to edit the percent."}
                       </p>
-                    ) : null}
-                  </div>
+                      {state.fieldErrors?.commissionPercent?.length ? (
+                        <p className="text-xs text-rose-300">
+                          {state.fieldErrors.commissionPercent[0]}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {withdrawal.sourceType === "SAVINGS_ACCOUNT" ? (
+                    <div className="grid max-w-sm gap-2">
+                      <Label
+                        htmlFor="feeAmount"
+                        className="text-sm font-medium text-white"
+                      >
+                        Fee amount
+                      </Label>
+                      <Input
+                        id="feeAmount"
+                        name="feeAmount"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={feeAmount}
+                        onChange={(event) => setFeeAmount(event.target.value)}
+                        disabled={
+                          !withdrawal.canEditCommission ||
+                          pending ||
+                          !hasCommissionFees
+                        }
+                        className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                        placeholder="0.00"
+                      />
+                      <p className="text-xs text-slate-400">
+                        {hasCommissionFees
+                          ? "Enter the fixed fee amount for this savings withdrawal."
+                          : "Enable commission to edit the fee amount."}
+                      </p>
+                      {state.fieldErrors?.feeAmount?.length ? (
+                        <p className="text-xs text-rose-300">
+                          {state.fieldErrors.feeAmount[0]}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   {withdrawal.sourceType === "SAVINGS_ACCOUNT" && hasCommissionFees ? (
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-                      Savings withdrawals store the calculated fee amount on the order.
+                      Savings withdrawals store the fixed fee amount on the order.
                       {withdrawal.savingsFeeAmount !== null ? (
                         <span className="text-white">
                           {" "}
@@ -273,7 +327,11 @@ export function AdminWithdrawalDetailsClient({
               <div className="grid gap-4 sm:grid-cols-2">
                 <InfoCard label="Source" value={withdrawal.sourceLabel} />
                 <InfoCard
-                  label="Commission fee"
+                  label={
+                    withdrawal.sourceType === "SAVINGS_ACCOUNT"
+                      ? "Fee amount"
+                      : "Commission percent"
+                  }
                   value={
                     withdrawal.hasCommissionFees
                       ? withdrawal.sourceType === "INVESTMENT_ORDER"

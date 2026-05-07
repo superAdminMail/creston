@@ -19,7 +19,7 @@ export default async function AdminWithdrawalDetailsPage(props: PageProps) {
 
   return (
     <AdminWithdrawalDetailsClient
-      key={`${withdrawal.id}:${withdrawal.hasCommissionFees}:${withdrawal.commissionPercent}:${withdrawal.commissionStatus}`}
+      key={`${withdrawal.id}:${withdrawal.hasCommissionFees}:${withdrawal.commissionPercent}:${withdrawal.savingsFeeAmount ?? "null"}:${withdrawal.commissionStatus}`}
       withdrawal={withdrawal}
     />
   );

@@ -101,9 +101,14 @@ export async function getWithdrawalCommissionCheckoutDetails(
       ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
       : "Withdrawal source";
 
+  if (sourceType === "SAVINGS_ACCOUNT" && withdrawal.savingsFeeAmount === null) {
+    return null;
+  }
+
+  const savingsFeeAmount = withdrawal.savingsFeeAmount;
   const commissionAmount =
-    withdrawal.savingsFeeAmount !== null
-      ? decimalToNumber(withdrawal.savingsFeeAmount)
+    sourceType === "SAVINGS_ACCOUNT"
+      ? decimalToNumber(savingsFeeAmount)
       : decimalToNumber(withdrawal.amount) *
         (decimalToNumber(withdrawal.commissionPercent) / 100);
 
@@ -135,9 +140,8 @@ export async function getWithdrawalCommissionCheckoutDetails(
       commissionStatus: withdrawal.commissionStatus,
       hasCommissionFees: withdrawal.hasCommissionFees,
       commissionPercent: decimalToNumber(withdrawal.commissionPercent),
-      savingsFeeAmount: withdrawal.savingsFeeAmount
-        ? decimalToNumber(withdrawal.savingsFeeAmount)
-        : null,
+      savingsFeeAmount:
+        savingsFeeAmount !== null ? decimalToNumber(savingsFeeAmount) : null,
       sourceType,
       sourceLabel,
       requestedAt: withdrawal.requestedAt.toISOString(),
