@@ -2,7 +2,6 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  ArrowRight,
   BriefcaseBusiness,
   CreditCard,
   Filter,
@@ -17,6 +16,13 @@ import {
 import type { UserRole } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -99,6 +105,47 @@ function getVerificationBadge(status: VerificationStatus) {
   }
 }
 
+function getEmailVerificationBadge(isVerified: boolean) {
+  return isVerified ? (
+    <Badge className="border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/10">
+      Verified
+    </Badge>
+  ) : (
+    <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/10">
+      Not verified
+    </Badge>
+  );
+}
+
+function getKycBadge(status: DashboardDirectoryUser["kycStatus"]) {
+  switch (status) {
+    case "VERIFIED":
+      return (
+        <Badge className="border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/10">
+          KYC verified
+        </Badge>
+      );
+    case "PENDING_REVIEW":
+      return (
+        <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/10">
+          KYC pending
+        </Badge>
+      );
+    case "REJECTED":
+      return (
+        <Badge className="border border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/10">
+          KYC rejected
+        </Badge>
+      );
+    default:
+      return (
+        <Badge className="border border-slate-500/20 bg-slate-500/10 text-slate-300 hover:bg-slate-500/10">
+          KYC not started
+        </Badge>
+      );
+  }
+}
+
 function getAccountStatusBadge(status: AccountStatus) {
   switch (status) {
     case "ACTIVE":
@@ -145,7 +192,7 @@ function StatCard({
             <p className="text-sm text-white/60">{description}</p>
           </div>
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
+          <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
             {icon}
           </div>
         </div>
@@ -165,6 +212,8 @@ export function DashboardUserDirectory({
   stats,
 }: DashboardUserDirectoryProps) {
   const [query, setQuery] = useState("");
+  const [selectedUser, setSelectedUser] =
+    useState<DashboardDirectoryUser | null>(null);
 
   const filteredUsers = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -186,6 +235,10 @@ export function DashboardUserDirectory({
     });
   }, [query, users]);
 
+  function openUser(user: DashboardDirectoryUser) {
+    setSelectedUser(user);
+  }
+
   return (
     <div className="min-h-screen bg-[#020817]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
@@ -206,7 +259,7 @@ export function DashboardUserDirectory({
               </div>
             </div>
 
-            <div className="grid w-full max-w-xl grid-cols-2 gap-3">
+            <div className="grid w-full max-w-xl grid-cols-2 sm:grid-cols-1 gap-3">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Users
@@ -324,7 +377,16 @@ export function DashboardUserDirectory({
                     {filteredUsers.map((user, index) => (
                       <tr
                         key={user.id}
-                        className={`border-b border-white/10 ${
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openUser(user)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openUser(user);
+                          }
+                        }}
+                        className={`cursor-pointer border-b border-white/10 outline-none transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.04] ${
                           index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent"
                         }`}
                       >
@@ -387,6 +449,15 @@ export function DashboardUserDirectory({
                 filteredUsers.map((user) => (
                   <Card
                     key={user.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openUser(user)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openUser(user);
+                      }
+                    }}
                     className="border-white/10 bg-white/[0.03] text-white"
                   >
                     <CardContent className="space-y-4 p-5">
@@ -450,10 +521,16 @@ export function DashboardUserDirectory({
                           Joined {user.joinedAt}
                         </p>
 
-                        <span className="inline-flex items-center gap-2 text-sm text-[#8acdfa]">
-                          Record loaded
-                          <ArrowRight className="h-4 w-4" />
-                        </span>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openUser(user);
+                          }}
+                          className="inline-flex items-center text-sm font-medium text-[#8acdfa] transition-colors hover:text-[#b8e6ff] hover:underline"
+                        >
+                          Record loaded -&gt;
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
@@ -463,6 +540,128 @@ export function DashboardUserDirectory({
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={Boolean(selectedUser)}
+        onOpenChange={(open) => !open && setSelectedUser(null)}
+      >
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+          {selectedUser ? (
+            <div className="flex max-h-[92dvh] flex-col">
+              <DialogHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                  {selectedUser.fullName}
+                </DialogTitle>
+                <DialogDescription className="text-sm leading-6 text-slate-400">
+                  User record loaded from the directory. Review the account
+                  profile, balances, and verification state in one place.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Role
+                    </p>
+                    <div className="mt-3">
+                      {getRoleBadge(selectedUser.role)}
+                    </div>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Email verification
+                    </p>
+                    <div className="mt-3">
+                      {getEmailVerificationBadge(selectedUser.emailVerified)}
+                    </div>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      KYC
+                    </p>
+                    <div className="mt-3">
+                      {getKycBadge(selectedUser.kycStatus)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Phone
+                    </p>
+                    <p className="mt-2 truncate text-sm font-medium text-white">
+                      {selectedUser.phoneNumber?.trim() || "Not set"}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Email
+                    </p>
+                    <p className="mt-2 truncate text-sm font-medium text-white">
+                      {selectedUser.email}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                      Account
+                    </p>
+                    <div className="mt-3">
+                      {getAccountStatusBadge(selectedUser.accountStatus)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Country
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {selectedUser.country}
+                  </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Deposits
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-white">
+                      {formatDirectoryCurrency(selectedUser.totalDeposits)}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Invested
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-white">
+                      {formatDirectoryCurrency(selectedUser.totalInvested)}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
+                      Wallet
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-white">
+                      {formatDirectoryCurrency(selectedUser.walletBalance)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Joined
+                  </p>
+                  <p className="mt-2 text-sm text-white/80">
+                    {selectedUser.joinedAt}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

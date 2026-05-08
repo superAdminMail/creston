@@ -12,8 +12,11 @@ export type DashboardDirectoryUser = {
   id: string;
   fullName: string;
   email: string;
+  phoneNumber: string | null;
   country: string;
   role: UserRole;
+  emailVerified: boolean;
+  kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
   verificationStatus: DirectoryVerificationStatus;
   accountStatus: DirectoryAccountStatus;
   totalDeposits: number;
@@ -135,6 +138,7 @@ export async function getDashboardUserDirectoryByHref(
       createdAt: true,
       investorProfile: {
         select: {
+          phoneNumber: true,
           country: true,
           kycStatus: true,
           savingsAccounts: {
@@ -195,8 +199,11 @@ export async function getDashboardUserDirectoryByHref(
       id: user.id,
       fullName: user.name?.trim() || "Unnamed user",
       email: user.email,
+      phoneNumber: user.investorProfile?.phoneNumber ?? null,
       country: user.investorProfile?.country?.trim() || "Not set",
       role: user.role,
+      emailVerified: user.emailVerified,
+      kycStatus: user.investorProfile?.kycStatus ?? "NOT_STARTED",
       verificationStatus,
       accountStatus,
       totalDeposits,
