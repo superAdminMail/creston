@@ -54,7 +54,7 @@ export async function adjustAccountBalance(
 
   try {
     const amount = toDecimal(parsed.data.amount);
-    const reason = parsed.data.reason.trim();
+    const reason = parsed.data.reason?.trim() || null;
 
     const result = await prisma.$transaction(
       async (tx) => {
@@ -249,12 +249,12 @@ export async function adjustAccountBalance(
             },
             direction: parsed.data.direction,
             amount: decimalToNumber(amount),
-            balanceBefore: decimalToNumber(balanceBefore),
-            balanceAfter: decimalToNumber(balanceAfter),
-            reason,
-            currency: account.currency,
-            savingsTransactionId: savingsTransaction.id,
-            sourceLabel: account.savingsProduct.name,
+              balanceBefore: decimalToNumber(balanceBefore),
+              balanceAfter: decimalToNumber(balanceAfter),
+              reason,
+              currency: account.currency,
+              savingsTransactionId: savingsTransaction.id,
+              sourceLabel: account.savingsProduct.name,
           },
           db: tx,
         });

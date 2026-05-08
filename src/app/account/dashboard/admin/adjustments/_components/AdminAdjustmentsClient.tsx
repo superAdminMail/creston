@@ -240,7 +240,7 @@ export function AdminAdjustmentsClient({ data }: Props) {
 
             <div className="grid gap-2">
               <label htmlFor="reason" className="text-sm font-medium text-slate-100">
-                Reason
+                Reason <span className="text-slate-500">(optional)</span>
               </label>
               <Textarea
                 id="reason"
@@ -250,7 +250,7 @@ export function AdminAdjustmentsClient({ data }: Props) {
                 className="rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
               />
               <p className="text-xs text-slate-500">
-                This note is stored in the audit log and user notification.
+                Optional. This note is stored in the audit log and user notification.
               </p>
               {state.fieldErrors?.reason?.[0] ? (
                 <p className="text-xs text-red-300">{state.fieldErrors.reason[0]}</p>

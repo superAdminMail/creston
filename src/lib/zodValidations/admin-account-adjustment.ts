@@ -8,7 +8,14 @@ export const adminAccountAdjustmentSchema = z
     accountId: z.string().trim().min(1, "Select an account."),
     direction: z.enum(["ADD", "DEDUCT"]),
     amount: z.string().trim().min(1, "Enter an adjustment amount."),
-    reason: z.string().trim().min(3, "Enter an adjustment reason."),
+    reason: z.preprocess((value) => {
+      if (typeof value !== "string") {
+        return undefined;
+      }
+
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    }, z.string().min(3, "Enter an adjustment reason.").optional()),
   })
   .superRefine((value, ctx) => {
     if (!amountPattern.test(value.amount)) {

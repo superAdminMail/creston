@@ -302,11 +302,6 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/adjustments",
           icon: CircleDollarSign,
         },
-        {
-          name: "Deposits",
-          href: "/account/dashboard/admin/deposits",
-          icon: CircleDollarSign,
-        },
       ],
     },
     {
