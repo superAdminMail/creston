@@ -259,7 +259,7 @@ export function DashboardUserDirectory({
               </div>
             </div>
 
-            <div className="grid w-full max-w-xl grid-cols-2 sm:grid-cols-1 gap-3">
+            <div className="grid w-full max-w-xl grid-cols-2 md:grid-cols-1 gap-3">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Users
