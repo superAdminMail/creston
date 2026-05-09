@@ -123,7 +123,7 @@ export default function UserDashboardPage({
           <DashboardStatCard
             title="Account Balance"
             value={formatUsd(stats.accountBalance)}
-            subtitle="Available balance for withdrawals"
+            subtitle="Available balance for withdrawal"
             icon={Wallet}
           />
           <DashboardStatCard
@@ -135,13 +135,13 @@ export default function UserDashboardPage({
           <DashboardStatCard
             title="Current Investment"
             value={formatUsd(stats.currentInvestment)}
-            subtitle="Current active investment amount"
+            subtitle="Current active investment capital"
             icon={Layers3}
           />
           <DashboardStatCard
             title="Total Investment"
             value={formatUsd(stats.totalInvestment)}
-            subtitle="Combined capital across investments"
+            subtitle="Combined capital invested"
             icon={Landmark}
           />
           <DashboardStatCard

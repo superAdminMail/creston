@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getUserDashboardDataAction } from "@/actions/dashboard/get-user-dashboard-data";
 import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import UserDashboardPage from "./_components/UserDashboardPage";

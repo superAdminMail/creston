@@ -312,6 +312,7 @@ export async function adjustAccountBalance(
     revalidatePath("/account/dashboard/admin/adjustments");
     revalidatePath("/account/dashboard/admin/investment-accounts");
     revalidatePath("/account/dashboard/admin/savings-accounts");
+    revalidatePath("/account/dashboard/user");
     revalidatePath("/account/dashboard/user/investment-accounts");
     revalidatePath("/account/dashboard/user/savings");
     revalidatePath("/account/dashboard/user/transactions");
