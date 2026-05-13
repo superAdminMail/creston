@@ -1,8 +1,8 @@
 import { getUserPaymentMethods } from "@/actions/accounts/payments/getUserPaymentMethods";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import PaymentInfoClient from "../_components/PaymentInfoClient";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
+
 export default async function Page() {
   const userId = await getCurrentUserId();
 
@@ -20,6 +20,9 @@ export default async function Page() {
 
   return (
     <PaymentInfoClient
+      key={methods
+        .map((method) => `${method.id}:${method.isDefault ? "1" : "0"}`)
+        .join("|")}
       initialMethods={methods}
       kycStatus={profile?.kycStatus ?? "NOT_STARTED"}
     />

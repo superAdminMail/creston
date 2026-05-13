@@ -63,6 +63,11 @@ type PaymentMethod = {
   bankName?: string | null;
   accountName?: string | null;
   accountNumber?: string | null;
+  bankCode?: string | null;
+  iban?: string | null;
+  swiftCode?: string | null;
+  routingNumber?: string | null;
+  branchName?: string | null;
   network?: string | null;
   address?: string | null;
 };
@@ -73,7 +78,17 @@ type Props = {
 };
 
 const initialCreatePaymentMethodState = createInitialFormState<
-  "type" | "bankName" | "accountName" | "accountNumber" | "network" | "address"
+  | "type"
+  | "bankName"
+  | "accountName"
+  | "accountNumber"
+  | "bankCode"
+  | "iban"
+  | "swiftCode"
+  | "routingNumber"
+  | "branchName"
+  | "network"
+  | "address"
 >();
 
 function maskSensitiveValue(value?: string | null) {
@@ -161,6 +176,46 @@ function PaymentMethodCard({
                 {maskSensitiveValue(method.accountNumber)}
               </span>
             </div>
+            {method.bankCode ||
+            method.iban ||
+            method.swiftCode ||
+            method.routingNumber ||
+            method.branchName ? (
+              <div className="mt-4 grid gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-xs sm:grid-cols-2">
+                {method.bankCode ? (
+                  <div className="space-y-1">
+                    <p className="text-slate-500">Bank code</p>
+                    <p className="text-slate-100">{method.bankCode}</p>
+                  </div>
+                ) : null}
+                {method.iban ? (
+                  <div className="space-y-1">
+                    <p className="text-slate-500">IBAN</p>
+                    <p className="font-mono text-slate-100">{method.iban}</p>
+                  </div>
+                ) : null}
+                {method.swiftCode ? (
+                  <div className="space-y-1">
+                    <p className="text-slate-500">SWIFT / BIC</p>
+                    <p className="font-mono text-slate-100">{method.swiftCode}</p>
+                  </div>
+                ) : null}
+                {method.routingNumber ? (
+                  <div className="space-y-1">
+                    <p className="text-slate-500">Routing number</p>
+                    <p className="font-mono text-slate-100">
+                      {method.routingNumber}
+                    </p>
+                  </div>
+                ) : null}
+                {method.branchName ? (
+                  <div className="space-y-1 sm:col-span-2">
+                    <p className="text-slate-500">Branch name</p>
+                    <p className="text-slate-100">{method.branchName}</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </>
         ) : (
           <>
@@ -275,14 +330,16 @@ function PaymentMethodModal({
     }
   }, [bankState.status, cryptoState.status, onOpenChange, router]);
 
-  useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       setType("BANK");
     }
-  }, [open]);
+
+    onOpenChange(nextOpen);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10">
         <div className="space-y-6 p-6">
           <DialogHeader className="space-y-2">
@@ -401,6 +458,71 @@ function PaymentMethodModal({
                           )}
                         />
                       ) : null}
+                    </FieldContent>
+                  </Field>
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field>
+                      <FieldLabel className="text-slate-200">
+                        Bank code
+                      </FieldLabel>
+                      <FieldContent>
+                        <Input
+                          name="bankCode"
+                          placeholder="Sort code or bank code"
+                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                        />
+                      </FieldContent>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel className="text-slate-200">IBAN</FieldLabel>
+                      <FieldContent>
+                        <Input
+                          name="iban"
+                          placeholder="International bank account number"
+                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                        />
+                      </FieldContent>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel className="text-slate-200">
+                        SWIFT / BIC
+                      </FieldLabel>
+                      <FieldContent>
+                        <Input
+                          name="swiftCode"
+                          placeholder="Bank identifier code"
+                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                        />
+                      </FieldContent>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel className="text-slate-200">
+                        Routing number
+                      </FieldLabel>
+                      <FieldContent>
+                        <Input
+                          name="routingNumber"
+                          placeholder="For wire transfers"
+                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                        />
+                      </FieldContent>
+                    </Field>
+                  </div>
+
+                  <Field>
+                    <FieldLabel className="text-slate-200">
+                      Branch name
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        name="branchName"
+                        placeholder="Optional branch location"
+                        className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                      />
                     </FieldContent>
                   </Field>
                 </FieldGroup>
@@ -527,10 +649,6 @@ export default function PaymentInfoClient({
 }: Props) {
   const [paymentMethods, setPaymentMethods] = useState(initialMethods);
   const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    setPaymentMethods(initialMethods);
-  }, [initialMethods]);
 
   const canManageMethods = kycStatus === "VERIFIED";
 

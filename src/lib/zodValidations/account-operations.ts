@@ -54,6 +54,11 @@ export const createPaymentMethodSchema = z
     bankName: z.string().trim().optional().or(z.literal("")),
     accountName: z.string().trim().optional().or(z.literal("")),
     accountNumber: z.string().trim().optional().or(z.literal("")),
+    bankCode: z.string().trim().optional().or(z.literal("")),
+    iban: z.string().trim().optional().or(z.literal("")),
+    swiftCode: z.string().trim().optional().or(z.literal("")),
+    routingNumber: z.string().trim().optional().or(z.literal("")),
+    branchName: z.string().trim().optional().or(z.literal("")),
     network: z.string().trim().optional().or(z.literal("")),
     address: z.string().trim().optional().or(z.literal("")),
   })

@@ -58,7 +58,12 @@ export function TransactionTable({
                 <TableCell className="text-slate-300">{tx.reference}</TableCell>
 
                 <TableCell className="text-slate-400">
-                  {tx.planName ?? "-"}
+                  <div>{tx.planName ?? "-"}</div>
+                  {tx.description ? (
+                    <div className="mt-1 text-xs leading-5 text-slate-500">
+                      {tx.description}
+                    </div>
+                  ) : null}
                 </TableCell>
 
                 <TableCell
@@ -119,6 +124,7 @@ export function TransactionTable({
               <div className="text-xs text-slate-400 space-y-1">
                 <p>Ref: {tx.reference}</p>
                 <p>Plan: {tx.planName ?? "-"}</p>
+                {tx.description ? <p>{tx.description}</p> : null}
                 <p>{formatDateLabel(tx.createdAt)}</p>
               </div>
             </CardContent>

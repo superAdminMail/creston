@@ -205,6 +205,25 @@ export async function accrueFixedOrder(
       return orderUpdate;
     }
 
+    if (calculation.accruedAmount.greaterThan(0)) {
+      await tx.investmentEarning.upsert({
+        where: {
+          investmentOrderId_date: {
+            investmentOrderId: order.id,
+            date: calculation.accruedUntil,
+          },
+        },
+        create: {
+          investmentOrderId: order.id,
+          date: calculation.accruedUntil,
+          amount: calculation.accruedAmount,
+        },
+        update: {
+          amount: calculation.accruedAmount,
+        },
+      });
+    }
+
     return orderUpdate;
   });
 

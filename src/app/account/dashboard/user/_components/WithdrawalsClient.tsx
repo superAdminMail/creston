@@ -17,7 +17,7 @@ import { createWithdrawalOrder } from "@/actions/accounts/withdrawal/createWithd
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/formatters/formatters";
+import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
 import type { WithdrawalSourceOption } from "@/lib/service/getAvailableWithdrawalSource";
 import type { AvailableWithdrawalBalanceSummary } from "@/lib/service/getAvailableWithdrawalBalance";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
@@ -50,9 +50,6 @@ export default function WithdrawalsClient({
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [selectedSourceType, setSelectedSourceType] = useState<
-    "SAVINGS_ACCOUNT" | "INVESTMENT_ORDER" | null
-  >(withdrawalSources[0]?.type ?? null);
   const [selectedSourceKey, setSelectedSourceKey] = useState<string | null>(
     withdrawalSources[0]
       ? `${withdrawalSources[0].type}:${withdrawalSources[0].id}`
@@ -69,11 +66,12 @@ export default function WithdrawalsClient({
     withdrawalSources.find((source) => source.type === "INVESTMENT_ORDER") ??
     null;
   const selectedSource =
-    (selectedSourceType === "SAVINGS_ACCOUNT"
-      ? savingsSource
-      : selectedSourceType === "INVESTMENT_ORDER"
-        ? investmentSource
-        : null) ?? null;
+    (selectedSourceKey
+      ? withdrawalSources.find(
+          (source) => `${source.type}:${source.id}` === selectedSourceKey,
+        )
+      : null) ?? withdrawalSources[0] ?? null;
+  const selectedSourceType = selectedSource?.type ?? null;
   const totalAvailableBalance = availableBalance.totalBalance;
   const availableBalanceCurrency = availableBalance.currency ?? "USD";
 
@@ -94,8 +92,6 @@ export default function WithdrawalsClient({
   function selectSource(type: "SAVINGS_ACCOUNT" | "INVESTMENT_ORDER") {
     const source = withdrawalSources.find((item) => item.type === type);
 
-    setSelectedSourceType(type);
-
     if (!source) {
       setSelectedSourceKey(null);
       setAmount("");
@@ -109,8 +105,6 @@ export default function WithdrawalsClient({
   useEffect(() => {
     if (state.status === "success") {
       toast.success(state.message ?? "Withdrawal request submitted.");
-      setAmount("");
-      setSelectedMethod(null);
       router.refresh();
       return;
     }
@@ -118,29 +112,7 @@ export default function WithdrawalsClient({
     if (state.status === "error" && state.message) {
       toast.error(state.message);
     }
-  }, [state]);
-
-  useEffect(() => {
-    const currentSelection = selectedSourceKey
-      ? withdrawalSources.find(
-          (source) => `${source.type}:${source.id}` === selectedSourceKey,
-        )
-      : null;
-
-    if (currentSelection) {
-      return;
-    }
-
-    const nextSource = withdrawalSources[0] ?? null;
-
-    setSelectedSourceType(nextSource?.type ?? null);
-    setSelectedSourceKey(
-      nextSource ? `${nextSource.type}:${nextSource.id}` : null,
-    );
-    if (nextSource) {
-      setAmount(String(nextSource.amount));
-    }
-  }, [selectedSourceKey, withdrawalSources]);
+  }, [router, state]);
 
   return (
     <div className="mx-auto max-w-4xl space-y-8 px-4 py-4">
@@ -211,9 +183,18 @@ export default function WithdrawalsClient({
               .startsWith("early withdrawal") ? (
               <div className="flex items-start gap-2 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-amber-100">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
-                <p className="leading-6">
-                  Early withdrawal fee will be applied automatically.
-                </p>
+                <div className="space-y-1">
+                  <p className="leading-6">
+                    Early withdrawal fee will be applied automatically.
+                  </p>
+                  <p className="text-[11px] leading-5 text-amber-100/80">
+                    Maturity date:{" "}
+                    {formatDateLabel(
+                      selectedSource.maturityDate,
+                      "Not available",
+                    )}
+                  </p>
+                </div>
               </div>
             ) : null}
           </div>

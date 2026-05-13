@@ -667,6 +667,11 @@ model PaymentMethod {
   bankName      String?
   accountName   String?
   accountNumber String?
+  bankCode      String?
+  iban          String?
+  swiftCode     String?
+  routingNumber String?
+  branchName    String?
 
   network String?
   address String?

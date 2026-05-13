@@ -17,6 +17,11 @@ type PaymentMethodField =
   | "bankName"
   | "accountName"
   | "accountNumber"
+  | "bankCode"
+  | "iban"
+  | "swiftCode"
+  | "routingNumber"
+  | "branchName"
   | "network"
   | "address";
 
@@ -35,6 +40,11 @@ export async function createPaymentMethod(
     bankName: getStringValue("bankName"),
     accountName: getStringValue("accountName"),
     accountNumber: getStringValue("accountNumber"),
+    bankCode: getStringValue("bankCode"),
+    iban: getStringValue("iban"),
+    swiftCode: getStringValue("swiftCode"),
+    routingNumber: getStringValue("routingNumber"),
+    branchName: getStringValue("branchName"),
     network: getStringValue("network"),
     address: getStringValue("address"),
   };
@@ -85,6 +95,11 @@ export async function createPaymentMethod(
         bankName: values.type === "BANK" ? values.bankName : null,
         accountName: values.type === "BANK" ? values.accountName : null,
         accountNumber: values.type === "BANK" ? values.accountNumber : null,
+        bankCode: values.type === "BANK" ? values.bankCode : null,
+        iban: values.type === "BANK" ? values.iban : null,
+        swiftCode: values.type === "BANK" ? values.swiftCode : null,
+        routingNumber: values.type === "BANK" ? values.routingNumber : null,
+        branchName: values.type === "BANK" ? values.branchName : null,
         network: values.type === "CRYPTO" ? values.network : null,
         address: values.type === "CRYPTO" ? values.address : null,
         isDefault: profile.paymentMethods.length === 0,

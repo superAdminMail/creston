@@ -51,9 +51,14 @@ export async function getUserTransactions(userId: string) {
           investorProfileId: profile.id,
         },
       },
+      orderBy: {
+        date: "desc",
+      },
       include: {
         investmentOrder: {
-          include: {
+          select: {
+            currency: true,
+            investmentModel: true,
             investmentPlan: {
               select: { name: true },
             },
@@ -113,9 +118,15 @@ export async function getUserTransactions(userId: string) {
     currency: e.investmentOrder.currency,
     status: "COMPLETED",
     createdAt: e.date,
-    reference: `ERN-${e.id.slice(0, 6).toUpperCase()}`,
+    reference:
+      e.investmentOrder.investmentModel === "FIXED"
+        ? `FIX-${e.id.slice(0, 6).toUpperCase()}`
+        : `ERN-${e.id.slice(0, 6).toUpperCase()}`,
     planName: e.investmentOrder?.investmentPlan?.name,
-    description: "Investment profit",
+    description:
+      e.investmentOrder.investmentModel === "FIXED"
+        ? "Daily fixed profit update"
+        : "Investment profit",
     direction: "CREDIT",
   }));
 

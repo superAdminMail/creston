@@ -23,6 +23,11 @@ export async function getUserPaymentMethods() {
       bankName: m.bankName,
       accountName: m.accountName,
       accountNumber: m.accountNumber,
+      bankCode: m.bankCode,
+      iban: m.iban,
+      swiftCode: m.swiftCode,
+      routingNumber: m.routingNumber,
+      branchName: m.branchName,
       network: m.network,
       address: m.address,
     })) ?? []

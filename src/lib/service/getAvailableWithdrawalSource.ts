@@ -16,6 +16,7 @@ export type AvailableWithdrawalSource =
       currency: string;
       label: string;
       investmentAccountId: string;
+      maturityDate: string | null;
     }
   | {
       type: "SAVINGS_ACCOUNT";
@@ -168,6 +169,7 @@ export async function getWithdrawalSourceOptions(
         ? `Early withdrawal: ${availableInvestmentOrder.investmentPlan.name}`
         : `Matured order: ${availableInvestmentOrder.investmentPlan.name}`,
       investmentAccountId: availableInvestmentOrder.investmentAccountId,
+      maturityDate: availableInvestmentOrder.maturityDate?.toISOString() ?? null,
     });
   }
 
