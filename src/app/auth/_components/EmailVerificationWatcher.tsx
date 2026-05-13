@@ -12,7 +12,7 @@ type EmailVerificationWatcherProps = {
 
 export default function EmailVerificationWatcher({
   redirectTo = "/account",
-  intervalMs = 4000,
+  intervalMs = 2000,
 }: EmailVerificationWatcherProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();

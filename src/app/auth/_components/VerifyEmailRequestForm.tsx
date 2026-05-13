@@ -22,6 +22,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 type VerifyEmailRequestFormProps = {
   siteName: string;
@@ -241,22 +242,33 @@ export function VerifyEmailRequestBody({
           </Field>
         </FieldGroup>
 
-        <Button
-          type="submit"
-          disabled={isSubmitDisabled}
-          className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
-        >
-          {isPending ? (
-            <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Sending link...
-            </span>
-          ) : mode === "expired" || mode === "invalid" ? (
-            "Send a new verification link"
-          ) : (
-            "Send verification link"
-          )}
-        </Button>
+        <div>
+          <Button
+            type="submit"
+            disabled={isSubmitDisabled}
+            className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
+          >
+            {isPending ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Sending link...
+              </span>
+            ) : mode === "expired" || mode === "invalid" ? (
+              "Send a new verification link"
+            ) : (
+              "Send verification link"
+            )}
+          </Button>
+        </div>
+        <div>
+          <Button
+            type="submit"
+            disabled={isSubmitDisabled}
+            className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
+          >
+            <Link href="/account">I already Verified</Link>
+          </Button>
+        </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
           <div className="flex items-start gap-3">
