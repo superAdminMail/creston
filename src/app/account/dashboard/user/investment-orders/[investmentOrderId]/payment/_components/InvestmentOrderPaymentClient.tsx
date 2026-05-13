@@ -535,7 +535,7 @@ export default function InvestmentOrderPaymentClient({
                       >
                         {selectedPaymentMode === null
                           ? "Choose payment mode first"
-                          : "I&apos;ve made this payment"}
+                          : "I've made this payment"}
                       </Button>
 
                       {selectedPaymentMode === "FULL" ? (
@@ -545,8 +545,8 @@ export default function InvestmentOrderPaymentClient({
                         />
                       ) : (
                         <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                          Paymento checkout is available for full payment
-                          only. Use the proof button above for partial crypto
+                          Pay now checkout is available for full payment only.
+                          Use the proof button above for partial crypto
                           submissions.
                         </div>
                       )}
