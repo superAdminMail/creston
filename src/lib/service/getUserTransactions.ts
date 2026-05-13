@@ -23,6 +23,78 @@ export type TransactionItem = {
   direction: "CREDIT" | "DEBIT";
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseLegacyFixedProfitNotification(notification: {
+  id: string;
+  createdAt: Date;
+  key: string | null;
+  metadata: unknown;
+}) {
+  if (!isRecord(notification.metadata)) {
+    return null;
+  }
+
+  if (notification.metadata.model !== "FIXED") {
+    return null;
+  }
+
+  const amount = Number(notification.metadata.amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  const currency =
+    typeof notification.metadata.currency === "string" &&
+    notification.metadata.currency.trim()
+      ? notification.metadata.currency
+      : "USD";
+
+  let investmentOrderId =
+    typeof notification.metadata.investmentOrderId === "string"
+      ? notification.metadata.investmentOrderId
+      : null;
+
+  let accruedUntilValue =
+    typeof notification.metadata.accruedUntil === "string"
+      ? notification.metadata.accruedUntil
+      : null;
+
+  if ((!investmentOrderId || !accruedUntilValue) && notification.key) {
+    const keyPrefix = "fixed-profit:";
+
+    if (notification.key.startsWith(keyPrefix)) {
+      const keyPayload = notification.key.slice(keyPrefix.length);
+      const separatorIndex = keyPayload.indexOf(":");
+
+      if (separatorIndex > 0) {
+        investmentOrderId ||= keyPayload.slice(0, separatorIndex);
+        accruedUntilValue ||= keyPayload.slice(separatorIndex + 1);
+      }
+    }
+  }
+
+  const createdAt = accruedUntilValue
+    ? new Date(accruedUntilValue)
+    : notification.createdAt;
+
+  if (Number.isNaN(createdAt.getTime())) {
+    return null;
+  }
+
+  return {
+    id: notification.id,
+    amount,
+    currency,
+    investmentOrderId,
+    createdAt,
+    reference: `FIX-${notification.id.slice(0, 6).toUpperCase()}`,
+  };
+}
+
 export async function getUserTransactions(userId: string) {
   const profile = await prisma.investorProfile.findUnique({
     where: { userId },
@@ -31,56 +103,127 @@ export async function getUserTransactions(userId: string) {
 
   if (!profile) return [];
 
-  const [orders, withdrawals, earnings, savingsTransactions] = await Promise.all([
-    prisma.investmentOrder.findMany({
-      where: { investorProfileId: profile.id },
-      include: {
-        investmentPlan: {
-          select: { name: true },
+  const [orders, withdrawals, earnings, legacyFixedProfitNotifications, savingsTransactions] =
+    await Promise.all([
+      prisma.investmentOrder.findMany({
+        where: { investorProfileId: profile.id },
+        include: {
+          investmentPlan: {
+            select: { name: true },
+          },
         },
-      },
-    }),
+      }),
 
-    prisma.withdrawalOrder.findMany({
-      where: { investorProfileId: profile.id },
-    }),
+      prisma.withdrawalOrder.findMany({
+        where: { investorProfileId: profile.id },
+      }),
 
-    prisma.investmentEarning.findMany({
-      where: {
-        investmentOrder: {
-          investorProfileId: profile.id,
+      prisma.investmentEarning.findMany({
+        where: {
+          investmentOrder: {
+            investorProfileId: profile.id,
+          },
         },
-      },
-      orderBy: {
-        date: "desc",
-      },
-      include: {
-        investmentOrder: {
-          select: {
-            currency: true,
-            investmentModel: true,
-            investmentPlan: {
-              select: { name: true },
+        orderBy: {
+          date: "desc",
+        },
+        include: {
+          investmentOrder: {
+            select: {
+              id: true,
+              currency: true,
+              investmentModel: true,
+              investmentPlan: {
+                select: { name: true },
+              },
             },
           },
         },
-      },
-    }),
-    prisma.savingsTransaction.findMany({
-      where: {
-        savingsAccount: {
-          investorProfileId: profile.id,
-        },
-      },
-      include: {
-        savingsAccount: {
-          select: {
-            name: true,
+      }),
+
+      prisma.notification.findMany({
+        where: {
+          userId,
+          type: "INVESTMENT_ROI",
+          key: {
+            startsWith: "fixed-profit:",
           },
         },
-      },
-    }),
-  ]);
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          key: true,
+          metadata: true,
+        },
+      }),
+
+      prisma.savingsTransaction.findMany({
+        where: {
+          savingsAccount: {
+            investorProfileId: profile.id,
+          },
+        },
+        include: {
+          savingsAccount: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+  const earningTransactionKeys = new Set(
+    earnings.map(
+      (earning) => `${earning.investmentOrder.id}:${earning.date.toISOString()}`,
+    ),
+  );
+
+  const orderPlanNamesById = new Map(
+    orders.map((order) => [order.id, order.investmentPlan?.name ?? null]),
+  );
+
+  const legacyFixedProfitTx: TransactionItem[] = legacyFixedProfitNotifications
+    .map(parseLegacyFixedProfitNotification)
+    .filter(
+      (
+        item,
+      ): item is {
+        id: string;
+        amount: number;
+        currency: string;
+        investmentOrderId: string | null;
+        createdAt: Date;
+        reference: string;
+      } => Boolean(item),
+    )
+    .filter((item) => {
+      if (!item.investmentOrderId) {
+        return true;
+      }
+
+      return !earningTransactionKeys.has(
+        `${item.investmentOrderId}:${item.createdAt.toISOString()}`,
+      );
+    })
+    .map((item) => ({
+      id: item.id,
+      type: "EARNING",
+      amount: item.amount,
+      currency: item.currency,
+      status: "COMPLETED",
+      createdAt: item.createdAt,
+      reference: item.reference,
+      planName:
+        item.investmentOrderId
+          ? orderPlanNamesById.get(item.investmentOrderId) ?? undefined
+          : undefined,
+      description: "Daily fixed profit update",
+      direction: "CREDIT",
+    }));
 
   const investmentTx: TransactionItem[] = orders.map((order) => ({
     id: order.id,
@@ -172,6 +315,7 @@ export async function getUserTransactions(userId: string) {
     ...investmentTx,
     ...withdrawalTx,
     ...earningTx,
+    ...legacyFixedProfitTx,
     ...savingsTx,
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
