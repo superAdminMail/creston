@@ -340,8 +340,8 @@ function PaymentMethodModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-xl rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10">
-        <div className="space-y-6 p-6">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10 sm:max-w-xl">
+        <div className="max-h-[calc(100vh-2rem)] overflow-y-auto space-y-6 p-6">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-xl text-white">
               Add payment method
