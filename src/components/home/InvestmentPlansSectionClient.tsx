@@ -26,7 +26,7 @@ export function InvestmentPlansSectionClient({
   const [api, setApi] = useState<CarouselApi>();
 
   return (
-    <SectionShell id="investment-plans" className="py-20 sm:py-24">
+    <SectionShell className="py-20 sm:py-24">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <SectionHeading
           eyebrow="Plans And Tier Catalog"

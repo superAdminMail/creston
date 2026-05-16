@@ -14,7 +14,7 @@ export async function Footer() {
     {
       title: "Company",
       links: [
-      { href: "#why-platform", label: `Why ${site.siteName}` },
+        { href: "#why-platform", label: `Why ${site.siteName}` },
         { href: "/about", label: "About" },
         { href: "/contact", label: "Contact" },
       ],
@@ -23,8 +23,8 @@ export async function Footer() {
       title: "Platform",
       links: [
         { href: "#how-it-works", label: "How It Works" },
-        { href: "#investment-products", label: "Investment Products" },
-        { href: "#investment-plans", label: "Investment Plans" },
+        { href: "/investment-products", label: "Investment Products" },
+        { href: "/investment-plans", label: "Investment Plans" },
       ],
     },
     {

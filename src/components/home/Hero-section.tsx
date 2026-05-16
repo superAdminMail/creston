@@ -77,7 +77,7 @@ export async function HeroSection() {
             </Link>
 
             <Link
-              href="#investment-plans"
+              href="/investment-plans"
               className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm text-white"
             >
               Explore plans

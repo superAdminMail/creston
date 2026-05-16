@@ -37,7 +37,7 @@ export function InvestmentProductsSectionClient({
   const [current, setCurrent] = useState(0);
 
   return (
-    <SectionShell id="investment-products" className="py-20 sm:py-24">
+    <SectionShell className="py-20 sm:py-24">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <SectionHeading
           eyebrow="Investment Products Catalog"
@@ -201,7 +201,7 @@ export function InvestmentProductsSectionClient({
 
           <div className="mt-8 flex justify-end">
             <Link
-              href="#investment-plans"
+              href="/investment-plans"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-200 transition hover:text-white"
             >
               Continue to plans

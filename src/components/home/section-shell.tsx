@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 type SectionShellProps = {
-  id: string;
+  id?: string;
   children: React.ReactNode;
   className?: string;
   innerClassName?: string;
