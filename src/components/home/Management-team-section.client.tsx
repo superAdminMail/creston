@@ -210,7 +210,7 @@ function ManagementCard({
       layout="position"
       onMouseEnter={onFocus}
       whileHover={{ y: -6, scale: 1.02 }}
-      className="w-[260px] sm:w-[300px]"
+      className="w-[280px] sm:w-[320px] lg:w-[340px]"
     >
       <div
         onClick={onFocus}
@@ -228,18 +228,18 @@ function ManagementCard({
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
 
         <div className="relative flex h-full flex-col">
-          <div className="mx-auto rounded-full bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.32),rgba(59,130,246,0.08))] p-1.5">
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/10 bg-blue-500/20 sm:h-20 sm:w-20">
+          <div className="mx-auto rounded-[1.75rem] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.32),rgba(59,130,246,0.08))] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.24)]">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.4rem] border border-white/10 bg-blue-500/20 sm:h-28 sm:w-28 lg:h-32 lg:w-32">
               {member.photoUrl ? (
                 <Image
                   src={member.photoUrl}
                   alt={member.name}
                   fill
-                  className="object-cover"
-                  sizes="80px"
+                  className="object-cover object-top"
+                  sizes="(max-width: 640px) 96px, (max-width: 1024px) 112px, 128px"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-white sm:text-xl">
+                <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white sm:text-2xl">
                   {member.name
                     .split(" ")
                     .map((part) => part[0])
