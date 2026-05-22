@@ -90,6 +90,10 @@ export default function InvestmentOrderPaymentClient({
   const latestBankPayment =
     order.recentPayments.find((payment) => payment.type === "BANK_DEPOSIT") ??
     null;
+  const latestCryptoPayment =
+    order.recentPayments.find(
+      (payment) => payment.type === "CRYPTO_PROVIDER",
+    ) ?? null;
   const latestBankPaymentShortfallAmount =
     order.latestBankPaymentShortfallAmount ?? 0;
   const isOrderFullySettled =
@@ -117,6 +121,15 @@ export default function InvestmentOrderPaymentClient({
   const bankProofActionDisabled =
     isOrderFullySettled ||
     latestBankPayment?.status === "PENDING_REVIEW" ||
+    selectedPaymentMode === null;
+  const cryptoProofActionLabel = isOrderFullySettled
+    ? "Payment complete"
+    : latestCryptoPayment?.status === "PENDING_REVIEW"
+      ? "Payment under review"
+      : "I've made this payment";
+  const cryptoProofActionDisabled =
+    isOrderFullySettled ||
+    latestCryptoPayment?.status === "PENDING_REVIEW" ||
     selectedPaymentMode === null;
 
   const updateCheckoutParams = ({
@@ -530,12 +543,12 @@ export default function InvestmentOrderPaymentClient({
                       <Button
                         type="button"
                         onClick={() => setShowModal(true)}
-                        disabled={selectedPaymentMode === null}
+                        disabled={cryptoProofActionDisabled}
                         className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                       >
                         {selectedPaymentMode === null
                           ? "Choose payment mode first"
-                          : "I've made this payment"}
+                          : cryptoProofActionLabel}
                       </Button>
 
                       {selectedPaymentMode === "FULL" ? (
