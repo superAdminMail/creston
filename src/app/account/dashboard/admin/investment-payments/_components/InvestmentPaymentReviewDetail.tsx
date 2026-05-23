@@ -35,6 +35,8 @@ export default function InvestmentPaymentReviewDetail({
   );
   const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [pending, startTransition] = useTransition();
+  const isCryptoProof = payment.type === "CRYPTO_PROVIDER";
+  const paymentTypeLabel = isCryptoProof ? "Crypto proof" : "Bank transfer";
 
   const canReview = payment.status === "PENDING_REVIEW";
 
@@ -113,7 +115,7 @@ export default function InvestmentPaymentReviewDetail({
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary">{formatEnumLabel(payment.status)}</Badge>
-            <Badge variant="outline">{formatEnumLabel(payment.type)}</Badge>
+            <Badge variant="outline">{paymentTypeLabel}</Badge>
             <Badge variant="outline">
               {formatEnumLabel(payment.order.status)}
             </Badge>
@@ -170,26 +172,51 @@ export default function InvestmentPaymentReviewDetail({
 
       <Card className="border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Submission details</CardTitle>
+          <CardTitle className="text-lg">
+            {isCryptoProof ? "Crypto proof details" : "Submission details"}
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div>
-            <span className="font-medium">Depositor:</span>{" "}
-            {payment.depositorName ?? "-"}
-          </div>
-          <div>
-            <span className="font-medium">Account name:</span>{" "}
-            {payment.depositorAccountName ?? "-"}
-          </div>
-          <div>
-            <span className="font-medium">Account number:</span>{" "}
-            {payment.depositorAccountNo ?? "-"}
-          </div>
-          <div>
-            <span className="font-medium">Transfer reference:</span>{" "}
-            {payment.transferReference ?? "-"}
-          </div>
+          {isCryptoProof ? (
+            <>
+              <div>
+                <span className="font-medium">Proof type:</span> Crypto payment
+                proof
+              </div>
+              <div>
+                <span className="font-medium">Blockchain transaction hash:</span>{" "}
+                {payment.blockchainTxHash ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Submitted amount:</span>{" "}
+                {payment.claimedAmount.toLocaleString()} {payment.currency}
+              </div>
+              <div>
+                <span className="font-medium">Order status:</span>{" "}
+                {formatEnumLabel(payment.order.status)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <span className="font-medium">Depositor:</span>{" "}
+                {payment.depositorName ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Account name:</span>{" "}
+                {payment.depositorAccountName ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Account number:</span>{" "}
+                {payment.depositorAccountNo ?? "-"}
+              </div>
+              <div>
+                <span className="font-medium">Transfer reference:</span>{" "}
+                {payment.transferReference ?? "-"}
+              </div>
+            </>
+          )}
           <div>
             <span className="font-medium">Submitted:</span>{" "}
             {formatDate(payment.submittedAt)}
@@ -204,7 +231,9 @@ export default function InvestmentPaymentReviewDetail({
       {payment.receipt?.url ? (
         <Card className="border-border/60 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Receipt</CardTitle>
+            <CardTitle className="text-lg">
+              {isCryptoProof ? "Crypto proof" : "Receipt"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <a
@@ -213,7 +242,9 @@ export default function InvestmentPaymentReviewDetail({
               rel="noreferrer"
               className="underline underline-offset-4"
             >
-              View uploaded receipt
+              {isCryptoProof
+                ? "View uploaded crypto proof"
+                : "View uploaded receipt"}
             </a>
           </CardContent>
         </Card>
