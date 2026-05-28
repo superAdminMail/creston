@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useActionState } from "react";
+import { toast } from "sonner";
 
 import { createPlatformPaymentMethod } from "@/actions/admin/platform-wallets/createPlatformWallet";
 import { updatePlatformPaymentMethod } from "@/actions/admin/platform-wallets/updatePlatformWallet";
@@ -480,12 +481,34 @@ export default function PlatformWalletForm({
     mode === "edit" ? updatePlatformPaymentMethod : createPlatformPaymentMethod,
     initialPlatformPaymentMethodFormState,
   );
+  const lastToastKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (state.status === "success") {
       onSuccess?.();
     }
   }, [state.status, onSuccess]);
+
+  useEffect(() => {
+    if (mode !== "create" || state.status === "idle" || !state.message) {
+      return;
+    }
+
+    const toastKey = `${state.status}:${state.message}`;
+
+    if (lastToastKey.current === toastKey) {
+      return;
+    }
+
+    lastToastKey.current = toastKey;
+
+    if (state.status === "success") {
+      toast.success(state.message);
+      return;
+    }
+
+    toast.error(state.message);
+  }, [mode, state.message, state.status]);
 
   return (
     <form action={formAction} className="space-y-5">
