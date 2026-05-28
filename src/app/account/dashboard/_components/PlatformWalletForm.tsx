@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { FormFieldErrors } from "@/lib/forms/actionState";
 
 export type PlatformPaymentMethodFormDefaults = {
   type?: "BANK_INFO" | "WALLET_ADDRESS";
@@ -59,16 +60,34 @@ function FieldLabel({ children }: { children: string }) {
   );
 }
 
+function FieldError({
+  fieldErrors,
+  name,
+}: {
+  fieldErrors?: FormFieldErrors<string>;
+  name: string;
+}) {
+  const message = fieldErrors?.[name]?.[0];
+
+  if (!message) {
+    return null;
+  }
+
+  return <p className="text-xs text-red-300">{message}</p>;
+}
+
 function PlatformPaymentMethodFields({
   state,
   pending,
   defaultValues,
   type,
+  fieldErrors,
 }: {
   state: PlatformPaymentMethodFormActionState;
   pending: boolean;
   defaultValues?: PlatformPaymentMethodFormDefaults;
   type: "BANK_INFO" | "WALLET_ADDRESS";
+  fieldErrors?: FormFieldErrors<string>;
 }) {
   const [verificationStatus, setVerificationStatus] = useState(
     defaultValues?.verificationStatus ?? "UNVERIFIED",
@@ -95,9 +114,12 @@ function PlatformPaymentMethodFields({
           <Input
             name="label"
             defaultValue={defaultValues?.label ?? "Treasury method"}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+            required
+            aria-invalid={Boolean(fieldErrors?.label?.[0])}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
             placeholder="Primary treasury label"
           />
+          <FieldError fieldErrors={fieldErrors} name="label" />
         </div>
 
         <div className="space-y-2">
@@ -105,9 +127,11 @@ function PlatformPaymentMethodFields({
           <Input
             name="providerName"
             defaultValue={defaultValues?.providerName ?? ""}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+            aria-invalid={Boolean(fieldErrors?.providerName?.[0])}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
             placeholder="Bank or wallet provider"
           />
+          <FieldError fieldErrors={fieldErrors} name="providerName" />
         </div>
 
         <div className="space-y-2">
@@ -115,9 +139,12 @@ function PlatformPaymentMethodFields({
           <Input
             name="accountName"
             defaultValue={defaultValues?.accountName ?? ""}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+            required
+            aria-invalid={Boolean(fieldErrors?.accountName?.[0])}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
             placeholder="Account holder / beneficiary"
           />
+          <FieldError fieldErrors={fieldErrors} name="accountName" />
         </div>
 
         <div className="space-y-2">
@@ -125,9 +152,12 @@ function PlatformPaymentMethodFields({
           <Input
             name="currency"
             defaultValue={defaultValues?.currency ?? "USD"}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+            required
+            aria-invalid={Boolean(fieldErrors?.currency?.[0])}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
             placeholder="USD"
           />
+          <FieldError fieldErrors={fieldErrors} name="currency" />
         </div>
 
         <div className="space-y-2">
@@ -135,21 +165,25 @@ function PlatformPaymentMethodFields({
           <Input
             name="country"
             defaultValue={defaultValues?.country ?? ""}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+            aria-invalid={Boolean(fieldErrors?.country?.[0])}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
             placeholder="Country"
           />
+          <FieldError fieldErrors={fieldErrors} name="country" />
         </div>
 
         <div className="space-y-2">
           <FieldLabel>Sort Order</FieldLabel>
-          <Input
-            name="sortOrder"
-            type="number"
-            min={0}
-            defaultValue={defaultValues?.sortOrder ?? 0}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
-          />
-        </div>
+            <Input
+              name="sortOrder"
+              type="number"
+              min={0}
+              defaultValue={defaultValues?.sortOrder ?? 0}
+              aria-invalid={Boolean(fieldErrors?.sortOrder?.[0])}
+              className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
+            />
+            <FieldError fieldErrors={fieldErrors} name="sortOrder" />
+          </div>
 
         <div className="space-y-2">
           <FieldLabel>Verification Status</FieldLabel>
@@ -175,24 +209,28 @@ function PlatformPaymentMethodFields({
 
       <div className="space-y-3">
         <FieldLabel>Instructions</FieldLabel>
-        <Textarea
-          name="instructions"
-          rows={3}
-          defaultValue={defaultValues?.instructions ?? ""}
-          className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white"
-          placeholder="Funding or transfer instructions"
-        />
+          <Textarea
+            name="instructions"
+            rows={3}
+            defaultValue={defaultValues?.instructions ?? ""}
+            aria-invalid={Boolean(fieldErrors?.instructions?.[0])}
+            className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
+            placeholder="Funding or transfer instructions"
+          />
+        <FieldError fieldErrors={fieldErrors} name="instructions" />
       </div>
 
       <div className="space-y-3">
         <FieldLabel>Notes</FieldLabel>
-        <Textarea
-          name="notes"
-          rows={3}
-          defaultValue={defaultValues?.notes ?? ""}
-          className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white"
-          placeholder="Internal or operational notes"
-        />
+          <Textarea
+            name="notes"
+            rows={3}
+            defaultValue={defaultValues?.notes ?? ""}
+            aria-invalid={Boolean(fieldErrors?.notes?.[0])}
+            className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
+            placeholder="Internal or operational notes"
+          />
+        <FieldError fieldErrors={fieldErrors} name="notes" />
       </div>
 
       {type === "BANK_INFO" ? (
@@ -206,74 +244,94 @@ function PlatformPaymentMethodFields({
               <Input
                 name="bankName"
                 defaultValue={defaultValues?.bankName ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                required
+                aria-invalid={Boolean(fieldErrors?.bankName?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="bankName" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>Bank Code</FieldLabel>
               <Input
                 name="bankCode"
                 defaultValue={defaultValues?.bankCode ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.bankCode?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="bankCode" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>Account Number</FieldLabel>
               <Input
                 name="accountNumber"
                 defaultValue={defaultValues?.accountNumber ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                required
+                aria-invalid={Boolean(fieldErrors?.accountNumber?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="accountNumber" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>Reference</FieldLabel>
               <Input
                 name="reference"
                 defaultValue={defaultValues?.reference ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.reference?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
                 placeholder="Optional payment reference"
               />
+              <FieldError fieldErrors={fieldErrors} name="reference" />
             </div>
             <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-2">
               <FieldLabel>Bank Address</FieldLabel>
               <Input
                 name="bankAddress"
                 defaultValue={defaultValues?.bankAddress ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.bankAddress?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
                 placeholder="Optional bank address"
               />
+              <FieldError fieldErrors={fieldErrors} name="bankAddress" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>IBAN</FieldLabel>
               <Input
                 name="iban"
                 defaultValue={defaultValues?.iban ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.iban?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="iban" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>Swift Code</FieldLabel>
               <Input
                 name="swiftCode"
                 defaultValue={defaultValues?.swiftCode ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.swiftCode?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="swiftCode" />
             </div>
             <div className="space-y-2 min-w-0">
               <FieldLabel>Routing Number</FieldLabel>
               <Input
                 name="routingNumber"
                 defaultValue={defaultValues?.routingNumber ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.routingNumber?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="routingNumber" />
             </div>
             <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <FieldLabel>Branch Name</FieldLabel>
               <Input
                 name="branchName"
                 defaultValue={defaultValues?.branchName ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.branchName?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
               />
+              <FieldError fieldErrors={fieldErrors} name="branchName" />
             </div>
           </div>
         </div>
@@ -314,18 +372,23 @@ function PlatformPaymentMethodFields({
                 name="walletAddress"
                 rows={4}
                 defaultValue={defaultValues?.walletAddress ?? ""}
-                className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white"
+                required
+                aria-invalid={Boolean(fieldErrors?.walletAddress?.[0])}
+                className="rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
                 placeholder="0x..."
               />
+              <FieldError fieldErrors={fieldErrors} name="walletAddress" />
             </div>
             <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
               <FieldLabel>Wallet Tag</FieldLabel>
               <Input
                 name="walletTag"
                 defaultValue={defaultValues?.walletTag ?? ""}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white"
+                aria-invalid={Boolean(fieldErrors?.walletTag?.[0])}
+                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-white aria-invalid:border-red-400/60 aria-invalid:ring-1 aria-invalid:ring-red-400/40"
                 placeholder="Optional wallet tag or memo"
               />
+              <FieldError fieldErrors={fieldErrors} name="walletTag" />
             </div>
           </div>
         </div>
@@ -445,6 +508,7 @@ export default function PlatformWalletForm({
         pending={pending}
         defaultValues={defaultValues}
         type={type}
+        fieldErrors={state.fieldErrors}
       />
     </form>
   );
