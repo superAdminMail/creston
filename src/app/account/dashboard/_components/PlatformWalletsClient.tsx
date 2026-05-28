@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowUpRight,
@@ -130,20 +130,36 @@ function PaymentMethodCard({
 }) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const router = useRouter();
+  const lastDeleteToastKey = useRef<string | null>(null);
   const [deleteState, deleteAction, deletePending] = useActionState(
     deletePlatformPaymentMethod,
     initialPlatformPaymentMethodFormState,
   );
 
   useEffect(() => {
+    if (deleteState.status === "idle" || !deleteState.message) {
+      return;
+    }
+
+    const toastKey = `${deleteState.status}:${deleteState.message}:${method.id}`;
+
+    if (lastDeleteToastKey.current === toastKey) {
+      return;
+    }
+
+    lastDeleteToastKey.current = toastKey;
+
     if (deleteState.status === "success") {
       queueMicrotask(() => {
         setRemoveOpen(false);
         router.refresh();
         toast.success("Platform payment method removed.");
       });
+      return;
     }
-  }, [deleteState.status, router]);
+
+    toast.error(deleteState.message);
+  }, [deleteState.message, deleteState.status, method.id, router]);
 
   return (
     <div className="relative rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:border-blue-400/20 hover:bg-white/[0.055]">
