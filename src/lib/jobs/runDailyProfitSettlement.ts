@@ -1,3 +1,4 @@
+import { RuntimeStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getPrices } from "@/lib/services/price/priceService";
 import { settleMarketProfits } from "@/lib/services/settlement/settlementService";
@@ -14,6 +15,10 @@ export async function runDailyProfitSettlement() {
       where: {
         status: "CONFIRMED",
         investmentModel: "MARKET",
+        isMatured: false,
+        runtimeStatus: {
+          in: [RuntimeStatus.ONGOING, RuntimeStatus.ACTIVE],
+        },
       },
       select: {
         id: true,
@@ -24,6 +29,12 @@ export async function runDailyProfitSettlement() {
         units: true,
         currentValue: true,
         lastValuationAt: true,
+        confirmedAt: true,
+        startDate: true,
+        maturityDate: true,
+        completedAt: true,
+        isMatured: true,
+        runtimeStatus: true,
         status: true,
         investorProfile: {
           select: {
@@ -39,6 +50,7 @@ export async function runDailyProfitSettlement() {
         },
         investmentPlan: {
           select: {
+            durationDays: true,
             investment: {
               select: {
                 symbol: true,

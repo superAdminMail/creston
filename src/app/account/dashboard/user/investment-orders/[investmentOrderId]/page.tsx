@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
+import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 
 type DecimalLike = {
@@ -81,6 +82,12 @@ export default async function Page({ params }: PageProps) {
   const paymentMethodLabel = order.paymentMethodType
     ? formatEnumLabel(order.paymentMethodType)
     : "Not set";
+  const resolvedLifecycle = resolveInvestmentOrderSchedule(
+    order.startDate,
+    order.maturityDate,
+    order.investmentPlan.durationDays,
+    order.confirmedAt ?? order.createdAt,
+  );
 
   const canPay =
     remainingAmount > 0 &&
@@ -182,15 +189,15 @@ export default async function Page({ params }: PageProps) {
         <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
           <p>
             Start:{" "}
-            {order.startDate
-              ? new Date(order.startDate).toLocaleDateString()
+            {resolvedLifecycle.startDate
+              ? new Date(resolvedLifecycle.startDate).toLocaleDateString()
               : "Not started"}
           </p>
 
           <p>
             Maturity:{" "}
-            {order.maturityDate
-              ? new Date(order.maturityDate).toLocaleDateString()
+            {resolvedLifecycle.maturityDate
+              ? new Date(resolvedLifecycle.maturityDate).toLocaleDateString()
               : "Not set"}
           </p>
 

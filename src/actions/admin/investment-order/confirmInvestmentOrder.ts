@@ -11,8 +11,8 @@ import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import {
   calculateFixedExpectedReturn,
-  resolveFixedOrderSchedule,
 } from "@/lib/services/investment/fixedOrderLifecycle";
+import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 
 import { canConfirmInvestmentOrderStatus } from "./adminInvestmentOrder.shared";
 
@@ -79,15 +79,12 @@ export async function confirmInvestmentOrder(
       ? order.expectedReturn ??
         calculateFixedExpectedReturn(amount, roiPercent ?? null)
       : null;
-  const fixedSchedule =
-    order.investmentModel === "FIXED"
-      ? resolveFixedOrderSchedule(
-          order.startDate,
-          order.maturityDate,
-          order.investmentPlan.durationDays,
-          now,
-        )
-      : null;
+  const orderSchedule = resolveInvestmentOrderSchedule(
+    order.startDate,
+    order.maturityDate,
+    order.investmentPlan.durationDays,
+    now,
+  );
 
   if (order.investmentModel === "FIXED" && !expectedReturn) {
     return errorState(
@@ -100,12 +97,8 @@ export async function confirmInvestmentOrder(
     data: {
       status: InvestmentOrderStatus.CONFIRMED,
       runtimeStatus: "ONGOING",
-      ...(fixedSchedule
-        ? {
-            startDate: fixedSchedule.startDate,
-            maturityDate: fixedSchedule.maturityDate,
-          }
-        : {}),
+      startDate: orderSchedule.startDate,
+      maturityDate: orderSchedule.maturityDate,
       ...(expectedReturn ? { expectedReturn } : {}),
       confirmedAt: now,
       paidAt: now,

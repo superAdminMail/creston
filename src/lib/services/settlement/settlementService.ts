@@ -1,9 +1,15 @@
-import { InvestmentModel, InvestmentTierLevel, Prisma } from "@/generated/prisma";
+import {
+  InvestmentModel,
+  InvestmentTierLevel,
+  Prisma,
+  RuntimeStatus,
+} from "@/generated/prisma";
 
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
 import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
+import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import {
   decimalToNumber,
   toDecimal,
@@ -25,7 +31,13 @@ export type MarketSettlementOrderRecord = {
   units: Prisma.Decimal | null;
   currentValue: Prisma.Decimal | null;
   lastValuationAt: Date | null;
+  confirmedAt: Date | null;
+  startDate: Date | null;
+  maturityDate: Date | null;
+  completedAt: Date | null;
+  isMatured: boolean;
   status: string;
+  runtimeStatus: RuntimeStatus;
   investorProfile: {
     userId: string;
   };
@@ -35,6 +47,7 @@ export type MarketSettlementOrderRecord = {
     projectedRoiMax: Prisma.Decimal | null;
   };
   investmentPlan: {
+    durationDays: number;
     investment: {
       symbol: string | null;
     };
@@ -56,6 +69,11 @@ export type MarketSettlementResult =
       previousValue: Prisma.Decimal;
       currentValue: Prisma.Decimal;
       realizedProfit: Prisma.Decimal;
+      matured: boolean;
+      schedule: {
+        startDate: Date;
+        maturityDate: Date;
+      };
     };
 
 function getSettlementBucket(now: Date) {
@@ -69,6 +87,12 @@ export function calculateMarketSettlement(
   now = new Date(),
 ) {
   const symbol = order.investmentPlan.investment.symbol;
+  const schedule = resolveInvestmentOrderSchedule(
+    order.startDate ?? order.confirmedAt,
+    order.maturityDate,
+    order.investmentPlan.durationDays,
+    now,
+  );
 
   if (!symbol) {
     return {
@@ -83,6 +107,24 @@ export function calculateMarketSettlement(
     return {
       status: "skipped" as const,
       reason: "invalid-model",
+      orderId: order.id,
+      symbol,
+    };
+  }
+
+  if (order.runtimeStatus === RuntimeStatus.PAUSED) {
+    return {
+      status: "skipped" as const,
+      reason: "paused",
+      orderId: order.id,
+      symbol,
+    };
+  }
+
+  if (order.isMatured || order.runtimeStatus === RuntimeStatus.COMPLETED) {
+    return {
+      status: "skipped" as const,
+      reason: "already-matured",
       orderId: order.id,
       symbol,
     };
@@ -115,6 +157,7 @@ export function calculateMarketSettlement(
   const currentValue = computeInvestmentOrderCurrentValue(order, price);
   const delta = currentValue.sub(previousValue);
   const realizedProfit = delta.greaterThan(0) ? delta : ZERO_DECIMAL;
+  const matured = settlementBucket >= schedule.maturityDate;
 
   return {
     status: "settled" as const,
@@ -124,6 +167,8 @@ export function calculateMarketSettlement(
     previousValue,
     currentValue,
     realizedProfit,
+    matured,
+    schedule,
   };
 }
 
@@ -158,6 +203,7 @@ export async function settleMarketProfit(
       where: {
         id: order.id,
         investmentModel: InvestmentModel.MARKET,
+        isMatured: false,
         OR: [
           {
             lastValuationAt: null,
@@ -170,8 +216,17 @@ export async function settleMarketProfit(
         ],
       },
       data: {
+        startDate: calculation.schedule.startDate,
+        maturityDate: calculation.schedule.maturityDate,
         currentValue: calculation.currentValue,
         lastValuationAt: calculation.settledAt,
+        isMatured: calculation.matured,
+        completedAt: calculation.matured
+          ? calculation.settledAt
+          : order.completedAt,
+        runtimeStatus: calculation.matured
+          ? RuntimeStatus.COMPLETED
+          : order.runtimeStatus,
       },
     });
 
@@ -205,6 +260,25 @@ export async function settleMarketProfit(
           balance: {
             increment: simulatedProfit,
           },
+        },
+      });
+    }
+
+    if (calculation.matured) {
+      await createRealtimeNotification({
+        userId: order.investorProfile.userId,
+        event: "INVESTMENT_MATURED",
+        title: "Investment matured",
+        message:
+          "Your market investment has reached maturity. You can review the order details and current value.",
+        link: `/account/dashboard/user/investment-orders/${order.id}`,
+        key: `market-maturity:${order.id}:${calculation.settledAt.toISOString()}`,
+        metadata: {
+          investmentOrderId: order.id,
+          currency: order.currency,
+          maturedAt: calculation.settledAt.toISOString(),
+          model: "MARKET",
+          currentValue: decimalToNumber(calculation.currentValue),
         },
       });
     }

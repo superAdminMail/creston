@@ -4,6 +4,7 @@ import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatte
 import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -123,6 +124,13 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     return null;
   }
 
+  const resolvedLifecycle = resolveInvestmentOrderSchedule(
+    order.startDate,
+    order.maturityDate,
+    order.investmentPlan.durationDays,
+    order.confirmedAt ?? order.createdAt,
+  );
+
   return {
     id: order.id,
     investorName: order.investorProfile.user.name?.trim() || "Unnamed investor",
@@ -168,8 +176,8 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     })(),
     expectedReturn: formatCurrency(decimalToNumber(order.expectedReturn), order.currency),
     accruedProfit: formatCurrency(decimalToNumber(order.accruedProfit), order.currency),
-    startDate: formatDateLabel(order.startDate, "Not started"),
-    maturityDate: formatDateLabel(order.maturityDate, "Not set"),
+    startDate: formatDateLabel(resolvedLifecycle.startDate, "Not started"),
+    maturityDate: formatDateLabel(resolvedLifecycle.maturityDate, "Not set"),
     adminNotes: order.adminNotes ?? "",
     cancellationReason: order.cancellationReason ?? "",
     canConfirm: canConfirmInvestmentOrderStatus(order.status),

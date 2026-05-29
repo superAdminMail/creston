@@ -1,6 +1,7 @@
 import { Prisma } from "@/generated/prisma";
 
 import { toDecimal } from "@/lib/services/investment/decimal";
+import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 
 export function calculateFixedExpectedReturn(
   amount: Prisma.Decimal | number | string,
@@ -21,18 +22,10 @@ export function resolveFixedOrderSchedule(
   durationDays: number,
   now = new Date(),
 ) {
-  const startDate = currentStartDate ?? now;
-  const maturityDate =
-    currentMaturityDate ?? addDays(startDate, Math.max(durationDays, 0));
-
-  return {
-    startDate,
-    maturityDate,
-  };
-}
-
-function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
+  return resolveInvestmentOrderSchedule(
+    currentStartDate,
+    currentMaturityDate,
+    durationDays,
+    now,
+  );
 }
