@@ -107,7 +107,7 @@ export default function AddSavingsAccount({
   }, [router, state.message, state.status]);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-8">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:px-8">
       <style>{`
         @keyframes popularBadgeShimmer {
           0% {
@@ -132,8 +132,7 @@ export default function AddSavingsAccount({
           Open a savings account
         </h1>
         <p className="text-sm text-slate-400">
-          Choose a savings product, set your account details, and open a
-          schema-aligned savings account.
+          Choose a savings product to open a savings account.
         </p>
       </div>
 
@@ -229,8 +228,7 @@ export default function AddSavingsAccount({
                 <span className="text-sm font-medium">Account setup</span>
               </div>
               <p className="text-sm text-slate-400">
-                Your account details are stored directly on the savings account
-                model and linked to the selected product.
+                Your account will be set up with the following details:
               </p>
             </div>
 
@@ -383,7 +381,7 @@ export default function AddSavingsAccount({
                 <Button
                   type="submit"
                   disabled={!selected || !canCreateSavingsAccount || isPending}
-                  className="rounded-2xl bg-blue-500 px-6 hover:bg-blue-600"
+                  className="rounded-2xl bg-blue-500 px-6 hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-blue-500/50 disabled:opacity-50"
                 >
                   {isPending ? "Opening..." : "Open savings account"}
                 </Button>

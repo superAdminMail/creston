@@ -34,6 +34,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { LegacyBankInfoRequestCleanupCard } from "./LegacyBankInfoRequestCleanupCard";
+
 const ICON_MAP: Record<SystemHealthIconKey, typeof Activity> = {
   activity: Activity,
   database: Database,
@@ -456,6 +458,10 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
                 })}
               </div>
             </div>
+          </div>
+
+          <div className="mt-10">
+            <LegacyBankInfoRequestCleanupCard />
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
