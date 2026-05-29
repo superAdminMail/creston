@@ -1,17 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
-import { ArrowLeft, BadgeCheck, CalendarClock, FileText } from "lucide-react";
+import { useActionState, useEffect, type ReactNode } from "react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  CalendarClock,
+  FileText,
+  PauseCircle,
+  PlayCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { confirmInvestmentOrder } from "@/actions/admin/investment-order/confirmInvestmentOrder";
+import { pauseAdminInvestmentOrder } from "@/actions/admin/investment-order/pauseAdminInvestmentOrder";
+import { resumeAdminInvestmentOrder } from "@/actions/admin/investment-order/resumeAdminInvestmentOrder";
 import type { AdminInvestmentOrderDetails } from "@/actions/admin/investment-order/getAdminInvestmentOrderDetails";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const initialState = { status: "idle" as const };
+const runtimeActionInitialState = { status: "idle" as const };
 
 function InfoCard({
   label,
@@ -25,6 +36,52 @@ function InfoCard({
       <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{label}</p>
       <p className="mt-2 text-sm font-medium text-white">{value}</p>
     </div>
+  );
+}
+
+function RuntimeActionButton({
+  orderId,
+  action,
+  label,
+  pendingLabel,
+  icon,
+  className,
+}: {
+  orderId: string;
+  action: typeof pauseAdminInvestmentOrder | typeof resumeAdminInvestmentOrder;
+  label: string;
+  pendingLabel: string;
+  icon: ReactNode;
+  className: string;
+}) {
+  const router = useRouter();
+  const [state, formAction, pending] = useActionState(
+    action,
+    runtimeActionInitialState,
+  );
+
+  useEffect(() => {
+    if (state.status === "idle" || !state.message) {
+      return;
+    }
+
+    if (state.status === "success") {
+      toast.success(state.message);
+      router.refresh();
+      return;
+    }
+
+    toast.error(state.message);
+  }, [router, state.message, state.status]);
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="orderId" value={orderId} />
+      <Button type="submit" disabled={pending} className={className}>
+        {icon}
+        {pending ? pendingLabel : label}
+      </Button>
+    </form>
   );
 }
 
@@ -64,19 +121,43 @@ export function AdminInvestmentOrderDetailsClient({
             </p>
           </div>
 
-          {order.canConfirm ? (
-            <form action={formAction}>
-              <input type="hidden" name="orderId" value={order.id} />
-              <Button
-                type="submit"
-                disabled={pending}
-                className="rounded-2xl bg-blue-500 hover:bg-blue-600"
-              >
-                <BadgeCheck className="mr-2 h-4 w-4" />
-                {pending ? "Confirming..." : "Confirm order"}
-              </Button>
-            </form>
-          ) : null}
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            {order.canConfirm ? (
+              <form action={formAction}>
+                <input type="hidden" name="orderId" value={order.id} />
+                <Button
+                  type="submit"
+                  disabled={pending}
+                  className="rounded-2xl bg-blue-500 hover:bg-blue-600"
+                >
+                  <BadgeCheck className="mr-2 h-4 w-4" />
+                  {pending ? "Confirming..." : "Confirm order"}
+                </Button>
+              </form>
+            ) : null}
+
+            {order.canPause ? (
+              <RuntimeActionButton
+                orderId={order.id}
+                action={pauseAdminInvestmentOrder}
+                label="Pause"
+                pendingLabel="Pausing..."
+                icon={<PauseCircle className="h-4 w-4" />}
+                className="rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15"
+              />
+            ) : null}
+
+            {order.canResume ? (
+              <RuntimeActionButton
+                orderId={order.id}
+                action={resumeAdminInvestmentOrder}
+                label="Resume"
+                pendingLabel="Resuming..."
+                icon={<PlayCircle className="h-4 w-4" />}
+                className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/15"
+              />
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -128,6 +209,9 @@ export function AdminInvestmentOrderDetailsClient({
                 <CalendarClock className="h-4 w-4 text-emerald-300" />
                 <h2 className="text-lg font-semibold text-white">Lifecycle</h2>
               </div>
+              <p className="text-sm leading-6 text-slate-400">
+                Start and maturity dates are anchored when the order is confirmed.
+              </p>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <InfoCard label="Start date" value={order.startDate} />

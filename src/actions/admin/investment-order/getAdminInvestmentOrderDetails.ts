@@ -8,6 +8,8 @@ import { decimalToNumber } from "@/lib/services/investment/decimal";
 import {
   assertAdminInvestmentOrderAccess,
   canConfirmInvestmentOrderStatus,
+  canPauseInvestmentOrderRuntimeStatus,
+  canResumeInvestmentOrderRuntimeStatus,
   formatStatusLabel,
 } from "./adminInvestmentOrder.shared";
 
@@ -45,6 +47,8 @@ export type AdminInvestmentOrderDetails = {
   adminNotes: string;
   cancellationReason: string;
   canConfirm: boolean;
+  canPause: boolean;
+  canResume: boolean;
   canDelete: boolean;
   canCancel: boolean;
 };
@@ -169,6 +173,14 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     adminNotes: order.adminNotes ?? "",
     cancellationReason: order.cancellationReason ?? "",
     canConfirm: canConfirmInvestmentOrderStatus(order.status),
+    canPause: canPauseInvestmentOrderRuntimeStatus(
+      order.status,
+      order.runtimeStatus,
+    ),
+    canResume: canResumeInvestmentOrderRuntimeStatus(
+      order.status,
+      order.runtimeStatus,
+    ),
     canDelete: order.status === "PENDING_PAYMENT",
     canCancel: order.status === "PENDING_PAYMENT",
   } satisfies AdminInvestmentOrderDetails;

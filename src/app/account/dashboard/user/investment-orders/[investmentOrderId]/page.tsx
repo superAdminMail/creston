@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { RuntimeStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
@@ -14,6 +15,18 @@ type DecimalLike = {
 
 function toNumber(value: DecimalLike | number | null | undefined) {
   return typeof value === "number" ? value : (value?.toNumber?.() ?? 0);
+}
+
+function formatUserRuntimeStatusLabel(status: string) {
+  switch (status) {
+    case RuntimeStatus.PAUSED:
+      return "Inactive";
+    case RuntimeStatus.ONGOING:
+    case RuntimeStatus.ACTIVE:
+      return "Ongoing";
+    default:
+      return formatEnumLabel(status);
+  }
 }
 
 type PageProps = {
@@ -116,6 +129,9 @@ export default async function Page({ params }: PageProps) {
           <p className="text-xs text-muted-foreground">
             {formatEnumLabel(order.status)}
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Runtime: {formatUserRuntimeStatusLabel(order.runtimeStatus)}
+          </p>
         </div>
 
         {order.isMatured && (
@@ -159,6 +175,9 @@ export default async function Page({ params }: PageProps) {
 
       <div className="space-y-2 rounded-xl border p-4">
         <p className="text-sm font-medium">Lifecycle</p>
+        <p className="text-xs text-muted-foreground">
+          Start and maturity dates are anchored when the order is confirmed.
+        </p>
 
         <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
           <p>

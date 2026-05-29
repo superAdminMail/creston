@@ -1,11 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { Prisma, InvestmentOrderStatus } from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import {
-  activateEligibleRewardsForUser,
-} from "@/lib/referrals/referralRewardService";
+import { activateEligibleRewardsForUser } from "@/lib/referrals/referralRewardService";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
@@ -151,6 +151,13 @@ export async function confirmInvestmentOrder(
       message: "Your investment order has been confirmed.",
     },
   );
+
+  revalidatePath("/account/dashboard/admin/investment-orders");
+  revalidatePath(`/account/dashboard/admin/investment-orders/${order.id}`);
+  revalidatePath("/account/dashboard/user/investment-orders");
+  revalidatePath(`/account/dashboard/user/investment-orders/${order.id}`);
+  revalidatePath(`/account/dashboard/user/investment-orders/${order.id}/payment`);
+  revalidatePath("/account/dashboard/notifications");
 
   return {
     status: "success",

@@ -3,10 +3,21 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useActionState, useEffect, useState } from "react";
-import { ArrowRight, Ban, MoreHorizontal, Trash2, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Ban,
+  MoreHorizontal,
+  PauseCircle,
+  PlayCircle,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { toast } from "sonner";
 
+import { pauseAdminInvestmentOrder } from "@/actions/admin/investment-order/pauseAdminInvestmentOrder";
+import { resumeAdminInvestmentOrder } from "@/actions/admin/investment-order/resumeAdminInvestmentOrder";
 import type {
   AdminInvestmentOrdersData,
   AdminInvestmentOrderListItem,
@@ -59,6 +70,8 @@ const orderActionDialogSchema = z.object({
 
 type OrderActionFieldName = "orderId" | "reason" | "adminNotes";
 const initialOrderActionState = createInitialFormState<OrderActionFieldName>();
+type RuntimeActionFieldName = "orderId";
+const initialRuntimeActionState = createInitialFormState<RuntimeActionFieldName>();
 
 function getStatusClasses(status: string) {
   switch (status) {
@@ -73,6 +86,21 @@ function getStatusClasses(status: string) {
       return "border-rose-400/20 bg-rose-400/10 text-rose-200";
     default:
       return "border-white/10 bg-white/[0.04] text-slate-200";
+  }
+}
+
+function getRuntimeStatusClasses(status: string) {
+  switch (status) {
+    case "PAUSED":
+      return "border-amber-400/20 bg-amber-400/10 text-amber-200";
+    case "ONGOING":
+    case "ACTIVE":
+      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+    case "COMPLETED":
+    case "CLOSED":
+      return "border-slate-400/20 bg-slate-400/10 text-slate-200";
+    default:
+      return "border-sky-400/20 bg-sky-400/10 text-sky-200";
   }
 }
 
@@ -208,7 +236,7 @@ function OrderActionDialog({
             <p className="text-sm text-rose-300">{state.message}</p>
           ) : null}
 
-          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2 py-4 px-4">
+          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2">
             <Button
               type="button"
               variant="outline"
@@ -228,6 +256,97 @@ function OrderActionDialog({
               )}
             >
               {pending ? "Submitting..." : submitLabel}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RuntimeStatusActionDialog({
+  orderId,
+  title,
+  description,
+  submitLabel,
+  pendingLabel,
+  action,
+  icon,
+  buttonClassName,
+}: {
+  orderId: string;
+  title: string;
+  description: string;
+  submitLabel: string;
+  pendingLabel: string;
+  action: typeof pauseAdminInvestmentOrder | typeof resumeAdminInvestmentOrder;
+  icon: ReactNode;
+  buttonClassName: string;
+}) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [state, formAction, pending] = useActionState(
+    action,
+    initialRuntimeActionState,
+  );
+
+  useEffect(() => {
+    if (state.status === "idle" || !state.message) {
+      return;
+    }
+
+    if (state.status === "success") {
+      toast.success(state.message);
+      const timer = window.setTimeout(() => {
+        setOpen(false);
+        router.refresh();
+      }, 0);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    toast.error(state.message);
+  }, [router, state.message, state.status]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+          {icon}
+          {submitLabel}
+        </DropdownMenuItem>
+      </DialogTrigger>
+
+      <DialogContent className="border-white/10 bg-[#081224] text-white sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form action={formAction} className="space-y-4">
+          <input type="hidden" name="orderId" value={orderId} />
+
+          {state.status === "error" && state.message ? (
+            <p className="text-sm text-rose-300">{state.message}</p>
+          ) : null}
+
+          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="rounded-2xl border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+            >
+              Close
+            </Button>
+            <Button
+              type="submit"
+              disabled={pending}
+              className={cn("rounded-2xl", buttonClassName)}
+            >
+              {pending ? pendingLabel : submitLabel}
             </Button>
           </DialogFooter>
         </form>
@@ -273,6 +392,32 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
             action={cancelAdminInvestmentOrder}
             initialState={initialOrderActionState}
             icon={<Ban className="h-4 w-4" />}
+          />
+        ) : null}
+
+        {order.canPause ? (
+          <RuntimeStatusActionDialog
+            orderId={order.id}
+            title="Pause investment order"
+            description="Pause this confirmed investment order to stop accrual until it is resumed."
+            submitLabel="Pause"
+            pendingLabel="Pausing..."
+            action={pauseAdminInvestmentOrder}
+            icon={<PauseCircle className="h-4 w-4" />}
+            buttonClassName="bg-amber-600 hover:bg-amber-500"
+          />
+        ) : null}
+
+        {order.canResume ? (
+          <RuntimeStatusActionDialog
+            orderId={order.id}
+            title="Resume investment order"
+            description="Resume this paused investment order so accrual can continue."
+            submitLabel="Resume"
+            pendingLabel="Resuming..."
+            action={resumeAdminInvestmentOrder}
+            icon={<PlayCircle className="h-4 w-4" />}
+            buttonClassName="bg-emerald-600 hover:bg-emerald-500"
           />
         ) : null}
 
@@ -322,7 +467,12 @@ function MobileOrderCard({ order }: { order: AdminInvestmentOrderListItem }) {
         <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-slate-300">
           {order.modelLabel}
         </span>
-        <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200">
+        <span
+          className={cn(
+            "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+            getRuntimeStatusClasses(order.runtimeStatus),
+          )}
+        >
           {order.runtimeStatusLabel}
         </span>
       </div>
@@ -466,7 +616,12 @@ export function AdminInvestmentOrdersClient({
                 >
                   {order.statusLabel}
                 </span>
-                <span className="inline-flex items-center rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200">
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+                    getRuntimeStatusClasses(order.runtimeStatus),
+                  )}
+                >
                   {order.runtimeStatusLabel}
                 </span>
               </div>

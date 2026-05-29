@@ -74,6 +74,8 @@ const initialState: CreatePromotionCampaignActionState = {
   status: "idle",
 };
 
+const CLAIM_CTA_PATH = "/account/dashboard/user/investment-orders/new";
+
 function SubmitButton({ inviteMode }: { inviteMode: boolean }) {
   const { pending } = useFormStatus();
 
@@ -106,6 +108,7 @@ export default function PromotionCampaignForm({
     initialState,
   );
   const [inviteMode, setInviteMode] = useState(false);
+  const [claimCtaEnabled, setClaimCtaEnabled] = useState(false);
 
   const userOptions = useMemo(() => {
     return users.map((user) => ({
@@ -218,6 +221,11 @@ export default function PromotionCampaignForm({
               type="hidden"
               name="rewardEnabled"
               value={inviteMode ? "true" : "false"}
+            />
+            <input
+              type="hidden"
+              name="claimCtaEnabled"
+              value={!inviteMode && claimCtaEnabled ? "true" : "false"}
             />
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -446,6 +454,43 @@ export default function PromotionCampaignForm({
                 required
               />
             </div>
+
+            {!inviteMode ? (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-white">
+                      Add claim CTA
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Adds a CLAIM button to the notification and sends users
+                      to the new investment order flow on the current domain.
+                    </p>
+                  </div>
+
+                  <Switch
+                    checked={claimCtaEnabled}
+                    onCheckedChange={setClaimCtaEnabled}
+                  />
+                </div>
+
+                {claimCtaEnabled ? (
+                  <div className="mt-4 rounded-xl border border-blue-400/20 bg-blue-400/5 p-3 text-sm text-slate-100">
+                    <p className="font-semibold text-white">CTA preview</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-blue-200/80">
+                      Label
+                    </p>
+                    <p className="text-sm text-white">CLAIM</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-blue-200/80">
+                      Destination
+                    </p>
+                    <p className="break-all text-sm text-white/90">
+                      {CLAIM_CTA_PATH}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {state.message ? (
               <div

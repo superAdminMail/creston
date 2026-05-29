@@ -25,6 +25,7 @@ export const createPromotionCampaignSchema = z
     startsAt: z.string().trim().optional(),
     expiresAt: z.string().trim().optional(),
     maxRedemptions: z.string().trim().optional(),
+    claimCtaEnabled: z.enum(["true", "false"]).optional().default("false"),
   })
   .superRefine((data, ctx) => {
     const inviteMode = data.rewardEnabled === "true";

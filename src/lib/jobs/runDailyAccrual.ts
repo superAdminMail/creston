@@ -1,3 +1,4 @@
+import { RuntimeStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { accrueFixedOrders } from "@/lib/services/accrual/accrualService";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
@@ -14,31 +15,34 @@ export async function runDailyAccrual() {
         status: "CONFIRMED",
         investmentModel: "FIXED",
         isMatured: false,
+        runtimeStatus: {
+          in: [RuntimeStatus.ONGOING, RuntimeStatus.ACTIVE],
+        },
       },
-        select: {
-          id: true,
-          investmentAccountId: true,
-          investmentModel: true,
-          runtimeStatus: true,
-          amount: true,
-          currency: true,
-          accruedProfit: true,
-          expectedReturn: true,
-          startDate: true,
+      select: {
+        id: true,
+        investmentAccountId: true,
+        investmentModel: true,
+        runtimeStatus: true,
+        amount: true,
+        currency: true,
+        accruedProfit: true,
+        expectedReturn: true,
+        startDate: true,
         maturityDate: true,
         lastAccruedAt: true,
         completedAt: true,
         isMatured: true,
-          investorProfile: {
-            select: {
-              userId: true,
-            },
+        investorProfile: {
+          select: {
+            userId: true,
           },
-          investmentPlan: {
-            select: {
-              durationDays: true,
-            },
+        },
+        investmentPlan: {
+          select: {
+            durationDays: true,
           },
+        },
       },
       orderBy: {
         createdAt: "asc",

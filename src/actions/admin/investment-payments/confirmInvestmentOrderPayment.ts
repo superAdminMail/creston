@@ -79,6 +79,10 @@ export async function confirmInvestmentOrderPayment(orderId: string) {
   }
 
   revalidatePath("/account/dashboard/admin/investment-payments");
+  revalidatePath("/account/dashboard/admin/investment-orders");
+  revalidatePath(`/account/dashboard/admin/investment-orders/${result.orderId}`);
+  revalidatePath("/account/dashboard/user/investment-orders");
+  revalidatePath(`/account/dashboard/user/investment-orders/${result.orderId}`);
   revalidatePath(
     `/account/dashboard/user/investment-orders/${result.orderId}/payment`,
   );

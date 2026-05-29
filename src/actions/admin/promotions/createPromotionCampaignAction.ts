@@ -102,6 +102,9 @@ export async function createPromotionCampaignAction(
     expiresAt: String(formData.get("expiresAt") ?? "") || undefined,
     maxRedemptions:
       String(formData.get("maxRedemptions") ?? "") || undefined,
+    claimCtaEnabled: String(formData.get("claimCtaEnabled") ?? "false") as
+      | "true"
+      | "false",
   };
 
   const parsed = createPromotionCampaignSchema.safeParse(rawInput);
@@ -118,6 +121,10 @@ export async function createPromotionCampaignAction(
 
   try {
     const inviteMode = input.rewardEnabled === "true";
+    const claimCtaEnabled = input.claimCtaEnabled === "true";
+    const claimCtaLink = claimCtaEnabled
+      ? "/account/dashboard/user/investment-orders/new"
+      : null;
     const promoCode = input.promoCode?.trim().toUpperCase() || null;
     const rewardAmount = new Prisma.Decimal(
       input.rewardAmount?.trim() || "100",
@@ -196,6 +203,9 @@ export async function createPromotionCampaignAction(
             startsAt: startsAt?.toISOString() ?? null,
             expiresAt: expiresAt?.toISOString() ?? null,
             maxRedemptions,
+            claimCtaEnabled,
+            claimCtaLabel: claimCtaEnabled ? "CLAIM" : null,
+            claimCtaLink,
           },
         },
         select: {
@@ -233,12 +243,15 @@ export async function createPromotionCampaignAction(
                 message: createdCampaign.message,
                 type: "SYSTEM",
                 key: `promotion:${createdCampaign.id}:inapp:${user.id}`,
+                ...(claimCtaLink ? { link: claimCtaLink } : {}),
                 metadata: {
                   campaignId: createdCampaign.id,
                   audienceType: input.audienceType,
                   campaignType: input.promotionType,
                   channel: createdCampaign.channel,
                   promotionType: input.promotionType,
+                  actionLabel: claimCtaEnabled ? "CLAIM" : null,
+                  claimCtaEnabled,
                 },
               },
               select: {

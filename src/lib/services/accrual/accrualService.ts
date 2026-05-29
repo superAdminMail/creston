@@ -74,6 +74,14 @@ export function calculateFixedAccrual(
     };
   }
 
+  if (order.runtimeStatus === RuntimeStatus.PAUSED) {
+    return {
+      status: "skipped" as const,
+      reason: "paused",
+      orderId: order.id,
+    };
+  }
+
   if (order.isMatured) {
     return {
       status: "skipped" as const,
