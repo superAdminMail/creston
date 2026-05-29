@@ -10,6 +10,7 @@ import {
   sumDecimals,
   toDecimal,
 } from "@/lib/services/investment/decimal";
+import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
 import { getPrices } from "@/lib/services/price/priceService";
 
@@ -148,7 +149,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   const accountBalance = totalInvestment + allEarnedProfits;
   const latestOrder = orders[0];
   const inactiveInvestmentOrder = orders.find(
-    (order) => order.runtimeStatus === "PAUSED",
+    (order) => isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus),
   );
   const currentInvestment = latestOrder
     ? decimalToNumber(

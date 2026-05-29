@@ -6,7 +6,10 @@ import {
   formatInvestmentTierReturnLabel,
   resolveInvestmentTierRoiPercentValue,
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
-import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import {
+  formatInvestmentOrderRuntimeStatusLabel,
+  isInactiveInvestmentOrderRuntimeStatus,
+} from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
@@ -67,7 +70,7 @@ function getPrimaryAction(
     "id" | "status" | "linkedInvestmentAccountId" | "runtimeStatus"
   >,
 ) {
-  if (order.runtimeStatus === "PAUSED") {
+  if (isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus)) {
     return {
       label: "View details",
       href: `/account/dashboard/user/investment-orders/${order.id}`,

@@ -4,7 +4,10 @@ import { BadgeCheck, CircleAlert, Clock3, Wallet } from "lucide-react";
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 import { formatCurrency } from "@/lib/formatters/formatters";
-import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import {
+  formatInvestmentOrderRuntimeStatusLabel,
+  isInactiveInvestmentOrderRuntimeStatus,
+} from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { cn } from "@/lib/utils";
 import type { UserInvestmentOrdersData } from "@/actions/investment-order/getUserInvestmentOrders";
 
@@ -167,7 +170,7 @@ export function UserInvestmentOrderCard({
             {statusNote}
           </div>
 
-          {order.runtimeStatus === "PAUSED" ? (
+          {isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus) ? (
             <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">
               This investment order is currently inactive. Please contact
               support if you need it reactivated.

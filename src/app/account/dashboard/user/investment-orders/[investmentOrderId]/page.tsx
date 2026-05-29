@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { RuntimeStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
@@ -175,7 +175,7 @@ export default async function Page({ params }: PageProps) {
           Start and maturity dates are anchored when the order is confirmed.
         </p>
 
-        {order.runtimeStatus === RuntimeStatus.PAUSED ? (
+        {isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus) ? (
           <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-200">
             This investment order is inactive. Please contact support to
             reactivate your order.

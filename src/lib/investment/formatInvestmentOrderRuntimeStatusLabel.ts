@@ -12,3 +12,7 @@ export function formatInvestmentOrderRuntimeStatusLabel(status: string) {
       return formatEnumLabel(status);
   }
 }
+
+export function isInactiveInvestmentOrderRuntimeStatus(status: string) {
+  return status === RuntimeStatus.PAUSED;
+}
