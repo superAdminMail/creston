@@ -6,6 +6,7 @@ import { RuntimeStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
@@ -16,18 +17,6 @@ type DecimalLike = {
 
 function toNumber(value: DecimalLike | number | null | undefined) {
   return typeof value === "number" ? value : (value?.toNumber?.() ?? 0);
-}
-
-function formatUserRuntimeStatusLabel(status: string) {
-  switch (status) {
-    case RuntimeStatus.PAUSED:
-      return "Inactive";
-    case RuntimeStatus.ONGOING:
-    case RuntimeStatus.ACTIVE:
-      return "Ongoing";
-    default:
-      return formatEnumLabel(status);
-  }
 }
 
 type PageProps = {
@@ -137,7 +126,7 @@ export default async function Page({ params }: PageProps) {
             {formatEnumLabel(order.status)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Runtime: {formatUserRuntimeStatusLabel(order.runtimeStatus)}
+            Runtime: {formatInvestmentOrderRuntimeStatusLabel(order.runtimeStatus)}
           </p>
         </div>
 
@@ -185,6 +174,13 @@ export default async function Page({ params }: PageProps) {
         <p className="text-xs text-muted-foreground">
           Start and maturity dates are anchored when the order is confirmed.
         </p>
+
+        {order.runtimeStatus === RuntimeStatus.PAUSED ? (
+          <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-200">
+            This investment order is inactive. Please contact support to
+            reactivate your order.
+          </div>
+        ) : null}
 
         <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
           <p>

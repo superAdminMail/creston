@@ -6,6 +6,7 @@ import {
   formatInvestmentTierReturnLabel,
   resolveInvestmentTierRoiPercentValue,
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
+import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
@@ -17,6 +18,8 @@ type UserInvestmentOrderListItem = {
   currency: string;
   status: InvestmentOrderStatus;
   statusLabel: string;
+  runtimeStatus: string;
+  runtimeStatusLabel: string;
   createdAt: string;
   paidAt: string;
   confirmedAt: string;
@@ -61,9 +64,16 @@ export type UserInvestmentOrdersData = {
 function getPrimaryAction(
   order: Pick<
     UserInvestmentOrderListItem,
-    "id" | "status" | "linkedInvestmentAccountId"
+    "id" | "status" | "linkedInvestmentAccountId" | "runtimeStatus"
   >,
 ) {
+  if (order.runtimeStatus === "PAUSED") {
+    return {
+      label: "View details",
+      href: `/account/dashboard/user/investment-orders/${order.id}`,
+    };
+  }
+
   switch (order.status) {
     case InvestmentOrderStatus.PENDING_PAYMENT:
       return {
@@ -115,6 +125,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           amount: true,
           currency: true,
           status: true,
+          runtimeStatus: true,
           createdAt: true,
           paidAt: true,
           confirmedAt: true,
@@ -182,6 +193,10 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       currency: order.currency,
       status: order.status,
       statusLabel: formatEnumLabel(order.status),
+      runtimeStatus: order.runtimeStatus,
+      runtimeStatusLabel: formatInvestmentOrderRuntimeStatusLabel(
+        order.runtimeStatus,
+      ),
       createdAt: formatDateLabel(order.createdAt),
       paidAt: formatDateLabel(order.paidAt, "Not paid yet"),
       confirmedAt: formatDateLabel(order.confirmedAt, "Awaiting confirmation"),

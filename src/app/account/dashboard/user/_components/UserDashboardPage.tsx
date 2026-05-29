@@ -26,6 +26,11 @@ export type UserDashboardStats = {
   totalInvestment: number;
   investmentPlan: string;
   totalEarnedProfits: number;
+  inactiveInvestmentOrder: {
+    id: string;
+    planName: string;
+    href: string;
+  } | null;
 };
 
 function DashboardStatCard({
@@ -86,6 +91,26 @@ export default function UserDashboardPage({
                 className="inline-flex items-center rounded-full border border-amber-300/30 bg-white/5 px-3 py-1 text-xs font-medium text-amber-50 transition hover:bg-white/10"
               >
                 Complete profile
+              </Link>
+            </AlertTitle>
+          </Alert>
+        ) : null}
+
+        {stats.inactiveInvestmentOrder ? (
+          <Alert className="rounded-[1.5rem] border border-amber-400/20 bg-amber-500/10 px-5 py-4 text-amber-100 shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+            <AlertTriangle className="h-4 w-4 text-amber-200" />
+            <AlertTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-sm font-semibold">
+                One of your investment orders is now inactive
+                {stats.inactiveInvestmentOrder.planName
+                  ? `: ${stats.inactiveInvestmentOrder.planName}`
+                  : "."}
+              </span>
+              <Link
+                href={stats.inactiveInvestmentOrder.href}
+                className="inline-flex items-center rounded-full border border-amber-300/30 bg-white/5 px-3 py-1 text-xs font-medium text-amber-50 transition hover:bg-white/10"
+              >
+                View order
               </Link>
             </AlertTitle>
           </Alert>

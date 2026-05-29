@@ -31,6 +31,11 @@ export type UserDashboardStats = {
   totalInvestment: number;
   investmentPlan: string;
   totalEarnedProfits: number;
+  inactiveInvestmentOrder: {
+    id: string;
+    planName: string;
+    href: string;
+  } | null;
   assets: UserDashboardAsset[];
 };
 
@@ -68,6 +73,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           amountPaid: true,
           accruedProfit: true,
           investmentModel: true,
+          runtimeStatus: true,
           units: true,
           currentValue: true,
           investmentEarnings: {
@@ -141,6 +147,9 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   const allEarnedProfits = assets.reduce((sum, asset) => sum + asset.profit, 0);
   const accountBalance = totalInvestment + allEarnedProfits;
   const latestOrder = orders[0];
+  const inactiveInvestmentOrder = orders.find(
+    (order) => order.runtimeStatus === "PAUSED",
+  );
   const currentInvestment = latestOrder
     ? decimalToNumber(
         toDecimal(latestOrder.amountPaid).greaterThan(0)
@@ -162,6 +171,13 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
       totalInvestment,
       totalEarnedProfits: earnedProfits,
       investmentPlan: latestActivePlan,
+      inactiveInvestmentOrder: inactiveInvestmentOrder
+        ? {
+            id: inactiveInvestmentOrder.id,
+            planName: inactiveInvestmentOrder.investmentPlan.name,
+            href: `/account/dashboard/user/investment-orders/${inactiveInvestmentOrder.id}`,
+          }
+        : null,
       assets,
     },
   };
