@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bitcoin, Copy, Landmark, Shield, ShieldCheck } from "lucide-react";
@@ -118,6 +119,51 @@ export default function WithdrawalCommissionFunding({
     details.remainingCommissionAmount > 0 &&
     !!bankMethod &&
     !details.isUnderReview;
+
+  if (details.isClosedWithdrawal) {
+    return (
+      <div className="mx-auto max-w-3xl px-3 py-4 sm:px-4 sm:py-6 md:px-6">
+        <Card className="rounded-[1.35rem] border border-rose-400/20 bg-rose-500/10 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:rounded-[1.75rem]">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base text-white sm:text-lg">
+              {details.withdrawal.status === "CANCELLED"
+                ? "Withdrawal cancelled"
+                : "Withdrawal rejected"}
+            </CardTitle>
+            <p className="mt-1 text-sm leading-6 text-rose-100/90">
+              This withdrawal request is no longer active, so no commission payment is required.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="rounded-[1.15rem] border border-white/10 bg-white/[0.04] p-4 sm:rounded-[1.25rem]">
+              <p className="text-xs uppercase tracking-[0.18em] text-rose-200/80">
+                {details.withdrawal.status === "CANCELLED"
+                  ? "Cancellation reason"
+                  : "Rejection reason"}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-rose-50">
+                {details.withdrawal.rejectionReason ??
+                  (details.withdrawal.status === "CANCELLED"
+                    ? "Your withdrawal request was cancelled by the admin team."
+                    : "Your withdrawal request was rejected by the admin team.")}
+              </p>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                asChild
+                className="rounded-full bg-white text-slate-950 hover:bg-slate-100"
+              >
+                <Link href={`/account/dashboard/user/withdrawals/${details.withdrawal.id}`}>
+                  View withdrawal
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">

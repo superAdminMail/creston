@@ -131,8 +131,8 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   const totalSavings = toDecimal(savingsSummary._sum.balance);
   const totalValue = totalInvestments.add(totalSavings);
-  const headlineTotalValue = toDecimal(241_000_000).add(totalValue);
-  const headlineUserCount = investorProfileCount + 50_000;
+  const headlineTotalValue = toDecimal(296_000_000).add(totalValue);
+  const headlineUserCount = investorProfileCount + 55_000;
 
   const typeTotals = new Map<string, { total: number; label: string }>();
   const planTotals = new Map<

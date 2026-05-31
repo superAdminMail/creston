@@ -4,6 +4,11 @@ import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platfo
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionCheckoutDetails } from "@/lib/types/payments/withdrawalCommission.types";
+import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  isWithdrawalCommissionSettledStatus,
+} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 import {
   readWithdrawalCommissionPaymentSnapshot,
 } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
@@ -44,6 +49,7 @@ export async function getWithdrawalCommissionCheckoutDetails(
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
+      rejectionReason: true,
       payoutSnapshot: true,
       requestedAt: true,
       investmentOrderId: true,
@@ -75,9 +81,9 @@ export async function getWithdrawalCommissionCheckoutDetails(
     return null;
   }
 
-  const sourceType = withdrawal.investmentOrderId
-    ? "INVESTMENT_ORDER"
-    : "SAVINGS_ACCOUNT";
+  const sourceType = getWithdrawalCommissionSourceType({
+    investmentOrderId: withdrawal.investmentOrderId,
+  });
 
   const sourceLabel = withdrawal.investmentOrder
     ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
@@ -105,7 +111,9 @@ export async function getWithdrawalCommissionCheckoutDetails(
     commissionAmount - paidCommissionAmount,
   );
   const isUnderReview =
-    commissionPayment?.reviewStatus === "PENDING_REVIEW";
+    commissionPayment?.reviewStatus === "PENDING_REVIEW" &&
+    !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus);
+  const isClosedWithdrawal = isWithdrawalTerminalStatus(withdrawal.status);
 
   const selectedFundingMethod =
     normalizeFundingMethodType(fundingMethodType) ?? "BANK_TRANSFER";
@@ -124,6 +132,7 @@ export async function getWithdrawalCommissionCheckoutDetails(
       amount: decimalToNumber(withdrawal.amount),
       currency: withdrawal.currency,
       status: withdrawal.status,
+      rejectionReason: withdrawal.rejectionReason,
       commissionStatus: withdrawal.commissionStatus,
       hasCommissionFees: withdrawal.hasCommissionFees,
       commissionPercent: decimalToNumber(withdrawal.commissionPercent),
@@ -155,7 +164,10 @@ export async function getWithdrawalCommissionCheckoutDetails(
     paidCommissionAmount,
     remainingCommissionAmount,
     isSettled:
-      remainingCommissionAmount <= 0 || withdrawal.commissionStatus === "PAID",
+      isClosedWithdrawal ||
+      remainingCommissionAmount <= 0 ||
+      isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus),
     isUnderReview,
+    isClosedWithdrawal,
   };
 }

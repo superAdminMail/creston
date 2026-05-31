@@ -7,7 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
+import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
+import {
+  isWithdrawalCommissionSettledStatus,
+} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 
 type CreateWithdrawalCommissionSubmissionInput = {
   withdrawalId: string;
@@ -106,9 +110,9 @@ export async function createWithdrawalCommissionSubmission({
     throw new Error("This withdrawal does not have commission fees enabled");
   }
 
-  const sourceType = initialWithdrawal.investmentOrderId
-    ? "INVESTMENT_ORDER"
-    : "SAVINGS_ACCOUNT";
+  const sourceType = getWithdrawalCommissionSourceType({
+    investmentOrderId: initialWithdrawal.investmentOrderId,
+  });
 
   const paymentMethod = await getPublicPlatformPaymentMethodForCheckout({
     currency: initialWithdrawal.currency,
@@ -152,6 +156,10 @@ export async function createWithdrawalCommissionSubmission({
 
       if (!withdrawal.hasCommissionFees) {
         throw new Error("This withdrawal does not have commission fees enabled");
+      }
+
+      if (isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus)) {
+        throw new Error("This withdrawal commission has already been settled");
       }
 
       const commissionDueAmount =

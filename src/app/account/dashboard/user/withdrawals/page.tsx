@@ -68,11 +68,12 @@ export default async function Page() {
         order.payoutSnapshot,
       );
 
-      return {
+        return {
         id: order.id,
         amount: order.amount.toString(),
         currency: order.currency,
         status: order.status,
+        rejectionReason: order.rejectionReason,
         hasCommissionFees: order.hasCommissionFees,
         commissionStatus: order.commissionStatus,
         requestedAt: order.requestedAt.toISOString(),

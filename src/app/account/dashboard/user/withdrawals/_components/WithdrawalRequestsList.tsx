@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
 import { Button } from "@/components/ui/button";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
+import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  isWithdrawalCommissionSettledStatus,
+} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 
 type Props = {
   withdrawalOrders: WithdrawalRequestItemDto[];
@@ -34,9 +42,9 @@ function getSourceLabel(order: WithdrawalRequestItemDto) {
 
 function canPayCommission(order: WithdrawalRequestItemDto) {
   return (
+    !isWithdrawalTerminalStatus(order.status) &&
     order.hasCommissionFees &&
-    order.commissionStatus !== "PAID" &&
-    order.commissionStatus !== "VOID" &&
+    !isWithdrawalCommissionSettledStatus(order.commissionStatus) &&
     order.commissionReviewStatus !== "PENDING_REVIEW"
   );
 }
@@ -68,7 +76,7 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                   </p>
                 </div>
                 <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-                  {order.status.toLowerCase()}
+                  {formatEnumLabel(order.status)}
                 </span>
               </div>
 
@@ -91,7 +99,17 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                 </div>
               </div>
 
-              {order.commissionReviewStatus === "PENDING_REVIEW" ? (
+              {isWithdrawalTerminalStatus(order.status) ? (
+                <div className="mt-3 rounded-xl border border-rose-200/40 bg-rose-500/10 p-3 text-xs text-rose-100">
+                  This withdrawal request is no longer active.
+                  {order.rejectionReason ? (
+                    <span className="block mt-1 text-rose-100/80">
+                      Reason: {order.rejectionReason}
+                    </span>
+                  ) : null}
+                </div>
+              ) : order.commissionReviewStatus === "PENDING_REVIEW" &&
+                !isWithdrawalCommissionSettledStatus(order.commissionStatus) ? (
                 <div className="mt-3 rounded-xl border border-amber-200/40 bg-amber-500/10 p-3 text-xs text-amber-100">
                   Withdrawal commission proof is waiting for admin review.
                   {order.commissionSubmittedAmount ? (

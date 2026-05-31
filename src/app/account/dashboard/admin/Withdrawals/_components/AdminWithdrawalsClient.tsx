@@ -13,7 +13,9 @@ import {
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
 import type { AdminWithdrawalItem } from "@/lib/service/getAdminWithdrawals";
+import { WithdrawalStatusActionMenu } from "@/app/account/dashboard/admin/Withdrawals/_components/WithdrawalStatusActionMenu";
 import { cn } from "@/lib/utils";
+import { getWithdrawalStatusTone } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 
 type WithdrawalStatusFilter =
   | "all"
@@ -87,25 +89,6 @@ function getPayoutMethodLabel(withdrawal: AdminWithdrawalItem) {
   ]
     .filter(Boolean)
     .join(" - ");
-}
-
-function getStatusTone(status: string) {
-  switch (status) {
-    case "PENDING":
-      return "bg-amber-500/10 text-amber-300 border-amber-400/20";
-    case "APPROVED":
-      return "bg-sky-500/10 text-sky-300 border-sky-400/20";
-    case "PROCESSING":
-      return "bg-violet-500/10 text-violet-300 border-violet-400/20";
-    case "COMPLETED":
-      return "bg-emerald-500/10 text-emerald-300 border-emerald-400/20";
-    case "REJECTED":
-      return "bg-red-500/10 text-red-300 border-red-400/20";
-    case "CANCELLED":
-      return "bg-slate-500/10 text-slate-300 border-slate-400/20";
-    default:
-      return "bg-white/10 text-slate-300 border-white/10";
-  }
 }
 
 export default function AdminWithdrawalsClient({
@@ -311,18 +294,30 @@ export default function AdminWithdrawalsClient({
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <Link
-                          href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
-                        >
-                          <ArrowRight className="h-3.5 w-3.5" />
-                          {withdrawal.status === "PENDING" ? "Manage commission" : "View"}
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
+                            className="inline-flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                          >
+                            <ArrowRight className="h-3.5 w-3.5" />
+                            {withdrawal.status === "PENDING"
+                              ? "Manage commission"
+                              : "View"}
+                          </Link>
+
+                          <WithdrawalStatusActionMenu
+                            withdrawalId={withdrawal.id}
+                            status={withdrawal.status}
+                          />
+                        </div>
                       </td>
                       <td className="px-6 py-5">
                         <Badge
                           variant="secondary"
-                          className={cn("border", getStatusTone(withdrawal.status))}
+                          className={cn(
+                            "border",
+                            getWithdrawalStatusTone(withdrawal.status),
+                          )}
                         >
                           {formatEnumLabel(withdrawal.status)}
                         </Badge>
@@ -362,7 +357,10 @@ export default function AdminWithdrawalsClient({
 
                     <Badge
                       variant="secondary"
-                      className={cn("border", getStatusTone(withdrawal.status))}
+                      className={cn(
+                        "border",
+                        getWithdrawalStatusTone(withdrawal.status),
+                      )}
                     >
                       {formatEnumLabel(withdrawal.status)}
                     </Badge>
@@ -432,13 +430,22 @@ export default function AdminWithdrawalsClient({
                     )}
                   </div>
 
-                  <Link
-                    href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                    {withdrawal.status === "PENDING" ? "Manage commission" : "View"}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/account/dashboard/admin/Withdrawals/${withdrawal.id}`}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      {withdrawal.status === "PENDING"
+                        ? "Manage commission"
+                        : "View"}
+                    </Link>
+
+                    <WithdrawalStatusActionMenu
+                      withdrawalId={withdrawal.id}
+                      status={withdrawal.status}
+                    />
+                  </div>
 
                   {withdrawal.rejectionReason ? (
                     <div className="rounded-2xl border border-red-400/20 bg-red-500/5 p-3 text-sm text-red-200">

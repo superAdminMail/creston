@@ -9,6 +9,7 @@ import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdraw
 import {
   readWithdrawalCommissionPaymentSnapshot,
 } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
+import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionPaymentSnapshot } from "@/lib/types/payments/withdrawalCommission.types";
 
@@ -18,10 +19,8 @@ type ReviewBaseInput = {
   reviewNote?: string | null;
 };
 
-type WithdrawalSourceType = "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
-
 function calculateCommissionDueAmount(input: {
-  sourceType: WithdrawalSourceType;
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
   amount: Prisma.Decimal;
   commissionPercent: Prisma.Decimal;
   savingsFeeAmount: Prisma.Decimal | null;
@@ -121,9 +120,9 @@ export async function approveWithdrawalCommissionReview(
     throw new Error("Withdrawal order not found.");
   }
 
-  const sourceType: WithdrawalSourceType = withdrawal.investmentOrderId
-    ? "INVESTMENT_ORDER"
-    : "SAVINGS_ACCOUNT";
+  const sourceType = getWithdrawalCommissionSourceType({
+    investmentOrderId: withdrawal.investmentOrderId,
+  });
 
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,

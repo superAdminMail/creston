@@ -16,6 +16,11 @@ import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRo
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 import {
+  getWithdrawalCommissionFieldConfig,
+  getWithdrawalCommissionSourceType,
+  normalizeWithdrawalCommissionInput,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
   updateWithdrawalCommissionSchema,
 } from "@/lib/zodValidations/update-withdrawal-commission";
 import { formatCurrency } from "@/lib/formatters/formatters";
@@ -48,17 +53,6 @@ function buildNotificationMessage(
   return `Withdrawal commission has been updated to ${commissionPercent ?? "0"}%.`;
 }
 
-function normalizeDecimalInput(
-  value: string | null | undefined,
-) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 export async function updateWithdrawalCommission(
   _previousState: UpdateWithdrawalCommissionState,
   formData: FormData,
@@ -68,14 +62,23 @@ export async function updateWithdrawalCommission(
   const parsed = updateWithdrawalCommissionSchema.safeParse({
     withdrawalId: formData.get("withdrawalId"),
     hasCommissionFees: formData.get("hasCommissionFees"),
-    commissionPercent: formData.get("commissionPercent"),
-    feeAmount: formData.get("feeAmount"),
+    commissionPercent: normalizeWithdrawalCommissionInput(
+      formData.get("commissionPercent"),
+    ),
+    feeAmount: normalizeWithdrawalCommissionInput(formData.get("feeAmount")),
   });
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors as Partial<
+      Record<FieldName, string[]>
+    >;
+    const firstFieldError = Object.values(fieldErrors)
+      .flat()
+      .find((value): value is string => typeof value === "string" && value.length > 0);
+
     return createValidationErrorState(
-      parsed.error.flatten().fieldErrors as Record<FieldName, string[]>,
-      "Please review the commission settings.",
+      fieldErrors,
+      firstFieldError ?? "Please review the commission settings.",
     );
   }
 
@@ -98,11 +101,7 @@ export async function updateWithdrawalCommission(
             },
           },
         },
-        investmentOrder: {
-          select: {
-            id: true,
-          },
-        },
+        investmentOrderId: true,
       },
     });
 
@@ -117,84 +116,72 @@ export async function updateWithdrawalCommission(
     }
 
     const hasCommissionFees = parsed.data.hasCommissionFees;
-    const sourceType = withdrawal.investmentOrder
-      ? "INVESTMENT_ORDER"
-      : "SAVINGS_ACCOUNT";
-    const commissionPercentInput = normalizeDecimalInput(
-      parsed.data.commissionPercent,
-    );
-    const feeAmountInput = normalizeDecimalInput(parsed.data.feeAmount);
+    const sourceType = getWithdrawalCommissionSourceType({
+      investmentOrderId: withdrawal.investmentOrderId,
+    });
+    const commissionField = getWithdrawalCommissionFieldConfig(sourceType);
+    const commissionInput =
+      sourceType === "INVESTMENT_ORDER"
+        ? parsed.data.commissionPercent
+        : parsed.data.feeAmount;
 
-    if (hasCommissionFees && sourceType === "INVESTMENT_ORDER") {
-      if (!commissionPercentInput) {
+    if (hasCommissionFees) {
+      if (!commissionInput) {
         return createValidationErrorState(
           {
-            commissionPercent: ["Enter a commission percent."],
+            [commissionField.fieldName]: [commissionField.emptyMessage],
           } satisfies Partial<Record<FieldName, string[]>>,
-          "Please review the commission settings.",
+          commissionField.emptyMessage,
         );
       }
 
-      const commissionPercentNumber = Number(commissionPercentInput);
+      const commissionNumber = Number(commissionInput);
+
+      if (!Number.isFinite(commissionNumber) || commissionNumber <= 0) {
+        return createValidationErrorState(
+          {
+            [commissionField.fieldName]: [commissionField.positiveMessage],
+          } satisfies Partial<Record<FieldName, string[]>>,
+          commissionField.positiveMessage,
+        );
+      }
 
       if (
-        !Number.isFinite(commissionPercentNumber) ||
-        commissionPercentNumber <= 0 ||
-        commissionPercentNumber > 100
+        sourceType === "INVESTMENT_ORDER" &&
+        commissionNumber > 100
       ) {
         return createValidationErrorState(
           {
-            commissionPercent: [
-              commissionPercentNumber <= 0
-                ? "Commission percent must be greater than zero."
-                : "Commission percent cannot exceed 100.",
+            [commissionField.fieldName]: [
+              commissionField.maxMessage ?? "Invalid commission value.",
             ],
           } satisfies Partial<Record<FieldName, string[]>>,
-          "Please review the commission settings.",
-        );
-      }
-    }
-
-    if (hasCommissionFees && sourceType === "SAVINGS_ACCOUNT") {
-      if (!feeAmountInput) {
-        return createValidationErrorState(
-          {
-            feeAmount: ["Enter a fee amount."],
-          } satisfies Partial<Record<FieldName, string[]>>,
-          "Please review the commission settings.",
+          commissionField.maxMessage ?? "Invalid commission value.",
         );
       }
 
-      const feeAmountNumber = Number(feeAmountInput);
-
-      if (!Number.isFinite(feeAmountNumber) || feeAmountNumber <= 0) {
+      if (
+        sourceType === "SAVINGS_ACCOUNT" &&
+        commissionNumber > decimalToNumber(withdrawal.amount)
+      ) {
         return createValidationErrorState(
           {
-            feeAmount: ["Fee amount must be greater than zero."],
-          } satisfies Partial<Record<FieldName, string[]>>,
-          "Please review the commission settings.",
-        );
-      }
-
-      if (feeAmountNumber > decimalToNumber(withdrawal.amount)) {
-        return createValidationErrorState(
-          {
-            feeAmount: [
-              "Fee amount cannot exceed the withdrawal amount.",
+            [commissionField.fieldName]: [
+              commissionField.maxMessage ?? "Invalid fee amount.",
             ],
           } satisfies Partial<Record<FieldName, string[]>>,
-          "Please review the commission settings.",
+          commissionField.maxMessage ?? "Invalid fee amount.",
         );
       }
     }
 
     const commissionPercent =
       hasCommissionFees && sourceType === "INVESTMENT_ORDER"
-        ? toDecimal(commissionPercentInput ?? "0")
+        ? toDecimal(commissionInput ?? "0")
         : toDecimal(0);
     const savingsFeeAmount =
       hasCommissionFees && sourceType === "SAVINGS_ACCOUNT"
-        ? toDecimal(feeAmountInput ?? "0")
+        ? toDecimal(commissionInput ?? "0")
         : null;
 
     await prisma.withdrawalOrder.update({

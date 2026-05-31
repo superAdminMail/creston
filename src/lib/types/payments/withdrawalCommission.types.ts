@@ -33,6 +33,7 @@ export type WithdrawalCommissionCheckoutDetails = {
     amount: number;
     currency: string;
     status: string;
+    rejectionReason: string | null;
     commissionStatus: string;
     hasCommissionFees: boolean;
     commissionPercent: number;
@@ -48,4 +49,5 @@ export type WithdrawalCommissionCheckoutDetails = {
   remainingCommissionAmount: number;
   isSettled: boolean;
   isUnderReview: boolean;
+  isClosedWithdrawal: boolean;
 };

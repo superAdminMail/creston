@@ -9,7 +9,11 @@ import { approveWithdrawalCommission } from "@/actions/admin/withdrawals/approve
 import { rejectWithdrawalCommission } from "@/actions/admin/withdrawals/rejectWithdrawalCommission";
 import { updateWithdrawalCommission } from "@/actions/admin/withdrawals/updateWithdrawalCommission";
 import type { AdminWithdrawalDetails } from "@/actions/admin/withdrawals/getAdminWithdrawalDetails";
-import { createInitialFormState } from "@/lib/forms/actionState";
+import { WithdrawalCommissionStatusActionMenu } from "@/app/account/dashboard/admin/Withdrawals/_components/WithdrawalCommissionStatusActionMenu";
+import {
+  createInitialFormState,
+  getFirstFormFieldError,
+} from "@/lib/forms/actionState";
 import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +23,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import {
+  getWithdrawalCommissionFieldConfig,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  isWithdrawalCommissionSettledStatus,
+  getWithdrawalCommissionStatusTone,
+} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 
 type FieldName =
   | "withdrawalId"
@@ -54,6 +65,7 @@ export function AdminWithdrawalDetailsClient({
   withdrawal: AdminWithdrawalDetails;
 }) {
   const router = useRouter();
+  const commissionSettingsFormRef = useRef<HTMLFormElement | null>(null);
   const [state, formAction, pending] = useActionState(
     updateWithdrawalCommission,
     initialState,
@@ -61,17 +73,24 @@ export function AdminWithdrawalDetailsClient({
   const [hasCommissionFees, setHasCommissionFees] = useState(
     withdrawal.hasCommissionFees,
   );
-  const [commissionPercent, setCommissionPercent] = useState(
-    withdrawal.sourceType === "INVESTMENT_ORDER" &&
-    withdrawal.commissionPercent > 0
-      ? withdrawal.commissionPercent.toFixed(2)
-      : "",
+  const commissionField = getWithdrawalCommissionFieldConfig(
+    withdrawal.sourceType,
   );
-  const [feeAmount, setFeeAmount] = useState(
-    withdrawal.sourceType === "SAVINGS_ACCOUNT" &&
-    withdrawal.savingsFeeAmount !== null
-      ? withdrawal.savingsFeeAmount.toFixed(2)
-      : "",
+  const commissionStoredValue = withdrawal.hasCommissionFees
+    ? commissionField.fieldName === "commissionPercent"
+      ? `${withdrawal.commissionPercent.toFixed(2)}%`
+      : withdrawal.savingsFeeAmount !== null
+        ? formatCurrency(withdrawal.savingsFeeAmount, withdrawal.currency)
+        : "Not available"
+    : "Not enabled";
+  const [commissionValue, setCommissionValue] = useState(
+    commissionField.fieldName === "commissionPercent"
+      ? withdrawal.commissionPercent > 0
+        ? withdrawal.commissionPercent.toFixed(2)
+        : ""
+      : withdrawal.savingsFeeAmount !== null
+        ? withdrawal.savingsFeeAmount.toFixed(2)
+        : "",
   );
   const [reviewAmount, setReviewAmount] = useState(
     withdrawal.commissionPayment?.claimedAmount
@@ -82,17 +101,28 @@ export function AdminWithdrawalDetailsClient({
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [reviewPending, startReviewTransition] = useTransition();
+  const [commissionSettingsPending, startCommissionSettingsTransition] =
+    useTransition();
   const lastToast = useRef<string | null>(null);
   const commissionReviewStatus =
     withdrawal.commissionPayment?.reviewStatus ?? null;
-  const canReviewCommission = commissionReviewStatus === "PENDING_REVIEW";
+  const canReviewCommission =
+    commissionReviewStatus === "PENDING_REVIEW" &&
+    !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus);
 
   useEffect(() => {
     if (state.status === "idle" || !state.message) {
       return;
     }
 
-    const toastKey = `${state.status}:${state.message}:${withdrawal.id}`;
+    const toastMessage =
+      state.status === "error"
+        ? getFirstFormFieldError(state.fieldErrors) ??
+          state.message ??
+          "Please review the commission settings."
+        : state.message;
+
+    const toastKey = `${state.status}:${toastMessage}:${withdrawal.id}`;
 
     if (lastToast.current === toastKey) {
       return;
@@ -101,13 +131,20 @@ export function AdminWithdrawalDetailsClient({
     lastToast.current = toastKey;
 
     if (state.status === "success") {
-      toast.success(state.message);
+      toast.success(toastMessage);
       router.refresh();
       return;
     }
 
-    toast.error(state.message);
-  }, [lastToast, router, state.message, state.status, withdrawal.id]);
+    toast.error(toastMessage);
+  }, [
+    lastToast,
+    router,
+    state.fieldErrors,
+    state.message,
+    state.status,
+    withdrawal.id,
+  ]);
 
   function submitCommissionReview(input: {
     approvalMode: "FULL" | "PARTIAL" | "REJECT";
@@ -165,6 +202,30 @@ export function AdminWithdrawalDetailsClient({
       approvalMode: "REJECT",
       rejectionReason,
     });
+  }
+
+  function submitCommissionSettings(nextHasCommissionFees: boolean) {
+    const formElement = commissionSettingsFormRef.current;
+
+    if (!formElement) {
+      toast.error("Commission settings form is unavailable.");
+      return;
+    }
+
+    const formData = new FormData(formElement);
+    formData.set("hasCommissionFees", nextHasCommissionFees ? "true" : "false");
+
+    if (!nextHasCommissionFees) {
+      formData.delete(commissionField.fieldName);
+    }
+
+    startCommissionSettingsTransition(() => {
+      void formAction(formData);
+    });
+  }
+
+  function handleRemoveCommission() {
+    submitCommissionSettings(false);
   }
 
   return (
@@ -232,7 +293,11 @@ export function AdminWithdrawalDetailsClient({
                 Commission settings
               </h2>
 
-              <form action={formAction} className="space-y-6">
+              <form
+                ref={commissionSettingsFormRef}
+                action={formAction}
+                className="space-y-6"
+              >
                 <input type="hidden" name="withdrawalId" value={withdrawal.id} />
                 <input
                   type="hidden"
@@ -258,82 +323,53 @@ export function AdminWithdrawalDetailsClient({
                     />
                   </div>
 
-                  {withdrawal.sourceType === "INVESTMENT_ORDER" ? (
-                    <div className="grid max-w-sm gap-2">
-                      <Label
-                        htmlFor="commissionPercent"
-                        className="text-sm font-medium text-white"
-                      >
-                        Commission percent
-                      </Label>
-                      <Input
-                        id="commissionPercent"
-                        name="commissionPercent"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        value={commissionPercent}
-                        onChange={(event) =>
-                          setCommissionPercent(event.target.value)
-                        }
-                        disabled={
-                          !withdrawal.canEditCommission ||
-                          pending ||
-                          !hasCommissionFees
-                        }
-                        className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
-                        placeholder="5.00"
-                      />
-                      <p className="text-xs text-slate-400">
-                        {hasCommissionFees
-                          ? "Enter a percent between 0 and 100."
-                          : "Enable commission to edit the percent."}
+                  <div className="grid max-w-sm gap-2">
+                    <Label
+                      htmlFor={commissionField.fieldName}
+                      className="text-sm font-medium text-white"
+                    >
+                      {commissionField.label}
+                    </Label>
+                    <Input
+                      id={commissionField.fieldName}
+                      name={commissionField.fieldName}
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max={
+                        commissionField.fieldName === "commissionPercent"
+                          ? "100"
+                          : undefined
+                      }
+                      value={commissionValue}
+                      onChange={(event) => setCommissionValue(event.target.value)}
+                      required={hasCommissionFees}
+                      aria-invalid={Boolean(
+                        state.fieldErrors?.[commissionField.fieldName]?.length,
+                      )}
+                      disabled={
+                        !withdrawal.canEditCommission ||
+                        pending ||
+                        !hasCommissionFees
+                      }
+                      className={cn(
+                        "rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500",
+                        state.fieldErrors?.[commissionField.fieldName]?.length &&
+                          "border-rose-400/60 ring-1 ring-rose-400/20",
+                      )}
+                      placeholder={commissionField.placeholder}
+                    />
+                    <p className="text-xs text-slate-400">
+                      {hasCommissionFees
+                        ? commissionField.helperText
+                        : `Enable commission to edit the ${commissionField.label.toLowerCase()}.`}
+                    </p>
+                    {state.fieldErrors?.[commissionField.fieldName]?.length ? (
+                      <p className="text-xs text-rose-300">
+                        {state.fieldErrors[commissionField.fieldName]?.[0]}
                       </p>
-                      {state.fieldErrors?.commissionPercent?.length ? (
-                        <p className="text-xs text-rose-300">
-                          {state.fieldErrors.commissionPercent[0]}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {withdrawal.sourceType === "SAVINGS_ACCOUNT" ? (
-                    <div className="grid max-w-sm gap-2">
-                      <Label
-                        htmlFor="feeAmount"
-                        className="text-sm font-medium text-white"
-                      >
-                        Fee amount
-                      </Label>
-                      <Input
-                        id="feeAmount"
-                        name="feeAmount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={feeAmount}
-                        onChange={(event) => setFeeAmount(event.target.value)}
-                        disabled={
-                          !withdrawal.canEditCommission ||
-                          pending ||
-                          !hasCommissionFees
-                        }
-                        className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
-                        placeholder="0.00"
-                      />
-                      <p className="text-xs text-slate-400">
-                        {hasCommissionFees
-                          ? "Enter the fixed fee amount for this savings withdrawal."
-                          : "Enable commission to edit the fee amount."}
-                      </p>
-                      {state.fieldErrors?.feeAmount?.length ? (
-                        <p className="text-xs text-rose-300">
-                          {state.fieldErrors.feeAmount[0]}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
 
                   {withdrawal.sourceType === "SAVINGS_ACCOUNT" && hasCommissionFees ? (
                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
@@ -360,16 +396,29 @@ export function AdminWithdrawalDetailsClient({
                   <div className="flex flex-wrap gap-3">
                     <Button
                       type="submit"
-                      disabled={pending}
+                      disabled={pending || commissionSettingsPending}
                       className={cn(
                         "rounded-2xl",
                         hasCommissionFees
                           ? "bg-emerald-600 hover:bg-emerald-500"
-                          : "bg-slate-700 hover:bg-slate-600",
+                        : "bg-slate-700 hover:bg-slate-600",
                       )}
                     >
                       {pending ? "Saving..." : "Save commission"}
                     </Button>
+                    {hasCommissionFees ? (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={pending || commissionSettingsPending}
+                        onClick={handleRemoveCommission}
+                        className="rounded-2xl"
+                      >
+                        {pending || commissionSettingsPending
+                          ? "Removing..."
+                          : "Remove commission"}
+                      </Button>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="text-sm text-slate-400">
@@ -408,23 +457,8 @@ export function AdminWithdrawalDetailsClient({
               <div className="grid gap-4 sm:grid-cols-2">
                 <InfoCard label="Source" value={withdrawal.sourceLabel} />
                 <InfoCard
-                  label={
-                    withdrawal.sourceType === "SAVINGS_ACCOUNT"
-                      ? "Fee amount"
-                      : "Commission percent"
-                  }
-                  value={
-                    withdrawal.hasCommissionFees
-                      ? withdrawal.sourceType === "INVESTMENT_ORDER"
-                        ? `${withdrawal.commissionPercent.toFixed(2)}%`
-                        : withdrawal.savingsFeeAmount !== null
-                          ? formatCurrency(
-                              withdrawal.savingsFeeAmount,
-                              withdrawal.currency,
-                            )
-                          : "Not available"
-                      : "Not enabled"
-                  }
+                  label={commissionField.label}
+                  value={commissionStoredValue}
                 />
               </div>
             </CardContent>
@@ -640,6 +674,47 @@ export function AdminWithdrawalDetailsClient({
         <div className="space-y-6">
           <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
             <CardContent className="space-y-4 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-white">
+                    Commission status
+                  </h2>
+                  <p className="text-sm leading-6 text-slate-400">
+                    Update the commission lifecycle state from this page.
+                  </p>
+                </div>
+
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "border",
+                    getWithdrawalCommissionStatusTone(withdrawal.commissionStatus),
+                  )}
+                >
+                  {withdrawal.commissionStatusLabel}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white">
+                    Change commission status
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    Choose the next lifecycle state for this commission.
+                  </p>
+                </div>
+
+                <WithdrawalCommissionStatusActionMenu
+                  withdrawalId={withdrawal.id}
+                  status={withdrawal.commissionStatus}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+            <CardContent className="space-y-4 p-6">
               <h2 className="text-lg font-semibold text-white">Payment method</h2>
               <InfoCard
                 label="Type"
@@ -675,14 +750,16 @@ export function AdminWithdrawalDetailsClient({
                 {withdrawal.adminNotes || "No admin notes recorded for this withdrawal."}
               </div>
               <h3 className="text-sm font-medium text-slate-200">
-                {withdrawal.status === "REJECTED"
-                  ? "Rejection reason"
+                {withdrawal.status === "REJECTED" ||
+                withdrawal.status === "CANCELLED"
+                  ? "Outcome reason"
                   : "Commission status"}
               </h3>
               <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-sm leading-7 text-slate-300">
                 {withdrawal.rejectionReason ||
-                  (withdrawal.status === "REJECTED"
-                    ? "No rejection reason recorded."
+                  (withdrawal.status === "REJECTED" ||
+                  withdrawal.status === "CANCELLED"
+                    ? "No outcome reason recorded."
                     : `${withdrawal.commissionStatusLabel} commission state.`)}
               </div>
             </CardContent>

@@ -4,9 +4,11 @@ import {
   formatCurrency,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
+import type { CommissionStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import type { WithdrawalCommissionPaymentSnapshot } from "@/lib/types/payments/withdrawalCommission.types";
 import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
@@ -14,7 +16,7 @@ export type AdminWithdrawalDetails = {
   id: string;
   status: string;
   statusLabel: string;
-  commissionStatus: string;
+  commissionStatus: CommissionStatus;
   commissionStatusLabel: string;
   amount: string;
   currency: string;
@@ -65,6 +67,7 @@ export async function getAdminWithdrawalDetails(
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
+      investmentOrderId: true,
       payoutSnapshot: true,
       requestedAt: true,
       processedAt: true,
@@ -145,7 +148,9 @@ export async function getAdminWithdrawalDetails(
     rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
     rejectionReason: withdrawal.rejectionReason,
     adminNotes: withdrawal.adminNotes,
-    sourceType: withdrawal.investmentOrder ? "INVESTMENT_ORDER" : "SAVINGS_ACCOUNT",
+    sourceType: getWithdrawalCommissionSourceType({
+      investmentOrderId: withdrawal.investmentOrderId,
+    }),
     sourceLabel: withdrawal.investmentOrder
       ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
       : withdrawal.investmentAccount

@@ -1,12 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { formatCurrency } from "@/lib/formatters/formatters";
+import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
+import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import { getWithdrawalStatusTone } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  isWithdrawalCommissionSettledStatus,
+} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 
 type Props = {
   params: Promise<{
@@ -41,6 +46,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
       hasCommissionFees: true,
       commissionPercent: true,
       savingsFeeAmount: true,
+      rejectionReason: true,
       requestedAt: true,
       payoutSnapshot: true,
       payoutMethod: {
@@ -103,14 +109,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
         ? withdrawal.payoutMethod.network ?? "Crypto wallet"
         : "Payment method";
 
-  const statusTone =
-    withdrawal.status === "COMPLETED"
-      ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-      : withdrawal.status === "REJECTED"
-        ? "border-rose-400/20 bg-rose-500/10 text-rose-100"
-        : withdrawal.status === "PROCESSING"
-          ? "border-blue-400/20 bg-blue-500/10 text-blue-100"
-          : "border-white/10 bg-white/5 text-slate-100";
+  const statusTone = getWithdrawalStatusTone(withdrawal.status);
 
   const sourceType = withdrawal.investmentOrderId
     ? "INVESTMENT_ORDER"
@@ -154,7 +153,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   <span
                     className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${statusTone}`}
                   >
-                    {withdrawal.status.replaceAll("_", " ").toLowerCase()}
+                    {formatEnumLabel(withdrawal.status)}
                   </span>
                   <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
                     {methodLabel}
@@ -204,7 +203,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
             <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
               Status
             </p>
-            <p className="mt-2 text-lg text-white">{withdrawal.status}</p>
+            <p className="mt-2 text-lg text-white">
+              {formatEnumLabel(withdrawal.status)}
+            </p>
           </div>
 
           <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 shadow-xl">
@@ -215,7 +216,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
           </div>
 
           {withdrawal.hasCommissionFees ? (
-            sourceType === "INVESTMENT_ORDER" ? (
+            withdrawal.status === "REJECTED" ? null : sourceType === "INVESTMENT_ORDER" ? (
               <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 shadow-xl md:col-span-2">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
                   Commission Percent
@@ -239,7 +240,23 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
             ) : null
           ) : null}
 
-          {commissionPayment?.reviewStatus === "PENDING_REVIEW" ? (
+          {isWithdrawalTerminalStatus(withdrawal.status) ? (
+            <div className="rounded-[1.75rem] border border-rose-400/20 bg-rose-500/10 p-5 text-rose-50 shadow-xl md:col-span-2">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-rose-200">
+                {withdrawal.status === "CANCELLED"
+                  ? "Withdrawal cancelled"
+                  : "Withdrawal rejected"}
+              </p>
+              <p className="mt-2 text-lg font-medium">
+                This withdrawal request is no longer active.
+              </p>
+              <p className="mt-1 text-sm text-rose-100/80">
+                {withdrawal.rejectionReason ??
+                  "You can submit a new withdrawal request using the available balance."}
+              </p>
+            </div>
+          ) : commissionPayment?.reviewStatus === "PENDING_REVIEW" &&
+            !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus) ? (
             <div className="rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10 p-5 text-amber-50 shadow-xl md:col-span-2">
               <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
                 Commission under review
@@ -253,9 +270,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
             </div>
           ) : null}
 
-          {withdrawal.hasCommissionFees &&
-          withdrawal.commissionStatus !== "PAID" &&
-          withdrawal.commissionStatus !== "VOID" &&
+          {!isWithdrawalTerminalStatus(withdrawal.status) &&
+          withdrawal.hasCommissionFees &&
+          !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus) &&
           commissionPayment?.reviewStatus !== "PENDING_REVIEW" ? (
             <div className="md:col-span-2">
               <Button

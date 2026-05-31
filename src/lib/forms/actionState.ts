@@ -43,6 +43,16 @@ export function createValidationErrorState<TField extends string = string>(
   return createErrorFormState(message, fieldErrors);
 }
 
+export function getFirstFormFieldError<TField extends string = string>(
+  fieldErrors?: FormFieldErrors<TField>,
+): string | null {
+  const firstError = Object.values(fieldErrors ?? {})
+    .flat()
+    .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+
+  return firstError ?? null;
+}
+
 export function getFriendlyServerError(
   error: unknown,
   fallback = "Something went wrong. Please try again.",
