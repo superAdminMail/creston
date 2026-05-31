@@ -7,7 +7,13 @@ import { toast } from "sonner";
 
 import { updateWithdrawalStatusAction } from "@/actions/admin/withdrawals/updateWithdrawalStatus";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +24,7 @@ import { Label } from "@/components/ui/label";
 import type { WithdrawalStatus } from "@/generated/prisma";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
-import {
-  getWithdrawalStatusActionOptions,
-} from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import { getWithdrawalStatusActionOptions } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { Textarea } from "@/components/ui/textarea";
 
 export function WithdrawalStatusActionMenu({
@@ -41,7 +45,8 @@ export function WithdrawalStatusActionMenu({
   const selectedReasonOption = useMemo(
     () =>
       selectedReasonStatus
-        ? options.find((option) => option.status === selectedReasonStatus) ?? null
+        ? (options.find((option) => option.status === selectedReasonStatus) ??
+          null)
         : null,
     [options, selectedReasonStatus],
   );
@@ -178,12 +183,12 @@ export function WithdrawalStatusActionMenu({
               <p className="text-xs text-rose-300">{reasonError}</p>
             ) : null}
             <p className="text-xs leading-5 text-slate-400">
-              This note will be saved with the withdrawal status update and shown
-              to the user where applicable.
+              This note will be saved with the withdrawal status update and
+              shown to the user where applicable.
             </p>
           </div>
 
-          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2">
+          <DialogFooter className="border-white/10 bg-transparent px-2 py-2">
             <Button
               type="button"
               variant="outline"
