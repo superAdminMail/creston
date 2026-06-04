@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma";
 
-export function asJsonObject(value: Prisma.JsonValue | null | undefined) {
+export function asJsonObject(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {} as Record<string, unknown>;
   }

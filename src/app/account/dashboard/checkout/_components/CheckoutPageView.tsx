@@ -7,6 +7,10 @@ import WithdrawalCommissionFunding from "./WithdrawalCommissionFunding";
 import { getWithdrawalCommissionCheckoutDetails } from "../_lib/getWithdrawalCommissionCheckoutDetails";
 import { calculateInvestmentOrderBankChargeAmount } from "@/lib/payments/bank/calculateInvestmentOrderBankChargeAmount";
 import {
+  getInvestmentOrderUpgradeSettings,
+  hasInvestmentOrderUpgradeOffer,
+} from "@/lib/investment/investmentOrderUpgrade";
+import {
   isCheckoutFundingMethodType,
   isCheckoutPaymentMode,
   type CheckoutFundingMethodType,
@@ -117,10 +121,18 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         routeInput.targetId,
         routeInput.fundingMethodType,
       );
+      const upgradeSettings = getInvestmentOrderUpgradeSettings(
+        order.paymentMetadata,
+      );
+      const isUpgradeFlow = hasInvestmentOrderUpgradeOffer(
+        order.runtimeStatus,
+        order.paymentMetadata,
+      );
       const isInvestmentOrderSettled =
-        order.remainingAmount <= 0 ||
-        order.status === "PAID" ||
-        order.status === "CONFIRMED";
+        !isUpgradeFlow &&
+        (order.remainingAmount <= 0 ||
+          order.status === "PAID" ||
+          order.status === "CONFIRMED");
       const selectedFundingMethodType =
         routeInput.fundingMethodType ??
         order.paymentMethodType ??
@@ -128,9 +140,11 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
       const selectedAmount =
         isInvestmentOrderSettled
           ? 0
-          : routeInput.paymentMode === "PARTIAL" &&
-              (selectedFundingMethodType === "BANK_TRANSFER" ||
-                selectedFundingMethodType === "CRYPTO_PROVIDER")
+          : isUpgradeFlow && upgradeSettings.amount !== null
+            ? upgradeSettings.amount
+            : routeInput.paymentMode === "PARTIAL" &&
+                (selectedFundingMethodType === "BANK_TRANSFER" ||
+                  selectedFundingMethodType === "CRYPTO_PROVIDER")
             ? calculateInvestmentOrderBankChargeAmount({
                 totalAmount: order.amount,
                 amountPaid: order.amountPaid,
@@ -150,6 +164,7 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
           isSettled={isInvestmentOrderSettled}
           fundingMethodType={routeInput.fundingMethodType}
           paymentMode={routeInput.paymentMode}
+          isUpgradeFlow={isUpgradeFlow}
         />
       );
     }

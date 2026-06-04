@@ -63,12 +63,14 @@ export default function InvestmentOrderPaymentClient({
   isSettled,
   fundingMethodType,
   paymentMode,
+  isUpgradeFlow = false,
 }: {
   order: InvestmentOrderPaymentDetails;
   selectedAmount: number;
   isSettled: boolean;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
+  isUpgradeFlow?: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -98,15 +100,18 @@ export default function InvestmentOrderPaymentClient({
     order.latestBankPaymentShortfallAmount ?? 0;
   const isOrderFullySettled =
     isSettled ||
-    order.remainingAmount <= 0 ||
-    order.status === "PAID" ||
-    order.status === "CONFIRMED";
+    (!isUpgradeFlow &&
+      (order.remainingAmount <= 0 ||
+        order.status === "PAID" ||
+        order.status === "CONFIRMED"));
   const canPay =
     !isOrderFullySettled &&
-    (order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID");
+    (isUpgradeFlow ||
+      order.status === "PENDING_PAYMENT" ||
+      order.status === "PARTIALLY_PAID");
   const isCryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const isBankSelected = selectedFundingMethod === "BANK_TRANSFER";
-  const effectivePaymentMode = selectedPaymentMode;
+  const effectivePaymentMode = isUpgradeFlow ? "FULL" : selectedPaymentMode;
   const bankProofActionLabel = isOrderFullySettled
     ? "Payment complete"
     : latestBankPayment?.status === "PENDING_REVIEW"
@@ -121,7 +126,7 @@ export default function InvestmentOrderPaymentClient({
   const bankProofActionDisabled =
     isOrderFullySettled ||
     latestBankPayment?.status === "PENDING_REVIEW" ||
-    selectedPaymentMode === null;
+    effectivePaymentMode === null;
   const cryptoProofActionLabel = isOrderFullySettled
     ? "Payment complete"
     : latestCryptoPayment?.status === "PENDING_REVIEW"
@@ -130,7 +135,7 @@ export default function InvestmentOrderPaymentClient({
   const cryptoProofActionDisabled =
     isOrderFullySettled ||
     latestCryptoPayment?.status === "PENDING_REVIEW" ||
-    selectedPaymentMode === null;
+    effectivePaymentMode === null;
 
   const updateCheckoutParams = ({
     nextFundingMethod,
@@ -206,14 +211,15 @@ export default function InvestmentOrderPaymentClient({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Investment checkout
+              {isUpgradeFlow ? "Investment upgrade" : "Investment checkout"}
             </p>
             <h2 className="mt-2 text-lg font-semibold text-slate-950 sm:text-xl dark:text-white">
               {order.plan.name}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-              Choose a funding method, then pay the full amount with crypto
-              wallet or split it with bank transfer.
+              {isUpgradeFlow
+                ? "Upgrade and reactivate your investment plan."
+                : "Choose a funding method, then pay the full amount with crypto wallet or split it with bank transfer."}
             </p>
           </div>
         </div>
@@ -230,7 +236,7 @@ export default function InvestmentOrderPaymentClient({
           <SummaryChip
             label="Selected amount"
             value={
-              isCryptoSelected || selectedPaymentMode
+              isUpgradeFlow || isCryptoSelected || selectedPaymentMode
                 ? formatCurrency(selectedAmount, order.currency)
                 : order.remainingAmountLabel
             }
@@ -348,7 +354,7 @@ export default function InvestmentOrderPaymentClient({
         </Card>
       ) : null}
 
-      {!isOrderFullySettled && selectedFundingMethod ? (
+      {!isOrderFullySettled && selectedFundingMethod && !isUpgradeFlow ? (
         <OrderPaymentSelector
           mode={selectedPaymentMode}
           onModeChange={(nextMode) => {
@@ -399,7 +405,7 @@ export default function InvestmentOrderPaymentClient({
       {canPay && selectedFundingMethod ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
           {selectedFundingMethod === "BANK_TRANSFER" ? (
-            selectedPaymentMode ? (
+            selectedPaymentMode || isUpgradeFlow ? (
               order.hasBankMethod && order.bankMethod ? (
                 <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
                   <CardHeader className="p-4 sm:p-6">
@@ -419,7 +425,9 @@ export default function InvestmentOrderPaymentClient({
                       />
                       <SummaryChip
                         label="Payment mode"
-                        value={getCheckoutPaymentModeLabel(selectedPaymentMode)}
+                        value={getCheckoutPaymentModeLabel(
+                          effectivePaymentMode,
+                        )}
                       />
                     </div>
 
@@ -494,9 +502,9 @@ export default function InvestmentOrderPaymentClient({
                       Crypto proof mode
                     </p>
                     <p className="mt-2 leading-6">
-                      Partial payments are available when you submit crypto
-                      proof. The Pay now checkout button below stays full
-                      payment only.
+                      {isUpgradeFlow
+                        ? "This upgrade uses the fixed amount set by the admin. Submit the full amount shown above."
+                        : "Partial payments are available when you submit crypto proof. The Pay now checkout button below stays full payment only."}
                     </p>
                   </div>
 
@@ -546,21 +554,21 @@ export default function InvestmentOrderPaymentClient({
                         disabled={cryptoProofActionDisabled}
                         className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                       >
-                        {selectedPaymentMode === null
+                        {effectivePaymentMode === null
                           ? "Choose payment mode first"
                           : cryptoProofActionLabel}
                       </Button>
 
-                      {selectedPaymentMode === "FULL" ? (
+                      {!isUpgradeFlow && effectivePaymentMode === "FULL" ? (
                         <InvestmentOrderCryptoCheckoutButton
                           investmentOrderId={order.id}
                           className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
                         />
                       ) : (
                         <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                          Pay now checkout is available for full payment only.
-                          Use the proof button above for partial crypto
-                          submissions.
+                          {isUpgradeFlow
+                            ? "Use the proof button above to submit the fixed upgrade amount."
+                            : "Use the proof button above for partial crypto submissions."}
                         </div>
                       )}
                     </div>
@@ -583,7 +591,7 @@ export default function InvestmentOrderPaymentClient({
 
       {showModal &&
       selectedFundingMethod === "BANK_TRANSFER" &&
-      selectedPaymentMode &&
+      (selectedPaymentMode || isUpgradeFlow) &&
       order.hasBankMethod &&
       order.bankMethod ? (
         <PaymentProofModal
@@ -593,7 +601,8 @@ export default function InvestmentOrderPaymentClient({
           platformPaymentMethodId={order.bankMethod.id}
           currency={order.currency}
           defaultAmount={selectedAmount}
-          maxAmount={order.remainingAmount}
+          maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
+          isUpgradeFlow={isUpgradeFlow}
         />
       ) : showModal &&
         selectedFundingMethod === "CRYPTO_PROVIDER" &&
@@ -605,8 +614,9 @@ export default function InvestmentOrderPaymentClient({
           platformPaymentMethodId={bankMethod.id}
           currency={order.currency}
           defaultAmount={selectedAmount}
-          maxAmount={order.remainingAmount}
+          maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
           proofMode="CRYPTO_PROVIDER"
+          isUpgradeFlow={isUpgradeFlow}
         />
       ) : null}
       <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">

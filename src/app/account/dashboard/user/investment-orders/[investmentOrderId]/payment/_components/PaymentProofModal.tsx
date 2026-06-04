@@ -11,6 +11,7 @@ type Props = {
   defaultAmount: number;
   maxAmount: number;
   proofMode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
+  isUpgradeFlow?: boolean;
 };
 
 export default function PaymentProofModal({
@@ -22,6 +23,7 @@ export default function PaymentProofModal({
   defaultAmount,
   maxAmount,
   proofMode = "BANK_TRANSFER",
+  isUpgradeFlow = false,
 }: Props) {
   const isCryptoMode = proofMode === "CRYPTO_PROVIDER";
 
@@ -32,12 +34,14 @@ export default function PaymentProofModal({
       title={isCryptoMode ? "Confirm crypto payment" : "Submit payment proof"}
       description={
         isCryptoMode
-          ? "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
+          ? isUpgradeFlow
+            ? "Enter the fixed upgrade amount shown above and attach a receipt image."
+            : "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
           : "Attach proof for review"
       }
       defaultAmount={defaultAmount}
-      amountLabel={`Claim amount (${currency})`}
-      amountMin={1}
+      amountLabel={`${isUpgradeFlow ? "Upgrade amount" : "Claim amount"} (${currency})`}
+      amountMin={isUpgradeFlow ? maxAmount : 1}
       amountMax={maxAmount}
       submitLabel="Submit proof"
       mode={proofMode}

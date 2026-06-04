@@ -10,13 +10,14 @@ import {
   type FormActionState,
 } from "@/lib/forms/actionState";
 import { prisma } from "@/lib/prisma";
+import { setInvestmentOrderUpgradeSettings } from "@/lib/investment/investmentOrderUpgrade";
 
 import {
   assertAdminInvestmentOrderAccess,
   canPauseInvestmentOrderRuntimeStatus,
 } from "./adminInvestmentOrder.shared";
 
-type FieldName = "orderId";
+type FieldName = "orderId" | "allowUpgrade" | "upgradeAmount";
 
 export async function pauseAdminInvestmentOrder(
   _previousState: FormActionState<FieldName>,
@@ -25,9 +26,29 @@ export async function pauseAdminInvestmentOrder(
   await assertAdminInvestmentOrderAccess();
 
   const orderId = formData.get("orderId");
+  const allowUpgrade = formData.get("allowUpgrade") === "true";
+  const upgradeAmountRaw = formData.get("upgradeAmount");
+  const upgradeAmount =
+    typeof upgradeAmountRaw === "string" && upgradeAmountRaw.trim().length > 0
+      ? Number(upgradeAmountRaw)
+      : null;
 
   if (!orderId || typeof orderId !== "string") {
     return createErrorFormState("Invalid investment order.");
+  }
+
+  if (
+    allowUpgrade &&
+    (upgradeAmount === null || !Number.isFinite(upgradeAmount) || upgradeAmount <= 0)
+  ) {
+    return createErrorFormState(
+      "Please review the highlighted fields.",
+      {
+        upgradeAmount: [
+          "Enter a valid upgrade amount greater than zero.",
+        ],
+      },
+    );
   }
 
   try {
@@ -37,6 +58,7 @@ export async function pauseAdminInvestmentOrder(
         id: true,
         status: true,
         runtimeStatus: true,
+        paymentMetadata: true,
       },
     });
 
@@ -59,6 +81,13 @@ export async function pauseAdminInvestmentOrder(
       where: { id: existingOrder.id },
       data: {
         runtimeStatus: RuntimeStatus.PAUSED,
+        paymentMetadata: setInvestmentOrderUpgradeSettings(
+          existingOrder.paymentMetadata,
+          {
+            allowUpgrade,
+            amount: allowUpgrade ? upgradeAmount : null,
+          },
+        ),
       },
     });
 
@@ -66,6 +95,7 @@ export async function pauseAdminInvestmentOrder(
     revalidatePath(`/account/dashboard/admin/investment-orders/${orderId}`);
     revalidatePath("/account/dashboard/user/investment-orders");
     revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/upgrade`);
     revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/payment`);
 
     return createSuccessFormState("Investment order paused successfully.");

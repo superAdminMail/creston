@@ -59,6 +59,7 @@ import {
   type AdminOperationsStat,
 } from "../../_components/AdminOperationsShell";
 import { AdminResponsiveCollectionShell } from "../../_components/AdminResponsiveCollectionShell";
+import { InvestmentOrderRuntimeStatusDialog } from "./InvestmentOrderRuntimeStatusDialog";
 
 const orderActionDialogSchema = z.object({
   reason: z
@@ -70,9 +71,6 @@ const orderActionDialogSchema = z.object({
 
 type OrderActionFieldName = "orderId" | "reason" | "adminNotes";
 const initialOrderActionState = createInitialFormState<OrderActionFieldName>();
-type RuntimeActionFieldName = "orderId";
-const initialRuntimeActionState = createInitialFormState<RuntimeActionFieldName>();
-
 function getStatusClasses(status: string) {
   switch (status) {
     case "CONFIRMED":
@@ -264,97 +262,6 @@ function OrderActionDialog({
   );
 }
 
-function RuntimeStatusActionDialog({
-  orderId,
-  title,
-  description,
-  submitLabel,
-  pendingLabel,
-  action,
-  icon,
-  buttonClassName,
-}: {
-  orderId: string;
-  title: string;
-  description: string;
-  submitLabel: string;
-  pendingLabel: string;
-  action: typeof pauseAdminInvestmentOrder | typeof resumeAdminInvestmentOrder;
-  icon: ReactNode;
-  buttonClassName: string;
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(
-    action,
-    initialRuntimeActionState,
-  );
-
-  useEffect(() => {
-    if (state.status === "idle" || !state.message) {
-      return;
-    }
-
-    if (state.status === "success") {
-      toast.success(state.message);
-      const timer = window.setTimeout(() => {
-        setOpen(false);
-        router.refresh();
-      }, 0);
-
-      return () => window.clearTimeout(timer);
-    }
-
-    toast.error(state.message);
-  }, [router, state.message, state.status]);
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
-          {icon}
-          {submitLabel}
-        </DropdownMenuItem>
-      </DialogTrigger>
-
-      <DialogContent className="border-white/10 bg-[#081224] text-white sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {description}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form action={formAction} className="space-y-4">
-          <input type="hidden" name="orderId" value={orderId} />
-
-          {state.status === "error" && state.message ? (
-            <p className="text-sm text-rose-300">{state.message}</p>
-          ) : null}
-
-          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              className="rounded-2xl border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
-            >
-              Close
-            </Button>
-            <Button
-              type="submit"
-              disabled={pending}
-              className={cn("rounded-2xl", buttonClassName)}
-            >
-              {pending ? pendingLabel : submitLabel}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
   return (
     <DropdownMenu>
@@ -396,26 +303,39 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
         ) : null}
 
         {order.canPause ? (
-          <RuntimeStatusActionDialog
+          <InvestmentOrderRuntimeStatusDialog
             orderId={order.id}
             title="Pause investment order"
             description="Pause this confirmed investment order to stop accrual until it is resumed."
             submitLabel="Pause"
             pendingLabel="Pausing..."
             action={pauseAdminInvestmentOrder}
+            trigger={
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                <PauseCircle className="h-4 w-4" />
+                Pause
+              </DropdownMenuItem>
+            }
             icon={<PauseCircle className="h-4 w-4" />}
             buttonClassName="bg-amber-600 hover:bg-amber-500"
+            showUpgradeFields
           />
         ) : null}
 
         {order.canResume ? (
-          <RuntimeStatusActionDialog
+          <InvestmentOrderRuntimeStatusDialog
             orderId={order.id}
             title="Resume investment order"
             description="Resume this paused investment order so accrual can continue."
             submitLabel="Resume"
             pendingLabel="Resuming..."
             action={resumeAdminInvestmentOrder}
+            trigger={
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                <PlayCircle className="h-4 w-4" />
+                Resume
+              </DropdownMenuItem>
+            }
             icon={<PlayCircle className="h-4 w-4" />}
             buttonClassName="bg-emerald-600 hover:bg-emerald-500"
           />

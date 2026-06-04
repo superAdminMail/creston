@@ -10,6 +10,10 @@ import {
   formatInvestmentOrderRuntimeStatusLabel,
   isInactiveInvestmentOrderRuntimeStatus,
 } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import {
+  buildInvestmentOrderUpgradePath,
+  hasInvestmentOrderUpgradeOffer,
+} from "@/lib/investment/investmentOrderUpgrade";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
@@ -51,6 +55,7 @@ type UserInvestmentOrderListItem = {
       alt: string;
     } | null;
   };
+  paymentMetadata: Record<string, unknown> | null;
   primaryAction: {
     label: string;
     href: string;
@@ -68,8 +73,19 @@ function getPrimaryAction(
   order: Pick<
     UserInvestmentOrderListItem,
     "id" | "status" | "linkedInvestmentAccountId" | "runtimeStatus"
-  >,
+  > & {
+    paymentMetadata: Record<string, unknown> | null;
+  },
 ) {
+  if (
+    hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order.paymentMetadata)
+  ) {
+    return {
+      label: "Upgrade",
+      href: buildInvestmentOrderUpgradePath(order.id),
+    };
+  }
+
   if (isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus)) {
     return {
       label: "View details",
@@ -136,6 +152,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           cancellationReason: true,
           adminNotes: true,
           investmentAccountId: true,
+          paymentMetadata: true,
           investmentPlan: {
             select: {
               id: true,
@@ -207,6 +224,7 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       cancellationReason: order.cancellationReason?.trim() || null,
       adminNotes: order.adminNotes?.trim() || null,
       linkedInvestmentAccountId: order.investmentAccountId,
+      paymentMetadata: order.paymentMetadata as Record<string, unknown> | null,
       plan: {
         id: order.investmentPlan.id,
         name: order.investmentPlan.name,

@@ -7,6 +7,10 @@ import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import {
+  buildInvestmentOrderUpgradePath,
+  hasInvestmentOrderUpgradeOffer,
+} from "@/lib/investment/investmentOrderUpgrade";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
@@ -45,6 +49,9 @@ export default async function Page({ params }: PageProps) {
         },
       },
       investmentPlanTier: true,
+      // paymentMethodType: true,
+      //  currentValue: true,
+      // paymentMetadata: true,
     },
   });
 
@@ -52,9 +59,14 @@ export default async function Page({ params }: PageProps) {
 
   const amount = toNumber(order.amount);
   const accruedProfit = toNumber(order.accruedProfit);
+  const currentValue = toNumber(order.currentValue);
   const expectedReturn = toNumber(order.expectedReturn);
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
+  const earnedProfit =
+    order.investmentModel === "MARKET"
+      ? Math.max(currentValue - amount, 0)
+      : accruedProfit;
 
   const returnLabel = formatInvestmentTierReturnLabel({
     investmentModel: order.investmentModel,
@@ -71,6 +83,10 @@ export default async function Page({ params }: PageProps) {
   const paymentMethodLabel = order.paymentMethodType
     ? formatEnumLabel(order.paymentMethodType)
     : "Not set";
+  const hasUpgradeOffer = hasInvestmentOrderUpgradeOffer(
+    order.runtimeStatus,
+    order.paymentMetadata,
+  );
   const resolvedLifecycle = resolveInvestmentOrderSchedule(
     order.startDate,
     order.maturityDate,
@@ -78,12 +94,9 @@ export default async function Page({ params }: PageProps) {
     order.confirmedAt ?? order.createdAt,
   );
 
-  const canPay =
-    remainingAmount > 0 &&
-    order.status !== "PAID" &&
-    order.status !== "CONFIRMED" &&
-    order.status !== "CANCELLED" &&
-    order.status !== "REJECTED";
+  const canMakePayment =
+    order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
+  const canUpgrade = hasUpgradeOffer && !canMakePayment;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-white/90 dark:text-gray-300 md:px-6">
@@ -98,17 +111,29 @@ export default async function Page({ params }: PageProps) {
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            asChild
-            disabled={!canPay}
-            className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white"
-          >
-            <Link
-              href={`/account/dashboard/user/investment-orders/${order.id}/payment`}
+          {canMakePayment ? (
+            <Button
+              asChild
+              className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white"
             >
-              Make Payment
-            </Link>
-          </Button>
+              <Link
+                href={`/account/dashboard/user/investment-orders/${order.id}/payment`}
+              >
+                Make Payment
+              </Link>
+            </Button>
+          ) : null}
+
+          {canUpgrade ? (
+            <Button
+              asChild
+              className="rounded-2xl bg-gradient-to-r from-green-800 to-sky-500 text-white"
+            >
+              <Link href={buildInvestmentOrderUpgradePath(order.id)}>
+                Upgrade
+              </Link>
+            </Button>
+          ) : null}
 
           {order.status === "PENDING_PAYMENT" ? (
             <CancelPendingInvestmentOrderButton
@@ -126,7 +151,8 @@ export default async function Page({ params }: PageProps) {
             {formatEnumLabel(order.status)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Runtime: {formatInvestmentOrderRuntimeStatusLabel(order.runtimeStatus)}
+            Runtime:{" "}
+            {formatInvestmentOrderRuntimeStatusLabel(order.runtimeStatus)}
           </p>
         </div>
 
@@ -150,7 +176,7 @@ export default async function Page({ params }: PageProps) {
 
         <div className="rounded-xl border p-4">
           <p className="text-xs text-muted-foreground">Earned</p>
-          <p className="text-lg font-semibold">${accruedProfit.toFixed(2)}</p>
+          <p className="text-lg font-semibold">${earnedProfit.toFixed(2)}</p>
         </div>
 
         <div className="rounded-xl border p-4">
@@ -199,13 +225,13 @@ export default async function Page({ params }: PageProps) {
 
           <p>Payment method: {paymentMethodLabel}</p>
 
-          <p>
-            Payment reference: {order.paymentReference || "Not provided"}
-          </p>
+          <p>Payment reference: {order.paymentReference || "Not provided"}</p>
 
           <p>
             Paid at:{" "}
-            {order.paidAt ? new Date(order.paidAt).toLocaleDateString() : "Not paid yet"}
+            {order.paidAt
+              ? new Date(order.paidAt).toLocaleDateString()
+              : "Not paid yet"}
           </p>
 
           <p>

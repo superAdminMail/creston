@@ -9,6 +9,7 @@ import {
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { asJsonObject } from "@/lib/payments/paymentJson";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
@@ -41,7 +42,9 @@ export async function getInvestmentOrderPaymentDetails(
       amountPaid: true,
       currency: true,
       status: true,
+      runtimeStatus: true,
       paymentMethodType: true,
+      paymentMetadata: true,
       createdAt: true,
       paymentReference: true,
       paidAt: true,
@@ -185,7 +188,9 @@ export async function getInvestmentOrderPaymentDetails(
     remainingAmount,
     currency: order.currency,
     status: order.status,
+    runtimeStatus: order.runtimeStatus,
     paymentMethodType: order.paymentMethodType,
+    paymentMetadata: asJsonObject(order.paymentMetadata),
     createdAt: order.createdAt.toISOString(),
     paymentReference: order.paymentReference ?? null,
     paidAt: order.paidAt?.toISOString() ?? null,

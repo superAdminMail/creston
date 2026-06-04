@@ -5,7 +5,9 @@ export type InvestmentOrderPaymentDetails = {
   remainingAmount: number;
   currency: string;
   status: string;
+  runtimeStatus: string;
   paymentMethodType: string | null;
+  paymentMetadata: Record<string, unknown> | null;
   createdAt: string;
   paymentReference: string | null;
   paidAt: string | null;

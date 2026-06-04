@@ -66,6 +66,7 @@ export async function resumeAdminInvestmentOrder(
     revalidatePath(`/account/dashboard/admin/investment-orders/${orderId}`);
     revalidatePath("/account/dashboard/user/investment-orders");
     revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/upgrade`);
     revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/payment`);
 
     return createSuccessFormState("Investment order resumed successfully.");
