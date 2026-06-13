@@ -122,11 +122,11 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         routeInput.fundingMethodType,
       );
       const upgradeSettings = getInvestmentOrderUpgradeSettings(
-        order.paymentMetadata,
+        order,
       );
       const isUpgradeFlow = hasInvestmentOrderUpgradeOffer(
         order.runtimeStatus,
-        order.paymentMetadata,
+        order,
       );
       const isInvestmentOrderSettled =
         !isUpgradeFlow &&

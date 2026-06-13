@@ -6,6 +6,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { isActiveInvestmentBalanceOrder } from "@/lib/services/investment/investmentBalanceService";
 import { resolveInvestmentOrderWithdrawalAmount } from "@/lib/service/getAvailableWithdrawalBalance";
 
 export type AvailableWithdrawalSource =
@@ -64,9 +65,16 @@ export async function getWithdrawalSourceOptions(
           id: true,
           investmentAccountId: true,
           investmentModel: true,
+          status: true,
           amount: true,
+          amountPaid: true,
           accruedProfit: true,
           currentValue: true,
+          investmentEarnings: {
+            select: {
+              amount: true,
+            },
+          },
           currency: true,
           maturityDate: true,
           isMatured: true,
@@ -153,7 +161,9 @@ export async function getWithdrawalSourceOptions(
   }
 
   const availableInvestmentOrder = investmentOrders.find(
-    (order) => !blockedInvestmentOrderIds.has(order.id),
+    (order) =>
+      !blockedInvestmentOrderIds.has(order.id) &&
+      isActiveInvestmentBalanceOrder(order),
   );
 
   if (availableInvestmentOrder) {

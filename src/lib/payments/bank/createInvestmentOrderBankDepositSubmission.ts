@@ -9,6 +9,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { upsertBankDepositSubmissionNotifications } from "@/lib/payments/bank/bankDepositSubmissionNotifications";
 import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { asJsonObject, toJsonValue } from "@/lib/payments/paymentJson";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 
@@ -25,6 +26,7 @@ type CreateInvestmentOrderBankDepositSubmissionInput = {
   transferReference?: string | null;
   note?: string | null;
   receiptFileId?: string | null;
+  isUpgradeFlow?: boolean;
 };
 
 export type CreateInvestmentOrderBankDepositSubmissionResult = {
@@ -51,6 +53,7 @@ export async function createInvestmentOrderBankDepositSubmission({
   transferReference,
   note,
   receiptFileId,
+  isUpgradeFlow = false,
 }: CreateInvestmentOrderBankDepositSubmissionInput): Promise<CreateInvestmentOrderBankDepositSubmissionResult> {
   const order = await prisma.investmentOrder.findFirst({
     where: {
@@ -59,7 +62,17 @@ export async function createInvestmentOrderBankDepositSubmission({
         userId,
       },
     },
-    include: {
+    select: {
+      id: true,
+      status: true,
+      amount: true,
+      amountPaid: true,
+      currency: true,
+      investmentPlanId: true,
+      upgradeStatus: true,
+      upgradeAmount: true,
+      platformPaymentMethodId: true,
+      paymentMetadata: true,
       platformPaymentMethod: true,
       investmentPlan: {
         select: {
@@ -81,10 +94,16 @@ export async function createInvestmentOrderBankDepositSubmission({
   }
 
   if (
-    order.status === InvestmentOrderStatus.PAID ||
-    order.status === InvestmentOrderStatus.CONFIRMED
+    (!isUpgradeFlow &&
+      (order.status === InvestmentOrderStatus.PAID ||
+        order.status === InvestmentOrderStatus.CONFIRMED)) ||
+    (isUpgradeFlow && order.status !== InvestmentOrderStatus.CONFIRMED)
   ) {
-    throw new Error("This investment order has already been paid");
+    throw new Error(
+      isUpgradeFlow
+        ? "This upgrade can only be submitted for a confirmed investment order"
+        : "This investment order has already been paid",
+    );
   }
 
   if (
@@ -165,28 +184,36 @@ export async function createInvestmentOrderBankDepositSubmission({
   });
 
   const chargeCalculation =
-    proofMode === "CRYPTO_PROVIDER"
-      ? null
-      : calculateInvestmentOrderBankChargeAmount({
+    !isUpgradeFlow && proofMode !== "CRYPTO_PROVIDER"
+      ? calculateInvestmentOrderBankChargeAmount({
           totalAmount: order.amount,
           amountPaid: order.amountPaid,
           usePartialPayment,
           hasPendingSubmission: false,
-        });
+        })
+      : null;
 
   const paymentMode =
-    proofMode === "CRYPTO_PROVIDER"
+    isUpgradeFlow || proofMode === "CRYPTO_PROVIDER"
       ? "FULL"
       : chargeCalculation!.isPartialPayment
         ? "PARTIAL"
         : "FULL";
 
   const submittedClaimedAmount =
-    proofMode === "CRYPTO_PROVIDER"
+    isUpgradeFlow || proofMode === "CRYPTO_PROVIDER"
       ? new Prisma.Decimal(claimedAmount ?? 0)
       : chargeCalculation!.chargeAmount;
 
-  if (proofMode === "CRYPTO_PROVIDER") {
+  if (isUpgradeFlow) {
+    if (!claimedAmount || claimedAmount <= 0) {
+      throw new Error("Upgrade amount is required");
+    }
+
+    if (new Prisma.Decimal(claimedAmount).lte(0)) {
+      throw new Error("Upgrade amount must be greater than zero");
+    }
+  } else if (proofMode === "CRYPTO_PROVIDER") {
     const remainingAmount = new Prisma.Decimal(order.amount).minus(
       order.amountPaid,
     );
@@ -242,6 +269,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         receiptFileId: receiptFileId?.trim() || null,
         note: note?.trim() || null,
         metadata: {
+          kind: isUpgradeFlow ? "UPGRADE" : "STANDARD",
           paymentMode,
           proofMode,
           splitNumber: chargeCalculation?.splitNumber ?? null,
@@ -265,15 +293,30 @@ export async function createInvestmentOrderBankDepositSubmission({
       data: {
         lastPaymentSubmittedAt: new Date(),
         paymentReference: transferReference?.trim() || createdPayment.id,
-        paymentMetadata: {
-          provider: proofMode,
-          paymentId: createdPayment.id,
-          paymentMode,
-          proofMode,
-          splitNumber: chargeCalculation?.splitNumber ?? null,
-          remainingBeforeCharge:
-            chargeCalculation?.remainingBeforeCharge.toString() ?? null,
-        },
+        paymentMetadata: isUpgradeFlow
+          ? (() => {
+              const metadata = asJsonObject(order.paymentMetadata);
+              delete metadata.upgrade;
+
+              return toJsonValue(metadata);
+            })()
+          : toJsonValue({
+              ...asJsonObject(order.paymentMetadata),
+              provider: proofMode,
+              paymentId: createdPayment.id,
+              paymentMode,
+              proofMode,
+              splitNumber: chargeCalculation?.splitNumber ?? null,
+              remainingBeforeCharge:
+                chargeCalculation?.remainingBeforeCharge.toString() ?? null,
+            }),
+        upgradeStatus: isUpgradeFlow ? "PENDING_REVIEW" : order.upgradeStatus,
+        upgradeAmount: isUpgradeFlow
+          ? new Prisma.Decimal(claimedAmount ?? 0)
+          : order.upgradeAmount,
+        upgradePaymentId: isUpgradeFlow ? createdPayment.id : null,
+        upgradeRequestedAt: isUpgradeFlow ? new Date() : null,
+        upgradeReviewedAt: null,
       },
     });
 
@@ -286,12 +329,15 @@ export async function createInvestmentOrderBankDepositSubmission({
         message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
         link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
         metadata: {
-          kind: "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
+          kind: isUpgradeFlow
+            ? "INVESTMENT_ORDER_UPGRADE_SUBMITTED"
+            : "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
           orderId: order.id,
           paymentId: createdPayment.id,
           submittedByUserId: userId,
           investmentPlanName: order.investmentPlan.name,
           currency: order.currency,
+          submissionKind: isUpgradeFlow ? "UPGRADE" : "STANDARD",
         },
       })),
     );

@@ -22,6 +22,7 @@ export async function getInvestmentPaymentReviewDetails(
       id: true,
       type: true,
       status: true,
+      submissionKind: true,
       claimedAmount: true,
       approvedAmount: true,
       currency: true,
@@ -106,6 +107,7 @@ export async function getInvestmentPaymentReviewDetails(
   const amountPaid = decimalToNumber(payment.investmentOrder.amountPaid);
   const remainingAmount = Math.max(orderAmount - amountPaid, 0);
   const canOfferPartialApproval =
+    payment.submissionKind !== "UPGRADE" &&
     payment.status === "PENDING_REVIEW" &&
     decimalToNumber(payment.claimedAmount) < remainingAmount;
 
@@ -113,6 +115,7 @@ export async function getInvestmentPaymentReviewDetails(
     id: payment.id,
     type: payment.type,
     status: payment.status,
+    submissionKind: payment.submissionKind,
     claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
       ? decimalToNumber(payment.approvedAmount)

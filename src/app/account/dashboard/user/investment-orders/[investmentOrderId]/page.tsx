@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
@@ -10,9 +11,11 @@ import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatI
 import {
   buildInvestmentOrderUpgradePath,
   hasInvestmentOrderUpgradeOffer,
+  isInvestmentOrderUpgraded,
 } from "@/lib/investment/investmentOrderUpgrade";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
+import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
 import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
 
 type DecimalLike = {
@@ -42,31 +45,68 @@ export default async function Page({ params }: PageProps) {
         userId,
       },
     },
-    include: {
-      investmentPlan: {
-        include: {
-          investment: true,
+    select: {
+      id: true,
+      amount: true,
+      amountPaid: true,
+      expectedReturn: true,
+      currency: true,
+      investmentModel: true,
+      status: true,
+      runtimeStatus: true,
+      isMatured: true,
+      paymentMethodType: true,
+      paymentMetadata: true,
+      startDate: true,
+      maturityDate: true,
+      paidAt: true,
+      confirmedAt: true,
+      paymentReference: true,
+      createdAt: true,
+      currentValue: true,
+      accruedProfit: true,
+      investmentPlanTier: {
+        select: {
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
+          level: true,
         },
       },
-      investmentPlanTier: true,
-      // paymentMethodType: true,
-      //  currentValue: true,
-      // paymentMetadata: true,
+      investmentPlan: {
+        select: {
+          name: true,
+          durationDays: true,
+          investmentModel: true,
+          investment: {
+            select: {
+              name: true,
+              type: true,
+              symbol: true,
+            },
+          },
+        },
+      },
+      investmentEarnings: {
+        select: {
+          amount: true,
+        },
+      },
+      upgradeStatus: true,
+      upgradeAmount: true,
+      upgradePaymentId: true,
+      upgradeRequestedAt: true,
+      upgradeReviewedAt: true,
     },
   });
 
   if (!order) notFound();
 
   const amount = toNumber(order.amount);
-  const accruedProfit = toNumber(order.accruedProfit);
-  const currentValue = toNumber(order.currentValue);
   const expectedReturn = toNumber(order.expectedReturn);
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
-  const earnedProfit =
-    order.investmentModel === "MARKET"
-      ? Math.max(currentValue - amount, 0)
-      : accruedProfit;
+  const earnedProfit = computeInvestmentOrderRecognizedProfit(order);
 
   const returnLabel = formatInvestmentTierReturnLabel({
     investmentModel: order.investmentModel,
@@ -85,7 +125,11 @@ export default async function Page({ params }: PageProps) {
     : "Not set";
   const hasUpgradeOffer = hasInvestmentOrderUpgradeOffer(
     order.runtimeStatus,
-    order.paymentMetadata,
+    order,
+  );
+  const isUpgraded = isInvestmentOrderUpgraded(
+    order.runtimeStatus,
+    order,
   );
   const resolvedLifecycle = resolveInvestmentOrderSchedule(
     order.startDate,
@@ -159,6 +203,12 @@ export default async function Page({ params }: PageProps) {
         {order.isMatured && (
           <span className="text-xs font-medium text-green-500">Matured</span>
         )}
+
+        {isUpgraded ? (
+          <Badge className="rounded-full border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-400/10">
+            UPGRADED
+          </Badge>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

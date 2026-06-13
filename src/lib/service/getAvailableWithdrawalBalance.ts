@@ -8,6 +8,11 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
+import {
+  calculateInvestmentAccountBalance,
+  isActiveInvestmentBalanceOrder,
+} from "@/lib/services/investment/investmentBalanceService";
+import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
 
 export type AvailableWithdrawalInvestmentOrder = {
   id: string;
@@ -22,7 +27,7 @@ export type AvailableWithdrawalInvestmentOrder = {
 
 export type AvailableWithdrawalBalanceSummary = {
   totalBalance: number;
-  investmentBalance: number;
+  accountBalance: number;
   savingsBalance: number;
   currency: string;
   investmentOrders: AvailableWithdrawalInvestmentOrder[];
@@ -31,16 +36,16 @@ export type AvailableWithdrawalBalanceSummary = {
 export function resolveInvestmentOrderWithdrawalAmount(order: {
   investmentModel: InvestmentModel;
   amount: Prisma.Decimal;
+  amountPaid: Prisma.Decimal;
   accruedProfit: Prisma.Decimal;
   currentValue: Prisma.Decimal | null;
+  investmentEarnings?: Array<{
+    amount: Prisma.Decimal;
+  }>;
 }) {
-  if (order.investmentModel === InvestmentModel.FIXED) {
-    return toDecimal(order.amount).add(toDecimal(order.accruedProfit));
-  }
-
-  return toDecimal(order.currentValue).greaterThan(0)
-    ? toDecimal(order.currentValue)
-    : toDecimal(order.amount).add(toDecimal(order.accruedProfit));
+  return toDecimal(order.amountPaid).add(
+    computeInvestmentOrderRecognizedProfit(order),
+  );
 }
 
 export async function getAvailableWithdrawalBalance(
@@ -63,9 +68,16 @@ export async function getAvailableWithdrawalBalance(
           id: true,
           investmentAccountId: true,
           investmentModel: true,
+          status: true,
           amount: true,
+          amountPaid: true,
           accruedProfit: true,
           currentValue: true,
+          investmentEarnings: {
+            select: {
+              amount: true,
+            },
+          },
           currency: true,
         },
       }),
@@ -101,19 +113,24 @@ export async function getAvailableWithdrawalBalance(
   );
 
   const eligibleInvestmentOrders = investmentOrders.filter(
-    (order) => !completedWithdrawalOrderIds.has(order.id),
+    (order) =>
+      !completedWithdrawalOrderIds.has(order.id) &&
+      isActiveInvestmentBalanceOrder(order),
   );
 
+  const balanceSummary = calculateInvestmentAccountBalance(eligibleInvestmentOrders);
+
   const investmentOrderEntries = eligibleInvestmentOrders.map((order) => {
-    const principal = toDecimal(order.amount);
     const availableAmount = resolveInvestmentOrderWithdrawalAmount(order);
 
     return {
       id: order.id,
       investmentAccountId: order.investmentAccountId,
       investmentModel: order.investmentModel,
-      principal: decimalToNumber(principal),
-      profit: decimalToNumber(availableAmount.minus(principal)),
+      principal: decimalToNumber(toDecimal(order.amountPaid)),
+      profit: decimalToNumber(
+        availableAmount.minus(toDecimal(order.amountPaid)),
+      ),
       availableAmount: decimalToNumber(availableAmount),
       currentValue: order.currentValue
         ? decimalToNumber(order.currentValue)
@@ -122,18 +139,14 @@ export async function getAvailableWithdrawalBalance(
     };
   });
 
-  const investmentBalance = eligibleInvestmentOrders.reduce(
-    (sum, order) =>
-      sum + decimalToNumber(resolveInvestmentOrderWithdrawalAmount(order)),
-    0,
-  );
+  const accountBalance = balanceSummary.accountBalanceNumber;
 
   const savingsBalance = savingsAccounts.reduce(
     (sum, account) => sum + decimalToNumber(account.balance),
     0,
   );
 
-  const totalBalance = investmentBalance + savingsBalance;
+  const totalBalance = accountBalance + savingsBalance;
   const currency =
     savingsAccounts[0]?.currency ??
     eligibleInvestmentOrders[0]?.currency ??
@@ -141,7 +154,7 @@ export async function getAvailableWithdrawalBalance(
 
   return {
     totalBalance,
-    investmentBalance,
+    accountBalance,
     savingsBalance,
     currency,
     investmentOrders: investmentOrderEntries,

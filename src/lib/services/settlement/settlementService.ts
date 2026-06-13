@@ -219,6 +219,9 @@ export async function settleMarketProfit(
         startDate: calculation.schedule.startDate,
         maturityDate: calculation.schedule.maturityDate,
         currentValue: calculation.currentValue,
+        accruedProfit: {
+          increment: simulatedProfit,
+        },
         lastValuationAt: calculation.settledAt,
         isMatured: calculation.matured,
         completedAt: calculation.matured

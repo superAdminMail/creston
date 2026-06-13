@@ -20,6 +20,7 @@ export async function getInvestmentPaymentReviewList(): Promise<
       id: true,
       type: true,
       status: true,
+      submissionKind: true,
       claimedAmount: true,
       approvedAmount: true,
       currency: true,
@@ -50,6 +51,7 @@ export async function getInvestmentPaymentReviewList(): Promise<
     orderStatus: payment.investmentOrder.status,
     paymentStatus: payment.status,
     type: payment.type,
+    submissionKind: payment.submissionKind,
     claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
       ? decimalToNumber(payment.approvedAmount)

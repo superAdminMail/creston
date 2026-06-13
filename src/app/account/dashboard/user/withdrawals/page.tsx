@@ -56,7 +56,7 @@ export default async function Page() {
     ? await getAvailableWithdrawalBalance(profile.id)
     : ({
         totalBalance: 0,
-        investmentBalance: 0,
+        accountBalance: 0,
         savingsBalance: 0,
         currency: "USD",
         investmentOrders: [],

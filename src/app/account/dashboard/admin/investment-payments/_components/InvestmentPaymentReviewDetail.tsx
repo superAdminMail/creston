@@ -36,7 +36,12 @@ export default function InvestmentPaymentReviewDetail({
   const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [pending, startTransition] = useTransition();
   const isCryptoProof = payment.type === "CRYPTO_PROVIDER";
-  const paymentTypeLabel = isCryptoProof ? "Crypto proof" : "Bank transfer";
+  const isUpgradeProof = payment.submissionKind === "UPGRADE";
+  const paymentTypeLabel = isUpgradeProof
+    ? "Upgrade proof"
+    : isCryptoProof
+      ? "Crypto proof"
+      : "Bank transfer";
 
   const canReview = payment.status === "PENDING_REVIEW";
 
@@ -51,7 +56,9 @@ export default function InvestmentPaymentReviewDetail({
         approvedAmount: approvedAmountValue,
         approvalMode,
         proofMode:
-          payment.type === "CRYPTO_PROVIDER"
+        payment.submissionKind === "UPGRADE"
+          ? "UPGRADE"
+          : payment.type === "CRYPTO_PROVIDER"
             ? "CRYPTO_PROVIDER"
             : "BANK_TRANSFER",
         reviewNote,
@@ -178,7 +185,22 @@ export default function InvestmentPaymentReviewDetail({
         </CardHeader>
 
         <CardContent className="grid gap-4 md:grid-cols-2">
-          {isCryptoProof ? (
+          {isUpgradeProof ? (
+            <>
+              <div>
+                <span className="font-medium">Proof type:</span> Upgrade
+                payment proof
+              </div>
+              <div>
+                <span className="font-medium">Upgrade amount:</span>{" "}
+                {payment.claimedAmount.toLocaleString()} {payment.currency}
+              </div>
+              <div>
+                <span className="font-medium">Order status:</span>{" "}
+                {formatEnumLabel(payment.order.status)}
+              </div>
+            </>
+          ) : isCryptoProof ? (
             <>
               <div>
                 <span className="font-medium">Proof type:</span> Crypto payment
@@ -232,7 +254,7 @@ export default function InvestmentPaymentReviewDetail({
         <Card className="border-border/60 shadow-sm">
           <CardHeader>
             <CardTitle className="text-lg">
-              {isCryptoProof ? "Crypto proof" : "Receipt"}
+              {isUpgradeProof ? "Upgrade proof" : isCryptoProof ? "Crypto proof" : "Receipt"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -242,7 +264,9 @@ export default function InvestmentPaymentReviewDetail({
               rel="noreferrer"
               className="underline underline-offset-4"
             >
-              {isCryptoProof
+              {isUpgradeProof
+                ? "View uploaded upgrade proof"
+                : isCryptoProof
                 ? "View uploaded crypto proof"
                 : "View uploaded receipt"}
             </a>
@@ -258,7 +282,7 @@ export default function InvestmentPaymentReviewDetail({
         <CardContent className="space-y-4">
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Submitted amount
+              {isUpgradeProof ? "Upgrade amount" : "Submitted amount"}
             </p>
             <p className="mt-2 font-semibold">
               {payment.claimedAmount.toLocaleString()} {payment.currency}
@@ -313,9 +337,9 @@ export default function InvestmentPaymentReviewDetail({
           {canReview ? (
             <div className="flex flex-wrap gap-3">
               <Button onClick={handleApproveFull} disabled={pending}>
-                Approve full payment
+                {isUpgradeProof ? "Approve upgrade" : "Approve full payment"}
               </Button>
-              {payment.canOfferPartialApproval ? (
+              {!isUpgradeProof && payment.canOfferPartialApproval ? (
                 <Button
                   variant="secondary"
                   onClick={handleMarkPartiallyPaid}
@@ -325,7 +349,7 @@ export default function InvestmentPaymentReviewDetail({
                 </Button>
               ) : null}
               <Button variant="destructive" onClick={handleReject} disabled={pending}>
-                Reject payment
+                {isUpgradeProof ? "Reject upgrade" : "Reject payment"}
               </Button>
             </div>
           ) : (

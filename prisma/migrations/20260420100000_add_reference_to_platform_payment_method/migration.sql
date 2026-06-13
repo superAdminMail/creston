@@ -1,2 +1,2 @@
 ALTER TABLE "platform_payment_method"
-ADD COLUMN "reference" TEXT;
+ADD COLUMN IF NOT EXISTS "reference" TEXT;

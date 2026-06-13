@@ -12,10 +12,12 @@ import { prisma } from "@/lib/prisma";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
 import {
   decimalToNumber,
-  sumDecimals,
   toDecimal,
 } from "@/lib/services/investment/decimal";
-import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
+import {
+  computeInvestmentOrderCurrentValue,
+  computeInvestmentOrderRecognizedProfit,
+} from "@/lib/services/investment/valuationService";
 import { getPrices } from "@/lib/services/price/priceService";
 import { redirect } from "next/navigation";
 
@@ -311,12 +313,7 @@ export async function getUserPerformanceDataAction(): Promise<UserPerformanceDat
         order,
         currentPrice,
       );
-      const realizedProfit =
-        order.investmentModel === "FIXED"
-          ? toDecimal(order.accruedProfit)
-          : sumDecimals(
-              order.investmentEarnings.map((earning) => earning.amount),
-            );
+      const realizedProfit = computeInvestmentOrderRecognizedProfit(order);
       const principal = toDecimal(order.amount);
 
       return {

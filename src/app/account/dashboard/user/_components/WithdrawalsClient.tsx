@@ -70,7 +70,9 @@ export default function WithdrawalsClient({
       ? withdrawalSources.find(
           (source) => `${source.type}:${source.id}` === selectedSourceKey,
         )
-      : null) ?? withdrawalSources[0] ?? null;
+      : null) ??
+    withdrawalSources[0] ??
+    null;
   const selectedSourceType = selectedSource?.type ?? null;
   const totalAvailableBalance = availableBalance.totalBalance;
   const availableBalanceCurrency = availableBalance.currency ?? "USD";
@@ -78,11 +80,13 @@ export default function WithdrawalsClient({
   const availableBalanceLabel =
     withdrawalSources.length === 0
       ? "No eligible source available"
-      : savingsSource && investmentSource
-        ? "Combined available balance across savings and investments"
-        : savingsSource
-          ? savingsSource.label
-          : (investmentSource?.label ?? "No eligible source available");
+      : investmentSource && savingsSource
+        ? "Savings and Investment balance available for withdrawal"
+        : investmentSource
+          ? "Investment balance available for withdrawal"
+          : savingsSource
+            ? savingsSource.label
+            : "No eligible source available";
 
   function mask(value?: string | null) {
     if (!value) return "";

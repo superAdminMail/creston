@@ -10,7 +10,7 @@ import {
   type FormActionState,
 } from "@/lib/forms/actionState";
 import { prisma } from "@/lib/prisma";
-import { setInvestmentOrderUpgradeSettings } from "@/lib/investment/investmentOrderUpgrade";
+import { asJsonObject, toJsonValue } from "@/lib/payments/paymentJson";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -81,13 +81,16 @@ export async function pauseAdminInvestmentOrder(
       where: { id: existingOrder.id },
       data: {
         runtimeStatus: RuntimeStatus.PAUSED,
-        paymentMetadata: setInvestmentOrderUpgradeSettings(
-          existingOrder.paymentMetadata,
-          {
-            allowUpgrade,
-            amount: allowUpgrade ? upgradeAmount : null,
-          },
-        ),
+        upgradeStatus: allowUpgrade ? "AVAILABLE" : "DISABLED",
+        upgradeAmount: allowUpgrade ? upgradeAmount : null,
+        upgradePaymentId: null,
+        upgradeRequestedAt: null,
+        upgradeReviewedAt: null,
+        paymentMetadata: (() => {
+          const metadata = asJsonObject(existingOrder.paymentMetadata);
+          delete metadata.upgrade;
+          return toJsonValue(metadata);
+        })(),
       },
     });
 

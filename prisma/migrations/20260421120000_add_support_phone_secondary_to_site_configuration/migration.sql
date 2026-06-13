@@ -1,3 +1,3 @@
 -- AlterTable
 ALTER TABLE "site_configuration"
-ADD COLUMN "supportPhoneSecondary" TEXT;
+ADD COLUMN IF NOT EXISTS "supportPhoneSecondary" TEXT;

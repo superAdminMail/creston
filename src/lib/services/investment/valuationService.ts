@@ -1,6 +1,6 @@
 import { Prisma } from "@/generated/prisma";
 
-import { toDecimal } from "@/lib/services/investment/decimal";
+import { toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
 
 export type InvestmentOrderValuationInput = {
   investmentModel: "FIXED" | "MARKET";
@@ -8,6 +8,9 @@ export type InvestmentOrderValuationInput = {
   accruedProfit?: Prisma.Decimal | number | string | null;
   units?: Prisma.Decimal | number | string | null;
   currentValue?: Prisma.Decimal | number | string | null;
+  investmentEarnings?: Array<{
+    amount: Prisma.Decimal | number | string;
+  }>;
 };
 
 export function computeInvestmentOrderCurrentValue(
@@ -37,4 +40,27 @@ export function computeInvestmentOrderCurrentValue(
   return toDecimal(order.currentValue).greaterThan(0)
     ? toDecimal(order.currentValue)
     : principal;
+}
+
+export function computeInvestmentOrderRecognizedProfit(
+  order: InvestmentOrderValuationInput,
+) {
+  const accruedProfit = toDecimal(order.accruedProfit);
+
+  if (accruedProfit.greaterThan(0)) {
+    return accruedProfit;
+  }
+
+  if (order.investmentEarnings?.length) {
+    const earningsProfit = order.investmentEarnings.reduce(
+      (sum, earning) => sum.add(toDecimal(earning.amount)),
+      ZERO_DECIMAL,
+    );
+
+    if (earningsProfit.greaterThan(0)) {
+      return earningsProfit;
+    }
+  }
+
+  return ZERO_DECIMAL;
 }

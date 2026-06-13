@@ -273,6 +273,11 @@ export default function InvestmentPaymentReviewList({
                       <Badge variant="secondary">
                         {formatEnumLabel(payment.paymentStatus)}
                       </Badge>
+                      {payment.submissionKind === "UPGRADE" ? (
+                        <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/10">
+                          Upgrade
+                        </Badge>
+                      ) : null}
                       <Badge variant="outline">
                         {formatEnumLabel(payment.orderStatus)}
                       </Badge>

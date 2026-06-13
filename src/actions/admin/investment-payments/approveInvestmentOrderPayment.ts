@@ -39,6 +39,13 @@ export async function approveInvestmentOrderPayment(
     revalidatePath(
       `/account/dashboard/user/investment-orders/${result.investmentOrderId}/payment`,
     );
+    revalidatePath("/account/dashboard/user/investment-orders");
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${result.investmentOrderId}`,
+    );
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${result.investmentOrderId}/upgrade`,
+    );
     revalidatePath("/account/dashboard/notifications");
 
     return {

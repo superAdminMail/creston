@@ -433,6 +433,12 @@ model InvestmentOrder {
   paymentMethodType       InvestmentPaymentMethodType?
   platformPaymentMethodId String?
 
+  upgradeStatus      InvestmentOrderUpgradeStatus @default(DISABLED)
+  upgradeAmount      Decimal?                     @db.Decimal(18, 2)
+  upgradePaymentId   String?
+  upgradeRequestedAt DateTime?
+  upgradeReviewedAt  DateTime?
+
   amountPaid Decimal @default(0) @db.Decimal(18, 2)
   amount     Decimal @db.Decimal(18, 2)
   currency   String  @default("USD")
@@ -1549,6 +1555,11 @@ enum InvestmentOrderPaymentType {
   CRYPTO_PROVIDER
 }
 
+enum InvestmentOrderPaymentSubmissionKind {
+  STANDARD
+  UPGRADE
+}
+
 enum InvestmentOrderPaymentStatus {
   PENDING_REVIEW
   APPROVED
@@ -1646,6 +1657,14 @@ enum InvestmentOrderStatus {
   PAID
   PENDING_PAYMENT
   PARTIALLY_PAID
+}
+
+enum InvestmentOrderUpgradeStatus {
+  DISABLED
+  AVAILABLE
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
 }
 
 enum CommissionStatus {

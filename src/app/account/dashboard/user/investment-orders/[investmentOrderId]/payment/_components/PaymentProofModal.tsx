@@ -61,6 +61,7 @@ export default function PaymentProofModal({
           orderId,
           platformPaymentMethodId,
           proofMode: isCryptoMode ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
+          isUpgradeFlow,
           claimedAmount: input.claimedAmount,
           depositorName: input.depositorName,
           depositorAccountName: input.depositorAccountName,

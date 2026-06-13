@@ -56,6 +56,11 @@ type UserInvestmentOrderListItem = {
     } | null;
   };
   paymentMetadata: Record<string, unknown> | null;
+  upgradeStatus: string;
+  upgradeAmount: number | null;
+  upgradePaymentId: string | null;
+  upgradeRequestedAt: string | null;
+  upgradeReviewedAt: string | null;
   primaryAction: {
     label: string;
     href: string;
@@ -78,7 +83,7 @@ function getPrimaryAction(
   },
 ) {
   if (
-    hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order.paymentMetadata)
+    hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order)
   ) {
     return {
       label: "Upgrade",
@@ -153,6 +158,11 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           adminNotes: true,
           investmentAccountId: true,
           paymentMetadata: true,
+          upgradeStatus: true,
+          upgradeAmount: true,
+          upgradePaymentId: true,
+          upgradeRequestedAt: true,
+          upgradeReviewedAt: true,
           investmentPlan: {
             select: {
               id: true,
@@ -225,6 +235,11 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       adminNotes: order.adminNotes?.trim() || null,
       linkedInvestmentAccountId: order.investmentAccountId,
       paymentMetadata: order.paymentMetadata as Record<string, unknown> | null,
+      upgradeStatus: order.upgradeStatus,
+      upgradeAmount: order.upgradeAmount ? decimalToNumber(order.upgradeAmount) : null,
+      upgradePaymentId: order.upgradePaymentId,
+      upgradeRequestedAt: order.upgradeRequestedAt?.toISOString() ?? null,
+      upgradeReviewedAt: order.upgradeReviewedAt?.toISOString() ?? null,
       plan: {
         id: order.investmentPlan.id,
         name: order.investmentPlan.name,

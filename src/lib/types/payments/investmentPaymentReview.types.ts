@@ -10,6 +10,7 @@ export type InvestmentPaymentReviewListItem = {
   orderStatus: InvestmentOrderStatus;
   paymentStatus: InvestmentOrderPaymentStatus;
   type: InvestmentOrderPaymentType;
+  submissionKind: "STANDARD" | "UPGRADE";
   claimedAmount: number;
   approvedAmount: number | null;
   currency: string;
@@ -30,6 +31,7 @@ export type InvestmentPaymentReviewDetails = {
   id: string;
   type: InvestmentOrderPaymentType;
   status: InvestmentOrderPaymentStatus;
+  submissionKind: "STANDARD" | "UPGRADE";
   claimedAmount: number;
   approvedAmount: number | null;
   canOfferPartialApproval: boolean;

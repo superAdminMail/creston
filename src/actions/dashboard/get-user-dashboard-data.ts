@@ -7,11 +7,14 @@ import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
 import {
   decimalToNumber,
-  sumDecimals,
   toDecimal,
 } from "@/lib/services/investment/decimal";
 import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
-import { computeInvestmentOrderCurrentValue } from "@/lib/services/investment/valuationService";
+import { calculateInvestmentAccountBalance } from "@/lib/services/investment/investmentBalanceService";
+import {
+  computeInvestmentOrderCurrentValue,
+  computeInvestmentOrderRecognizedProfit,
+} from "@/lib/services/investment/valuationService";
 import { getPrices } from "@/lib/services/price/priceService";
 
 export type UserDashboardAsset = {
@@ -72,6 +75,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           id: true,
           amount: true,
           amountPaid: true,
+          status: true,
           accruedProfit: true,
           investmentModel: true,
           runtimeStatus: true,
@@ -113,17 +117,15 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     ? await getPrices(symbols, { preferFreshDb: true })
     : {};
 
-  const assets: UserDashboardAsset[] = orders.map((order) => {
+  const balanceSummary = calculateInvestmentAccountBalance(orders);
+  const activeOrders = balanceSummary.activeOrders;
+
+  const assets: UserDashboardAsset[] = activeOrders.map((order) => {
     const investment = order.investmentPlan.investment;
     const symbol = investment.symbol;
     const price = symbol ? (priceSnapshots[symbol]?.price ?? null) : null;
     const currentValue = computeInvestmentOrderCurrentValue(order, price);
-    const realizedProfit =
-      order.investmentModel === "FIXED"
-        ? toDecimal(order.accruedProfit)
-        : sumDecimals(
-            order.investmentEarnings.map((earning) => earning.amount),
-          );
+    const realizedProfit = computeInvestmentOrderRecognizedProfit(order);
     const principal = toDecimal(order.amount);
     const profitPercent = principal.greaterThan(0)
       ? decimalToNumber(realizedProfit.div(principal).mul(100))
@@ -141,13 +143,10 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     };
   });
 
-  const totalInvestment = orders.reduce(
-    (sum, order) => sum + decimalToNumber(order.amountPaid),
-    0,
-  );
-  const allEarnedProfits = assets.reduce((sum, asset) => sum + asset.profit, 0);
-  const accountBalance = totalInvestment + allEarnedProfits;
-  const latestOrder = orders[0];
+  const accountBalance = balanceSummary.accountBalanceNumber;
+  const totalInvestment = balanceSummary.totalPrincipalNumber;
+  const allEarnedProfits = balanceSummary.totalEarnedProfitsNumber;
+  const latestOrder = activeOrders[0];
   const inactiveInvestmentOrder = orders.find(
     (order) => isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus),
   );
@@ -158,19 +157,16 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           : latestOrder.amount,
       )
     : 0;
-  const earnedProfits = latestOrder
-    ? (assets.find((asset) => asset.orderId === latestOrder.id)?.profit ?? 0)
-    : 0;
   const latestActivePlan = latestOrder?.investmentPlan?.name ?? "Not selected";
 
   return {
     userName: user.name?.trim() || "Client",
     stats: {
-      investmentsCount: orders.length,
+      investmentsCount: activeOrders.length,
       currentInvestment,
       accountBalance,
       totalInvestment,
-      totalEarnedProfits: earnedProfits,
+      totalEarnedProfits: allEarnedProfits,
       investmentPlan: latestActivePlan,
       inactiveInvestmentOrder: inactiveInvestmentOrder
         ? {

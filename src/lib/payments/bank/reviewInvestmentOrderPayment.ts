@@ -14,6 +14,12 @@ type ReviewInvestmentOrderPaymentBase = {
 type InvestmentApprovalMode = "FULL" | "PARTIAL";
 type InvestmentProofMode = CheckoutFundingMethodType;
 
+type PaymentKind = "STANDARD" | "UPGRADE";
+
+function readPaymentKind(value: unknown): PaymentKind {
+  return value === "UPGRADE" ? "UPGRADE" : "STANDARD";
+}
+
 export async function approveInvestmentOrderPaymentReview({
   paymentId,
   adminUserId,
@@ -32,6 +38,7 @@ export async function approveInvestmentOrderPaymentReview({
       id: true,
       status: true,
       type: true,
+      submissionKind: true,
       claimedAmount: true,
       investmentOrderId: true,
       investmentOrder: {
@@ -40,6 +47,10 @@ export async function approveInvestmentOrderPaymentReview({
           amount: true,
           amountPaid: true,
           status: true,
+          runtimeStatus: true,
+          upgradeStatus: true,
+          upgradeAmount: true,
+          upgradePaymentId: true,
           investorProfile: {
             select: {
               userId: true,
@@ -54,20 +65,31 @@ export async function approveInvestmentOrderPaymentReview({
     throw new Error("Payment submission not found.");
   }
 
-  if (payment.investmentOrder.status === "CONFIRMED") {
+  const paymentKind = readPaymentKind(payment.submissionKind);
+  const claimedAmount = payment.claimedAmount.toNumber();
+
+  if (payment.investmentOrder.status === "CONFIRMED" && paymentKind !== "UPGRADE") {
     throw new Error(
       "This order is already confirmed and can no longer be reviewed here.",
     );
   }
 
-  const claimedAmount = payment.claimedAmount.toNumber();
-
   if (approvedAmount > claimedAmount) {
     throw new Error("Approved amount cannot be greater than claimed amount.");
   }
 
+  if (paymentKind === "UPGRADE" && approvalMode !== "FULL") {
+    throw new Error("Upgrade proofs must be approved in full.");
+  }
+
+  if (paymentKind === "UPGRADE" && approvedAmount !== claimedAmount) {
+    throw new Error("Upgrade approval must match the submitted upgrade amount.");
+  }
+
   if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
-    throw new Error("Partial approval amount must be lower than the claimed amount.");
+    throw new Error(
+      "Partial approval amount must be lower than the claimed amount.",
+    );
   }
 
   const orderAmount = payment.investmentOrder.amount.toNumber();
@@ -77,9 +99,21 @@ export async function approveInvestmentOrderPaymentReview({
   if (approvedAmount > remaining) {
     throw new Error("Approved amount cannot exceed the remaining order balance.");
   }
+
   const isCryptoProof =
-    proofMode === "CRYPTO_PROVIDER" ||
-    payment.type === "CRYPTO_PROVIDER";
+    proofMode === "CRYPTO_PROVIDER" || payment.type === "CRYPTO_PROVIDER";
+  const isActiveUpgradeOffer =
+    paymentKind === "UPGRADE" &&
+    payment.investmentOrder.upgradeStatus === "PENDING_REVIEW" &&
+    payment.investmentOrder.upgradeAmount !== null &&
+    payment.investmentOrder.upgradePaymentId === payment.id &&
+    payment.investmentOrder.runtimeStatus !== "NOT_STARTED" &&
+    payment.claimedAmount.toNumber() ===
+      payment.investmentOrder.upgradeAmount.toNumber();
+
+  if (paymentKind === "UPGRADE" && !isActiveUpgradeOffer) {
+    throw new Error("The upgrade offer is no longer available.");
+  }
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.investmentOrderPayment.updateMany({
@@ -101,28 +135,53 @@ export async function approveInvestmentOrderPaymentReview({
       throw new Error("This payment submission has already been reviewed.");
     }
 
-    await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+    if (paymentKind === "UPGRADE") {
+      await tx.investmentOrder.update({
+        where: { id: payment.investmentOrderId },
+        data: {
+          amount: {
+            increment: approvedAmount,
+          },
+          amountPaid: {
+            increment: approvedAmount,
+          },
+          upgradeStatus: "APPROVED",
+          upgradeReviewedAt: new Date(),
+          lastPaymentReviewedAt: new Date(),
+        },
+      });
+    } else {
+      await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+    }
 
     await createReviewNotification({
       tx,
       userId: payment.investmentOrder.investorProfile.userId,
-      key: `investment-payment-review:${payment.id}:${approvalMode}`,
+      key: `investment-payment-review:${payment.id}:${approvalMode}:${paymentKind}`,
       title:
         approvalMode === "FULL"
-          ? isCryptoProof
-            ? "Investment crypto payment approved"
-            : "Investment payment approved"
-          : isCryptoProof
-            ? "Investment crypto payment partially approved"
-            : "Investment payment partially approved",
+          ? paymentKind === "UPGRADE"
+            ? "Investment upgrade approved"
+            : isCryptoProof
+              ? "Investment crypto payment approved"
+              : "Investment payment approved"
+          : paymentKind === "UPGRADE"
+            ? "Investment upgrade partially approved"
+            : isCryptoProof
+              ? "Investment crypto payment partially approved"
+              : "Investment payment partially approved",
       message:
         approvalMode === "FULL"
-          ? isCryptoProof
-            ? "Your crypto payment proof was approved."
-            : "Your investment payment proof was approved."
-          : isCryptoProof
-            ? "Your crypto payment proof was partially approved."
-            : "Your investment payment proof was partially approved.",
+          ? paymentKind === "UPGRADE"
+            ? "Your investment upgrade proof was approved."
+            : isCryptoProof
+              ? "Your crypto payment proof was approved."
+              : "Your investment payment proof was approved."
+          : paymentKind === "UPGRADE"
+            ? "Your investment upgrade proof was partially approved."
+            : isCryptoProof
+              ? "Your crypto payment proof was partially approved."
+              : "Your investment payment proof was partially approved.",
       link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
       metadata: {
         paymentId: payment.id,
@@ -131,6 +190,7 @@ export async function approveInvestmentOrderPaymentReview({
         proofMode: proofMode ?? payment.type,
         approvedAmount,
         reviewedByUserId: adminUserId,
+        submissionKind: paymentKind,
       },
     });
   });
@@ -151,8 +211,12 @@ export async function rejectInvestmentOrderPaymentReview({
     select: {
       id: true,
       investmentOrderId: true,
+      submissionKind: true,
       investmentOrder: {
         select: {
+          upgradeStatus: true,
+          upgradeAmount: true,
+          upgradePaymentId: true,
           investorProfile: {
             select: {
               userId: true,
@@ -166,6 +230,8 @@ export async function rejectInvestmentOrderPaymentReview({
   if (!payment) {
     throw new Error("Payment submission not found.");
   }
+
+  const paymentKind = readPaymentKind(payment.submissionKind);
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.investmentOrderPayment.updateMany({
@@ -187,20 +253,38 @@ export async function rejectInvestmentOrderPaymentReview({
       throw new Error("This payment submission has already been reviewed.");
     }
 
-    await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+    if (paymentKind === "UPGRADE") {
+      await tx.investmentOrder.update({
+        where: { id: payment.investmentOrderId },
+        data: {
+          upgradeStatus: "REJECTED",
+          upgradeReviewedAt: new Date(),
+          lastPaymentReviewedAt: new Date(),
+        },
+      });
+    } else {
+      await reconcileInvestmentOrderPaymentState(tx, payment.investmentOrderId);
+    }
 
     await createReviewNotification({
       tx,
       userId: payment.investmentOrder.investorProfile.userId,
-      key: `investment-payment-review:${payment.id}:REJECTED`,
-      title: "Investment payment rejected",
-      message: "Your investment payment proof was rejected by the admin team.",
+      key: `investment-payment-review:${payment.id}:REJECTED:${paymentKind}`,
+      title:
+        paymentKind === "UPGRADE"
+          ? "Investment upgrade rejected"
+          : "Investment payment rejected",
+      message:
+        paymentKind === "UPGRADE"
+          ? "Your investment upgrade proof was rejected by the admin team."
+          : "Your investment payment proof was rejected by the admin team.",
       link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
       metadata: {
         paymentId: payment.id,
         investmentOrderId: payment.investmentOrderId,
         rejectionReason,
         reviewedByUserId: adminUserId,
+        submissionKind: paymentKind,
       },
     });
   });

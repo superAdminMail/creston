@@ -1,15 +1,12 @@
 import { cache } from "react";
 
-import {
-  InvestmentModel,
-  InvestmentOrderStatus,
-  SavingsStatus,
-} from "@/generated/prisma";
+import { InvestmentOrderStatus, SavingsStatus } from "@/generated/prisma";
 
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
+import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
 
 type HeroSnapshot = {
   statusLabel: string;
@@ -120,19 +117,17 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
     ]);
 
   const totalInvestments = investmentOrders.reduce((sum, order) => {
-    const resolvedValue =
-      order.investmentModel === InvestmentModel.MARKET &&
-      toDecimal(order.currentValue).greaterThan(0)
-        ? toDecimal(order.currentValue)
-        : toDecimal(order.amount).add(toDecimal(order.accruedProfit));
+    const resolvedValue = toDecimal(order.amount).add(
+      computeInvestmentOrderRecognizedProfit(order),
+    );
 
     return sum.add(resolvedValue);
   }, toDecimal(0));
 
   const totalSavings = toDecimal(savingsSummary._sum.balance);
   const totalValue = totalInvestments.add(totalSavings);
-  const headlineTotalValue = toDecimal(296_000_000).add(totalValue);
-  const headlineUserCount = investorProfileCount + 55_000;
+  const headlineTotalValue = toDecimal(796_000_000).add(totalValue);
+  const headlineUserCount = investorProfileCount + 65_000;
 
   const typeTotals = new Map<string, { total: number; label: string }>();
   const planTotals = new Map<
@@ -141,11 +136,9 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
   >();
 
   for (const order of investmentOrders) {
-    const resolvedValue =
-      order.investmentModel === InvestmentModel.MARKET &&
-      toDecimal(order.currentValue).greaterThan(0)
-        ? toDecimal(order.currentValue)
-        : toDecimal(order.amount).add(toDecimal(order.accruedProfit));
+    const resolvedValue = toDecimal(order.amount).add(
+      computeInvestmentOrderRecognizedProfit(order),
+    );
 
     const typeLabel =
       formatEnumLabel(

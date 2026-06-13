@@ -29,6 +29,7 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
       userId: user.id,
       platformPaymentMethodId: data.platformPaymentMethodId,
       proofMode: data.proofMode ?? "BANK_TRANSFER",
+      isUpgradeFlow: data.isUpgradeFlow ?? false,
       claimedAmount: data.claimedAmount,
       depositorName: data.depositorName,
       depositorAccountName: data.depositorAccountName,
@@ -40,6 +41,9 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
 
     revalidatePath(
       `/account/dashboard/user/investment-orders/${result.orderId}/payment`,
+    );
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${result.orderId}/upgrade`,
     );
     revalidatePath("/account/dashboard/admin/investment-payments");
     revalidatePath(`/account/dashboard/admin/investment-payments/${result.paymentId}`);
