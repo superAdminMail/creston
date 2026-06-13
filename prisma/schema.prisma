@@ -952,8 +952,9 @@ model InvestmentOrderPayment {
   investmentOrderId String
   investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
 
-  type   InvestmentOrderPaymentType
-  status InvestmentOrderPaymentStatus @default(PENDING_REVIEW)
+  type           InvestmentOrderPaymentType
+  status         InvestmentOrderPaymentStatus         @default(PENDING_REVIEW)
+  submissionKind InvestmentOrderPaymentSubmissionKind @default(STANDARD)
 
   platformPaymentMethodId String?
   platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
