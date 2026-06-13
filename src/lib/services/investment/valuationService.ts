@@ -2,15 +2,18 @@ import { Prisma } from "@/generated/prisma";
 
 import { toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
 
-export type InvestmentOrderValuationInput = {
-  investmentModel: "FIXED" | "MARKET";
-  amount: Prisma.Decimal | number | string;
+export type InvestmentOrderProfitInput = {
   accruedProfit?: Prisma.Decimal | number | string | null;
-  units?: Prisma.Decimal | number | string | null;
-  currentValue?: Prisma.Decimal | number | string | null;
   investmentEarnings?: Array<{
     amount: Prisma.Decimal | number | string;
   }>;
+};
+
+export type InvestmentOrderValuationInput = InvestmentOrderProfitInput & {
+  investmentModel: "FIXED" | "MARKET";
+  amount: Prisma.Decimal | number | string;
+  units?: Prisma.Decimal | number | string | null;
+  currentValue?: Prisma.Decimal | number | string | null;
 };
 
 export function computeInvestmentOrderCurrentValue(
@@ -43,7 +46,7 @@ export function computeInvestmentOrderCurrentValue(
 }
 
 export function computeInvestmentOrderRecognizedProfit(
-  order: InvestmentOrderValuationInput,
+  order: InvestmentOrderProfitInput,
 ) {
   const accruedProfit = toDecimal(order.accruedProfit);
 

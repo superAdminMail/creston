@@ -3,7 +3,6 @@ import {
   InvestmentOrderStatus,
   Prisma,
   SavingsStatus,
-  WithdrawalAllocationSourceType,
   WithdrawalStatus,
 } from "@/generated/prisma";
 
@@ -51,7 +50,7 @@ export type WithdrawalBalanceSnapshot = {
 
 export type WithdrawalAllocationPlanItem =
   | {
-      sourceType: WithdrawalAllocationSourceType.INVESTMENT_ORDER;
+      sourceType: "INVESTMENT_ORDER";
       sourceId: string;
       sourceLabel: string;
       investmentOrderId: string;
@@ -62,7 +61,7 @@ export type WithdrawalAllocationPlanItem =
       currency: string;
     }
   | {
-      sourceType: WithdrawalAllocationSourceType.SAVINGS_ACCOUNT;
+      sourceType: "SAVINGS_ACCOUNT";
       sourceId: string;
       sourceLabel: string;
       investmentOrderId: null;
@@ -94,8 +93,8 @@ function calculateBaseWithdrawableAmount(order: {
 
 export function calculateInvestmentOrderWithdrawalPenalty(
   order: {
-    amount: Prisma.Decimal;
-    accruedProfit: Prisma.Decimal;
+    principal: Prisma.Decimal;
+    profit: Prisma.Decimal;
     currentValue: Prisma.Decimal | null;
     isMatured: boolean;
     investmentPlan: {
@@ -119,7 +118,7 @@ export function calculateInvestmentOrderWithdrawalPenalty(
 
   const fullGross = toDecimal(order.currentValue).greaterThan(0)
     ? toDecimal(order.currentValue)
-    : toDecimal(order.amount).add(toDecimal(order.accruedProfit));
+    : toDecimal(order.principal).add(toDecimal(order.profit));
 
   if (!fullGross.greaterThan(0)) {
     return ZERO_DECIMAL;
@@ -227,7 +226,7 @@ export async function buildWithdrawalBalanceSnapshot(
   for (const withdrawal of completedWithdrawalOrders) {
     for (const allocation of withdrawal.allocations) {
       if (
-        allocation.sourceType === WithdrawalAllocationSourceType.INVESTMENT_ORDER &&
+        allocation.sourceType === "INVESTMENT_ORDER" &&
         allocation.investmentOrderId
       ) {
         const current =
@@ -240,7 +239,7 @@ export async function buildWithdrawalBalanceSnapshot(
       }
 
       if (
-        allocation.sourceType === WithdrawalAllocationSourceType.SAVINGS_ACCOUNT &&
+        allocation.sourceType === "SAVINGS_ACCOUNT" &&
         allocation.savingsAccountId
       ) {
         const current =
@@ -350,8 +349,8 @@ export function buildWithdrawalAllocationPlan(
 
       const penalty = calculateInvestmentOrderWithdrawalPenalty(
         {
-          amount: order.principal,
-          accruedProfit: order.profit,
+          principal: order.principal,
+          profit: order.profit,
           currentValue: order.currentValue,
           isMatured: order.isMatured,
           investmentPlan: {
@@ -364,7 +363,7 @@ export function buildWithdrawalAllocationPlan(
       );
 
       allocations.push({
-        sourceType: WithdrawalAllocationSourceType.INVESTMENT_ORDER,
+        sourceType: "INVESTMENT_ORDER",
         sourceId: order.id,
         sourceLabel: order.investmentPlanName,
         investmentOrderId: order.id,
@@ -389,7 +388,7 @@ export function buildWithdrawalAllocationPlan(
         : account.availableAmount;
 
       allocations.push({
-        sourceType: WithdrawalAllocationSourceType.SAVINGS_ACCOUNT,
+        sourceType: "SAVINGS_ACCOUNT",
         sourceId: account.id,
         sourceLabel: account.name,
         investmentOrderId: null,
