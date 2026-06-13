@@ -87,6 +87,20 @@ export default async function Page() {
           : null,
         payoutSnapshot: order.payoutSnapshot
           ? {
+              sourceType:
+                typeof order.payoutSnapshot === "object" &&
+                order.payoutSnapshot &&
+                "sourceType" in order.payoutSnapshot &&
+                typeof order.payoutSnapshot.sourceType === "string"
+                  ? order.payoutSnapshot.sourceType
+                  : null,
+              sourceLabel:
+                typeof order.payoutSnapshot === "object" &&
+                order.payoutSnapshot &&
+                "sourceLabel" in order.payoutSnapshot &&
+                typeof order.payoutSnapshot.sourceLabel === "string"
+                  ? order.payoutSnapshot.sourceLabel
+                  : null,
               withdrawalMode:
                 typeof order.payoutSnapshot === "object" &&
                 order.payoutSnapshot &&
