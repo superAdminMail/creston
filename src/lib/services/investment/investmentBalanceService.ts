@@ -1,21 +1,22 @@
-import { InvestmentOrderStatus, Prisma } from "@/generated/prisma";
+import { InvestmentModel, InvestmentOrderStatus, Prisma } from "@/generated/prisma";
 
 import { decimalToNumber, toDecimal, ZERO_DECIMAL } from "@/lib/services/investment/decimal";
 import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
 
 export type InvestmentBalanceOrderInput = {
+  id: string;
   amount: Prisma.Decimal | number | string;
   amountPaid: Prisma.Decimal | number | string;
   accruedProfit?: Prisma.Decimal | number | string | null;
-  investmentModel: "FIXED" | "MARKET" | string;
+  investmentModel: InvestmentModel;
   units?: Prisma.Decimal | number | string | null;
   currentValue?: Prisma.Decimal | number | string | null;
   investmentEarnings?: Array<{
     amount: Prisma.Decimal | number | string;
   }>;
-  investmentPlan?: {
+  investmentPlan: {
     name: string;
-    investment?: {
+    investment: {
       name: string;
       type: string;
       symbol: string | null;
