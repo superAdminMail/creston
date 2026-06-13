@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
   getWithdrawalCommissionFieldConfig,
+  getWithdrawalCommissionSourceType,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import {
   isWithdrawalCommissionSettledStatus,
@@ -74,7 +75,10 @@ export function AdminWithdrawalDetailsClient({
     withdrawal.hasCommissionFees,
   );
   const commissionField = getWithdrawalCommissionFieldConfig(
-    withdrawal.sourceType,
+    getWithdrawalCommissionSourceType({
+      investmentOrderId: null,
+      sourceType: withdrawal.sourceType,
+    }),
   );
   const commissionStoredValue = withdrawal.hasCommissionFees
     ? commissionField.fieldName === "commissionPercent"
