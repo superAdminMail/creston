@@ -112,13 +112,33 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     },
   });
 
+  function normalizeSourceType(
+    value: string | null,
+    withdrawal: {
+      investmentOrder: { id: string } | null;
+    },
+  ): AdminWithdrawalItem["sourceType"] {
+    if (
+      value === "INVESTMENT_ORDER" ||
+      value === "SAVINGS_ACCOUNT" ||
+      value === "INVESTMENT_POOL" ||
+      value === "SAVINGS_POOL"
+    ) {
+      return value;
+    }
+
+    return withdrawal.investmentOrder ? "INVESTMENT_ORDER" : "SAVINGS_ACCOUNT";
+  }
+
   return withdrawals.map((withdrawal) => {
+    const currentWithdrawal = withdrawal;
     const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
-      withdrawal.payoutSnapshot,
+      currentWithdrawal.payoutSnapshot,
     );
     const payoutSnapshot =
-      withdrawal.payoutSnapshot && typeof withdrawal.payoutSnapshot === "object"
-        ? (withdrawal.payoutSnapshot as Record<string, unknown>)
+      currentWithdrawal.payoutSnapshot &&
+      typeof currentWithdrawal.payoutSnapshot === "object"
+        ? (currentWithdrawal.payoutSnapshot as Record<string, unknown>)
         : null;
     const snapshotSourceType =
       payoutSnapshot && typeof payoutSnapshot.sourceType === "string"
@@ -149,33 +169,31 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
       rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
       rejectionReason: withdrawal.rejectionReason,
       adminNotes: withdrawal.adminNotes,
-      sourceType:
-        snapshotSourceType ??
-        (withdrawal.investmentOrder
-          ? "INVESTMENT_ORDER"
-          : "SAVINGS_ACCOUNT"),
+      sourceType: normalizeSourceType(snapshotSourceType, {
+        investmentOrder: currentWithdrawal.investmentOrder,
+      }),
       sourceLabel:
         snapshotSourceLabel ??
-        (withdrawal.investmentOrder
-          ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-          : withdrawal.investmentAccount
-            ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+        (currentWithdrawal.investmentOrder
+          ? `Investment order - ${currentWithdrawal.investmentOrder.investmentPlan.name}`
+          : currentWithdrawal.investmentAccount
+            ? `Investment account - ${currentWithdrawal.investmentAccount.investmentPlan.name}`
             : "Direct withdrawal request"),
       requester: {
-        id: withdrawal.investorProfile.user.id,
-        name: withdrawal.investorProfile.user.name,
-        email: withdrawal.investorProfile.user.email,
+        id: currentWithdrawal.investorProfile.user.id,
+        name: currentWithdrawal.investorProfile.user.name,
+        email: currentWithdrawal.investorProfile.user.email,
       },
-      payoutMethod: withdrawal.payoutMethod
+      payoutMethod: currentWithdrawal.payoutMethod
         ? {
-            id: withdrawal.payoutMethod.id,
-            type: withdrawal.payoutMethod.type,
-            bankName: withdrawal.payoutMethod.bankName,
-            accountName: withdrawal.payoutMethod.accountName,
-            accountNumber: withdrawal.payoutMethod.accountNumber,
-            network: withdrawal.payoutMethod.network,
-            address: withdrawal.payoutMethod.address,
-            isVerified: withdrawal.payoutMethod.isVerified,
+            id: currentWithdrawal.payoutMethod.id,
+            type: currentWithdrawal.payoutMethod.type,
+            bankName: currentWithdrawal.payoutMethod.bankName,
+            accountName: currentWithdrawal.payoutMethod.accountName,
+            accountNumber: currentWithdrawal.payoutMethod.accountNumber,
+            network: currentWithdrawal.payoutMethod.network,
+            address: currentWithdrawal.payoutMethod.address,
+            isVerified: currentWithdrawal.payoutMethod.isVerified,
           }
         : null,
     };

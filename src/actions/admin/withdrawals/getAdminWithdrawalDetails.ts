@@ -131,59 +131,76 @@ export async function getAdminWithdrawalDetails(
     return null;
   }
 
+  const currentWithdrawal = withdrawal;
+
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
-    withdrawal.payoutSnapshot,
+    currentWithdrawal.payoutSnapshot,
   );
+  function normalizeSourceType(
+    value: string | null,
+  ): AdminWithdrawalDetails["sourceType"] {
+    if (
+      value === "INVESTMENT_ORDER" ||
+      value === "SAVINGS_ACCOUNT" ||
+      value === "INVESTMENT_POOL" ||
+      value === "SAVINGS_POOL"
+    ) {
+      return value;
+    }
+
+    return getWithdrawalCommissionSourceType({
+      investmentOrderId: currentWithdrawal.investmentOrderId,
+    }) === "INVESTMENT_ORDER"
+      ? "INVESTMENT_ORDER"
+      : "SAVINGS_ACCOUNT";
+  }
+
   return {
-    id: withdrawal.id,
-    status: withdrawal.status,
-    statusLabel: formatEnumLabel(withdrawal.status),
-    commissionStatus: withdrawal.commissionStatus,
-    commissionStatusLabel: formatEnumLabel(withdrawal.commissionStatus),
-    amount: formatCurrency(decimalToNumber(withdrawal.amount), withdrawal.currency),
-    currency: withdrawal.currency,
-    hasCommissionFees: withdrawal.hasCommissionFees,
-    commissionPercent: decimalToNumber(withdrawal.commissionPercent),
-    savingsFeeAmount: withdrawal.savingsFeeAmount
-      ? decimalToNumber(withdrawal.savingsFeeAmount)
+    id: currentWithdrawal.id,
+    status: currentWithdrawal.status,
+    statusLabel: formatEnumLabel(currentWithdrawal.status),
+    commissionStatus: currentWithdrawal.commissionStatus,
+    commissionStatusLabel: formatEnumLabel(currentWithdrawal.commissionStatus),
+    amount: formatCurrency(decimalToNumber(currentWithdrawal.amount), currentWithdrawal.currency),
+    currency: currentWithdrawal.currency,
+    hasCommissionFees: currentWithdrawal.hasCommissionFees,
+    commissionPercent: decimalToNumber(currentWithdrawal.commissionPercent),
+    savingsFeeAmount: currentWithdrawal.savingsFeeAmount
+      ? decimalToNumber(currentWithdrawal.savingsFeeAmount)
       : null,
     commissionPayment,
-    requestedAt: withdrawal.requestedAt.toISOString(),
-    processedAt: withdrawal.processedAt?.toISOString() ?? null,
-    completedAt: withdrawal.completedAt?.toISOString() ?? null,
-    rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
-    rejectionReason: withdrawal.rejectionReason,
-    adminNotes: withdrawal.adminNotes,
-    sourceType: getWithdrawalCommissionSourceType({
-      investmentOrderId: withdrawal.investmentOrderId,
-      sourceType: readWithdrawalSnapshotString(
-        withdrawal.payoutSnapshot,
-        "sourceType",
-      ),
-    }),
+    requestedAt: currentWithdrawal.requestedAt.toISOString(),
+    processedAt: currentWithdrawal.processedAt?.toISOString() ?? null,
+    completedAt: currentWithdrawal.completedAt?.toISOString() ?? null,
+    rejectedAt: currentWithdrawal.rejectedAt?.toISOString() ?? null,
+    rejectionReason: currentWithdrawal.rejectionReason,
+    adminNotes: currentWithdrawal.adminNotes,
+    sourceType: normalizeSourceType(
+      readWithdrawalSnapshotString(currentWithdrawal.payoutSnapshot, "sourceType"),
+    ),
     sourceLabel:
-      readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceLabel") ??
-      (withdrawal.investmentOrder
-        ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-        : withdrawal.investmentAccount
-          ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+      readWithdrawalSnapshotString(currentWithdrawal.payoutSnapshot, "sourceLabel") ??
+      (currentWithdrawal.investmentOrder
+        ? `Investment order - ${currentWithdrawal.investmentOrder.investmentPlan.name}`
+        : currentWithdrawal.investmentAccount
+          ? `Investment account - ${currentWithdrawal.investmentAccount.investmentPlan.name}`
           : "Direct withdrawal request"),
     requester: {
-      id: withdrawal.investorProfile.user.id,
-      name: withdrawal.investorProfile.user.name,
-      email: withdrawal.investorProfile.user.email,
+      id: currentWithdrawal.investorProfile.user.id,
+      name: currentWithdrawal.investorProfile.user.name,
+      email: currentWithdrawal.investorProfile.user.email,
     },
-    payoutMethod: withdrawal.payoutMethod
+    payoutMethod: currentWithdrawal.payoutMethod
       ? {
-          id: withdrawal.payoutMethod.id,
-          type: withdrawal.payoutMethod.type,
-          bankName: withdrawal.payoutMethod.bankName,
-          accountName: withdrawal.payoutMethod.accountName,
-          accountNumber: withdrawal.payoutMethod.accountNumber,
-          network: withdrawal.payoutMethod.network,
-          address: withdrawal.payoutMethod.address,
+          id: currentWithdrawal.payoutMethod.id,
+          type: currentWithdrawal.payoutMethod.type,
+          bankName: currentWithdrawal.payoutMethod.bankName,
+          accountName: currentWithdrawal.payoutMethod.accountName,
+          accountNumber: currentWithdrawal.payoutMethod.accountNumber,
+          network: currentWithdrawal.payoutMethod.network,
+          address: currentWithdrawal.payoutMethod.address,
         }
       : null,
-    canEditCommission: withdrawal.status === "PENDING",
+    canEditCommission: currentWithdrawal.status === "PENDING",
   };
 }
