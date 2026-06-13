@@ -60,10 +60,9 @@ export default function WithdrawalsClient({
   });
 
   const savingsSource =
-    withdrawalSources.find((source) => source.type === "SAVINGS_ACCOUNT") ??
-    null;
+    withdrawalSources.find((source) => source.type === "SAVINGS_POOL") ?? null;
   const investmentSource =
-    withdrawalSources.find((source) => source.type === "INVESTMENT_ORDER") ??
+    withdrawalSources.find((source) => source.type === "INVESTMENT_POOL") ??
     null;
   const selectedSource =
     (selectedSourceKey
@@ -93,7 +92,7 @@ export default function WithdrawalsClient({
     return `**** ${value.slice(-4)}`;
   }
 
-  function selectSource(type: "SAVINGS_ACCOUNT" | "INVESTMENT_ORDER") {
+  function selectSource(type: "SAVINGS_POOL" | "INVESTMENT_POOL") {
     const source = withdrawalSources.find((item) => item.type === type);
 
     if (!source) {
@@ -151,9 +150,9 @@ export default function WithdrawalsClient({
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => selectSource("SAVINGS_ACCOUNT")}
+            onClick={() => selectSource("SAVINGS_POOL")}
             className={`rounded-full border px-3 py-2 text-sm transition ${
-              selectedSourceType === "SAVINGS_ACCOUNT"
+              selectedSourceType === "SAVINGS_POOL"
                 ? "border-[#3c9ee0] bg-[#3c9ee0]/10 text-[#3c9ee0]"
                 : "border-white/10 bg-white/5 text-slate-300"
             }`}
@@ -162,9 +161,9 @@ export default function WithdrawalsClient({
           </button>
           <button
             type="button"
-            onClick={() => selectSource("INVESTMENT_ORDER")}
+            onClick={() => selectSource("INVESTMENT_POOL")}
             className={`rounded-full border px-3 py-2 text-sm transition ${
-              selectedSourceType === "INVESTMENT_ORDER"
+              selectedSourceType === "INVESTMENT_POOL"
                 ? "border-[#3c9ee0] bg-[#3c9ee0]/10 text-[#3c9ee0]"
                 : "border-white/10 bg-white/5 text-slate-300"
             }`}
@@ -181,10 +180,8 @@ export default function WithdrawalsClient({
               available.
             </p>
 
-            {selectedSource.type === "INVESTMENT_ORDER" &&
-            selectedSource.label
-              .toLowerCase()
-              .startsWith("early withdrawal") ? (
+            {selectedSource.type === "INVESTMENT_POOL" &&
+            selectedSource.hasEarlyWithdrawal ? (
               <div className="flex items-start gap-2 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-amber-100">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
                 <div className="space-y-1">
@@ -205,7 +202,7 @@ export default function WithdrawalsClient({
         ) : selectedSourceType ? (
           <p className="text-xs text-slate-400">
             No{" "}
-            {selectedSourceType === "SAVINGS_ACCOUNT"
+            {selectedSourceType === "SAVINGS_POOL"
               ? "savings"
               : "investment"}{" "}
             balance is currently available for withdrawal.

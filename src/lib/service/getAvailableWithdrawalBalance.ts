@@ -1,18 +1,7 @@
-import {
-  InvestmentModel,
-  InvestmentOrderStatus,
-  Prisma,
-  SavingsStatus,
-  WithdrawalStatus,
-} from "@/generated/prisma";
+import { InvestmentModel } from "@/generated/prisma";
 
-import { prisma } from "@/lib/prisma";
-import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
-import {
-  calculateInvestmentAccountBalance,
-  isActiveInvestmentBalanceOrder,
-} from "@/lib/services/investment/investmentBalanceService";
-import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
+import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { buildWithdrawalBalanceSnapshot } from "@/lib/service/withdrawalBalanceSnapshot";
 
 export type AvailableWithdrawalInvestmentOrder = {
   id: string;
@@ -34,103 +23,25 @@ export type AvailableWithdrawalBalanceSummary = {
 };
 
 export function resolveInvestmentOrderWithdrawalAmount(order: {
-  investmentModel: InvestmentModel;
-  amount: Prisma.Decimal;
-  amountPaid: Prisma.Decimal;
-  accruedProfit: Prisma.Decimal;
-  currentValue: Prisma.Decimal | null;
-  investmentEarnings?: Array<{
-    amount: Prisma.Decimal;
-  }>;
+  availableAmount: number | string | { toString(): string };
 }) {
-  return toDecimal(order.amountPaid).add(
-    computeInvestmentOrderRecognizedProfit(order),
-  );
+  return Number(order.availableAmount.toString());
 }
 
 export async function getAvailableWithdrawalBalance(
   investorProfileId: string,
 ): Promise<AvailableWithdrawalBalanceSummary> {
-  const [investmentOrders, savingsAccounts, completedWithdrawals] =
-    await Promise.all([
-      prisma.investmentOrder.findMany({
-        where: {
-          investorProfileId,
-          status: {
-            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
-          },
-          isWithdrawn: false,
-        },
-        orderBy: {
-          maturityDate: "asc",
-        },
-        select: {
-          id: true,
-          investmentAccountId: true,
-          investmentModel: true,
-          status: true,
-          amount: true,
-          amountPaid: true,
-          accruedProfit: true,
-          currentValue: true,
-          investmentEarnings: {
-            select: {
-              amount: true,
-            },
-          },
-          currency: true,
-        },
-      }),
-      prisma.savingsAccount.findMany({
-        where: {
-          investorProfileId,
-          status: SavingsStatus.ACTIVE,
-          isLocked: false,
-        },
-        select: {
-          balance: true,
-          currency: true,
-        },
-      }),
-      prisma.withdrawalOrder.findMany({
-        where: {
-          investorProfileId,
-          status: WithdrawalStatus.COMPLETED,
-          investmentOrderId: {
-            not: null,
-          },
-        },
-        select: {
-          investmentOrderId: true,
-        },
-      }),
-    ]);
+  const snapshot = await buildWithdrawalBalanceSnapshot(investorProfileId);
 
-  const completedWithdrawalOrderIds = new Set(
-    completedWithdrawals
-      .map((withdrawal) => withdrawal.investmentOrderId)
-      .filter((value): value is string => Boolean(value)),
-  );
-
-  const eligibleInvestmentOrders = investmentOrders.filter(
-    (order) =>
-      !completedWithdrawalOrderIds.has(order.id) &&
-      isActiveInvestmentBalanceOrder(order),
-  );
-
-  const balanceSummary = calculateInvestmentAccountBalance(eligibleInvestmentOrders);
-
-  const investmentOrderEntries = eligibleInvestmentOrders.map((order) => {
-    const availableAmount = resolveInvestmentOrderWithdrawalAmount(order);
+  const investmentOrderEntries = snapshot.investmentOrders.map((order) => {
+    const availableAmount = order.availableAmount;
 
     return {
       id: order.id,
       investmentAccountId: order.investmentAccountId,
       investmentModel: order.investmentModel,
-      principal: decimalToNumber(toDecimal(order.amountPaid)),
-      profit: decimalToNumber(
-        availableAmount.minus(toDecimal(order.amountPaid)),
-      ),
+      principal: decimalToNumber(order.principal),
+      profit: decimalToNumber(order.profit),
       availableAmount: decimalToNumber(availableAmount),
       currentValue: order.currentValue
         ? decimalToNumber(order.currentValue)
@@ -139,24 +50,11 @@ export async function getAvailableWithdrawalBalance(
     };
   });
 
-  const accountBalance = balanceSummary.accountBalanceNumber;
-
-  const savingsBalance = savingsAccounts.reduce(
-    (sum, account) => sum + decimalToNumber(account.balance),
-    0,
-  );
-
-  const totalBalance = accountBalance + savingsBalance;
-  const currency =
-    savingsAccounts[0]?.currency ??
-    eligibleInvestmentOrders[0]?.currency ??
-    "USD";
-
   return {
-    totalBalance,
-    accountBalance,
-    savingsBalance,
-    currency,
+    totalBalance: decimalToNumber(snapshot.totalBalance),
+    accountBalance: decimalToNumber(snapshot.accountBalance),
+    savingsBalance: decimalToNumber(snapshot.savingsBalance),
+    currency: snapshot.currency,
     investmentOrders: investmentOrderEntries,
   };
 }

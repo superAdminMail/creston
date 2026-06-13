@@ -22,7 +22,7 @@ export type AdminWithdrawalItem = {
   rejectedAt: string | null;
   rejectionReason: string | null;
   adminNotes: string | null;
-  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" | "INVESTMENT_POOL" | "SAVINGS_POOL";
   sourceLabel: string;
   requester: {
     id: string;
@@ -116,6 +116,18 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
       withdrawal.payoutSnapshot,
     );
+    const payoutSnapshot =
+      withdrawal.payoutSnapshot && typeof withdrawal.payoutSnapshot === "object"
+        ? (withdrawal.payoutSnapshot as Record<string, unknown>)
+        : null;
+    const snapshotSourceType =
+      payoutSnapshot && typeof payoutSnapshot.sourceType === "string"
+        ? payoutSnapshot.sourceType
+        : null;
+    const snapshotSourceLabel =
+      payoutSnapshot && typeof payoutSnapshot.sourceLabel === "string"
+        ? payoutSnapshot.sourceLabel
+        : null;
 
     return {
       id: withdrawal.id,
@@ -137,14 +149,18 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
       rejectedAt: withdrawal.rejectedAt?.toISOString() ?? null,
       rejectionReason: withdrawal.rejectionReason,
       adminNotes: withdrawal.adminNotes,
-      sourceType: withdrawal.investmentOrder
-        ? "INVESTMENT_ORDER"
-        : "SAVINGS_ACCOUNT",
-      sourceLabel: withdrawal.investmentOrder
-        ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-        : withdrawal.investmentAccount
-          ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
-          : "Direct withdrawal request",
+      sourceType:
+        snapshotSourceType ??
+        (withdrawal.investmentOrder
+          ? "INVESTMENT_ORDER"
+          : "SAVINGS_ACCOUNT"),
+      sourceLabel:
+        snapshotSourceLabel ??
+        (withdrawal.investmentOrder
+          ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
+          : withdrawal.investmentAccount
+            ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+            : "Direct withdrawal request"),
       requester: {
         id: withdrawal.investorProfile.user.id,
         name: withdrawal.investorProfile.user.name,

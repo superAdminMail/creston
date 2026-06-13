@@ -9,7 +9,10 @@ import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdraw
 import {
   readWithdrawalCommissionPaymentSnapshot,
 } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
-import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  getWithdrawalCommissionSourceType,
+  readWithdrawalSnapshotString,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionPaymentSnapshot } from "@/lib/types/payments/withdrawalCommission.types";
 
@@ -122,6 +125,10 @@ export async function approveWithdrawalCommissionReview(
 
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: withdrawal.investmentOrderId,
+    sourceType: readWithdrawalSnapshotString(
+      withdrawal.payoutSnapshot,
+      "sourceType",
+    ),
   });
 
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(

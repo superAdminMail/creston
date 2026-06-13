@@ -4,7 +4,10 @@ import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platfo
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionCheckoutDetails } from "@/lib/types/payments/withdrawalCommission.types";
-import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  getWithdrawalCommissionSourceType,
+  readWithdrawalSnapshotString,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import {
   isWithdrawalCommissionSettledStatus,
@@ -83,13 +86,16 @@ export async function getWithdrawalCommissionCheckoutDetails(
 
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: withdrawal.investmentOrderId,
+    sourceType: readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceType"),
   });
 
-  const sourceLabel = withdrawal.investmentOrder
-    ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-    : withdrawal.investmentAccount
-      ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
-      : "Withdrawal source";
+  const sourceLabel =
+    readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceLabel") ??
+    (withdrawal.investmentOrder
+      ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
+      : withdrawal.investmentAccount
+        ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+        : "Withdrawal source");
 
   if (sourceType === "SAVINGS_ACCOUNT" && withdrawal.savingsFeeAmount === null) {
     return null;

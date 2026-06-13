@@ -34,6 +34,7 @@ function getMethodLabel(method?: WithdrawalRequestItemDto["payoutMethod"]) {
 
 function getSourceLabel(order: WithdrawalRequestItemDto) {
   return (
+    order.payoutSnapshot?.sourceLabel ??
     order.investmentOrder?.investmentPlan?.name ??
     order.investmentAccount?.investmentPlan?.name ??
     "Withdrawal source"

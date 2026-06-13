@@ -465,10 +465,11 @@ model InvestmentOrder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  withdrawalOrders     WithdrawalOrder[]
-  investmentEarnings   InvestmentEarning[]
-  payments             InvestmentOrderPayment[]
-  cryptoFundingIntents CryptoFundingIntent[]
+  withdrawalOrders      WithdrawalOrder[]
+  investmentEarnings    InvestmentEarning[]
+  payments              InvestmentOrderPayment[]
+  cryptoFundingIntents  CryptoFundingIntent[]
+  withdrawalAllocations WithdrawalOrderAllocation[]
 
   @@index([paymentMethodType])
   @@index([platformPaymentMethodId])
@@ -570,6 +571,7 @@ model SavingsAccount {
 
   transactions          SavingsTransaction[]
   savingsFundingIntents SavingsFundingIntent[]
+  withdrawalAllocations WithdrawalOrderAllocation[]
 
   @@index([investorProfileId])
   @@index([savingsProductId])
@@ -647,9 +649,10 @@ model WithdrawalOrder {
   rejectionReason String?
   adminNotes      String?
 
-  investorProfile   InvestorProfile    @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentAccount InvestmentAccount? @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
-  investmentOrder   InvestmentOrder?   @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
+  investorProfile   InvestorProfile             @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentAccount InvestmentAccount?          @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentOrder   InvestmentOrder?            @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
+  allocations       WithdrawalOrderAllocation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -660,6 +663,35 @@ model WithdrawalOrder {
   @@index([investmentOrderId])
   @@index([status])
   @@map("withdrawal_order")
+}
+
+model WithdrawalOrderAllocation {
+  id String @id @default(cuid())
+
+  withdrawalOrderId String
+  sourceType        WithdrawalAllocationSourceType
+  sourceId          String
+  sourceLabel       String?
+
+  sourceGrossAmount   Decimal @db.Decimal(18, 2)
+  sourcePenaltyAmount Decimal @default(0) @db.Decimal(18, 2)
+  sourceNetAmount     Decimal @db.Decimal(18, 2)
+  currency            String  @default("USD")
+
+  investmentOrderId String?
+  savingsAccountId  String?
+
+  withdrawalOrder WithdrawalOrder  @relation(fields: [withdrawalOrderId], references: [id], onDelete: Cascade)
+  investmentOrder InvestmentOrder? @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
+  savingsAccount  SavingsAccount?  @relation(fields: [savingsAccountId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([withdrawalOrderId])
+  @@index([sourceType, sourceId])
+  @@index([investmentOrderId])
+  @@index([savingsAccountId])
+  @@map("withdrawal_order_allocation")
 }
 
 model PaymentMethod {
@@ -1703,6 +1735,11 @@ enum WithdrawalStatus {
   COMPLETED
   REJECTED
   CANCELLED
+}
+
+enum WithdrawalAllocationSourceType {
+  INVESTMENT_ORDER
+  SAVINGS_ACCOUNT
 }
 
 enum PaymentMethodType {

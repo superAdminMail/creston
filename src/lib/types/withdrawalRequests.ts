@@ -18,6 +18,8 @@ export type WithdrawalRequestItemDto = {
   requestedAt: string;
   payoutMethod: WithdrawalRequestPaymentMethodDto | null;
   payoutSnapshot: {
+    sourceType: string | null;
+    sourceLabel: string | null;
     withdrawalMode: "EARLY_WITHDRAWAL" | "NORMAL" | null;
     earlyWithdrawalPenalty: string | null;
   } | null;

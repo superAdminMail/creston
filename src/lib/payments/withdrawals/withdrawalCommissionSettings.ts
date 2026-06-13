@@ -18,8 +18,30 @@ export type WithdrawalCommissionFieldConfig = {
 
 export function getWithdrawalCommissionSourceType(input: {
   investmentOrderId: string | null | undefined;
+  sourceType?: string | null | undefined;
 }): WithdrawalCommissionSourceType {
+  if (input.sourceType === "INVESTMENT_POOL") {
+    return "INVESTMENT_ORDER";
+  }
+
+  if (input.sourceType === "SAVINGS_POOL") {
+    return "SAVINGS_ACCOUNT";
+  }
+
   return input.investmentOrderId ? "INVESTMENT_ORDER" : "SAVINGS_ACCOUNT";
+}
+
+export function readWithdrawalSnapshotString(
+  snapshot: unknown,
+  key: string,
+): string | null {
+  if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) {
+    return null;
+  }
+
+  const value = (snapshot as Record<string, unknown>)[key];
+
+  return typeof value === "string" ? value : null;
 }
 
 export function getWithdrawalCommissionFieldConfig(

@@ -19,6 +19,7 @@ import {
   getWithdrawalCommissionFieldConfig,
   getWithdrawalCommissionSourceType,
   normalizeWithdrawalCommissionInput,
+  readWithdrawalSnapshotString,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import {
   updateWithdrawalCommissionSchema,
@@ -102,6 +103,7 @@ export async function updateWithdrawalCommission(
           },
         },
         investmentOrderId: true,
+        payoutSnapshot: true,
       },
     });
 
@@ -118,6 +120,10 @@ export async function updateWithdrawalCommission(
     const hasCommissionFees = parsed.data.hasCommissionFees;
     const sourceType = getWithdrawalCommissionSourceType({
       investmentOrderId: withdrawal.investmentOrderId,
+      sourceType: readWithdrawalSnapshotString(
+        withdrawal.payoutSnapshot,
+        "sourceType",
+      ),
     });
     const commissionField = getWithdrawalCommissionFieldConfig(sourceType);
     const commissionInput =

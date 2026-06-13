@@ -1,27 +1,19 @@
-import {
-  InvestmentOrderStatus,
-  SavingsStatus,
-  WithdrawalStatus,
-} from "@/generated/prisma";
-
-import { prisma } from "@/lib/prisma";
-import { decimalToNumber } from "@/lib/services/investment/decimal";
-import { isActiveInvestmentBalanceOrder } from "@/lib/services/investment/investmentBalanceService";
-import { resolveInvestmentOrderWithdrawalAmount } from "@/lib/service/getAvailableWithdrawalBalance";
+import { buildWithdrawalBalanceSnapshot } from "@/lib/service/withdrawalBalanceSnapshot";
 
 export type AvailableWithdrawalSource =
   | {
-      type: "INVESTMENT_ORDER";
-      id: string;
+      type: "INVESTMENT_POOL";
+      id: "INVESTMENT_POOL";
       amount: number;
       currency: string;
       label: string;
-      investmentAccountId: string;
+      investmentAccountId: null;
       maturityDate: string | null;
+      hasEarlyWithdrawal: boolean;
     }
   | {
-      type: "SAVINGS_ACCOUNT";
-      id: string;
+      type: "SAVINGS_POOL";
+      id: "SAVINGS_POOL";
       amount: number;
       currency: string;
       label: string;
@@ -31,171 +23,35 @@ export type AvailableWithdrawalSource =
 
 export type WithdrawalSourceOption = Exclude<AvailableWithdrawalSource, null>;
 
-function isEarlyWithdrawal(order: { isMatured: boolean; maturityDate: Date | null }, now: Date) {
-  if (order.isMatured) {
-    return false;
-  }
-
-  if (!order.maturityDate) {
-    return true;
-  }
-
-  return order.maturityDate > now;
-}
-
 export async function getWithdrawalSourceOptions(
   investorProfileId: string,
 ): Promise<WithdrawalSourceOption[]> {
-  const now = new Date();
-
-  const [investmentOrders, savingsAccounts, activeWithdrawals] =
-    await Promise.all([
-      prisma.investmentOrder.findMany({
-        where: {
-          investorProfileId,
-          status: {
-            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
-          },
-          isWithdrawn: false,
-        },
-        orderBy: {
-          maturityDate: "asc",
-        },
-        select: {
-          id: true,
-          investmentAccountId: true,
-          investmentModel: true,
-          status: true,
-          amount: true,
-          amountPaid: true,
-          accruedProfit: true,
-          currentValue: true,
-          investmentEarnings: {
-            select: {
-              amount: true,
-            },
-          },
-          currency: true,
-          maturityDate: true,
-          isMatured: true,
-          investmentPlan: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      }),
-      prisma.savingsAccount.findMany({
-        where: {
-          investorProfileId,
-          status: SavingsStatus.ACTIVE,
-          isLocked: false,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-        select: {
-          id: true,
-          balance: true,
-          currency: true,
-          name: true,
-        },
-      }),
-      prisma.withdrawalOrder.findMany({
-        where: {
-          investorProfileId,
-          status: {
-            in: [
-              WithdrawalStatus.PENDING,
-              WithdrawalStatus.APPROVED,
-              WithdrawalStatus.PROCESSING,
-              WithdrawalStatus.COMPLETED,
-            ],
-          },
-        },
-        select: {
-          status: true,
-          investmentOrderId: true,
-          payoutSnapshot: true,
-        },
-        orderBy: {
-          requestedAt: "desc",
-        },
-      }),
-    ]);
-
+  const snapshot = await buildWithdrawalBalanceSnapshot(investorProfileId);
   const sources: WithdrawalSourceOption[] = [];
 
-  const blockedInvestmentOrderIds = new Set<string>();
-  const blockedSavingsSourceIds = new Set<string>();
-  let hasLegacyActiveSavingsWithdrawal = false;
-
-  for (const withdrawal of activeWithdrawals) {
-    if (withdrawal.investmentOrderId) {
-      blockedInvestmentOrderIds.add(withdrawal.investmentOrderId);
-      continue;
-    }
-
-    if (withdrawal.status === WithdrawalStatus.COMPLETED) {
-      continue;
-    }
-
-    const snapshot = withdrawal.payoutSnapshot;
-
-    if (!snapshot || typeof snapshot !== "object") {
-      hasLegacyActiveSavingsWithdrawal = true;
-      continue;
-    }
-
-    const sourceType =
-      "sourceType" in snapshot ? String(snapshot.sourceType ?? "") : "";
-    const sourceId =
-      "sourceId" in snapshot ? String(snapshot.sourceId ?? "") : "";
-
-    if (sourceType === "SAVINGS_ACCOUNT" && sourceId) {
-      blockedSavingsSourceIds.add(sourceId);
-      continue;
-    }
-
-    hasLegacyActiveSavingsWithdrawal = true;
-  }
-
-  const availableInvestmentOrder = investmentOrders.find(
-    (order) =>
-      !blockedInvestmentOrderIds.has(order.id) &&
-      isActiveInvestmentBalanceOrder(order),
-  );
-
-  if (availableInvestmentOrder) {
-    const earlyWithdrawal = isEarlyWithdrawal(availableInvestmentOrder, now);
+  if (snapshot.accountBalance.greaterThan(0)) {
     sources.push({
-      type: "INVESTMENT_ORDER",
-      id: availableInvestmentOrder.id,
-      amount: decimalToNumber(
-        resolveInvestmentOrderWithdrawalAmount(availableInvestmentOrder),
+      type: "INVESTMENT_POOL",
+      id: "INVESTMENT_POOL",
+      amount: Number(snapshot.accountBalance.toString()),
+      currency: snapshot.currency,
+      label: "Investment balance",
+      investmentAccountId: null,
+      maturityDate:
+        snapshot.investmentOrders[0]?.maturityDate?.toISOString() ?? null,
+      hasEarlyWithdrawal: snapshot.investmentOrders.some(
+        (order) => !order.isMatured,
       ),
-      currency: availableInvestmentOrder.currency,
-      label: earlyWithdrawal
-        ? `Early withdrawal: ${availableInvestmentOrder.investmentPlan.name}`
-        : `Matured order: ${availableInvestmentOrder.investmentPlan.name}`,
-      investmentAccountId: availableInvestmentOrder.investmentAccountId,
-      maturityDate: availableInvestmentOrder.maturityDate?.toISOString() ?? null,
     });
   }
 
-  const availableSavings = savingsAccounts.find(
-    (account) =>
-      !hasLegacyActiveSavingsWithdrawal &&
-      !blockedSavingsSourceIds.has(account.id),
-  );
-
-  if (availableSavings) {
+  if (snapshot.savingsBalance.greaterThan(0)) {
     sources.push({
-      type: "SAVINGS_ACCOUNT",
-      id: availableSavings.id,
-      amount: decimalToNumber(availableSavings.balance),
-      currency: availableSavings.currency,
-      label: `Savings account: ${availableSavings.name}`,
+      type: "SAVINGS_POOL",
+      id: "SAVINGS_POOL",
+      amount: Number(snapshot.savingsBalance.toString()),
+      currency: snapshot.currency,
+      label: "Savings balance",
       investmentAccountId: null,
     });
   }

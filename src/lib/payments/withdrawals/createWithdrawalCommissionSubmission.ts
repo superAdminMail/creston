@@ -7,7 +7,10 @@ import { prisma } from "@/lib/prisma";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
-import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  getWithdrawalCommissionSourceType,
+  readWithdrawalSnapshotString,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyRealtimeNotifications";
 import {
   isWithdrawalCommissionSettledStatus,
@@ -99,6 +102,7 @@ export async function createWithdrawalCommissionSubmission({
       currency: true,
       hasCommissionFees: true,
       investmentOrderId: true,
+      payoutSnapshot: true,
     },
   });
 
@@ -112,6 +116,10 @@ export async function createWithdrawalCommissionSubmission({
 
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: initialWithdrawal.investmentOrderId,
+    sourceType: readWithdrawalSnapshotString(
+      initialWithdrawal.payoutSnapshot,
+      "sourceType",
+    ),
   });
 
   const paymentMethod = await getPublicPlatformPaymentMethodForCheckout({

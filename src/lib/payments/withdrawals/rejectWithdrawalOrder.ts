@@ -3,7 +3,10 @@
 import { Prisma, WithdrawalStatus } from "@/generated/prisma";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
 import { prisma } from "@/lib/prisma";
-import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  getWithdrawalCommissionSourceType,
+  readWithdrawalSnapshotString,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 
 export async function rejectWithdrawalOrder(input: {
   withdrawalId: string;
@@ -39,6 +42,7 @@ export async function rejectWithdrawalOrder(input: {
 
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: withdrawal.investmentOrderId,
+    sourceType: readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceType"),
   });
 
   const now = new Date();

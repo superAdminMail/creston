@@ -87,6 +87,8 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
   const payoutSnapshot =
     withdrawal.payoutSnapshot && typeof withdrawal.payoutSnapshot === "object"
       ? (withdrawal.payoutSnapshot as {
+          sourceType?: string | null;
+          sourceLabel?: string | null;
           withdrawalMode?: "NORMAL" | "EARLY_WITHDRAWAL" | null;
           requestedAmount?: string | null;
           earlyWithdrawalPenalty?: string | null;
@@ -98,6 +100,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
   );
 
   const sourceLabel =
+    payoutSnapshot?.sourceLabel ??
     withdrawal.investmentOrder?.investmentPlan?.name ??
     withdrawal.investmentAccount?.investmentPlan?.name ??
     "Withdrawal source";
@@ -111,11 +114,13 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
 
   const statusTone = getWithdrawalStatusTone(withdrawal.status);
 
-  const sourceType = withdrawal.investmentOrderId
-    ? "INVESTMENT_ORDER"
-    : withdrawal.investmentAccountId
-      ? "SAVINGS_ACCOUNT"
-      : null;
+  const sourceType =
+    payoutSnapshot?.sourceType ??
+    (withdrawal.investmentOrderId
+      ? "INVESTMENT_ORDER"
+      : withdrawal.investmentAccountId
+        ? "SAVINGS_ACCOUNT"
+        : null);
 
   return (
     <div className="relative mx-auto min-h-[calc(100vh-5rem)] max-w-6xl px-4 py-6 sm:py-8">
@@ -216,7 +221,8 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
           </div>
 
           {withdrawal.hasCommissionFees ? (
-            withdrawal.status === "REJECTED" ? null : sourceType === "INVESTMENT_ORDER" ? (
+            withdrawal.status === "REJECTED" ? null : sourceType === "INVESTMENT_ORDER" ||
+              sourceType === "INVESTMENT_POOL" ? (
               <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 shadow-xl md:col-span-2">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
                   Commission Percent
@@ -225,7 +231,8 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   {Number(withdrawal.commissionPercent)}%
                 </p>
               </div>
-            ) : sourceType === "SAVINGS_ACCOUNT" ? (
+            ) : sourceType === "SAVINGS_ACCOUNT" ||
+              sourceType === "SAVINGS_POOL" ? (
               <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] p-5 shadow-xl md:col-span-2">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
                   Savings Fee Amount

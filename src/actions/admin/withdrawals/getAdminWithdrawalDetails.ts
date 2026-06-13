@@ -8,7 +8,10 @@ import type { CommissionStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
-import { getWithdrawalCommissionSourceType } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import {
+  getWithdrawalCommissionSourceType,
+  readWithdrawalSnapshotString,
+} from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
 import type { WithdrawalCommissionPaymentSnapshot } from "@/lib/types/payments/withdrawalCommission.types";
 import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 
@@ -30,7 +33,11 @@ export type AdminWithdrawalDetails = {
   rejectedAt: string | null;
   rejectionReason: string | null;
   adminNotes: string | null;
-  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
+  sourceType:
+    | "INVESTMENT_ORDER"
+    | "SAVINGS_ACCOUNT"
+    | "INVESTMENT_POOL"
+    | "SAVINGS_POOL";
   sourceLabel: string;
   requester: {
     id: string;
@@ -127,7 +134,6 @@ export async function getAdminWithdrawalDetails(
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,
   );
-
   return {
     id: withdrawal.id,
     status: withdrawal.status,
@@ -150,12 +156,18 @@ export async function getAdminWithdrawalDetails(
     adminNotes: withdrawal.adminNotes,
     sourceType: getWithdrawalCommissionSourceType({
       investmentOrderId: withdrawal.investmentOrderId,
+      sourceType: readWithdrawalSnapshotString(
+        withdrawal.payoutSnapshot,
+        "sourceType",
+      ),
     }),
-    sourceLabel: withdrawal.investmentOrder
-      ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
-      : withdrawal.investmentAccount
-        ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
-        : "Direct withdrawal request",
+    sourceLabel:
+      readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceLabel") ??
+      (withdrawal.investmentOrder
+        ? `Investment order - ${withdrawal.investmentOrder.investmentPlan.name}`
+        : withdrawal.investmentAccount
+          ? `Investment account - ${withdrawal.investmentAccount.investmentPlan.name}`
+          : "Direct withdrawal request"),
     requester: {
       id: withdrawal.investorProfile.user.id,
       name: withdrawal.investorProfile.user.name,

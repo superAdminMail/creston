@@ -7,9 +7,20 @@ export type InvestmentBalanceOrderInput = {
   amount: Prisma.Decimal | number | string;
   amountPaid: Prisma.Decimal | number | string;
   accruedProfit?: Prisma.Decimal | number | string | null;
+  investmentModel?: "FIXED" | "MARKET" | string;
+  units?: Prisma.Decimal | number | string | null;
+  currentValue?: Prisma.Decimal | number | string | null;
   investmentEarnings?: Array<{
     amount: Prisma.Decimal | number | string;
   }>;
+  investmentPlan?: {
+    name: string;
+    investment?: {
+      name: string;
+      type: string;
+      symbol: string | null;
+    };
+  };
   status: InvestmentOrderStatus | string;
 };
 

@@ -42,7 +42,8 @@ export const createWithdrawalOrderSchema = z.object({
     .string()
     .trim()
     .refine(
-      (value) => value === "SAVINGS_ACCOUNT" || value === "INVESTMENT_ORDER",
+      (value) =>
+        value === "SAVINGS_POOL" || value === "INVESTMENT_POOL",
       "Select a withdrawal source.",
     ),
   sourceId: z.string().trim().min(1, "Select a withdrawal source."),
