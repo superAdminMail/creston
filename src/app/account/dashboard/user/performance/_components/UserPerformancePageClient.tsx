@@ -108,10 +108,7 @@ function ActivityRow({
         <div>
           <p className="text-sm font-medium text-white">{title}</p>
           <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-          <p
-            className="mt-1 truncate text-xs text-slate-500"
-            title={reference}
-          >
+          <p className="mt-1 truncate text-xs text-slate-500" title={reference}>
             {dateLabel} | {formatReferenceLabel(reference)}
           </p>
         </div>
@@ -158,7 +155,7 @@ export function UserPerformancePageClient({ data }: Props) {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 px-3 py-1 text-xs font-medium text-[#8fd0ff]">
               <span className="h-2 w-2 rounded-full bg-[#3c9ee0]" />
-              Portfolio intelligence
+              Portfolio Performance
             </div>
 
             <div className="space-y-2">
