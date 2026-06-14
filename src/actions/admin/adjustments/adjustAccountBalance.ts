@@ -23,14 +23,19 @@ import { prisma } from "@/lib/prisma";
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 import { adminAccountAdjustmentSchema } from "@/lib/zodValidations/admin-account-adjustment";
 
-type FieldName = "accountType" | "accountId" | "direction" | "amount" | "reason";
+type FieldName =
+  | "accountType"
+  | "accountId"
+  | "direction"
+  | "amount"
+  | "reason";
 
 export type AdminAccountAdjustmentState = FormActionState<FieldName> & {
   adjustmentId?: string;
 };
 
 function formatMovementLabel(direction: "ADD" | "DEDUCT") {
-  return direction === "ADD" ? "increased" : "decreased";
+  return direction === "ADD" ? "credited" : "debited";
 }
 
 function buildAdjustmentId(accountId: string) {
@@ -121,7 +126,9 @@ export async function adjustAccountBalance(
             );
           }
 
-          const balanceBefore = toDecimal(investmentOrder.investmentAccount.balance);
+          const balanceBefore = toDecimal(
+            investmentOrder.investmentAccount.balance,
+          );
           const balanceAfter =
             parsed.data.direction === "ADD"
               ? balanceBefore.add(amount)
@@ -138,7 +145,9 @@ export async function adjustAccountBalance(
           }
 
           if (earningsAfter.lessThan(0)) {
-            throw new Error("Adjustment would make the order earnings negative.");
+            throw new Error(
+              "Adjustment would make the order earnings negative.",
+            );
           }
 
           await tx.investmentAccount.update({
@@ -194,8 +203,10 @@ export async function adjustAccountBalance(
               investmentOrderId: investmentOrder.id,
               owner: {
                 id: investmentOrder.investmentAccount.investorProfile.user.id,
-                name: investmentOrder.investmentAccount.investorProfile.user.name,
-                email: investmentOrder.investmentAccount.investorProfile.user.email,
+                name: investmentOrder.investmentAccount.investorProfile.user
+                  .name,
+                email:
+                  investmentOrder.investmentAccount.investorProfile.user.email,
               },
               direction: parsed.data.direction,
               amount: decimalToNumber(amount),
@@ -222,7 +233,8 @@ export async function adjustAccountBalance(
               investmentOrderId: investmentOrder.id,
               earningsBefore: decimalToNumber(earningsBefore),
               earningsAfter: decimalToNumber(earningsAfter),
-              ownerId: investmentOrder.investmentAccount.investorProfile.user.id,
+              ownerId:
+                investmentOrder.investmentAccount.investorProfile.user.id,
               ownerName:
                 investmentOrder.investmentAccount.investorProfile.user.name?.trim() ||
                 null,
@@ -330,12 +342,12 @@ export async function adjustAccountBalance(
             },
             direction: parsed.data.direction,
             amount: decimalToNumber(amount),
-              balanceBefore: decimalToNumber(balanceBefore),
-              balanceAfter: decimalToNumber(balanceAfter),
-              reason,
-              currency: account.currency,
-              savingsTransactionId: savingsTransaction.id,
-              sourceLabel: account.savingsProduct.name,
+            balanceBefore: decimalToNumber(balanceBefore),
+            balanceAfter: decimalToNumber(balanceAfter),
+            reason,
+            currency: account.currency,
+            savingsTransactionId: savingsTransaction.id,
+            sourceLabel: account.savingsProduct.name,
           },
           db: tx,
         });
