@@ -552,8 +552,8 @@ export default function SupportInboxWorkspace({
                         "border-sky-400/30 bg-sky-500/10",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-3">
                         {canDeleteTickets ? (
                           <div
                             onClick={(event) => event.stopPropagation()}
@@ -571,24 +571,24 @@ export default function SupportInboxWorkspace({
                         ) : null}
 
                         <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-white">
-                          {ticket.subject}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400">
-                          {ticket.ticketId} | {getPreviewSubtitle(ticket)}
-                        </p>
+                          <p className="break-words text-sm font-semibold leading-5 text-white sm:line-clamp-2">
+                            {ticket.subject}
+                          </p>
+                          <p className="mt-1 break-words text-xs leading-5 text-slate-400">
+                            {ticket.ticketId} | {getPreviewSubtitle(ticket)}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap sm:self-start">
                         {ticket.unreadCount > 0 ? (
-                          <Badge className="rounded-full bg-sky-500/15 px-2.5 py-1 text-[11px] text-sky-200">
+                          <Badge className="shrink-0 rounded-full bg-sky-500/15 px-2.5 py-1 text-[11px] text-sky-200">
                             {ticket.unreadCount}
                           </Badge>
                         ) : null}
 
                         {canManageTickets ? (
-                          <div className="flex items-center gap-1 opacity-100 transition group-hover:opacity-100 lg:opacity-0">
+                          <div className="flex flex-wrap items-center justify-end gap-1 opacity-100 transition group-hover:opacity-100 lg:opacity-0">
                             <Button
                               type="button"
                               variant="ghost"
@@ -613,7 +613,7 @@ export default function SupportInboxWorkspace({
                                   event.stopPropagation();
                                   handleDelete(ticket.id);
                                 }}
-                                className="h-8 w-8 rounded-full border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-red-500/15 hover:text-red-200"
+                                className="h-8 w-8 shrink-0 rounded-full border border-white/10 bg-white/[0.03] text-slate-300 hover:bg-red-500/15 hover:text-red-200"
                               >
                                 {isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
