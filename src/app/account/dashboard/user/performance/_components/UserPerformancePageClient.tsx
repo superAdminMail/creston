@@ -42,6 +42,14 @@ function formatPercent(value: number) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function formatReferenceLabel(reference: string) {
+  if (reference.length <= 18) {
+    return reference;
+  }
+
+  return `${reference.slice(0, 10)}…${reference.slice(-6)}`;
+}
+
 function StatCard({
   title,
   value,
@@ -88,7 +96,7 @@ function ActivityRow({
       <div className="flex items-start gap-3">
         <div
           className={cn(
-            "mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border",
+            "mt-0.5 flex h-10 w-10 px-3 py-3 items-center justify-center rounded-2xl border",
             isCredit
               ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
               : "border-rose-400/20 bg-rose-400/10 text-rose-200",
@@ -100,8 +108,11 @@ function ActivityRow({
         <div>
           <p className="text-sm font-medium text-white">{title}</p>
           <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            {dateLabel} | {reference}
+          <p
+            className="mt-1 truncate text-xs text-slate-500"
+            title={reference}
+          >
+            {dateLabel} | {formatReferenceLabel(reference)}
           </p>
         </div>
       </div>
