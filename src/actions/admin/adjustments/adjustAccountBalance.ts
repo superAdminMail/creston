@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { Prisma } from "@/generated/prisma";
+import {
+  InvestmentOrderAdjustmentDirection,
+  Prisma,
+} from "@/generated/prisma";
 import {
   createErrorFormState,
   createSuccessFormState,
@@ -12,7 +15,6 @@ import {
 } from "@/lib/forms/actionState";
 import { logAuditEvent } from "@/lib/audit/logAuditEvent";
 import { createRealtimeNotification } from "@/lib/notifications/createNotification";
-import { asJsonObject, toJsonValue } from "@/lib/payments/paymentJson";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
@@ -30,22 +32,6 @@ function formatMovementLabel(direction: "ADD" | "DEDUCT") {
 
 function buildAdjustmentId(accountId: string) {
   return `adj:${accountId}:${Date.now().toString(36)}`;
-}
-
-function appendInvestmentOrderAdjustmentSnapshot(
-  existingMetadata: unknown,
-  snapshot: Record<string, unknown>,
-) {
-  const metadata = asJsonObject(existingMetadata);
-  const adjustments = Array.isArray(metadata.adjustments)
-    ? metadata.adjustments.filter((item) => typeof item === "object" && item !== null)
-    : [];
-
-  return toJsonValue({
-    ...metadata,
-    adjustments: [...adjustments, snapshot],
-    lastAdjustment: snapshot,
-  });
 }
 
 export async function adjustAccountBalance(
@@ -128,7 +114,6 @@ export async function adjustAccountBalance(
             select: {
               id: true,
               accruedProfit: true,
-              paymentMetadata: true,
               investmentPlan: {
                 select: {
                   name: true,
@@ -174,27 +159,33 @@ export async function adjustAccountBalance(
             where: { id: investmentOrder.id },
             data: {
               accruedProfit: earningsAfter,
-              paymentMetadata: appendInvestmentOrderAdjustmentSnapshot(
-                investmentOrder.paymentMetadata,
-                {
-                  kind: "EARNINGS_ADJUSTMENT",
-                  adjustmentId,
-                  accountType: parsed.data.accountType,
-                  accountId: account.id,
-                  investmentOrderId: investmentOrder.id,
-                  investmentPlanName: investmentOrder.investmentPlan.name,
-                  direction: parsed.data.direction,
-                  amount: decimalToNumber(amount),
-                  earningsBefore: decimalToNumber(earningsBefore),
-                  earningsAfter: decimalToNumber(earningsAfter),
-                  balanceBefore: decimalToNumber(balanceBefore),
-                  balanceAfter: decimalToNumber(balanceAfter),
-                  reason,
-                  currency: account.currency,
-                  adjustedByUserId: admin.userId,
-                  adjustedAt: new Date().toISOString(),
-                },
-              ),
+            },
+          });
+
+          await tx.investmentOrderAdjustment.create({
+            data: {
+              reference: adjustmentId,
+              investmentOrderId: investmentOrder.id,
+              adjustedByUserId: admin.userId,
+              direction:
+                parsed.data.direction === "ADD"
+                  ? InvestmentOrderAdjustmentDirection.ADD
+                  : InvestmentOrderAdjustmentDirection.DEDUCT,
+              amount,
+              earningsBefore,
+              earningsAfter,
+              balanceBefore,
+              balanceAfter,
+              currency: account.currency,
+              reason,
+              metadata: {
+                kind: "EARNINGS_ADJUSTMENT",
+                accountType: parsed.data.accountType,
+                accountId: account.id,
+                investmentOrderId: investmentOrder.id,
+                investmentPlanName: investmentOrder.investmentPlan.name,
+                adjustedAt: new Date().toISOString(),
+              },
             },
           });
 

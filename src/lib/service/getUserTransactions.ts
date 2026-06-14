@@ -25,6 +25,10 @@ export type TransactionItem = {
   direction: "CREDIT" | "DEBIT";
 };
 
+type AdjustmentTransactionItem = Omit<TransactionItem, "type"> & {
+  type: "ADJUSTMENT";
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -34,7 +38,7 @@ function parseInvestmentOrderAdjustmentMetadata(order: {
   currency: string;
   updatedAt: Date;
   paymentMetadata: unknown;
-}) {
+}): Array<AdjustmentTransactionItem | null> {
   const metadata = asJsonObject(order.paymentMetadata);
   const adjustments = Array.isArray(metadata.adjustments)
     ? metadata.adjustments
@@ -63,8 +67,8 @@ function parseInvestmentOrderAdjustmentMetadata(order: {
         return null;
       }
 
-      const direction =
-        item.direction === "DEDUCT" ? "DEBIT" : ("CREDIT" as const);
+      const direction: "CREDIT" | "DEBIT" =
+        item.direction === "DEDUCT" ? "DEBIT" : "CREDIT";
       const reference =
         typeof item.adjustmentId === "string" && item.adjustmentId.trim()
           ? item.adjustmentId
@@ -88,9 +92,44 @@ function parseInvestmentOrderAdjustmentMetadata(order: {
             : undefined,
         description: "Manual investment earnings adjustment",
         direction,
-      };
+      } as AdjustmentTransactionItem;
     })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+    .filter((item): item is AdjustmentTransactionItem => item !== null);
+}
+
+function parseInvestmentOrderAdjustmentRecord(adjustment: {
+  id: string;
+  reference: string;
+  direction: "ADD" | "DEDUCT";
+  amount: unknown;
+  currency: string;
+  reason: string | null;
+  createdAt: Date;
+  investmentOrder: {
+    id: string;
+    investmentPlan: {
+      name: string;
+    } | null;
+  };
+}): AdjustmentTransactionItem | null {
+  const amount = Number(adjustment.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  return {
+    id: adjustment.id,
+    type: "ADJUSTMENT" as const,
+    amount,
+    currency: adjustment.currency,
+    status: "COMPLETED",
+    createdAt: adjustment.createdAt,
+    reference: adjustment.reference,
+    planName: adjustment.investmentOrder.investmentPlan?.name ?? undefined,
+    description:
+      adjustment.reason ?? "Manual investment earnings adjustment",
+    direction: adjustment.direction === "DEDUCT" ? "DEBIT" : "CREDIT",
+  } as AdjustmentTransactionItem;
 }
 
 function parseLegacyFixedProfitNotification(notification: {
@@ -169,13 +208,46 @@ export async function getUserTransactions(userId: string) {
 
   if (!profile) return [];
 
-  const [orders, withdrawals, earnings, legacyFixedProfitNotifications, savingsTransactions] =
+  const [
+    orders,
+    investmentAdjustments,
+    withdrawals,
+    earnings,
+    legacyFixedProfitNotifications,
+    savingsTransactions,
+  ] =
     await Promise.all([
       prisma.investmentOrder.findMany({
         where: { investorProfileId: profile.id },
         include: {
           investmentPlan: {
             select: { name: true },
+          },
+        },
+      }),
+      prisma.investmentOrderAdjustment.findMany({
+        where: {
+          investmentOrder: {
+            investorProfileId: profile.id,
+          },
+        },
+        select: {
+          id: true,
+          reference: true,
+          direction: true,
+          amount: true,
+          currency: true,
+          reason: true,
+          createdAt: true,
+          investmentOrder: {
+            select: {
+              id: true,
+              investmentPlan: {
+                select: {
+                  name: true,
+                },
+              },
+            },
           },
         },
       }),
@@ -305,9 +377,16 @@ export async function getUserTransactions(userId: string) {
     direction: "DEBIT",
   }));
 
-  const investmentAdjustmentTx: TransactionItem[] = orders.flatMap((order) =>
-    parseInvestmentOrderAdjustmentMetadata(order),
-  );
+  const investmentAdjustmentTx: AdjustmentTransactionItem[] = orders
+    .flatMap((order) => parseInvestmentOrderAdjustmentMetadata(order))
+    .filter((item): item is AdjustmentTransactionItem => item !== null);
+
+  const investmentAdjustmentLedgerTx: AdjustmentTransactionItem[] =
+    investmentAdjustments
+      .map(parseInvestmentOrderAdjustmentRecord)
+      .filter(
+        (item): item is AdjustmentTransactionItem => item !== null,
+      );
 
   const withdrawalTx: TransactionItem[] = withdrawals.map((w) => ({
     id: w.id,
@@ -384,11 +463,23 @@ export async function getUserTransactions(userId: string) {
   const transactions = [
     ...investmentTx,
     ...investmentAdjustmentTx,
+    ...investmentAdjustmentLedgerTx,
     ...withdrawalTx,
     ...earningTx,
     ...legacyFixedProfitTx,
     ...savingsTx,
-  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  ]
+    .filter(
+      (transaction, index, array) =>
+        index ===
+        array.findIndex(
+          (candidate) =>
+            candidate.type === transaction.type &&
+            candidate.reference === transaction.reference &&
+            candidate.createdAt.getTime() === transaction.createdAt.getTime(),
+        ),
+    )
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return transactions;
 }

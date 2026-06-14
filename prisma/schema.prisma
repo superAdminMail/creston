@@ -62,8 +62,9 @@ model User {
   notifications       Notification[]
   conversations       Conversation[]       @relation("ConversationUser")
 
-  submittedInvestmentOrderPayments InvestmentOrderPayment[] @relation("InvestmentOrderPaymentSubmittedBy")
-  reviewedInvestmentOrderPayments  InvestmentOrderPayment[] @relation("InvestmentOrderPaymentReviewedBy")
+  submittedInvestmentOrderPayments InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentSubmittedBy")
+  reviewedInvestmentOrderPayments  InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentReviewedBy")
+  investmentOrderAdjustments       InvestmentOrderAdjustment[]
 
   createdPromotionCampaigns PromotionCampaign[] @relation("PromotionCampaignCreatedBy")
   promotionDeliveries       PromotionDelivery[] @relation("PromotionDeliveryUser")
@@ -467,6 +468,7 @@ model InvestmentOrder {
 
   withdrawalOrders      WithdrawalOrder[]
   investmentEarnings    InvestmentEarning[]
+  adjustments           InvestmentOrderAdjustment[]
   payments              InvestmentOrderPayment[]
   cryptoFundingIntents  CryptoFundingIntent[]
   withdrawalAllocations WithdrawalOrderAllocation[]
@@ -497,6 +499,37 @@ model InvestmentEarning {
   investmentOrder InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
 
   @@unique([investmentOrderId, date])
+}
+
+model InvestmentOrderAdjustment {
+  id String @id @default(cuid())
+
+  reference String @unique
+
+  investmentOrderId String
+  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+
+  adjustedByUserId String
+  adjustedByUser   User   @relation(fields: [adjustedByUserId], references: [id], onDelete: Restrict)
+
+  direction InvestmentOrderAdjustmentDirection
+
+  amount         Decimal @db.Decimal(18, 2)
+  earningsBefore Decimal @db.Decimal(18, 2)
+  earningsAfter  Decimal @db.Decimal(18, 2)
+  balanceBefore  Decimal @db.Decimal(18, 2)
+  balanceAfter   Decimal @db.Decimal(18, 2)
+  currency       String  @default("USD")
+  reason         String?
+  metadata       Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([investmentOrderId])
+  @@index([adjustedByUserId])
+  @@index([direction])
+  @@index([createdAt])
+  @@map("investment_order_adjustment")
 }
 
 /// *
@@ -1586,6 +1619,11 @@ enum SavingsTransactionPaymentStatus {
 enum InvestmentOrderPaymentType {
   BANK_DEPOSIT
   CRYPTO_PROVIDER
+}
+
+enum InvestmentOrderAdjustmentDirection {
+  ADD
+  DEDUCT
 }
 
 enum InvestmentOrderPaymentSubmissionKind {
