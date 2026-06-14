@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  AccountStatus,
   InvestmentOrderAdjustmentDirection,
+  InvestmentOrderStatus,
   Prisma,
+  RuntimeStatus,
 } from "@/generated/prisma";
 import {
   createErrorFormState,
@@ -34,6 +37,10 @@ function buildAdjustmentId(accountId: string) {
   return `adj:${accountId}:${Date.now().toString(36)}`;
 }
 
+function isRunningRuntimeStatus(status: RuntimeStatus) {
+  return status === RuntimeStatus.ACTIVE || status === RuntimeStatus.ONGOING;
+}
+
 export async function adjustAccountBalance(
   _previousState: AdminAccountAdjustmentState,
   formData: FormData,
@@ -61,21 +68,31 @@ export async function adjustAccountBalance(
 
     const result = await prisma.$transaction(
       async (tx) => {
-        if (parsed.data.accountType === "INVESTMENT_ACCOUNT") {
-          const account = await tx.investmentAccount.findUnique({
+        if (parsed.data.accountType === "INVESTMENT_ORDER") {
+          const investmentOrder = await tx.investmentOrder.findUnique({
             where: { id: parsed.data.accountId },
             select: {
               id: true,
-              balance: true,
+              accruedProfit: true,
               currency: true,
               status: true,
-              investorProfile: {
+              runtimeStatus: true,
+              isMatured: true,
+              confirmedAt: true,
+              investmentAccount: {
                 select: {
-                  user: {
+                  id: true,
+                  balance: true,
+                  status: true,
+                  investorProfile: {
                     select: {
-                      id: true,
-                      name: true,
-                      email: true,
+                      user: {
+                        select: {
+                          id: true,
+                          name: true,
+                          email: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -88,52 +105,28 @@ export async function adjustAccountBalance(
             },
           });
 
-          if (!account) {
-            throw new Error("Investment account not found.");
-          }
-
-          if (account.status === "CLOSED") {
-            throw new Error("Closed investment accounts cannot be adjusted.");
-          }
-
-          const investmentOrder = await tx.investmentOrder.findFirst({
-            where: {
-              investmentAccountId: account.id,
-              status: {
-                in: ["PAID", "CONFIRMED"],
-              },
-            },
-            orderBy: [
-              {
-                confirmedAt: "desc",
-              },
-              {
-                createdAt: "desc",
-              },
-            ],
-            select: {
-              id: true,
-              accruedProfit: true,
-              investmentPlan: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          });
-
           if (!investmentOrder) {
+            throw new Error("Investment order not found.");
+          }
+
+          if (
+            investmentOrder.status !== InvestmentOrderStatus.CONFIRMED ||
+            !isRunningRuntimeStatus(investmentOrder.runtimeStatus) ||
+            investmentOrder.isMatured ||
+            !investmentOrder.confirmedAt ||
+            investmentOrder.investmentAccount.status !== AccountStatus.ACTIVE
+          ) {
             throw new Error(
-              "No active investment order was found for this account.",
+              "Only confirmed, running investment orders can be adjusted.",
             );
           }
 
-          const balanceBefore = toDecimal(account.balance);
+          const balanceBefore = toDecimal(investmentOrder.investmentAccount.balance);
           const balanceAfter =
             parsed.data.direction === "ADD"
               ? balanceBefore.add(amount)
               : balanceBefore.sub(amount);
-          const adjustmentId = buildAdjustmentId(account.id);
+          const adjustmentId = buildAdjustmentId(investmentOrder.id);
           const earningsBefore = toDecimal(investmentOrder.accruedProfit);
           const earningsAfter =
             parsed.data.direction === "ADD"
@@ -149,7 +142,7 @@ export async function adjustAccountBalance(
           }
 
           await tx.investmentAccount.update({
-            where: { id: account.id },
+            where: { id: investmentOrder.investmentAccount.id },
             data: {
               balance: balanceAfter,
             },
@@ -176,12 +169,12 @@ export async function adjustAccountBalance(
               earningsAfter,
               balanceBefore,
               balanceAfter,
-              currency: account.currency,
+              currency: investmentOrder.currency,
               reason,
               metadata: {
                 kind: "EARNINGS_ADJUSTMENT",
                 accountType: parsed.data.accountType,
-                accountId: account.id,
+                accountId: investmentOrder.id,
                 investmentOrderId: investmentOrder.id,
                 investmentPlanName: investmentOrder.investmentPlan.name,
                 adjustedAt: new Date().toISOString(),
@@ -194,15 +187,15 @@ export async function adjustAccountBalance(
             action: "adjustment.created",
             entityType: "InvestmentOrder",
             entityId: investmentOrder.id,
-            description: `Adjusted investment order earnings for ${account.investorProfile.user.name?.trim() || account.investorProfile.user.email}.`,
+            description: `Adjusted investment order earnings for ${investmentOrder.investmentAccount.investorProfile.user.name?.trim() || investmentOrder.investmentAccount.investorProfile.user.email}.`,
             metadata: {
               accountType: parsed.data.accountType,
-              accountId: account.id,
+              accountId: investmentOrder.id,
               investmentOrderId: investmentOrder.id,
               owner: {
-                id: account.investorProfile.user.id,
-                name: account.investorProfile.user.name,
-                email: account.investorProfile.user.email,
+                id: investmentOrder.investmentAccount.investorProfile.user.id,
+                name: investmentOrder.investmentAccount.investorProfile.user.name,
+                email: investmentOrder.investmentAccount.investorProfile.user.email,
               },
               direction: parsed.data.direction,
               amount: decimalToNumber(amount),
@@ -211,7 +204,7 @@ export async function adjustAccountBalance(
               earningsBefore: decimalToNumber(earningsBefore),
               earningsAfter: decimalToNumber(earningsAfter),
               reason,
-              currency: account.currency,
+              currency: investmentOrder.currency,
               sourceLabel: investmentOrder.investmentPlan.name,
               adjustmentId,
             },
@@ -221,17 +214,20 @@ export async function adjustAccountBalance(
           return {
             adjustmentId,
             account: {
-              id: account.id,
+              id: investmentOrder.id,
               type: parsed.data.accountType,
-              currency: account.currency,
+              currency: investmentOrder.currency,
               balanceBefore: decimalToNumber(balanceBefore),
               balanceAfter: decimalToNumber(balanceAfter),
               investmentOrderId: investmentOrder.id,
               earningsBefore: decimalToNumber(earningsBefore),
               earningsAfter: decimalToNumber(earningsAfter),
-              ownerId: account.investorProfile.user.id,
-              ownerName: account.investorProfile.user.name?.trim() || null,
-              ownerEmail: account.investorProfile.user.email,
+              ownerId: investmentOrder.investmentAccount.investorProfile.user.id,
+              ownerName:
+                investmentOrder.investmentAccount.investorProfile.user.name?.trim() ||
+                null,
+              ownerEmail:
+                investmentOrder.investmentAccount.investorProfile.user.email,
               sourceLabel: investmentOrder.investmentPlan.name,
             },
           };
@@ -371,7 +367,7 @@ export async function adjustAccountBalance(
 
     const adjustmentDirection = formatMovementLabel(parsed.data.direction);
     const notificationLink =
-      parsed.data.accountType === "INVESTMENT_ACCOUNT"
+      parsed.data.accountType === "INVESTMENT_ORDER"
         ? `/account/dashboard/user/investment-orders/${result.account.investmentOrderId}`
         : "/account/dashboard/user/savings";
 
@@ -380,7 +376,7 @@ export async function adjustAccountBalance(
       event: "SYSTEM",
       title: "Balance updated",
       message:
-        parsed.data.accountType === "INVESTMENT_ACCOUNT"
+        parsed.data.accountType === "INVESTMENT_ORDER"
           ? `Your investment order earnings were ${adjustmentDirection} by ${amount.toFixed(2)} ${result.account.currency}.`
           : `Your savings balance was ${adjustmentDirection} by ${amount.toFixed(2)} ${result.account.currency}.`,
       link: notificationLink,
@@ -412,7 +408,7 @@ export async function adjustAccountBalance(
     revalidatePath("/account/dashboard/user/investment-orders");
     revalidatePath("/account/dashboard/user/savings");
     revalidatePath("/account/dashboard/user/transactions");
-    if (result.account.type === "INVESTMENT_ACCOUNT") {
+    if (result.account.type === "INVESTMENT_ORDER") {
       revalidatePath(
         `/account/dashboard/user/investment-orders/${result.account.investmentOrderId}`,
       );

@@ -1,10 +1,10 @@
-export type AdminAdjustmentAccountType =
-  | "INVESTMENT_ACCOUNT"
+export type AdminAdjustmentTargetType =
+  | "INVESTMENT_ORDER"
   | "SAVINGS_ACCOUNT";
 
-export type AdminAdjustmentAccountOption = {
+export type AdminAdjustmentTargetOption = {
   id: string;
-  accountType: AdminAdjustmentAccountType;
+  targetType: AdminAdjustmentTargetType;
   title: string;
   subtitle: string;
   meta: string;
@@ -17,12 +17,12 @@ export type AdminAdjustmentAccountOption = {
 };
 
 export type AdminAdjustmentPageData = {
-  accounts: AdminAdjustmentAccountOption[];
-  defaultAccountType: AdminAdjustmentAccountType | null;
-  defaultAccountId: string | null;
+  targets: AdminAdjustmentTargetOption[];
+  defaultTargetType: AdminAdjustmentTargetType | null;
+  defaultTargetId: string | null;
   stats: {
-    totalAccounts: number;
-    investmentAccounts: number;
+    totalTargets: number;
+    investmentOrders: number;
     savingsAccounts: number;
   };
 };

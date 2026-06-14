@@ -4,8 +4,8 @@ const amountPattern = /^\d+(?:\.\d{1,2})?$/;
 
 export const adminAccountAdjustmentSchema = z
   .object({
-    accountType: z.enum(["INVESTMENT_ACCOUNT", "SAVINGS_ACCOUNT"]),
-    accountId: z.string().trim().min(1, "Select an account."),
+    accountType: z.enum(["INVESTMENT_ORDER", "SAVINGS_ACCOUNT"]),
+    accountId: z.string().trim().min(1, "Select a target."),
     direction: z.enum(["ADD", "DEDUCT"]),
     amount: z.string().trim().min(1, "Enter an adjustment amount."),
     reason: z.preprocess((value) => {

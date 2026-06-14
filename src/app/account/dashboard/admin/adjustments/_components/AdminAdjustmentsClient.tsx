@@ -20,8 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import type {
-  AdminAdjustmentAccountType,
   AdminAdjustmentPageData,
+  AdminAdjustmentTargetType,
 } from "@/lib/types/adminAdjustments";
 import { cn } from "@/lib/utils";
 
@@ -43,43 +43,43 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-function getAccountTypeLabel(accountType: AdminAdjustmentAccountType) {
-  return accountType === "INVESTMENT_ACCOUNT"
-    ? "Investment account"
+function getTargetTypeLabel(targetType: AdminAdjustmentTargetType) {
+  return targetType === "INVESTMENT_ORDER"
+    ? "Investment order"
     : "Savings account";
 }
 
 export function AdminAdjustmentsClient({ data }: Props) {
   const router = useRouter();
   const [state, formAction] = useActionState(adjustAccountBalance, initialState);
-  const [selectedAccountType, setSelectedAccountType] =
-    useState<AdminAdjustmentAccountType>(
-      data.defaultAccountType ?? "INVESTMENT_ACCOUNT",
+  const [selectedTargetType, setSelectedTargetType] =
+    useState<AdminAdjustmentTargetType>(
+      data.defaultTargetType ?? "INVESTMENT_ORDER",
     );
-  const [selectedAccountId, setSelectedAccountId] = useState(
-    data.defaultAccountId ?? "",
+  const [selectedTargetId, setSelectedTargetId] = useState(
+    data.defaultTargetId ?? "",
   );
   const [direction, setDirection] = useState<"ADD" | "DEDUCT">("ADD");
   const lastToastKey = useRef<string | null>(null);
 
-  const accountOptions = useMemo(
+  const targetOptions = useMemo(
     () =>
-      data.accounts.filter(
-        (account) => account.accountType === selectedAccountType,
+      data.targets.filter(
+        (target) => target.targetType === selectedTargetType,
       ),
-    [data.accounts, selectedAccountType],
+    [data.targets, selectedTargetType],
   );
 
-  const activeAccountId =
-    accountOptions.some((account) => account.id === selectedAccountId)
-      ? selectedAccountId
-      : accountOptions[0]?.id ?? "";
+  const activeTargetId =
+    targetOptions.some((target) => target.id === selectedTargetId)
+      ? selectedTargetId
+      : targetOptions[0]?.id ?? "";
 
-  const selectedAccount =
-    data.accounts.find((account) => account.id === activeAccountId) ??
-    accountOptions[0] ??
+  const selectedTarget =
+    data.targets.find((target) => target.id === activeTargetId) ??
+    targetOptions[0] ??
     null;
-  const canSubmit = accountOptions.length > 0 && Boolean(activeAccountId);
+  const canSubmit = targetOptions.length > 0 && Boolean(activeTargetId);
 
   useEffect(() => {
     if (state.status === "idle" || !state.message) {
@@ -116,7 +116,7 @@ export function AdminAdjustmentsClient({ data }: Props) {
             Balance adjustment form
           </CardTitle>
           <p className="text-sm text-slate-400">
-            Select an account, choose whether to add or deduct funds, then save
+            Select a target, choose whether to add or deduct funds, then save
             the adjustment. The change is audit logged and the user is
             notified.
           </p>
@@ -124,35 +124,35 @@ export function AdminAdjustmentsClient({ data }: Props) {
 
         <CardContent className="px-4 py-4 sm:px-6 sm:py-6">
           <form action={formAction} className="space-y-5">
-            <input type="hidden" name="accountType" value={selectedAccountType} />
-            <input type="hidden" name="accountId" value={activeAccountId} />
+            <input type="hidden" name="accountType" value={selectedTargetType} />
+            <input type="hidden" name="accountId" value={activeTargetId} />
             <input type="hidden" name="direction" value={direction} />
 
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-100">
-                Account type
+                Target type
               </label>
               <Select
-                value={selectedAccountType}
+                value={selectedTargetType}
                 onValueChange={(next) => {
-                  const nextType = next as AdminAdjustmentAccountType;
-                  setSelectedAccountType(nextType);
+                  const nextType = next as AdminAdjustmentTargetType;
+                  setSelectedTargetType(nextType);
                 }}
               >
                 <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose account type" />
+                  <SelectValue placeholder="Choose target type" />
                 </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="INVESTMENT_ACCOUNT">
-                  Investment account
-                </SelectItem>
-                <SelectItem value="SAVINGS_ACCOUNT">
-                  Savings account
-                </SelectItem>
-              </SelectContent>
+                <SelectContent>
+                  <SelectItem value="INVESTMENT_ORDER">
+                    Investment order
+                  </SelectItem>
+                  <SelectItem value="SAVINGS_ACCOUNT">
+                    Savings account
+                  </SelectItem>
+                </SelectContent>
               </Select>
               <p className="text-xs text-slate-500">
-                Pick the account family you want to adjust.
+                Pick the target family you want to adjust.
               </p>
               {state.fieldErrors?.accountType?.[0] ? (
                 <p className="text-xs text-red-300">
@@ -163,32 +163,33 @@ export function AdminAdjustmentsClient({ data }: Props) {
 
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-100">
-                Target account
+                Target order or account
               </label>
               <Select
-                value={activeAccountId}
-                onValueChange={setSelectedAccountId}
-                disabled={accountOptions.length === 0}
+                value={activeTargetId}
+                onValueChange={setSelectedTargetId}
+                disabled={targetOptions.length === 0}
               >
                 <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
                   <SelectValue
                     placeholder={
-                      accountOptions.length === 0
-                        ? "No accounts available"
-                        : "Choose an account"
+                      targetOptions.length === 0
+                        ? "No targets available"
+                        : "Choose a target"
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {accountOptions.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.title}
+                  {targetOptions.map((target) => (
+                    <SelectItem key={target.id} value={target.id}>
+                      {target.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-slate-500">
-                Only active or frozen accounts are shown here.
+                Only confirmed, running investment orders and open savings
+                accounts are shown here.
               </p>
               {state.fieldErrors?.accountId?.[0] ? (
                 <p className="text-xs text-red-300">{state.fieldErrors.accountId[0]}</p>
@@ -200,13 +201,13 @@ export function AdminAdjustmentsClient({ data }: Props) {
                 <label className="text-sm font-medium text-slate-100">
                   Adjustment direction
                 </label>
-              <Select
-                value={direction}
-                onValueChange={(next) => setDirection(next as "ADD" | "DEDUCT")}
-              >
-                <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose direction" />
-                </SelectTrigger>
+                <Select
+                  value={direction}
+                  onValueChange={(next) => setDirection(next as "ADD" | "DEDUCT")}
+                >
+                  <SelectTrigger className="h-11 w-full rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                    <SelectValue placeholder="Choose direction" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ADD">Add to balance</SelectItem>
                     <SelectItem value="DEDUCT">Deduct from balance</SelectItem>
@@ -250,7 +251,8 @@ export function AdminAdjustmentsClient({ data }: Props) {
                 className="rounded-2xl border-white/10 bg-white/[0.04] text-white placeholder:text-slate-500"
               />
               <p className="text-xs text-slate-500">
-                Optional. This note is stored in the audit log and user notification.
+                Optional. This note is stored in the audit log and user
+                notification.
               </p>
               {state.fieldErrors?.reason?.[0] ? (
                 <p className="text-xs text-red-300">{state.fieldErrors.reason[0]}</p>
@@ -279,24 +281,24 @@ export function AdminAdjustmentsClient({ data }: Props) {
 
       <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.98))] text-white shadow-[0_22px_60px_rgba(0,0,0,0.22)]">
         <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
-          <CardTitle className="text-lg sm:text-xl">Selected account</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Selected target</CardTitle>
           <p className="text-sm text-slate-400">
-            Review the currently selected account before saving the adjustment.
+            Review the currently selected target before saving the adjustment.
           </p>
         </CardHeader>
 
         <CardContent className="space-y-4 px-4 py-4 sm:px-6 sm:py-6">
-          {selectedAccount ? (
+          {selectedTarget ? (
             <>
               <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4">
                 <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                  Account
+                  Target
                 </p>
                 <p className="mt-2 text-base font-semibold text-white">
-                  {selectedAccount.title}
+                  {selectedTarget.title}
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  {getAccountTypeLabel(selectedAccount.accountType)}
+                  {getTargetTypeLabel(selectedTarget.targetType)}
                 </p>
               </div>
 
@@ -307,8 +309,8 @@ export function AdminAdjustmentsClient({ data }: Props) {
                   </p>
                   <p className="mt-2 text-lg font-semibold text-white">
                     {formatCurrency(
-                      selectedAccount.balance,
-                      selectedAccount.currency,
+                      selectedTarget.balance,
+                      selectedTarget.currency,
                     )}
                   </p>
                 </div>
@@ -318,7 +320,7 @@ export function AdminAdjustmentsClient({ data }: Props) {
                     Status
                   </p>
                   <p className="mt-2 text-lg font-semibold text-white">
-                    {formatEnumLabel(selectedAccount.status)}
+                    {formatEnumLabel(selectedTarget.status)}
                   </p>
                 </div>
               </div>
@@ -328,10 +330,10 @@ export function AdminAdjustmentsClient({ data }: Props) {
                   Owner
                 </p>
                 <p className="mt-2 text-sm font-medium text-white">
-                  {selectedAccount.ownerName}
+                  {selectedTarget.ownerName}
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  {selectedAccount.ownerEmail}
+                  {selectedTarget.ownerEmail}
                 </p>
               </div>
 
@@ -340,13 +342,13 @@ export function AdminAdjustmentsClient({ data }: Props) {
                   Source
                 </p>
                 <p className="mt-2 text-sm text-slate-200">
-                  {selectedAccount.meta}
+                  {selectedTarget.meta}
                 </p>
               </div>
             </>
           ) : (
             <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-slate-400">
-              No adjustable accounts are currently available.
+              No adjustable targets are currently available.
             </div>
           )}
         </CardContent>

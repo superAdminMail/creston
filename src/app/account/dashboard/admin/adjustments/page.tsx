@@ -9,17 +9,17 @@ export default async function AdminAdjustmentsPage() {
   return (
     <AdminOperationsShell
       title="Adjustments"
-      description="Add or deduct balance from an active investment or savings account, with audit logging and user notifications."
+      description="Add or deduct balance from an active investment order or savings account, with audit logging and user notifications."
       stats={[
         {
-          title: "Adjustable accounts",
-          value: String(data.stats.totalAccounts),
-          hint: "Open investment and savings accounts that can be adjusted",
+          title: "Adjustable targets",
+          value: String(data.stats.totalTargets),
+          hint: "Open investment orders and savings accounts that can be adjusted",
         },
         {
-          title: "Investment accounts",
-          value: String(data.stats.investmentAccounts),
-          hint: "Investment account balances currently available",
+          title: "Investment orders",
+          value: String(data.stats.investmentOrders),
+          hint: "Confirmed, running investment orders currently available",
         },
         {
           title: "Savings accounts",

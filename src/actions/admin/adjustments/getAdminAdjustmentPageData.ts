@@ -1,21 +1,27 @@
 "use server";
 
-import { Prisma } from "@/generated/prisma";
+import {
+  InvestmentOrderStatus,
+  Prisma,
+  RuntimeStatus,
+} from "@/generated/prisma";
 import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type {
-  AdminAdjustmentAccountOption,
   AdminAdjustmentPageData,
+  AdminAdjustmentTargetOption,
 } from "@/lib/types/adminAdjustments";
 
-const investmentAccountSelect =
-  Prisma.validator<Prisma.InvestmentAccountSelect>()({
+const investmentOrderSelect =
+  Prisma.validator<Prisma.InvestmentOrderSelect>()({
     id: true,
-    balance: true,
+    accruedProfit: true,
     currency: true,
     status: true,
+    runtimeStatus: true,
+    confirmedAt: true,
     updatedAt: true,
     investorProfile: {
       select: {
@@ -58,28 +64,33 @@ const savingsAccountSelect =
     },
   });
 
-function mapInvestmentAccount(
-  account: Prisma.InvestmentAccountGetPayload<{
-    select: typeof investmentAccountSelect;
+function mapInvestmentOrder(
+  order: Prisma.InvestmentOrderGetPayload<{
+    select: typeof investmentOrderSelect;
   }>,
-): AdminAdjustmentAccountOption {
-  const ownerName = account.investorProfile.user.name?.trim() || "Unnamed user";
-  const ownerEmail = account.investorProfile.user.email;
-  const balance = decimalToNumber(account.balance);
-  const currency = account.currency;
+): AdminAdjustmentTargetOption {
+  const ownerName = order.investorProfile.user.name?.trim() || "Unnamed user";
+  const ownerEmail = order.investorProfile.user.email;
+  const balance = decimalToNumber(order.accruedProfit);
+  const currency = order.currency;
 
   return {
-    id: account.id,
-    accountType: "INVESTMENT_ACCOUNT",
-    title: `${ownerName} · ${account.investmentPlan.name}`,
+    id: order.id,
+    targetType: "INVESTMENT_ORDER",
+    title: `${ownerName} · ${order.investmentPlan.name}`,
     subtitle: ownerEmail,
-    meta: `${formatCurrency(balance, currency)} · ${formatEnumLabel(account.status)}`,
+    meta: [
+      `Profit ${formatCurrency(balance, currency)}`,
+      formatEnumLabel(order.status),
+      formatEnumLabel(order.runtimeStatus),
+      order.confirmedAt ? "Confirmed" : "Unconfirmed",
+    ].join(" · "),
     balance,
     currency,
-    status: account.status,
+    status: order.status,
     ownerName,
     ownerEmail,
-    updatedAt: account.updatedAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
   };
 }
 
@@ -87,7 +98,7 @@ function mapSavingsAccount(
   account: Prisma.SavingsAccountGetPayload<{
     select: typeof savingsAccountSelect;
   }>,
-): AdminAdjustmentAccountOption {
+): AdminAdjustmentTargetOption {
   const ownerName = account.investorProfile.user.name?.trim() || "Unnamed user";
   const ownerEmail = account.investorProfile.user.email;
   const balance = decimalToNumber(account.balance);
@@ -95,7 +106,7 @@ function mapSavingsAccount(
 
   return {
     id: account.id,
-    accountType: "SAVINGS_ACCOUNT",
+    targetType: "SAVINGS_ACCOUNT",
     title: `${ownerName} · ${account.savingsProduct.name}`,
     subtitle: ownerEmail,
     meta: `${formatCurrency(balance, currency)} · ${formatEnumLabel(account.status)}`,
@@ -111,14 +122,19 @@ function mapSavingsAccount(
 export async function getAdminAdjustmentPageData(): Promise<AdminAdjustmentPageData> {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
 
-  const [investmentAccounts, savingsAccounts] = await Promise.all([
-    prisma.investmentAccount.findMany({
+  const [investmentOrders, savingsAccounts] = await Promise.all([
+    prisma.investmentOrder.findMany({
       where: {
-        status: {
-          not: "CLOSED",
+        status: InvestmentOrderStatus.CONFIRMED,
+        runtimeStatus: {
+          in: [RuntimeStatus.ACTIVE, RuntimeStatus.ONGOING],
+        },
+        isMatured: false,
+        confirmedAt: {
+          not: null,
         },
       },
-      select: investmentAccountSelect,
+      select: investmentOrderSelect,
       orderBy: {
         updatedAt: "desc",
       },
@@ -138,23 +154,23 @@ export async function getAdminAdjustmentPageData(): Promise<AdminAdjustmentPageD
     }),
   ]);
 
-  const accounts = [
-    ...investmentAccounts.map(mapInvestmentAccount),
+  const targets = [
+    ...investmentOrders.map(mapInvestmentOrder),
     ...savingsAccounts.map(mapSavingsAccount),
   ].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
 
-  const defaultAccount =
-    accounts.find((account) => account.accountType === "INVESTMENT_ACCOUNT") ??
-    accounts[0] ??
+  const defaultTarget =
+    targets.find((target) => target.targetType === "INVESTMENT_ORDER") ??
+    targets[0] ??
     null;
 
   return {
-    accounts,
-    defaultAccountType: defaultAccount?.accountType ?? null,
-    defaultAccountId: defaultAccount?.id ?? null,
+    targets,
+    defaultTargetType: defaultTarget?.targetType ?? null,
+    defaultTargetId: defaultTarget?.id ?? null,
     stats: {
-      totalAccounts: accounts.length,
-      investmentAccounts: investmentAccounts.length,
+      totalTargets: targets.length,
+      investmentOrders: investmentOrders.length,
       savingsAccounts: savingsAccounts.length,
     },
   };
