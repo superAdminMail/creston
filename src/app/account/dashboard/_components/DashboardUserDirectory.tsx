@@ -183,16 +183,18 @@ function StatCard({
   return (
     <Card className="border-white/10 bg-[#071120] text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
       <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/50">
               {title}
             </p>
-            <h3 className="text-2xl font-semibold tracking-tight">{value}</h3>
-            <p className="text-sm text-white/60">{description}</p>
+            <h3 className="break-words text-2xl font-semibold leading-tight tracking-tight">
+              {value}
+            </h3>
+            <p className="text-sm leading-6 text-white/60">{description}</p>
           </div>
 
-          <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 px-3 py-3 text-[#7cc4f3]">
             {icon}
           </div>
         </div>
@@ -259,20 +261,20 @@ export function DashboardUserDirectory({
               </div>
             </div>
 
-            <div className="grid w-full max-w-xl grid-cols-2 md:grid-cols-1 gap-3">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Users
                 </p>
-                <p className="mt-2 text-2xl font-semibold">
+                <p className="mt-2 break-words text-2xl font-semibold leading-tight">
                   {stats.totalUsers}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Funds
                 </p>
-                <p className="mt-2 text-2xl font-semibold">
+                <p className="mt-2 break-words text-2xl font-semibold leading-tight">
                   {formatDirectoryCurrency(stats.totalManagedFunds)}
                 </p>
               </div>
