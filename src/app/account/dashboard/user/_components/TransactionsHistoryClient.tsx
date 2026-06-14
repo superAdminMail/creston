@@ -5,6 +5,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   PiggyBank,
+  BadgePercent,
   TrendingUp,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ const filters: Array<{ label: string; value: FilterValue }> = [
   { label: "investment", value: "INVESTMENT" },
   { label: "withdrawal", value: "WITHDRAWAL" },
   { label: "earning", value: "EARNING" },
+  { label: "adjustment", value: "ADJUSTMENT" },
   { label: "savings", value: "SAVINGS" },
 ];
 
@@ -51,6 +53,10 @@ function TransactionIcon({ transaction }: { transaction: TransactionItem }) {
 
   if (transaction.type === "SAVINGS") {
     return <PiggyBank className="h-4 w-4 text-amber-300" />;
+  }
+
+  if (transaction.type === "ADJUSTMENT") {
+    return <BadgePercent className="h-4 w-4 text-amber-300" />;
   }
 
   return <ArrowDownLeft className="h-4 w-4 text-green-400" />;

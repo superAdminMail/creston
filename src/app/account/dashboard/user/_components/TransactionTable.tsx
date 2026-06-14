@@ -146,6 +146,7 @@ function TypeBadge({ type }: { type: string }) {
     INVESTMENT: "bg-blue-500/10 text-blue-300",
     WITHDRAWAL: "bg-red-500/10 text-red-300",
     EARNING: "bg-emerald-500/10 text-emerald-300",
+    ADJUSTMENT: "bg-amber-500/10 text-amber-300",
     SAVINGS: "bg-amber-500/10 text-amber-300",
   };
 

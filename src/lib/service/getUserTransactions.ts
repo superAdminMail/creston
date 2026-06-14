@@ -1,10 +1,12 @@
 import type { SavingsTransactionType } from "@/generated/prisma";
+import { asJsonObject } from "@/lib/payments/paymentJson";
 import { prisma } from "@/lib/prisma";
 
 export type TransactionType =
   | "INVESTMENT"
   | "WITHDRAWAL"
   | "EARNING"
+  | "ADJUSTMENT"
   | "SAVINGS";
 
 export type TransactionItem = {
@@ -25,6 +27,70 @@ export type TransactionItem = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseInvestmentOrderAdjustmentMetadata(order: {
+  id: string;
+  currency: string;
+  updatedAt: Date;
+  paymentMetadata: unknown;
+}) {
+  const metadata = asJsonObject(order.paymentMetadata);
+  const adjustments = Array.isArray(metadata.adjustments)
+    ? metadata.adjustments
+    : [];
+
+  return adjustments
+    .filter((item): item is Record<string, unknown> => isRecord(item))
+    .filter(
+      (item) =>
+        item.kind === "EARNINGS_ADJUSTMENT" ||
+        item.kind === "BALANCE_ADJUSTMENT",
+    )
+    .map((item) => {
+      const amount = Number(item.amount);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return null;
+      }
+
+      const createdAt =
+        typeof item.adjustedAt === "string"
+          ? new Date(item.adjustedAt)
+          : order.updatedAt;
+
+      if (Number.isNaN(createdAt.getTime())) {
+        return null;
+      }
+
+      const direction =
+        item.direction === "DEDUCT" ? "DEBIT" : ("CREDIT" as const);
+      const reference =
+        typeof item.adjustmentId === "string" && item.adjustmentId.trim()
+          ? item.adjustmentId
+          : `ADJ-${order.id.slice(0, 6).toUpperCase()}`;
+
+      return {
+        id: `${order.id}:${reference}`,
+        type: "ADJUSTMENT" as const,
+        amount,
+        currency:
+          typeof item.currency === "string" && item.currency.trim()
+            ? item.currency
+            : order.currency,
+        status: "COMPLETED",
+        createdAt,
+        reference,
+        planName:
+          typeof item.investmentPlanName === "string" &&
+          item.investmentPlanName.trim()
+            ? item.investmentPlanName
+            : undefined,
+        description: "Manual investment earnings adjustment",
+        direction,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 }
 
 function parseLegacyFixedProfitNotification(notification: {
@@ -239,6 +305,10 @@ export async function getUserTransactions(userId: string) {
     direction: "DEBIT",
   }));
 
+  const investmentAdjustmentTx: TransactionItem[] = orders.flatMap((order) =>
+    parseInvestmentOrderAdjustmentMetadata(order),
+  );
+
   const withdrawalTx: TransactionItem[] = withdrawals.map((w) => ({
     id: w.id,
     type: "WITHDRAWAL",
@@ -313,6 +383,7 @@ export async function getUserTransactions(userId: string) {
 
   const transactions = [
     ...investmentTx,
+    ...investmentAdjustmentTx,
     ...withdrawalTx,
     ...earningTx,
     ...legacyFixedProfitTx,
