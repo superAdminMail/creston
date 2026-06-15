@@ -283,11 +283,6 @@ export const DASHBOARD_MENU = {
           icon: Landmark,
         },
         {
-          name: "Transactions",
-          href: "/account/dashboard/admin/transactions",
-          icon: CircleDollarSign,
-        },
-        {
           name: "Investment Payments",
           href: "/account/dashboard/admin/investment-payments",
           icon: CircleDollarSign,
@@ -300,6 +295,16 @@ export const DASHBOARD_MENU = {
         {
           name: "Adjustments",
           href: "/account/dashboard/admin/adjustments",
+          icon: CircleDollarSign,
+        },
+        {
+          name: "Transactions",
+          href: "/account/dashboard/admin/transactions",
+          icon: CircleDollarSign,
+        },
+        {
+          name: "History",
+          href: "/account/dashboard/admin/history",
           icon: CircleDollarSign,
         },
       ],
