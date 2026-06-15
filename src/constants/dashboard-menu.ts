@@ -267,16 +267,16 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/investment-orders",
           icon: ClipboardList,
         },
+        {
+          name: "Accounting History",
+          href: "/account/dashboard/admin/history",
+          icon: CircleDollarSign,
+        },
       ],
     },
     {
-      title: "Financial",
+      title: "Payment Gateway",
       links: [
-        {
-          name: "Funding Intents",
-          href: "/account/dashboard/admin/funding-intents",
-          icon: Wallet,
-        },
         {
           name: "Payment Methods",
           href: "/account/dashboard/admin/payment-methods",
@@ -292,19 +292,30 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/admin/savings-payments",
           icon: CircleDollarSign,
         },
+      ],
+    },
+    {
+      title: "Financial",
+      links: [
         {
           name: "Adjustments",
           href: "/account/dashboard/admin/adjustments",
           icon: CircleDollarSign,
         },
         {
-          name: "Transactions",
-          href: "/account/dashboard/admin/transactions",
+          name: "Funding Intents",
+          href: "/account/dashboard/admin/funding-intents",
+          icon: Wallet,
+        },
+
+        {
+          name: "Deposits",
+          href: "/account/dashboard/admin/deposits",
           icon: CircleDollarSign,
         },
         {
-          name: "History",
-          href: "/account/dashboard/admin/history",
+          name: "Transactions",
+          href: "/account/dashboard/admin/transactions",
           icon: CircleDollarSign,
         },
       ],
@@ -315,11 +326,6 @@ export const DASHBOARD_MENU = {
         {
           name: "Withdrawals",
           href: "/account/dashboard/admin/Withdrawals",
-          icon: CircleDollarSign,
-        },
-        {
-          name: "Deposits",
-          href: "/account/dashboard/admin/deposits",
           icon: CircleDollarSign,
         },
       ],
