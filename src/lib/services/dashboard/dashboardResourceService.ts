@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { calculateInvestmentAccountBalance } from "@/lib/services/investment/investmentBalanceService";
 
 type DashboardResourceKey =
   | "users"
@@ -169,7 +170,6 @@ async function fetchInvestmentAccounts() {
       select: {
         id: true,
         status: true,
-        balance: true,
         currency: true,
         createdAt: true,
         investorProfile: {
@@ -187,6 +187,34 @@ async function fetchInvestmentAccounts() {
             name: true,
           },
         },
+        investmentOrders: {
+          select: {
+            id: true,
+            amount: true,
+            amountPaid: true,
+            accruedProfit: true,
+            investmentModel: true,
+            currentValue: true,
+            status: true,
+            investmentEarnings: {
+              select: {
+                amount: true,
+              },
+            },
+            investmentPlan: {
+              select: {
+                name: true,
+                investment: {
+                  select: {
+                    name: true,
+                    type: true,
+                    symbol: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     }),
     totalPromise: prisma.investmentAccount.count(),
@@ -195,7 +223,8 @@ async function fetchInvestmentAccounts() {
       title: account.investorProfile.user.name?.trim() || "Unnamed investor",
       subtitle: `${account.investmentPlan.name} | ${account.investorProfile.user.email}`,
       balance: formatCurrency(
-        decimalToNumber(account.balance),
+        calculateInvestmentAccountBalance(account.investmentOrders)
+          .accountBalanceNumber,
         account.currency,
       ),
       meta: `${formatEnumLabel(account.status)} | Opened ${formatDateLabel(account.createdAt)}`,
