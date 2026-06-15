@@ -21,6 +21,7 @@ export type DashboardResourceItem = {
   id: string;
   title: string;
   subtitle: string;
+  balance?: string;
   meta: string;
 };
 
@@ -193,7 +194,11 @@ async function fetchInvestmentAccounts() {
       id: account.id,
       title: account.investorProfile.user.name?.trim() || "Unnamed investor",
       subtitle: `${account.investmentPlan.name} | ${account.investorProfile.user.email}`,
-      meta: `${formatCurrency(decimalToNumber(account.balance), account.currency)} | ${formatEnumLabel(account.status)} | Opened ${formatDateLabel(account.createdAt)}`,
+      balance: formatCurrency(
+        decimalToNumber(account.balance),
+        account.currency,
+      ),
+      meta: `${formatEnumLabel(account.status)} | Opened ${formatDateLabel(account.createdAt)}`,
     }),
   });
 }

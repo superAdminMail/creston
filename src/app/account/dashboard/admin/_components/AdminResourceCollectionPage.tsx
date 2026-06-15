@@ -15,6 +15,7 @@ type AdminResourceCollectionPageProps = {
 function MobileResourceCard({
   title,
   subtitle,
+  balance,
   meta,
 }: DashboardResourceCollection["items"][number]) {
   return (
@@ -23,6 +24,11 @@ function MobileResourceCard({
         <p className="text-base font-semibold text-white">{title}</p>
         <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
       </div>
+      {balance ? (
+        <p className="text-sm font-medium text-sky-300">
+          Account balance: {balance}
+        </p>
+      ) : null}
       <p className="text-xs leading-6 text-slate-500">{meta}</p>
     </div>
   );
@@ -71,6 +77,19 @@ export function AdminResourceCollectionPage({
               </div>
             ),
           },
+          ...(collection.key === "investmentAccounts"
+            ? [
+                {
+                  key: "balance",
+                  header: "Account balance",
+                  render: (item: DashboardResourceCollection["items"][number]) => (
+                    <p className="text-sm font-medium text-sky-300">
+                      {item.balance ?? "Not available"}
+                    </p>
+                  ),
+                },
+              ]
+            : []),
           {
             key: "meta",
             header: "Operational detail",
