@@ -45,6 +45,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import {
   Field,
   FieldContent,
   FieldDescription,
@@ -55,6 +64,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createInitialFormState } from "@/lib/forms/actionState";
+import PaymentMethodDrawer from "./PaymentMethodDrawer";
 
 type PaymentMethod = {
   id: string;
@@ -340,7 +350,7 @@ function PaymentMethodModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10 sm:max-w-xl">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[1.75rem] border border-white/10 p-0 text-white ring-white/10 sm:max-w-xl">
         <div className="max-h-[calc(100vh-2rem)] overflow-y-auto space-y-6 p-6">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-xl text-white">
@@ -770,7 +780,7 @@ export default function PaymentInfoClient({
       )}
 
       {canManageMethods ? (
-        <PaymentMethodModal open={showModal} onOpenChange={setShowModal} />
+        <PaymentMethodDrawer open={showModal} onOpenChange={setShowModal} />
       ) : null}
     </div>
   );

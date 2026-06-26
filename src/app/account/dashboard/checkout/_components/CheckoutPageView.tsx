@@ -4,7 +4,9 @@ import InvestmentOrderPaymentClient from "../../user/investment-orders/[investme
 import { getInvestmentOrderPaymentDetails } from "../../user/investment-orders/[investmentOrderId]/payment/_lib/getInvestmentOrderPaymentDetails";
 import SavingsFunding from "./SavingsFunding";
 import WithdrawalCommissionFunding from "./WithdrawalCommissionFunding";
+import WithdrawalFeeFunding from "./WithdrawalFeeFunding";
 import { getWithdrawalCommissionCheckoutDetails } from "../_lib/getWithdrawalCommissionCheckoutDetails";
+import { getWithdrawalFeeCheckoutDetails } from "../_lib/getWithdrawalFeeCheckoutDetails";
 import { calculateInvestmentOrderBankChargeAmount } from "@/lib/payments/bank/calculateInvestmentOrderBankChargeAmount";
 import {
   getInvestmentOrderUpgradeSettings,
@@ -20,7 +22,8 @@ import {
 type CheckoutTargetType =
   | "INVESTMENT_ORDER"
   | "SAVINGS_FUNDING"
-  | "WITHDRAWAL_ORDER";
+  | "WITHDRAWAL_ORDER"
+  | "WITHDRAWAL_FEE";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -31,6 +34,7 @@ type CheckoutRouteInput = {
   targetId: string;
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
+  suggestedAmount: number | null;
 };
 
 function single(value: string | string[] | undefined) {
@@ -61,6 +65,24 @@ function parseCheckoutFundingMethodType(
   return null;
 }
 
+function parsePositiveAmount(
+  value: string | string[] | undefined,
+): number | null {
+  const raw = single(value);
+
+  if (raw === undefined || raw.trim().length === 0) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 function parseCheckoutRouteInput(
   searchParams: Record<string, string | string[] | undefined>,
 ): CheckoutRouteInput | null {
@@ -69,13 +91,15 @@ function parseCheckoutRouteInput(
   if (
     targetType === "INVESTMENT_ORDER" ||
     targetType === "SAVINGS_FUNDING" ||
-    targetType === "WITHDRAWAL_ORDER"
+    targetType === "WITHDRAWAL_ORDER" ||
+    targetType === "WITHDRAWAL_FEE"
   ) {
     const targetId = single(searchParams.targetId);
     const paymentMode = parseCheckoutPaymentMode(searchParams.paymentMode);
     const fundingMethodType = parseCheckoutFundingMethodType(
       searchParams.fundingMethodType,
     );
+    const suggestedAmount = parsePositiveAmount(searchParams.suggestedAmount);
 
     if (!targetId) {
       return null;
@@ -101,6 +125,11 @@ function parseCheckoutRouteInput(
       targetId,
       fundingMethodType,
       paymentMode: targetType === "WITHDRAWAL_ORDER" ? null : paymentMode,
+      suggestedAmount:
+        targetType === "WITHDRAWAL_ORDER" ||
+        targetType === "WITHDRAWAL_FEE"
+          ? suggestedAmount
+          : null,
     };
   }
 
@@ -190,6 +219,25 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         <WithdrawalCommissionFunding
           details={details}
           fundingMethodType={routeInput.fundingMethodType}
+          suggestedAmount={routeInput.suggestedAmount}
+        />
+      );
+    }
+    case "WITHDRAWAL_FEE": {
+      const details = await getWithdrawalFeeCheckoutDetails(
+        routeInput.targetId,
+        routeInput.fundingMethodType,
+      );
+
+      if (!details) {
+        notFound();
+      }
+
+      return (
+        <WithdrawalFeeFunding
+          details={details}
+          fundingMethodType={routeInput.fundingMethodType}
+          suggestedAmount={routeInput.suggestedAmount}
         />
       );
     }

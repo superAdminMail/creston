@@ -547,7 +547,7 @@ export function DashboardUserDirectory({
         open={Boolean(selectedUser)}
         onOpenChange={(open) => !open && setSelectedUser(null)}
       >
-        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-white/10 p-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
           {selectedUser ? (
             <div className="flex max-h-[92dvh] flex-col">
               <DialogHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">

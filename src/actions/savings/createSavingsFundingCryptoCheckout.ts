@@ -326,8 +326,7 @@ export async function createSavingsFundingCryptoCheckout(
             status: SavingsFundingIntentStatus.FAILED,
             failedAt: new Date(),
             failureCode: RESERVATION_FAILED_CODE,
-            failureMessage:
-              error instanceof Error ? error.message : "Unable to create crypto checkout.",
+            failureMessage: "Unable to create crypto checkout.",
           },
         })
         .catch((reservationError) => {
@@ -340,10 +339,7 @@ export async function createSavingsFundingCryptoCheckout(
 
     return {
       ok: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Unable to create crypto checkout.",
+      message: "Unable to create crypto checkout.",
     };
   }
 }

@@ -120,19 +120,11 @@ export default async function AdminSavingsProductsPage() {
       renderMobileCard={(product) => (
         <div className="space-y-3">
           <div>
-            <span className="flex justify-between">
+            <div className="flex justify-between">
               <p className="text-base font-semibold text-white">
                 {product.name}
-              </p>{" "}
-              {product.sortOrder === 1 ? (
-                <Badge
-                  variant="secondary"
-                  className="border-amber-400/20 bg-amber-500/10 text-amber-300 px-8 py-1.5 text-xl"
-                >
-                  Popular
-                </Badge>
-              ) : null}
-            </span>
+              </p>
+            </div>
             <p className="mt-1 text-sm text-slate-400">
               {product.description ?? "No description provided"}
             </p>

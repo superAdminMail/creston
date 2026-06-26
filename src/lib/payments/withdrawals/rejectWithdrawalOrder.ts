@@ -7,6 +7,7 @@ import {
   getWithdrawalCommissionSourceType,
   readWithdrawalSnapshotString,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
+import { releaseInvestmentOrdersForWithdrawal } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
 
 export async function rejectWithdrawalOrder(input: {
   withdrawalId: string;
@@ -24,6 +25,11 @@ export async function rejectWithdrawalOrder(input: {
       rejectionReason: true,
       payoutSnapshot: true,
       investmentOrderId: true,
+      allocations: {
+        select: {
+          investmentOrderId: true,
+        },
+      },
       investorProfile: {
         select: {
           userId: true,
@@ -65,6 +71,8 @@ export async function rejectWithdrawalOrder(input: {
     if (updateResult.count === 0) {
       throw new Error("Withdrawal order can only be rejected while pending.");
     }
+
+    await releaseInvestmentOrdersForWithdrawal(tx, withdrawal.id);
   });
 
   await createRealtimeNotification({

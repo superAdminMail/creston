@@ -1,6 +1,12 @@
 export type WithdrawalCommissionSourceType =
   | "INVESTMENT_ORDER"
-  | "SAVINGS_ACCOUNT";
+  | "SAVINGS_ACCOUNT"
+  | "MIXED";
+
+export type WithdrawalCommissionAllocationInput = {
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
+  sourceGrossAmount: number;
+};
 
 export type WithdrawalCommissionFieldName =
   | "commissionPercent"
@@ -19,7 +25,16 @@ export type WithdrawalCommissionFieldConfig = {
 export function getWithdrawalCommissionSourceType(input: {
   investmentOrderId: string | null | undefined;
   sourceType?: string | null | undefined;
+  allocationMode?: string | null | undefined;
 }): WithdrawalCommissionSourceType {
+  if (input.allocationMode === "AUTO" || input.sourceType === "AUTO") {
+    return "MIXED";
+  }
+
+  if (input.sourceType === "MIXED") {
+    return "MIXED";
+  }
+
   if (input.sourceType === "INVESTMENT_POOL") {
     return "INVESTMENT_ORDER";
   }
@@ -29,6 +44,43 @@ export function getWithdrawalCommissionSourceType(input: {
   }
 
   return input.investmentOrderId ? "INVESTMENT_ORDER" : "SAVINGS_ACCOUNT";
+}
+
+export function calculateWithdrawalCommissionDueAmount(input: {
+  sourceType: WithdrawalCommissionSourceType;
+  amount: number;
+  commissionPercent: number;
+  savingsFeeAmount: number | null;
+  allocations?: WithdrawalCommissionAllocationInput[];
+}): number {
+  const allocations = input.allocations ?? [];
+
+  if (input.sourceType === "MIXED" && allocations.length > 0) {
+    let total = 0;
+    let hasSavings = false;
+
+    for (const allocation of allocations) {
+      if (allocation.sourceType === "INVESTMENT_ORDER") {
+        total += allocation.sourceGrossAmount * (input.commissionPercent / 100);
+      }
+
+      if (allocation.sourceType === "SAVINGS_ACCOUNT") {
+        hasSavings = true;
+      }
+    }
+
+    if (hasSavings && input.savingsFeeAmount !== null) {
+      total += input.savingsFeeAmount;
+    }
+
+    return total;
+  }
+
+  if (input.sourceType === "SAVINGS_ACCOUNT") {
+    return input.savingsFeeAmount ?? 0;
+  }
+
+  return input.amount * (input.commissionPercent / 100);
 }
 
 export function readWithdrawalSnapshotString(

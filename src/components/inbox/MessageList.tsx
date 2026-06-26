@@ -34,10 +34,11 @@ function formatDateLabel(value: string) {
   if (current === today) return "Today";
   if (current === yesterday) return "Yesterday";
 
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
+    timeZone: "UTC",
   });
 }
 

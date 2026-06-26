@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getSafeServerActionErrorMessage } from "@/lib/forms/actionState";
 import { createInvestmentOrderBankDepositSubmission } from "@/lib/payments/bank/createInvestmentOrderBankDepositSubmission";
 import { submitInvestmentBankPaymentProofSchema as schema } from "@/lib/zodValidations/investment-bank-payment-proof";
 
@@ -56,10 +57,11 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
   } catch (error) {
     return {
       ok: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Unable to submit payment proof.",
+      message: getSafeServerActionErrorMessage(
+        "submitInvestmentBankPaymentProof",
+        error,
+        "Unable to submit payment proof.",
+      ),
     };
   }
 }

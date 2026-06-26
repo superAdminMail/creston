@@ -38,7 +38,7 @@ export type WithdrawalCommissionCheckoutDetails = {
     hasCommissionFees: boolean;
     commissionPercent: number;
     savingsFeeAmount: number | null;
-    sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
+    sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" | "MIXED";
     sourceLabel: string;
     requestedAt: string;
   };

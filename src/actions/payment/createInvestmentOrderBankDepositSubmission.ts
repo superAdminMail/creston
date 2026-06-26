@@ -7,6 +7,7 @@ import {
   type CreateInvestmentOrderBankDepositSubmissionResult,
 } from "@/lib/payments/bank/createInvestmentOrderBankDepositSubmission";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getSafeServerActionErrorMessage } from "@/lib/forms/actionState";
 
 export type CreateInvestmentOrderBankDepositSubmissionActionResult =
   | {
@@ -26,7 +27,7 @@ type CreateInvestmentOrderBankDepositSubmissionInput = {
   depositorAccountNo?: string;
   transferReference?: string;
   note?: string;
-  receiptFileId?: string;
+  receiptFileId: string;
 };
 
 export async function createInvestmentOrderBankDepositSubmissionAction({
@@ -41,11 +42,19 @@ export async function createInvestmentOrderBankDepositSubmissionAction({
 }: CreateInvestmentOrderBankDepositSubmissionInput): Promise<CreateInvestmentOrderBankDepositSubmissionActionResult> {
   try {
     const normalizedInvestmentOrderId = investmentOrderId.trim();
+    const normalizedReceiptFileId = receiptFileId.trim();
 
     if (!normalizedInvestmentOrderId) {
       return {
         success: false,
         error: "Investment order id is required",
+      };
+    }
+
+    if (!normalizedReceiptFileId) {
+      return {
+        success: false,
+        error: "Receipt image is required",
       };
     }
 
@@ -67,7 +76,7 @@ export async function createInvestmentOrderBankDepositSubmissionAction({
       depositorAccountNo,
       transferReference,
       note,
-      receiptFileId,
+      receiptFileId: normalizedReceiptFileId,
     });
 
     revalidatePath("/account/dashboard/user/investment-orders");
@@ -85,17 +94,13 @@ export async function createInvestmentOrderBankDepositSubmissionAction({
       data,
     };
   } catch (error) {
-    console.error(
-      "createInvestmentOrderBankDepositSubmissionAction error:",
-      error,
-    );
-
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to submit bank deposit for this investment order",
+      error: getSafeServerActionErrorMessage(
+        "createInvestmentOrderBankDepositSubmissionAction",
+        error,
+        "Unable to submit bank deposit for this investment order.",
+      ),
     };
   }
 }

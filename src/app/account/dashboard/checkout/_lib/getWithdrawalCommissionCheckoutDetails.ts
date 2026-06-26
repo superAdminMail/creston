@@ -5,6 +5,7 @@ import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import type { WithdrawalCommissionCheckoutDetails } from "@/lib/types/payments/withdrawalCommission.types";
 import {
+  calculateWithdrawalCommissionDueAmount,
   getWithdrawalCommissionSourceType,
   readWithdrawalSnapshotString,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
@@ -57,6 +58,12 @@ export async function getWithdrawalCommissionCheckoutDetails(
       requestedAt: true,
       investmentOrderId: true,
       investmentAccountId: true,
+      allocations: {
+        select: {
+          sourceType: true,
+          sourceGrossAmount: true,
+        },
+      },
       investmentOrder: {
         select: {
           id: true,
@@ -87,6 +94,10 @@ export async function getWithdrawalCommissionCheckoutDetails(
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: withdrawal.investmentOrderId,
     sourceType: readWithdrawalSnapshotString(withdrawal.payoutSnapshot, "sourceType"),
+    allocationMode: readWithdrawalSnapshotString(
+      withdrawal.payoutSnapshot,
+      "allocationMode",
+    ),
   });
 
   const sourceLabel =
@@ -102,11 +113,17 @@ export async function getWithdrawalCommissionCheckoutDetails(
   }
 
   const savingsFeeAmount = withdrawal.savingsFeeAmount;
-  const commissionAmount =
-    sourceType === "SAVINGS_ACCOUNT"
-      ? decimalToNumber(savingsFeeAmount)
-      : decimalToNumber(withdrawal.amount) *
-        (decimalToNumber(withdrawal.commissionPercent) / 100);
+  const commissionAmount = calculateWithdrawalCommissionDueAmount({
+    sourceType,
+    amount: decimalToNumber(withdrawal.amount),
+    commissionPercent: decimalToNumber(withdrawal.commissionPercent),
+    savingsFeeAmount:
+      savingsFeeAmount !== null ? decimalToNumber(savingsFeeAmount) : null,
+    allocations: withdrawal.allocations.map((allocation) => ({
+      sourceType: allocation.sourceType,
+      sourceGrossAmount: decimalToNumber(allocation.sourceGrossAmount),
+    })),
+  });
 
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,

@@ -24,7 +24,7 @@ type CreateSavingsFundingDepositSubmissionInput = {
   depositorAccountNo?: string | null;
   transferReference?: string | null;
   note?: string | null;
-  receiptFileId?: string | null;
+  receiptFileId: string;
   platformPaymentMethodId: string;
 };
 
@@ -108,6 +108,12 @@ export async function createSavingsFundingDepositSubmission({
         ? "Selected crypto payment method is not available"
         : "Selected bank transfer method is not available",
     );
+  }
+
+  const normalizedReceiptFileId = receiptFileId.trim();
+
+  if (!normalizedReceiptFileId) {
+    throw new Error("Receipt image is required");
   }
 
   if (proofMode === "CRYPTO_PROVIDER") {
@@ -234,7 +240,7 @@ export async function createSavingsFundingDepositSubmission({
           depositorAccountNo: depositorAccountNo?.trim() || null,
           transferReference: transferReference?.trim() || null,
           note: note?.trim() || null,
-          receiptFileId: receiptFileId?.trim() || null,
+          receiptFileId: normalizedReceiptFileId,
           metadata: {
             source: "savings_checkout",
             savingsAccountId: account.id,

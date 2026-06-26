@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { prisma } from "@/lib/prisma";
+import { WithdrawalStatus } from "@/generated/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
+import { prisma } from "@/lib/prisma";
+import { releaseInvestmentOrdersForWithdrawal } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
 import {
   canTransitionWithdrawalStatus,
   getWithdrawalStatusLifecyclePatch,
@@ -24,15 +26,14 @@ export async function updateWithdrawalStatusAction(
 
   const parsed = schema.safeParse(input);
 
-    if (!parsed.success) {
-      const reasonError = parsed.error.flatten().fieldErrors.reason?.[0];
+  if (!parsed.success) {
+    const reasonError = parsed.error.flatten().fieldErrors.reason?.[0];
 
-      return {
-        ok: false,
-        message:
-          reasonError ?? "Select a valid withdrawal status.",
-      };
-    }
+    return {
+      ok: false,
+      message: reasonError ?? "Select a valid withdrawal status.",
+    };
+  }
 
   try {
     const withdrawal = await prisma.withdrawalOrder.findUnique({
@@ -76,11 +77,20 @@ export async function updateWithdrawalStatusAction(
     const now = new Date();
     const patch = getWithdrawalStatusLifecyclePatch(nextStatus, now, reason);
 
-    await prisma.withdrawalOrder.update({
-      where: {
-        id: withdrawal.id,
-      },
-      data: patch,
+    await prisma.$transaction(async (tx) => {
+      await tx.withdrawalOrder.update({
+        where: {
+          id: withdrawal.id,
+        },
+        data: patch,
+      });
+
+      if (
+        nextStatus === WithdrawalStatus.REJECTED ||
+        nextStatus === WithdrawalStatus.CANCELLED
+      ) {
+        await releaseInvestmentOrdersForWithdrawal(tx, withdrawal.id);
+      }
     });
 
     revalidatePath("/account/dashboard/admin/Withdrawals");

@@ -36,15 +36,12 @@ export default function SavingsCryptoCheckoutButton({
       }
 
       window.location.assign(result.redirectUrl);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to open crypto checkout.",
-      );
-    } finally {
-      setPending(false);
-    }
+      } catch (error) {
+        console.error("SavingsCryptoCheckoutButton error:", error);
+        toast.error("Unable to open crypto checkout right now.");
+      } finally {
+        setPending(false);
+      }
   };
 
   return (

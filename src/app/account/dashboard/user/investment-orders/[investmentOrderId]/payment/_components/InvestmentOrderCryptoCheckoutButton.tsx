@@ -43,17 +43,14 @@ export default function InvestmentOrderCryptoCheckoutButton({
       } | null;
 
       if (!response.ok || !result?.success || !result.redirectUrl) {
-        toast.error(result?.error ?? "Unable to open Paymento checkout.");
+        toast.error("Unable to open Paymento checkout right now.");
         return;
       }
 
       window.location.assign(result.redirectUrl);
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Unable to open Paymento checkout.",
-      );
+      console.error("InvestmentOrderCryptoCheckoutButton error:", error);
+      toast.error("Unable to open Paymento checkout right now.");
     } finally {
       setPending(false);
     }

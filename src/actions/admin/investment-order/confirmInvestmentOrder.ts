@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { Prisma, InvestmentOrderStatus } from "@/generated/prisma";
+import { Prisma, InvestmentOrderStatus, RuntimeStatus } from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { activateEligibleRewardsForUser } from "@/lib/referrals/referralRewardService";
@@ -13,6 +13,7 @@ import {
   calculateFixedExpectedReturn,
 } from "@/lib/services/investment/fixedOrderLifecycle";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
+import { hasWithdrawalPauseHold } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
 
 import { canConfirmInvestmentOrderStatus } from "./adminInvestmentOrder.shared";
 
@@ -46,14 +47,32 @@ export async function confirmInvestmentOrder(
     where: {
       id: orderId,
     },
-    include: {
+    select: {
+      id: true,
+      status: true,
+      investmentModel: true,
+      amount: true,
+      expectedReturn: true,
+      startDate: true,
+      maturityDate: true,
+      currentValue: true,
+      lastValuationAt: true,
+      paymentMetadata: true,
       investorProfile: {
         select: {
           userId: true,
         },
       },
-      investmentPlan: true,
-      investmentPlanTier: true,
+      investmentPlan: {
+        select: {
+          durationDays: true,
+        },
+      },
+      investmentPlanTier: {
+        select: {
+          fixedRoiPercent: true,
+        },
+      },
     },
   });
 
@@ -73,6 +92,7 @@ export async function confirmInvestmentOrder(
 
   const now = new Date();
   const amount = decimalToNumber(order.amount);
+  const shouldRemainPaused = hasWithdrawalPauseHold(order.paymentMetadata);
   const roiPercent = order.investmentPlanTier.fixedRoiPercent;
   const expectedReturn =
     order.investmentModel === "FIXED"
@@ -96,7 +116,9 @@ export async function confirmInvestmentOrder(
     where: { id: order.id },
     data: {
       status: InvestmentOrderStatus.CONFIRMED,
-      runtimeStatus: "ONGOING",
+      runtimeStatus: shouldRemainPaused
+        ? RuntimeStatus.PAUSED
+        : RuntimeStatus.ONGOING,
       startDate: orderSchedule.startDate,
       maturityDate: orderSchedule.maturityDate,
       ...(expectedReturn ? { expectedReturn } : {}),

@@ -12,7 +12,25 @@ import { InvestmentModelsSection } from "@/components/home/investment-model-sect
 const HomeContent = () => {
   return (
     <>
-      <ScrollReveal y={26} duration={0.7} amount={0.15}>
+      <HeroSection />
+
+      <WhySection />
+
+      <InvestmentModelsSection />
+
+      <HowItWorksSection />
+
+      <BenefitsSection />
+
+      <TestimonialsSection />
+
+      <FaqSection />
+
+      <ManagementTeamSection />
+
+      <FinalCtaSection />
+
+      {/* <ScrollReveal y={26} duration={0.7} amount={0.15}>
         <HeroSection />
       </ScrollReveal>
 
@@ -45,7 +63,7 @@ const HomeContent = () => {
 
       <ScrollReveal duration={0.017}>
         <FinalCtaSection />
-      </ScrollReveal>
+      </ScrollReveal> */}
     </>
   );
 };

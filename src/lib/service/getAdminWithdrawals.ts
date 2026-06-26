@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
+import { resolveWithdrawalSourceDisplayLabel } from "@/lib/withdrawals/withdrawalSourceDisplay";
+import {
+  readWithdrawalPaymentMethodSnapshot,
+  resolveWithdrawalPaymentMethodLabel,
+} from "@/lib/withdrawals/withdrawalPaymentMethodReview";
 
 export type AdminWithdrawalItem = {
   id: string;
@@ -24,6 +29,8 @@ export type AdminWithdrawalItem = {
   adminNotes: string | null;
   sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" | "INVESTMENT_POOL" | "SAVINGS_POOL";
   sourceLabel: string;
+  paymentMethodLabel: string;
+  paymentMethodStatus: "AVAILABLE" | "UNAVAILABLE" | "UPDATED";
   requester: {
     id: string;
     name: string | null;
@@ -135,6 +142,9 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
       currentWithdrawal.payoutSnapshot,
     );
+    const paymentMethodSnapshot = readWithdrawalPaymentMethodSnapshot(
+      currentWithdrawal.payoutSnapshot,
+    );
     const payoutSnapshot =
       currentWithdrawal.payoutSnapshot &&
       typeof currentWithdrawal.payoutSnapshot === "object"
@@ -143,10 +153,6 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
     const snapshotSourceType =
       payoutSnapshot && typeof payoutSnapshot.sourceType === "string"
         ? payoutSnapshot.sourceType
-        : null;
-    const snapshotSourceLabel =
-      payoutSnapshot && typeof payoutSnapshot.sourceLabel === "string"
-        ? payoutSnapshot.sourceLabel
         : null;
 
     return {
@@ -172,13 +178,53 @@ export async function getAdminWithdrawals(): Promise<AdminWithdrawalItem[]> {
       sourceType: normalizeSourceType(snapshotSourceType, {
         investmentOrder: currentWithdrawal.investmentOrder,
       }),
-      sourceLabel:
-        snapshotSourceLabel ??
-        (currentWithdrawal.investmentOrder
+      sourceLabel: resolveWithdrawalSourceDisplayLabel(
+        payoutSnapshot
+          ? {
+              sourceType:
+                typeof payoutSnapshot.sourceType === "string"
+                  ? payoutSnapshot.sourceType
+                  : null,
+              sourceLabel:
+                typeof payoutSnapshot.sourceLabel === "string"
+                  ? payoutSnapshot.sourceLabel
+                  : null,
+              allocations: Array.isArray(payoutSnapshot.allocations)
+                ? payoutSnapshot.allocations
+                    .map((allocation) => {
+                      if (!allocation || typeof allocation !== "object") {
+                        return null;
+                      }
+
+                      const typedAllocation = allocation as Record<string, unknown>;
+
+                      return {
+                        sourceType:
+                          typeof typedAllocation.sourceType === "string"
+                            ? typedAllocation.sourceType
+                            : null,
+                      };
+                    })
+                    .filter(
+                      (
+                        allocation,
+                      ): allocation is { sourceType: string | null } =>
+                        allocation !== null,
+                    )
+                : null,
+            }
+          : null,
+        currentWithdrawal.investmentOrder
           ? `Investment order - ${currentWithdrawal.investmentOrder.investmentPlan.name}`
           : currentWithdrawal.investmentAccount
             ? `Investment account - ${currentWithdrawal.investmentAccount.investmentPlan.name}`
-            : "Direct withdrawal request"),
+            : "Direct withdrawal request",
+      ),
+      paymentMethodLabel: resolveWithdrawalPaymentMethodLabel(
+        currentWithdrawal.payoutMethod,
+        paymentMethodSnapshot,
+      ),
+      paymentMethodStatus: paymentMethodSnapshot.review.status,
       requester: {
         id: currentWithdrawal.investorProfile.user.id,
         name: currentWithdrawal.investorProfile.user.name,

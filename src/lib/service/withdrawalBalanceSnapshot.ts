@@ -12,8 +12,10 @@ import {
   ZERO_DECIMAL,
 } from "@/lib/services/investment/decimal";
 import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
+import { calculateInvestmentOrderWithdrawalPenalty as calculateInvestmentOrderWithdrawalPenaltyAmount } from "@/lib/services/investment/withdrawalPenalty";
 
 export type WithdrawalSourceType = "INVESTMENT_POOL" | "SAVINGS_POOL";
+export type WithdrawalAllocationMode = "AUTO" | "SINGLE";
 
 export type WithdrawalBalanceInvestmentOrder = {
   id: string;
@@ -48,6 +50,12 @@ export type WithdrawalBalanceSnapshot = {
   currency: string;
 };
 
+export type WithdrawalAllocationSelection = {
+  allocationMode: WithdrawalAllocationMode;
+  sourceType?: WithdrawalSourceType | null;
+  sourceId?: string | null;
+};
+
 export type WithdrawalAllocationPlanItem =
   | {
       sourceType: "INVESTMENT_ORDER";
@@ -73,6 +81,7 @@ export type WithdrawalAllocationPlanItem =
     };
 
 export type WithdrawalAllocationPlan = {
+  allocationMode: WithdrawalAllocationMode;
   requestedAmount: Prisma.Decimal;
   netPayoutAmount: Prisma.Decimal;
   penaltyAmount: Prisma.Decimal;
@@ -105,55 +114,57 @@ export function calculateInvestmentOrderWithdrawalPenalty(
   },
   grossAmount?: Prisma.Decimal,
 ) {
-  if (order.isMatured) {
+  return toDecimal(
+    calculateInvestmentOrderWithdrawalPenaltyAmount(
+      {
+        principal: order.principal.toNumber(),
+        profit: order.profit.toNumber(),
+        currentValue: order.currentValue ? order.currentValue.toNumber() : null,
+        isMatured: order.isMatured,
+        penaltyType: order.investmentPlan.penaltyType,
+        earlyWithdrawalPenaltyValue: order.investmentPlan.earlyWithdrawalPenaltyValue
+          ? order.investmentPlan.earlyWithdrawalPenaltyValue.toNumber()
+          : null,
+        maxPenaltyAmount: order.investmentPlan.maxPenaltyAmount
+          ? order.investmentPlan.maxPenaltyAmount.toNumber()
+          : null,
+      },
+      grossAmount ? grossAmount.toNumber() : undefined,
+    ),
+  );
+}
+
+function calculateMaximumInvestmentOrderGrossAmount(order: {
+  availableAmount: Prisma.Decimal;
+  principal: Prisma.Decimal;
+  profit: Prisma.Decimal;
+  currentValue: Prisma.Decimal | null;
+  isMatured: boolean;
+  investmentPlan: {
+    penaltyType: "FIXED" | "PERCENT" | null;
+    earlyWithdrawalPenaltyValue: Prisma.Decimal | null;
+    maxPenaltyAmount: Prisma.Decimal | null;
+  };
+}) {
+  const availableAmount = toDecimal(order.availableAmount);
+
+  if (!availableAmount.greaterThan(0)) {
     return ZERO_DECIMAL;
   }
 
-  const penaltyType = order.investmentPlan.penaltyType;
-  const penaltyValue = order.investmentPlan.earlyWithdrawalPenaltyValue;
-
-  if (!penaltyType || !penaltyValue || penaltyValue.lessThanOrEqualTo(0)) {
-    return ZERO_DECIMAL;
-  }
-
-  const fullGross = toDecimal(order.currentValue).greaterThan(0)
-    ? toDecimal(order.currentValue)
-    : toDecimal(order.principal).add(toDecimal(order.profit));
-
-  if (!fullGross.greaterThan(0)) {
-    return ZERO_DECIMAL;
-  }
-
-  const fullPenalty =
-    penaltyType === "PERCENT"
-      ? fullGross.mul(toDecimal(penaltyValue)).div(100)
-      : toDecimal(penaltyValue);
-
-  if (order.investmentPlan.maxPenaltyAmount && fullPenalty.greaterThan(order.investmentPlan.maxPenaltyAmount)) {
-    return grossAmount && grossAmount.lessThan(fullGross)
-      ? toDecimal(order.investmentPlan.maxPenaltyAmount).mul(
-          toDecimal(grossAmount).div(fullGross),
-        )
-      : toDecimal(order.investmentPlan.maxPenaltyAmount);
-  }
-
-  if (!grossAmount || grossAmount.greaterThanOrEqualTo(fullGross)) {
-    return fullPenalty;
-  }
-
-  return fullPenalty.mul(toDecimal(grossAmount).div(fullGross));
+  return availableAmount;
 }
 
 export async function buildWithdrawalBalanceSnapshot(
   investorProfileId: string,
 ): Promise<WithdrawalBalanceSnapshot> {
-  const [investmentOrders, savingsAccounts, completedWithdrawalOrders] =
+  const [investmentOrders, savingsAccounts, reservedWithdrawalOrders] =
     await Promise.all([
       prisma.investmentOrder.findMany({
         where: {
           investorProfileId,
           status: {
-            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
+            in: [InvestmentOrderStatus.CONFIRMED],
           },
         },
         orderBy: {
@@ -204,7 +215,9 @@ export async function buildWithdrawalBalanceSnapshot(
       prisma.withdrawalOrder.findMany({
         where: {
           investorProfileId,
-          status: WithdrawalStatus.COMPLETED,
+          status: {
+            notIn: [WithdrawalStatus.REJECTED, WithdrawalStatus.CANCELLED],
+          },
         },
         select: {
           allocations: {
@@ -223,7 +236,7 @@ export async function buildWithdrawalBalanceSnapshot(
   const consumedInvestmentByOrderId = new Map<string, Prisma.Decimal>();
   const consumedSavingsByAccountId = new Map<string, Prisma.Decimal>();
 
-  for (const withdrawal of completedWithdrawalOrders) {
+  for (const withdrawal of reservedWithdrawalOrders) {
     for (const allocation of withdrawal.allocations) {
       if (
         allocation.sourceType === "INVESTMENT_ORDER" &&
@@ -321,7 +334,7 @@ export async function buildWithdrawalBalanceSnapshot(
 
 export function buildWithdrawalAllocationPlan(
   snapshot: WithdrawalBalanceSnapshot,
-  sourceType: WithdrawalSourceType,
+  selection: WithdrawalAllocationSelection,
   requestedAmount: Prisma.Decimal,
 ): WithdrawalAllocationPlan {
   let remaining = toDecimal(requestedAmount);
@@ -330,6 +343,7 @@ export function buildWithdrawalAllocationPlan(
 
   if (!remaining.greaterThan(0)) {
     return {
+      allocationMode: selection.allocationMode,
       requestedAmount: ZERO_DECIMAL,
       netPayoutAmount: ZERO_DECIMAL,
       penaltyAmount: ZERO_DECIMAL,
@@ -337,15 +351,55 @@ export function buildWithdrawalAllocationPlan(
     };
   }
 
-  if (sourceType === "INVESTMENT_POOL") {
+  if (selection.allocationMode === "AUTO") {
+    for (const account of snapshot.savingsAccounts) {
+      if (!remaining.greaterThan(0)) {
+        break;
+      }
+
+      const grossAmount = remaining.lessThan(account.availableAmount)
+        ? remaining
+        : account.availableAmount;
+
+      allocations.push({
+        sourceType: "SAVINGS_ACCOUNT",
+        sourceId: account.id,
+        sourceLabel: account.name,
+        investmentOrderId: null,
+        savingsAccountId: account.id,
+        sourceGrossAmount: grossAmount,
+        sourcePenaltyAmount: ZERO_DECIMAL,
+        sourceNetAmount: grossAmount,
+        currency: account.currency,
+      });
+
+      remaining = remaining.sub(grossAmount);
+    }
+
     for (const order of snapshot.investmentOrders) {
       if (!remaining.greaterThan(0)) {
         break;
       }
 
-      const grossAmount = remaining.lessThan(order.availableAmount)
+      const maximumGrossAmount = calculateMaximumInvestmentOrderGrossAmount({
+        availableAmount: order.availableAmount,
+        principal: order.principal,
+        profit: order.profit,
+        currentValue: order.currentValue,
+        isMatured: order.isMatured,
+        investmentPlan: {
+          penaltyType: order.penaltyType,
+          earlyWithdrawalPenaltyValue: order.earlyWithdrawalPenaltyValue,
+          maxPenaltyAmount: order.maxPenaltyAmount,
+        },
+      });
+      const grossAmount = remaining.lessThan(maximumGrossAmount)
         ? remaining
-        : order.availableAmount;
+        : maximumGrossAmount;
+
+      if (!grossAmount.greaterThan(0)) {
+        continue;
+      }
 
       const penalty = calculateInvestmentOrderWithdrawalPenalty(
         {
@@ -361,6 +415,7 @@ export function buildWithdrawalAllocationPlan(
         },
         grossAmount,
       );
+      const netAmount = grossAmount.sub(penalty);
 
       allocations.push({
         sourceType: "INVESTMENT_ORDER",
@@ -370,14 +425,71 @@ export function buildWithdrawalAllocationPlan(
         savingsAccountId: null,
         sourceGrossAmount: grossAmount,
         sourcePenaltyAmount: penalty,
-        sourceNetAmount: grossAmount.sub(penalty),
+        sourceNetAmount: netAmount,
         currency: order.currency,
       });
 
       penaltyAmount = penaltyAmount.add(penalty);
       remaining = remaining.sub(grossAmount);
     }
-  } else {
+  } else if (selection.sourceType === "INVESTMENT_POOL") {
+    for (const order of snapshot.investmentOrders) {
+      if (!remaining.greaterThan(0)) {
+        break;
+      }
+
+      const maximumGrossAmount = calculateMaximumInvestmentOrderGrossAmount({
+        availableAmount: order.availableAmount,
+        principal: order.principal,
+        profit: order.profit,
+        currentValue: order.currentValue,
+        isMatured: order.isMatured,
+        investmentPlan: {
+          penaltyType: order.penaltyType,
+          earlyWithdrawalPenaltyValue: order.earlyWithdrawalPenaltyValue,
+          maxPenaltyAmount: order.maxPenaltyAmount,
+        },
+      });
+      const grossAmount = remaining.lessThan(maximumGrossAmount)
+        ? remaining
+        : maximumGrossAmount;
+
+      if (!grossAmount.greaterThan(0)) {
+        continue;
+      }
+
+      const penalty = calculateInvestmentOrderWithdrawalPenalty(
+        {
+          principal: order.principal,
+          profit: order.profit,
+          currentValue: order.currentValue,
+          isMatured: order.isMatured,
+          investmentPlan: {
+            penaltyType: order.penaltyType,
+            earlyWithdrawalPenaltyValue: order.earlyWithdrawalPenaltyValue,
+            maxPenaltyAmount: order.maxPenaltyAmount,
+          },
+        },
+        grossAmount,
+      );
+      const netAmount = grossAmount.sub(penalty);
+
+      allocations.push({
+        sourceType: "INVESTMENT_ORDER",
+        sourceId: order.id,
+        sourceLabel: order.investmentPlanName,
+        investmentOrderId: order.id,
+        savingsAccountId: null,
+        sourceGrossAmount: grossAmount,
+        sourcePenaltyAmount: penalty,
+        sourceNetAmount: netAmount,
+        currency: order.currency,
+      });
+
+      penaltyAmount = penaltyAmount.add(penalty);
+      remaining = remaining.sub(grossAmount);
+    }
+  } else if (selection.sourceType === "SAVINGS_POOL") {
     for (const account of snapshot.savingsAccounts) {
       if (!remaining.greaterThan(0)) {
         break;
@@ -413,6 +525,7 @@ export function buildWithdrawalAllocationPlan(
   );
 
   return {
+    allocationMode: selection.allocationMode,
     requestedAmount: toDecimal(requestedAmount),
     netPayoutAmount,
     penaltyAmount,

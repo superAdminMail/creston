@@ -66,9 +66,11 @@ function DetailRow({
 export default function WithdrawalCommissionFunding({
   details,
   fundingMethodType,
+  suggestedAmount,
 }: {
   details: WithdrawalCommissionCheckoutDetails;
   fundingMethodType: CheckoutFundingMethodType | null;
+  suggestedAmount?: number | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -115,6 +117,12 @@ export default function WithdrawalCommissionFunding({
 
   const bankMethod = details.paymentMethod;
   const cryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
+  const effectiveSuggestedAmount =
+    typeof suggestedAmount === "number" &&
+    Number.isFinite(suggestedAmount) &&
+    suggestedAmount > 0
+      ? Math.min(suggestedAmount, details.remainingCommissionAmount)
+      : details.remainingCommissionAmount;
   const canOpenProof =
     details.remainingCommissionAmount > 0 &&
     !!bankMethod &&
@@ -131,7 +139,8 @@ export default function WithdrawalCommissionFunding({
                 : "Withdrawal rejected"}
             </CardTitle>
             <p className="mt-1 text-sm leading-6 text-rose-100/90">
-              This withdrawal request is no longer active, so no commission payment is required.
+              This withdrawal request is no longer active, so no commission
+              payment is required.
             </p>
           </CardHeader>
           <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -154,7 +163,9 @@ export default function WithdrawalCommissionFunding({
                 asChild
                 className="rounded-full bg-white text-slate-950 hover:bg-slate-100"
               >
-                <Link href={`/account/dashboard/user/withdrawals/${details.withdrawal.id}`}>
+                <Link
+                  href={`/account/dashboard/user/withdrawals/${details.withdrawal.id}`}
+                >
                   View withdrawal
                 </Link>
               </Button>
@@ -177,8 +188,8 @@ export default function WithdrawalCommissionFunding({
               {details.withdrawal.sourceLabel}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-              Choose a funding method, then submit proof after you have paid
-              the commission amount shown below.
+              Choose a funding method, then submit proof after you have paid the
+              commission amount shown below.
             </p>
           </div>
         </div>
@@ -447,8 +458,8 @@ export default function WithdrawalCommissionFunding({
                       {details.isUnderReview
                         ? "Awaiting admin review"
                         : canOpenProof
-                        ? "I&apos;ve made this payment"
-                        : "Commission unavailable"}
+                          ? "I've made this payment"
+                          : "Commission unavailable"}
                     </Button>
                   </div>
                 </div>
@@ -464,7 +475,8 @@ export default function WithdrawalCommissionFunding({
                           Ready for bank proof
                         </p>
                         <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                          Submit your transfer proof after sending the bank payment.
+                          Submit your transfer proof after sending the bank
+                          payment.
                         </p>
                       </div>
                     </div>
@@ -503,20 +515,20 @@ export default function WithdrawalCommissionFunding({
 
                   {bankMethod ? (
                     <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      onClick={() => setProofOpen(true)}
-                      disabled={!canOpenProof}
-                      className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                    >
+                      <Button
+                        type="button"
+                        onClick={() => setProofOpen(true)}
+                        disabled={!canOpenProof}
+                        className="rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                      >
                         {details.isUnderReview
                           ? "Awaiting admin review"
                           : canOpenProof
-                          ? "I&apos;ve made this payment"
-                          : "Commission unavailable"}
-                    </Button>
-                  </div>
-                ) : null}
+                            ? "I've made this payment"
+                            : "Commission unavailable"}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </CardContent>
@@ -553,16 +565,14 @@ export default function WithdrawalCommissionFunding({
         </Card>
       ) : null}
 
-      {proofOpen &&
-      selectedFundingMethod === "BANK_TRANSFER" &&
-      bankMethod ? (
+      {proofOpen && selectedFundingMethod === "BANK_TRANSFER" && bankMethod ? (
         <WithdrawalCommissionProofModal
           open={proofOpen}
           onOpenChange={setProofOpen}
           withdrawalId={details.withdrawal.id}
           platformPaymentMethodId={bankMethod.id}
           currency={details.withdrawal.currency}
-          defaultAmount={details.remainingCommissionAmount}
+          defaultAmount={effectiveSuggestedAmount}
           maxAmount={details.remainingCommissionAmount}
         />
       ) : proofOpen &&
@@ -574,7 +584,7 @@ export default function WithdrawalCommissionFunding({
           withdrawalId={details.withdrawal.id}
           platformPaymentMethodId={bankMethod.id}
           currency={details.withdrawal.currency}
-          defaultAmount={details.remainingCommissionAmount}
+          defaultAmount={effectiveSuggestedAmount}
           maxAmount={details.remainingCommissionAmount}
           mode="CRYPTO_PROVIDER"
         />

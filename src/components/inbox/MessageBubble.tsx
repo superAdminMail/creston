@@ -15,6 +15,21 @@ type Props = {
   viewerSenderType?: SenderType;
 };
 
+function formatMessageTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "UTC",
+  }).format(date);
+}
+
 function isOwnMessage(message: ChatMessage, viewerSenderType?: SenderType) {
   return message.senderType === (viewerSenderType ?? "USER");
 }
@@ -58,10 +73,7 @@ export default function MessageBubble({ message, viewerSenderType }: Props) {
 
         <div className="mt-1 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
           <span>
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+            {formatMessageTime(message.createdAt)}
           </span>
 
           {isUser && (

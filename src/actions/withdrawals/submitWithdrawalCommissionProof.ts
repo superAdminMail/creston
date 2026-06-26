@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getSafeServerActionErrorMessage } from "@/lib/forms/actionState";
 import { createWithdrawalCommissionSubmission } from "@/lib/payments/withdrawals/createWithdrawalCommissionSubmission";
 import { submitWithdrawalCommissionProofSchema as schema } from "@/lib/zodValidations/withdrawal-commission-proof";
 
@@ -50,14 +51,13 @@ export async function submitWithdrawalCommissionProof(input: Input) {
       data: result,
     };
   } catch (error) {
-    console.error("submitWithdrawalCommissionProof error:", error);
-
     return {
       ok: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Unable to submit withdrawal commission proof",
+      message: getSafeServerActionErrorMessage(
+        "submitWithdrawalCommissionProof",
+        error,
+        "Unable to submit withdrawal commission proof.",
+      ),
     };
   }
 }

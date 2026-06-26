@@ -83,9 +83,14 @@ export default function InboxList({
   const formatPreviewTime = (value?: string) => {
     if (!value) return "";
     const date = new Date(value);
-    return Number.isNaN(date.getTime())
-      ? ""
-      : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (Number.isNaN(date.getTime())) return "";
+
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "UTC",
+    }).format(date);
   };
   return (
     <aside className="flex h-full min-h-0 flex-col border-r bg-white dark:bg-background">

@@ -4,12 +4,10 @@ import { Prisma } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { prisma } from "@/lib/prisma";
-import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
+import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
 import {
-  readWithdrawalCommissionPaymentSnapshot,
-} from "@/lib/withdrawals/withdrawalCommissionSnapshot";
-import {
+  calculateWithdrawalCommissionDueAmount,
   getWithdrawalCommissionSourceType,
   readWithdrawalSnapshotString,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
@@ -21,20 +19,6 @@ type ReviewBaseInput = {
   adminUserId: string;
   reviewNote?: string | null;
 };
-
-function calculateCommissionDueAmount(input: {
-  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
-  amount: Prisma.Decimal;
-  commissionPercent: Prisma.Decimal;
-  savingsFeeAmount: Prisma.Decimal | null;
-}) {
-  return input.sourceType === "SAVINGS_ACCOUNT"
-    ? input.savingsFeeAmount
-      ? decimalToNumber(input.savingsFeeAmount)
-      : null
-    : decimalToNumber(input.amount) *
-        (decimalToNumber(input.commissionPercent) / 100);
-}
 
 function buildReviewLink(input: {
   withdrawalId: string;
@@ -110,6 +94,12 @@ export async function approveWithdrawalCommissionReview(
       commissionPercent: true,
       savingsFeeAmount: true,
       investmentOrderId: true,
+      allocations: {
+        select: {
+          sourceType: true,
+          sourceGrossAmount: true,
+        },
+      },
       payoutSnapshot: true,
       investorProfile: {
         select: {
@@ -129,6 +119,10 @@ export async function approveWithdrawalCommissionReview(
       withdrawal.payoutSnapshot,
       "sourceType",
     ),
+    allocationMode: readWithdrawalSnapshotString(
+      withdrawal.payoutSnapshot,
+      "allocationMode",
+    ),
   });
 
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
@@ -139,14 +133,21 @@ export async function approveWithdrawalCommissionReview(
     throw new Error("This withdrawal commission proof submission has already been reviewed.");
   }
 
-  const commissionDueAmount = calculateCommissionDueAmount({
+  const commissionDueAmount = calculateWithdrawalCommissionDueAmount({
     sourceType,
-    amount: withdrawal.amount,
-    commissionPercent: withdrawal.commissionPercent,
-    savingsFeeAmount: withdrawal.savingsFeeAmount,
+    amount: Number(withdrawal.amount),
+    commissionPercent: Number(withdrawal.commissionPercent),
+    savingsFeeAmount:
+      withdrawal.savingsFeeAmount !== null
+        ? Number(withdrawal.savingsFeeAmount)
+        : null,
+    allocations: withdrawal.allocations.map((allocation) => ({
+      sourceType: allocation.sourceType,
+      sourceGrossAmount: Number(allocation.sourceGrossAmount),
+    })),
   });
 
-  if (commissionDueAmount === null || commissionDueAmount <= 0) {
+  if (commissionDueAmount <= 0) {
     throw new Error("Withdrawal commission is not configured.");
   }
 

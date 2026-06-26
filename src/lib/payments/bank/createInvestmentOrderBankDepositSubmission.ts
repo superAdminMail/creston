@@ -25,7 +25,7 @@ type CreateInvestmentOrderBankDepositSubmissionInput = {
   depositorAccountNo?: string | null;
   transferReference?: string | null;
   note?: string | null;
-  receiptFileId?: string | null;
+  receiptFileId: string;
   isUpgradeFlow?: boolean;
 };
 
@@ -125,6 +125,12 @@ export async function createInvestmentOrderBankDepositSubmission({
 
   if (!selectedPlatformPaymentMethodId) {
     throw new Error("No payment method is configured for this order");
+  }
+
+  const normalizedReceiptFileId = receiptFileId.trim();
+
+  if (!normalizedReceiptFileId) {
+    throw new Error("Receipt image is required");
   }
 
   const allowPrivateMethod =
@@ -266,7 +272,7 @@ export async function createInvestmentOrderBankDepositSubmission({
         depositorAccountName: depositorAccountName?.trim() || null,
         depositorAccountNo: depositorAccountNo?.trim() || null,
         transferReference: transferReference?.trim() || null,
-        receiptFileId: receiptFileId?.trim() || null,
+        receiptFileId: normalizedReceiptFileId,
         note: note?.trim() || null,
         metadata: {
           kind: isUpgradeFlow ? "UPGRADE" : "STANDARD",

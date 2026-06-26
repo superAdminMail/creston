@@ -155,7 +155,7 @@ export function OrphanImageCleanupClient({
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="rounded-[1.75rem] border-white/10 bg-slate-950 text-white sm:max-w-xl">
+        <DialogContent className="rounded-[1.75rem] border-white/10 text-white sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">
               Confirm orphan image cleanup

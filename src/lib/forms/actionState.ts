@@ -72,3 +72,12 @@ export function getFriendlyServerError(
 
   return fallback;
 }
+
+export function getSafeServerActionErrorMessage(
+  actionName: string,
+  error: unknown,
+  fallback: string,
+) {
+  console.error(`${actionName} error:`, error);
+  return fallback;
+}

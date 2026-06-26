@@ -76,6 +76,7 @@ export default function InvestmentOrderBankDepositForm({
   const [transferReference, setTransferReference] = useState("");
   const [receiptFileId, setReceiptFileId] = useState("");
   const [note, setNote] = useState("");
+  const hasReceiptFileId = receiptFileId.trim().length > 0;
 
   const chargePreview = useMemo(() => {
     const total = roundMoney(amount);
@@ -129,6 +130,11 @@ export default function InvestmentOrderBankDepositForm({
       return;
     }
 
+    if (!hasReceiptFileId) {
+      toast.error("Please upload a receipt image before submitting.");
+      return;
+    }
+
     startTransition(async () => {
       const result = await createInvestmentOrderBankDepositSubmissionAction({
         investmentOrderId,
@@ -138,7 +144,7 @@ export default function InvestmentOrderBankDepositForm({
         depositorAccountNo,
         transferReference,
         note,
-        receiptFileId,
+        receiptFileId: receiptFileId.trim(),
       });
 
       if (!result.success) {
@@ -329,6 +335,11 @@ export default function InvestmentOrderBankDepositForm({
             Replace this with your upload flow later. For now, submit the stored
             file asset id here.
           </p>
+          {!hasReceiptFileId ? (
+            <p className="mt-2 text-xs font-medium text-rose-400">
+              Receipt image is required before submission.
+            </p>
+          ) : null}
         </div>
 
         <div className="md:col-span-2">
@@ -356,7 +367,7 @@ export default function InvestmentOrderBankDepositForm({
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={!canPay || isPending || chargePreview.amount <= 0}
+          disabled={!canPay || isPending || chargePreview.amount <= 0 || !hasReceiptFileId}
           className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-5 py-3 text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
         >
           {isPending ? (

@@ -157,7 +157,7 @@ function OrderActionDialog({
         </DropdownMenuItem>
       </DialogTrigger>
 
-      <DialogContent className="border-white/10 bg-[#081224] text-white sm:max-w-lg">
+      <DialogContent className="border-white/10 text-white sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -278,7 +278,7 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
 
       <DropdownMenuContent
         align="end"
-        className="w-48 rounded-2xl border border-white/10 bg-[#081224] p-1 text-white"
+        className="w-48 rounded-2xl border border-white/10 p-1 text-white"
       >
         <DropdownMenuItem asChild>
           <Link href={`/account/dashboard/admin/investment-orders/${order.id}`}>

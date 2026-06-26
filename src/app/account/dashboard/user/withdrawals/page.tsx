@@ -5,6 +5,11 @@ import { getAvailableWithdrawalBalance } from "@/lib/service/getAvailableWithdra
 import { getWithdrawalSourceOptions } from "@/lib/service/getAvailableWithdrawalSource";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { readWithdrawalCommissionPaymentSnapshot } from "@/lib/withdrawals/withdrawalCommissionSnapshot";
+import { resolveWithdrawalSourceDisplayLabel } from "@/lib/withdrawals/withdrawalSourceDisplay";
+import {
+  readWithdrawalPaymentMethodSnapshot,
+  resolveWithdrawalPaymentMethodLabel,
+} from "@/lib/withdrawals/withdrawalPaymentMethodReview";
 import WithdrawalsClient from "../_components/WithdrawalsClient";
 
 export default async function Page() {
@@ -67,8 +72,86 @@ export default async function Page() {
       const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
         order.payoutSnapshot,
       );
+      const paymentMethodSnapshot = readWithdrawalPaymentMethodSnapshot(
+        order.payoutSnapshot,
+      );
+      const payoutSnapshot =
+        order.payoutSnapshot &&
+        typeof order.payoutSnapshot === "object" &&
+        !Array.isArray(order.payoutSnapshot)
+          ? (order.payoutSnapshot as Record<string, unknown>)
+          : null;
+      const rawWithdrawalMode =
+        typeof payoutSnapshot?.withdrawalMode === "string"
+          ? payoutSnapshot.withdrawalMode
+          : null;
+      const storedPenaltyAmount =
+        payoutSnapshot && typeof payoutSnapshot.penaltyAmount === "string"
+          ? payoutSnapshot.penaltyAmount
+          : null;
+      const normalizedWithdrawalMode =
+        rawWithdrawalMode === "EARLY_WITHDRAWAL" ||
+        rawWithdrawalMode === "NORMAL"
+          ? rawWithdrawalMode
+          : storedPenaltyAmount && Number(storedPenaltyAmount) > 0
+            ? "EARLY_WITHDRAWAL"
+            : null;
+      const rawEarlyWithdrawalPenalty =
+        typeof payoutSnapshot?.earlyWithdrawalPenalty === "string" &&
+        payoutSnapshot.earlyWithdrawalPenalty.trim().length > 0
+          ? payoutSnapshot.earlyWithdrawalPenalty
+          : null;
+      const normalizedEarlyWithdrawalPenalty =
+        rawEarlyWithdrawalPenalty ??
+        (storedPenaltyAmount && Number(storedPenaltyAmount) > 0
+          ? storedPenaltyAmount
+          : null);
+      const sourceLabel = resolveWithdrawalSourceDisplayLabel(
+        payoutSnapshot
+          ? {
+              sourceType:
+                typeof payoutSnapshot.sourceType === "string"
+                  ? payoutSnapshot.sourceType
+                  : null,
+              sourceLabel:
+                typeof payoutSnapshot.sourceLabel === "string"
+                  ? payoutSnapshot.sourceLabel
+                  : null,
+              allocations: Array.isArray(payoutSnapshot.allocations)
+                ? payoutSnapshot.allocations
+                    .map((allocation) => {
+                      if (!allocation || typeof allocation !== "object") {
+                        return null;
+                      }
 
-        return {
+                      const typedAllocation = allocation as Record<string, unknown>;
+
+                      return {
+                        sourceType:
+                          typeof typedAllocation.sourceType === "string"
+                            ? typedAllocation.sourceType
+                            : null,
+                      };
+                    })
+                    .filter(
+                      (
+                        allocation,
+                      ): allocation is { sourceType: string | null } =>
+                        allocation !== null,
+                    )
+                : null,
+            }
+          : null,
+        order.investmentOrder?.investmentPlan?.name ??
+          order.investmentAccount?.investmentPlan?.name ??
+          "Withdrawal source",
+      );
+      const paymentMethodLabel = resolveWithdrawalPaymentMethodLabel(
+        order.payoutMethod,
+        paymentMethodSnapshot,
+      );
+
+      return {
         id: order.id,
         amount: order.amount.toString(),
         currency: order.currency,
@@ -77,6 +160,8 @@ export default async function Page() {
         hasCommissionFees: order.hasCommissionFees,
         commissionStatus: order.commissionStatus,
         requestedAt: order.requestedAt.toISOString(),
+        paymentMethodLabel,
+        paymentMethodStatus: paymentMethodSnapshot.review.status,
         payoutMethod: order.payoutMethod
           ? {
               id: order.payoutMethod.id,
@@ -85,40 +170,73 @@ export default async function Page() {
               network: order.payoutMethod.network,
             }
           : null,
-        payoutSnapshot: order.payoutSnapshot
+        payoutSnapshot: payoutSnapshot
           ? {
               sourceType:
-                typeof order.payoutSnapshot === "object" &&
-                order.payoutSnapshot &&
-                "sourceType" in order.payoutSnapshot &&
-                typeof order.payoutSnapshot.sourceType === "string"
-                  ? order.payoutSnapshot.sourceType
+                typeof payoutSnapshot.sourceType === "string"
+                  ? payoutSnapshot.sourceType
                   : null,
-              sourceLabel:
-                typeof order.payoutSnapshot === "object" &&
-                order.payoutSnapshot &&
-                "sourceLabel" in order.payoutSnapshot &&
-                typeof order.payoutSnapshot.sourceLabel === "string"
-                  ? order.payoutSnapshot.sourceLabel
+              sourceLabel,
+              allocationMode:
+                payoutSnapshot.allocationMode === "AUTO" ||
+                payoutSnapshot.allocationMode === "SINGLE"
+                  ? payoutSnapshot.allocationMode
                   : null,
-              withdrawalMode:
-                typeof order.payoutSnapshot === "object" &&
-                order.payoutSnapshot &&
-                "withdrawalMode" in order.payoutSnapshot &&
-                order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
-                  ? "EARLY_WITHDRAWAL"
-                  : typeof order.payoutSnapshot === "object" &&
-                      order.payoutSnapshot &&
-                      "withdrawalMode" in order.payoutSnapshot &&
-                      order.payoutSnapshot.withdrawalMode === "NORMAL"
-                    ? "NORMAL"
-                    : null,
-              earlyWithdrawalPenalty:
-                typeof order.payoutSnapshot === "object" &&
-                order.payoutSnapshot &&
-                "earlyWithdrawalPenalty" in order.payoutSnapshot
-                  ? String(order.payoutSnapshot.earlyWithdrawalPenalty ?? "")
-                  : null,
+              withdrawalMode: normalizedWithdrawalMode,
+              earlyWithdrawalPenalty: normalizedEarlyWithdrawalPenalty,
+              allocations:
+                Array.isArray(payoutSnapshot.allocations)
+                  ? payoutSnapshot.allocations
+                      .map((allocation) => {
+                        if (!allocation || typeof allocation !== "object") {
+                          return null;
+                        }
+
+                        const typedAllocation = allocation as Record<string, unknown>;
+                        const allocationSourceType =
+                          typeof typedAllocation.sourceType === "string"
+                            ? typedAllocation.sourceType
+                            : null;
+
+                        if (
+                          allocationSourceType !== "INVESTMENT_ORDER" &&
+                          allocationSourceType !== "SAVINGS_ACCOUNT"
+                        ) {
+                          return null;
+                        }
+
+                        const sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" =
+                          allocationSourceType;
+
+                        return {
+                          sourceType,
+                          sourceLabel:
+                            typeof typedAllocation.sourceLabel === "string"
+                              ? typedAllocation.sourceLabel
+                              : "Withdrawal source",
+                          sourceGrossAmount:
+                            typeof typedAllocation.sourceGrossAmount === "string"
+                              ? typedAllocation.sourceGrossAmount
+                              : "0",
+                          sourcePenaltyAmount:
+                            typeof typedAllocation.sourcePenaltyAmount === "string"
+                              ? typedAllocation.sourcePenaltyAmount
+                              : "0",
+                          sourceNetAmount:
+                            typeof typedAllocation.sourceNetAmount === "string"
+                              ? typedAllocation.sourceNetAmount
+                              : "0",
+                          currency:
+                            typeof typedAllocation.currency === "string"
+                              ? typedAllocation.currency
+                              : order.currency,
+                        };
+                      })
+                      .filter(
+                        (allocation): allocation is NonNullable<typeof allocation> =>
+                          allocation !== null,
+                      )
+                  : undefined,
             }
           : null,
         commissionReviewStatus: commissionPayment?.reviewStatus ?? null,

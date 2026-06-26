@@ -7,6 +7,7 @@ import {
   createErrorFormState,
   createSuccessFormState,
   createValidationErrorState,
+  getSafeServerActionErrorMessage,
   type FormActionState,
 } from "@/lib/forms/actionState";
 import { prisma } from "@/lib/prisma";
@@ -15,12 +16,42 @@ import {
   buildWithdrawalAllocationPlan,
   buildWithdrawalBalanceSnapshot,
 } from "@/lib/service/withdrawalBalanceSnapshot";
-import { toDecimal } from "@/lib/services/investment/decimal";
-import { createWithdrawalOrderSchema } from "@/lib/zodValidations/account-operations";
+import { pauseInvestmentOrdersForWithdrawal } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
+import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
+import { formatCurrency } from "@/lib/formatters/formatters";
+import {
+  createWithdrawalOrderSchema,
+  MIN_WITHDRAWAL_AMOUNT,
+} from "@/lib/zodValidations/account-operations";
 
 export type CreateWithdrawalOrderState = FormActionState<
-  "amount" | "methodId" | "sourceType" | "sourceId"
+  "amount" | "methodId" | "allocationMode" | "sourceType" | "sourceId"
 >;
+
+function buildAutoAllocationLabel(
+  allocations: Array<{ sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" }>,
+) {
+  const hasSavings = allocations.some(
+    (allocation) => allocation.sourceType === "SAVINGS_ACCOUNT",
+  );
+  const hasInvestment = allocations.some(
+    (allocation) => allocation.sourceType === "INVESTMENT_ORDER",
+  );
+
+  if (hasSavings && hasInvestment) {
+    return "Auto allocation across savings and investment balances";
+  }
+
+  if (hasSavings) {
+    return "Auto allocation from savings balance";
+  }
+
+  if (hasInvestment) {
+    return "Auto allocation from investment balance";
+  }
+
+  return "Auto allocation";
+}
 
 export async function createWithdrawalOrder(
   _prevState: CreateWithdrawalOrderState,
@@ -29,6 +60,7 @@ export async function createWithdrawalOrder(
   const parsed = createWithdrawalOrderSchema.safeParse({
     amount: formData.get("amount"),
     methodId: formData.get("methodId"),
+    allocationMode: formData.get("allocationMode"),
     sourceType: formData.get("sourceType"),
     sourceId: formData.get("sourceId"),
   });
@@ -60,7 +92,7 @@ export async function createWithdrawalOrder(
     );
   }
 
-  const { amount, methodId, sourceId, sourceType } = parsed.data;
+  const { amount, methodId, sourceId, sourceType, allocationMode } = parsed.data;
   const requestedAmount = toDecimal(amount);
 
   const method = profile.paymentMethods.find((m) => m.id === methodId);
@@ -71,40 +103,121 @@ export async function createWithdrawalOrder(
     });
   }
 
-  const withdrawalSources = await getWithdrawalSourceOptions(profile.id);
-  const withdrawalSource = withdrawalSources.find(
-    (source) => source.type === sourceType && source.id === sourceId,
-  );
-
-  if (!withdrawalSource || withdrawalSource.amount <= 0) {
-    return createErrorFormState(
-      "There is no available balance eligible for withdrawal right now.",
-      {
-        sourceId: ["Select a valid withdrawal source."],
-      },
-    );
-  }
-
-  if (requestedAmount.greaterThan(withdrawalSource.amount)) {
-    return createErrorFormState(
-      "Withdrawal amount exceeds the available balance.",
-      {
-        amount: ["Withdrawal amount exceeds the available balance."],
-      },
-    );
-  }
-
   const snapshot = await buildWithdrawalBalanceSnapshot(profile.id);
-  const allocationPlan = buildWithdrawalAllocationPlan(
-    snapshot,
-    sourceType,
-    requestedAmount,
-  );
+  const withdrawalSources = await getWithdrawalSourceOptions(profile.id);
+  const spansSavingsAndInvestment =
+    snapshot.savingsBalance.greaterThan(0) &&
+    snapshot.accountBalance.greaterThan(0) &&
+    requestedAmount.greaterThan(snapshot.savingsBalance) &&
+    !requestedAmount.greaterThan(snapshot.totalBalance);
+  const effectiveAllocationMode = spansSavingsAndInvestment
+    ? "AUTO"
+    : allocationMode;
+  const isSingleSelection = effectiveAllocationMode === "SINGLE";
+  const withdrawalSource = isSingleSelection
+    ? withdrawalSources.find(
+        (source) => source.type === sourceType && source.id === sourceId,
+      )
+    : null;
+
+  if (requestedAmount.lessThan(MIN_WITHDRAWAL_AMOUNT)) {
+    const minimumMessage = `Amount must be at least ${formatCurrency(
+      MIN_WITHDRAWAL_AMOUNT,
+      snapshot.currency,
+    )}.`;
+
+    return createErrorFormState(minimumMessage, {
+      amount: [minimumMessage],
+    });
+  }
+
+  if (isSingleSelection) {
+    if (!withdrawalSource || withdrawalSource.amount <= 0) {
+      return createErrorFormState(
+        "There is no available balance eligible for withdrawal right now.",
+        {
+          sourceId: ["Select a valid withdrawal source."],
+        },
+      );
+    }
+
+    if (requestedAmount.greaterThan(withdrawalSource.amount)) {
+      const maximumMessage = `Maximum withdrawal amount is ${formatCurrency(
+        withdrawalSource.amount,
+        snapshot.currency,
+      )}.`;
+
+      return createErrorFormState(maximumMessage, {
+        amount: [maximumMessage],
+      });
+    }
+  } else if (requestedAmount.greaterThan(snapshot.totalBalance)) {
+    const maximumMessage = `Maximum withdrawal amount is ${formatCurrency(
+      decimalToNumber(snapshot.totalBalance),
+      snapshot.currency,
+    )}.`;
+
+    return createErrorFormState(maximumMessage, {
+      amount: [maximumMessage],
+    });
+  }
+
+  let allocationPlan;
+
+  try {
+    allocationPlan = buildWithdrawalAllocationPlan(
+      snapshot,
+      {
+        allocationMode: effectiveAllocationMode,
+        sourceType: isSingleSelection ? sourceType : null,
+        sourceId: isSingleSelection ? sourceId : null,
+      },
+      requestedAmount,
+    );
+  } catch (error) {
+    return createErrorFormState(
+      getSafeServerActionErrorMessage(
+        "createWithdrawalOrder",
+        error,
+        "Unable to allocate the withdrawal request.",
+      ),
+      {
+        amount: [
+          "Unable to allocate the withdrawal request with the available balance.",
+        ],
+      },
+    );
+  }
+
+  if (allocationPlan.netPayoutAmount.lessThanOrEqualTo(0)) {
+    return createErrorFormState(
+      "Withdrawal amount must exceed the early withdrawal fee.",
+      {
+        amount: ["Withdrawal amount must exceed the early withdrawal fee."],
+      },
+    );
+  }
+
+  const sourceLabel = isSingleSelection
+    ? withdrawalSource?.label ?? "Withdrawal source"
+    : buildAutoAllocationLabel(allocationPlan.allocations);
+
+  const affectedInvestmentOrderIds = [
+    ...new Set(
+      allocationPlan.allocations
+        .map((allocation) => allocation.investmentOrderId)
+        .filter((investmentOrderId): investmentOrderId is string =>
+          Boolean(investmentOrderId),
+        ),
+    ),
+  ];
+  const hasEarlyWithdrawalPenalty = allocationPlan.penaltyAmount.greaterThan(0);
 
   const payoutSnapshot = {
-    sourceType,
-    sourceId,
-    sourceLabel: withdrawalSource.label,
+    allocationMode: effectiveAllocationMode,
+    sourceType: isSingleSelection ? sourceType : null,
+    sourceId: isSingleSelection ? sourceId : null,
+    sourceLabel,
     type: method.type,
     bankName: method.bankName,
     accountName: method.accountName,
@@ -113,6 +226,10 @@ export async function createWithdrawalOrder(
     address: method.address,
     requestedAmount: allocationPlan.requestedAmount.toString(),
     penaltyAmount: allocationPlan.penaltyAmount.toString(),
+    withdrawalMode: hasEarlyWithdrawalPenalty ? "EARLY_WITHDRAWAL" : null,
+    earlyWithdrawalPenalty: hasEarlyWithdrawalPenalty
+      ? allocationPlan.penaltyAmount.toString()
+      : null,
     netPayoutAmount: allocationPlan.netPayoutAmount.toString(),
     allocations: allocationPlan.allocations.map((allocation) => ({
       sourceType: allocation.sourceType,
@@ -125,12 +242,18 @@ export async function createWithdrawalOrder(
     })),
   };
 
+  if (allocationPlan.allocations.length === 0) {
+    return createErrorFormState(
+      "Unable to allocate the withdrawal request.",
+    );
+  }
+
   await prisma.$transaction(async (tx) => {
     const withdrawalOrder = await tx.withdrawalOrder.create({
       data: {
         investorProfileId: profile.id,
         amount: allocationPlan.netPayoutAmount,
-        currency: withdrawalSource.currency,
+        currency: snapshot.currency,
         payoutMethodId: method.id,
         payoutSnapshot,
         status: "PENDING",
@@ -138,10 +261,6 @@ export async function createWithdrawalOrder(
         investmentOrderId: null,
       },
     });
-
-    if (allocationPlan.allocations.length === 0) {
-      throw new Error("Unable to allocate the withdrawal request.");
-    }
 
     await tx.withdrawalOrderAllocation.createMany({
       data: allocationPlan.allocations.map((allocation) => ({
@@ -157,9 +276,26 @@ export async function createWithdrawalOrder(
         savingsAccountId: allocation.savingsAccountId,
       })),
     });
+
+    await pauseInvestmentOrdersForWithdrawal(tx, {
+      withdrawalId: withdrawalOrder.id,
+      orderIds: affectedInvestmentOrderIds,
+    });
   });
 
   revalidatePath("/account/dashboard/user/withdrawals");
+  revalidatePath("/account/dashboard/user");
+  revalidatePath("/account/dashboard/user/investment-orders");
+
+  for (const orderId of affectedInvestmentOrderIds) {
+    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${orderId}/payment`,
+    );
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${orderId}/upgrade`,
+    );
+  }
 
   return createSuccessFormState("Withdrawal request submitted.");
 }

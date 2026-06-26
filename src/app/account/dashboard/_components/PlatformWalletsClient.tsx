@@ -331,7 +331,7 @@ function PaymentMethodCard({
                 Remove
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="border-white/10 bg-[#050B1F] text-white">
+            <AlertDialogContent className="border-white/10 text-white">
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove this payment method?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
@@ -425,7 +425,7 @@ export default function PlatformWalletsClient({
                     Add Payment Method
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+                <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
                   <div className="max-h-[92dvh] overflow-y-auto">
                     <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
                     <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
@@ -531,7 +531,7 @@ export default function PlatformWalletsClient({
         open={Boolean(editWallet)}
         onOpenChange={(open) => !open && setEditWallet(null)}
       >
-        <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 bg-[#050B1F] p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
           <div className="max-h-[92dvh] overflow-y-auto">
             <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
               <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">

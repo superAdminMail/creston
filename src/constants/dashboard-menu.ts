@@ -499,12 +499,12 @@ export const DASHBOARD_MENU = {
       links: [
         {
           name: "Withdrawals",
-          href: "/account/dashboard/admin/withdrawals",
+          href: "/account/dashboard/super-admin/withdrawals",
           icon: CircleDollarSign,
         },
         {
           name: "Deposits",
-          href: "/account/dashboard/admin/deposits",
+          href: "/account/dashboard/super-admin/deposits",
           icon: CircleDollarSign,
         },
       ],

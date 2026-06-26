@@ -11,6 +11,11 @@ export type AvailableWithdrawalInvestmentOrder = {
   profit: number;
   availableAmount: number;
   currentValue: number | null;
+  maturityDate: string | null;
+  isMatured: boolean;
+  penaltyType: "FIXED" | "PERCENT" | null;
+  earlyWithdrawalPenaltyValue: number | null;
+  maxPenaltyAmount: number | null;
   currency: string;
 };
 
@@ -45,6 +50,15 @@ export async function getAvailableWithdrawalBalance(
       availableAmount: decimalToNumber(availableAmount),
       currentValue: order.currentValue
         ? decimalToNumber(order.currentValue)
+        : null,
+      maturityDate: order.maturityDate?.toISOString() ?? null,
+      isMatured: order.isMatured,
+      penaltyType: order.penaltyType,
+      earlyWithdrawalPenaltyValue: order.earlyWithdrawalPenaltyValue
+        ? decimalToNumber(order.earlyWithdrawalPenaltyValue)
+        : null,
+      maxPenaltyAmount: order.maxPenaltyAmount
+        ? decimalToNumber(order.maxPenaltyAmount)
         : null,
       currency: order.currency,
     };

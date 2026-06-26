@@ -85,7 +85,7 @@ export function InvestmentOrderRuntimeStatusDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="border-white/10 bg-[#081224] text-white sm:max-w-lg">
+      <DialogContent className="border-white/10 text-white sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-slate-400">

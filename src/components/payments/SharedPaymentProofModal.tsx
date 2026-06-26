@@ -43,7 +43,7 @@ export type PaymentProofSubmitInput = {
   depositorAccountNo: string;
   transferReference: string;
   note: string;
-  receiptFileId?: string;
+  receiptFileId: string;
 };
 
 type Props = {
@@ -87,6 +87,7 @@ export default function SharedPaymentProofModal({
   const [pending, startTransition] = useTransition();
   const committedReceiptAssetIdRef = useRef<string | null>(null);
   const receiptAttachmentRef = useRef<ReceiptAttachment | null>(null);
+  const hasReceiptImage = Boolean(receiptAttachment?.assetId);
 
   useEffect(() => {
     receiptAttachmentRef.current = receiptAttachment;
@@ -146,7 +147,7 @@ export default function SharedPaymentProofModal({
     try {
       const result = await deleteFileAssetAction(receiptAttachment.assetId);
       if (result?.error) {
-        toast.error(result.error);
+        toast.error("Unable to remove receipt image.");
         return;
       }
 
@@ -163,6 +164,11 @@ export default function SharedPaymentProofModal({
       return;
     }
 
+    if (!hasReceiptImage) {
+      toast.error("Please upload a receipt image before submitting.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         const result = await submit({
@@ -174,7 +180,7 @@ export default function SharedPaymentProofModal({
             mode === "BANK_TRANSFER" ? depositorAccountNo : "",
           transferReference: mode === "BANK_TRANSFER" ? transferReference : "",
           note: mode === "BANK_TRANSFER" ? note : "",
-          receiptFileId: receiptFileId || undefined,
+          receiptFileId,
         });
 
         if (!result.ok) {
@@ -187,18 +193,15 @@ export default function SharedPaymentProofModal({
         resetForm();
         onOpenChange(false);
       } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Unable to submit payment proof.",
-        );
+        console.error("SharedPaymentProofModal submit error:", error);
+        toast.error("Unable to submit payment proof right now.");
       }
     });
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[1.35rem] border border-slate-200/90 bg-white p-0 text-slate-950 shadow-[0_32px_100px_rgba(15,23,42,0.28)] sm:max-w-2xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-slate-950 dark:text-white">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[1.35rem] border border-slate-200/90 bg-white p-0 text-slate-950 shadow-[0_32px_100px_rgba(15,23,42,0.28)] sm:max-w-2xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0b1526] dark:via-[#09111f] dark:to-[#050b17] dark:text-white">
         <div className="border-b border-slate-200/80 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
@@ -388,6 +391,12 @@ export default function SharedPaymentProofModal({
                 </div>
               </div>
             )}
+
+            {!hasReceiptImage ? (
+              <p className="text-xs font-medium text-rose-500 dark:text-rose-300">
+                Receipt image is required before submission.
+              </p>
+            ) : null}
           </div>
 
           {mode === "BANK_TRANSFER" ? (
@@ -422,7 +431,7 @@ export default function SharedPaymentProofModal({
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={pending || amountIsInvalid}
+              disabled={pending || amountIsInvalid || !hasReceiptImage}
               className="w-full rounded-full bg-slate-950 px-5 text-white shadow-[0_12px_28px_rgba(2,6,23,0.32)] hover:bg-slate-800 sm:w-auto dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
             >
               {pending ? "Submitting..." : submitLabel}

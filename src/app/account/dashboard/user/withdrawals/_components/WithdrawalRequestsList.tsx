@@ -6,31 +6,16 @@ import {
   formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
-import {
-  isWithdrawalCommissionSettledStatus,
-} from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
+import { isWithdrawalCommissionSettledStatus } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 
 type Props = {
   withdrawalOrders: WithdrawalRequestItemDto[];
 };
-
-function getMethodLabel(method?: WithdrawalRequestItemDto["payoutMethod"]) {
-  if (!method) return "Payment method";
-
-  if (method.type === "BANK") {
-    return method.bankName ?? "Bank transfer";
-  }
-
-  if (method.type === "CRYPTO") {
-    return method.network ?? "Crypto wallet";
-  }
-
-  return "Payment method";
-}
 
 function getSourceLabel(order: WithdrawalRequestItemDto) {
   return (
@@ -39,6 +24,37 @@ function getSourceLabel(order: WithdrawalRequestItemDto) {
     order.investmentAccount?.investmentPlan?.name ??
     "Withdrawal source"
   );
+}
+
+function getAllocationModeLabel(order: WithdrawalRequestItemDto) {
+  if (order.payoutSnapshot?.allocationMode === "AUTO") {
+    return "Auto allocation";
+  }
+
+  if (order.payoutSnapshot?.allocationMode === "SINGLE") {
+    return "Single source";
+  }
+
+  return null;
+}
+
+function getAllocationSummary(order: WithdrawalRequestItemDto) {
+  const allocations = order.payoutSnapshot?.allocations ?? [];
+
+  if (allocations.length === 0) {
+    return null;
+  }
+
+  return allocations
+    .map((allocation) => {
+      const amount = formatCurrency(
+        Number(allocation.sourceGrossAmount),
+        allocation.currency ?? order.currency,
+      );
+
+      return `${allocation.sourceLabel} ${amount}`;
+    })
+    .join(" · ");
 }
 
 function canPayCommission(order: WithdrawalRequestItemDto) {
@@ -76,8 +92,11 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                     {getSourceLabel(order)}
                   </p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-slate-300">
-                  {formatEnumLabel(order.status)}
+                <span title={formatEnumLabel(order.status)}>
+                  <CheckCircle2
+                    className="h-5 w-5 shrink-0 text-emerald-400"
+                    aria-hidden="true"
+                  />
                 </span>
               </div>
 
@@ -87,7 +106,22 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                     Payment Method
                   </p>
                   <p className="mt-1 text-sm text-slate-200">
-                    {getMethodLabel(order.payoutMethod)}
+                    {order.paymentMethodLabel}
+                  </p>
+                  <p
+                    className={`mt-1 text-[10px] uppercase tracking-[0.2em] ${
+                      order.paymentMethodStatus === "UNAVAILABLE"
+                        ? "text-amber-300"
+                        : order.paymentMethodStatus === "UPDATED"
+                          ? "text-emerald-300"
+                          : "text-slate-500"
+                    }`}
+                  >
+                    {order.paymentMethodStatus === "UNAVAILABLE"
+                      ? "Update required"
+                      : order.paymentMethodStatus === "UPDATED"
+                        ? "Updated details submitted"
+                        : "Available"}
                   </p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
@@ -99,6 +133,21 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                   </p>
                 </div>
               </div>
+
+              {getAllocationModeLabel(order) || getAllocationSummary(order) ? (
+                <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs text-slate-300">
+                  {getAllocationModeLabel(order) ? (
+                    <p className="uppercase tracking-[0.2em] text-slate-500">
+                      {getAllocationModeLabel(order)}
+                    </p>
+                  ) : null}
+                  {getAllocationSummary(order) ? (
+                    <p className="mt-2 leading-5 text-slate-300">
+                      {getAllocationSummary(order)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               {isWithdrawalTerminalStatus(order.status) ? (
                 <div className="mt-3 rounded-xl border border-rose-200/40 bg-rose-500/10 p-3 text-xs text-rose-100">

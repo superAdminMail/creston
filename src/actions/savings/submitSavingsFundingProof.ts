@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getSafeServerActionErrorMessage } from "@/lib/forms/actionState";
 import { createSavingsFundingDepositSubmission } from "@/lib/payments/bank/createSavingsFundingDepositSubmission";
 import { submitSavingsFundingProofSchema as schema } from "@/lib/zodValidations/savings-funding-proof";
 
@@ -51,14 +52,13 @@ export async function submitSavingsFundingProof(input: Input) {
       data: result,
     };
   } catch (error) {
-    console.error("submitSavingsFundingProof error:", error);
-
     return {
       ok: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Unable to submit deposit proof",
+      message: getSafeServerActionErrorMessage(
+        "submitSavingsFundingProof",
+        error,
+        "Unable to submit deposit proof.",
+      ),
     };
   }
 }

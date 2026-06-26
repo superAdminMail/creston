@@ -5,9 +5,9 @@ import { UserRole } from "@/generated/prisma";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
-import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 import {
+  calculateWithdrawalCommissionDueAmount,
   getWithdrawalCommissionSourceType,
   readWithdrawalSnapshotString,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
@@ -15,6 +15,7 @@ import { notifyManyRealtimeNotifications } from "@/lib/notifications/notifyManyR
 import {
   isWithdrawalCommissionSettledStatus,
 } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
+import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 
 type CreateWithdrawalCommissionSubmissionInput = {
   withdrawalId: string;
@@ -26,7 +27,7 @@ type CreateWithdrawalCommissionSubmissionInput = {
   depositorAccountNo?: string | null;
   transferReference?: string | null;
   note?: string | null;
-  receiptFileId?: string | null;
+  receiptFileId: string;
   platformPaymentMethodId: string;
 };
 
@@ -99,9 +100,16 @@ export async function createWithdrawalCommissionSubmission({
     },
     select: {
       id: true,
+      status: true,
       currency: true,
       hasCommissionFees: true,
       investmentOrderId: true,
+      allocations: {
+        select: {
+          sourceType: true,
+          sourceGrossAmount: true,
+        },
+      },
       payoutSnapshot: true,
     },
   });
@@ -114,11 +122,19 @@ export async function createWithdrawalCommissionSubmission({
     throw new Error("This withdrawal does not have commission fees enabled");
   }
 
+  if (isWithdrawalTerminalStatus(initialWithdrawal.status)) {
+    throw new Error("This withdrawal commission checkout is no longer available");
+  }
+
   const sourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: initialWithdrawal.investmentOrderId,
     sourceType: readWithdrawalSnapshotString(
       initialWithdrawal.payoutSnapshot,
       "sourceType",
+    ),
+    allocationMode: readWithdrawalSnapshotString(
+      initialWithdrawal.payoutSnapshot,
+      "allocationMode",
     ),
   });
 
@@ -136,6 +152,12 @@ export async function createWithdrawalCommissionSubmission({
     );
   }
 
+  const normalizedReceiptFileId = receiptFileId.trim();
+
+  if (!normalizedReceiptFileId) {
+    throw new Error("Receipt image is required");
+  }
+
   const result = await prisma.$transaction(
     async (tx) => {
       const withdrawal = await tx.withdrawalOrder.findFirst({
@@ -147,14 +169,20 @@ export async function createWithdrawalCommissionSubmission({
         },
         select: {
           id: true,
+          status: true,
           amount: true,
           currency: true,
-          status: true,
           commissionStatus: true,
           hasCommissionFees: true,
           commissionPercent: true,
           savingsFeeAmount: true,
           payoutSnapshot: true,
+          allocations: {
+            select: {
+              sourceType: true,
+              sourceGrossAmount: true,
+            },
+          },
         },
       });
 
@@ -166,21 +194,27 @@ export async function createWithdrawalCommissionSubmission({
         throw new Error("This withdrawal does not have commission fees enabled");
       }
 
+      if (isWithdrawalTerminalStatus(withdrawal.status)) {
+        throw new Error("This withdrawal commission checkout is no longer available");
+      }
+
       if (isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus)) {
         throw new Error("This withdrawal commission has already been settled");
       }
 
-      const commissionDueAmount =
-        sourceType === "SAVINGS_ACCOUNT"
-          ? (() => {
-              if (withdrawal.savingsFeeAmount === null) {
-                throw new Error("Withdrawal fee amount is not configured");
-              }
-
-              return decimalToNumber(withdrawal.savingsFeeAmount);
-            })()
-          : decimalToNumber(withdrawal.amount) *
-            (decimalToNumber(withdrawal.commissionPercent) / 100);
+      const commissionDueAmount = calculateWithdrawalCommissionDueAmount({
+        sourceType,
+        amount: Number(withdrawal.amount),
+        commissionPercent: Number(withdrawal.commissionPercent),
+        savingsFeeAmount:
+          withdrawal.savingsFeeAmount !== null
+            ? Number(withdrawal.savingsFeeAmount)
+            : null,
+        allocations: withdrawal.allocations.map((allocation) => ({
+          sourceType: allocation.sourceType,
+          sourceGrossAmount: Number(allocation.sourceGrossAmount),
+        })),
+      });
       const commissionSnapshot = readCommissionPaymentSnapshot(
         withdrawal.payoutSnapshot,
       );
@@ -224,7 +258,7 @@ export async function createWithdrawalCommissionSubmission({
                 depositorAccountNo: depositorAccountNo?.trim() || null,
                 transferReference: transferReference?.trim() || null,
                 note: note?.trim() || null,
-                receiptFileId: receiptFileId?.trim() || null,
+                receiptFileId: normalizedReceiptFileId,
                 submittedAt: now.toISOString(),
                 reviewStatus: "PENDING_REVIEW",
                 approvedAmount: null,
@@ -247,7 +281,7 @@ export async function createWithdrawalCommissionSubmission({
                 depositorAccountNo: depositorAccountNo?.trim() || null,
                 transferReference: transferReference?.trim() || null,
                 note: note?.trim() || null,
-                receiptFileId: receiptFileId?.trim() || null,
+                receiptFileId: normalizedReceiptFileId,
                 submittedAt: now.toISOString(),
                 reviewStatus: "PENDING_REVIEW",
                 approvedAmount: null,

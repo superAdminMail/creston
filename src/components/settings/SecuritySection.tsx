@@ -149,7 +149,7 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="border-white/10 bg-[#08101d]/98 text-white shadow-[0_24px_70px_rgba(2,6,23,0.32)] sm:max-w-lg">
+        <DialogContent className="border-white/10 text-white shadow-[0_24px_70px_rgba(2,6,23,0.32)] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-white">Change Password</DialogTitle>
             <DialogDescription className="text-slate-400">

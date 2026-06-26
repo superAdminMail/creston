@@ -10,6 +10,7 @@ import {
   type FormActionState,
 } from "@/lib/forms/actionState";
 import { prisma } from "@/lib/prisma";
+import { hasWithdrawalPauseHold } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -37,6 +38,7 @@ export async function resumeAdminInvestmentOrder(
         id: true,
         status: true,
         runtimeStatus: true,
+        paymentMetadata: true,
       },
     });
 
@@ -52,6 +54,12 @@ export async function resumeAdminInvestmentOrder(
     ) {
       return createErrorFormState(
         "Only paused confirmed investment orders can be resumed.",
+      );
+    }
+
+    if (hasWithdrawalPauseHold(existingOrder.paymentMetadata)) {
+      return createErrorFormState(
+        "This investment order has a pending withdrawal hold and cannot be resumed yet.",
       );
     }
 

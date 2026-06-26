@@ -107,7 +107,7 @@ export function UserProfileCard({
                     Verify Email
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-xl rounded-[1.75rem] border border-white/10 bg-[#050b17] p-0 text-white ring-white/10">
+                <DialogContent className="max-w-xl rounded-[1.75rem] border border-white/10 p-0 text-white ring-white/10">
                   <DialogHeader className="px-6 pt-6">
                     <DialogTitle className="text-xl text-white">
                       Verify your email

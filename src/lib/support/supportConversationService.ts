@@ -28,6 +28,10 @@ import {
   type SupportInboxSort,
 } from "@/lib/support/supportConversationView";
 import {
+  WITHDRAWAL_PRIVATE_SUPPORT_SOURCE_PREFIX,
+  isWithdrawalPrivateSupportConversationSource,
+} from "@/lib/support/withdrawalPrivateSupportConversation";
+import {
   persistConversationMessage,
   processConversationMessageAfterWrite,
 } from "@/lib/inbox/conversationService";
@@ -255,6 +259,16 @@ function getAllowedIncomingSenderTypes(viewerRole: UserRole) {
   return isSupportStaffRole(viewerRole) ? INCOMING_TO_STAFF : INCOMING_TO_USER;
 }
 
+function isHiddenPrivateWithdrawalSupportConversation(
+  source: string | null | undefined,
+  viewerRole: UserRole,
+) {
+  return (
+    viewerRole !== UserRole.SUPER_ADMIN &&
+    isWithdrawalPrivateSupportConversationSource(source)
+  );
+}
+
 export function getSupportIncomingSenderTypes(viewerRole: UserRole) {
   return getAllowedIncomingSenderTypes(viewerRole);
 }
@@ -346,11 +360,20 @@ async function loadUnreadMessagesForConversations(
 }
 
 function canViewConversation(
-  conversation: Pick<ConversationThreadRecord, "type" | "members">,
+  conversation: Pick<ConversationThreadRecord, "type" | "members" | "source">,
   viewerUserId: string,
   viewerRole: UserRole,
 ) {
   if (isSupportStaffRole(viewerRole)) {
+    if (
+      isHiddenPrivateWithdrawalSupportConversation(
+        conversation.source,
+        viewerRole,
+      )
+    ) {
+      return false;
+    }
+
     return SUPPORT_CONVERSATION_TYPES.includes(conversation.type);
   }
 
@@ -479,6 +502,7 @@ function buildPreview(
     createdAt: conversation.createdAt.toISOString(),
     updatedAt: conversation.updatedAt.toISOString(),
     lastMessageAt: conversation.lastMessageAt?.toISOString() ?? null,
+    source: conversation.source ?? null,
     isAssignedToMe:
       Boolean(conversation.agentId) && conversation.agentId === viewerUserId,
     canReply:
@@ -505,6 +529,16 @@ export async function getSupportInboxConversations(input: {
           status: {
             notIn: [ConversationStatus.BLOCKED, ConversationStatus.DELETED],
           },
+          ...(input.viewerRole === UserRole.SUPER_ADMIN
+            ? {}
+            : {
+                NOT: {
+                  source: {
+                    startsWith:
+                      WITHDRAWAL_PRIVATE_SUPPORT_SOURCE_PREFIX,
+                  },
+                },
+              }),
         }
       : {
           type: { in: [...SUPPORT_CONVERSATION_TYPES] },
@@ -526,17 +560,27 @@ export async function getSupportInboxConversations(input: {
           : [{ lastMessageAt: "desc" }, { updatedAt: "desc" }],
   });
 
+  const visibleConversations = isStaff
+    ? conversations.filter(
+        (conversation) =>
+          !isHiddenPrivateWithdrawalSupportConversation(
+            conversation.source,
+            input.viewerRole,
+          ),
+      )
+    : conversations;
+
   const senderDirectory = await loadSenderDirectory(
-    conversations
+    visibleConversations
       .map((conversation) => conversation.messages[0]?.senderId)
       .filter((senderId): senderId is string => Boolean(senderId)),
   );
   const unreadMessagesByConversationId = await loadUnreadMessagesForConversations(
-    conversations.map((conversation) => conversation.id),
+    visibleConversations.map((conversation) => conversation.id),
     input.viewerRole,
   );
 
-  const decorated = conversations.map((conversation) => {
+  const decorated = visibleConversations.map((conversation) => {
     const viewerMember = conversation.members.find(
       (member) => member.userId === input.viewerUserId,
     );
@@ -603,6 +647,16 @@ export async function getSupportConversationThread(input: {
       ...(isSupportStaffRole(input.viewerRole)
         ? {
             type: { in: [...SUPPORT_CONVERSATION_TYPES] },
+            ...(input.viewerRole === UserRole.SUPER_ADMIN
+              ? {}
+              : {
+                  NOT: {
+                    source: {
+                      startsWith:
+                        WITHDRAWAL_PRIVATE_SUPPORT_SOURCE_PREFIX,
+                    },
+                  },
+                }),
           }
         : {
             members: {
@@ -617,6 +671,10 @@ export async function getSupportConversationThread(input: {
 
   if (
     !conversation ||
+    isHiddenPrivateWithdrawalSupportConversation(
+      conversation.source,
+      input.viewerRole,
+    ) ||
     !canViewConversation(conversation, input.viewerUserId, input.viewerRole)
   ) {
     return null;
@@ -861,7 +919,8 @@ export async function finalizeSupportConversationCreation(
           email: created.createdConversation.contactEmail ?? null,
           role: "CONTACT",
         },
-    priority: created.createdConversation.priority,
+      priority: created.createdConversation.priority,
+      source: created.createdConversation.source,
   }).catch((error) => {
     console.error("Failed to notify support staff about ticket", error);
   });
@@ -939,6 +998,7 @@ export async function replyToSupportConversation(input: {
     select: {
       id: true,
       agentId: true,
+      source: true,
       status: true,
       userId: true,
       subject: true,
@@ -951,6 +1011,15 @@ export async function replyToSupportConversation(input: {
   }
 
   if (senderType === SenderType.SUPPORT) {
+    if (
+      isHiddenPrivateWithdrawalSupportConversation(
+        conversation.source,
+        input.viewerRole,
+      )
+    ) {
+      throw new Error("Unauthorized");
+    }
+
     if (
       conversation.agentId &&
       conversation.agentId !== input.viewerUserId &&
@@ -1030,15 +1099,34 @@ export async function assignSupportConversationToMe(input: {
       status: {
         notIn: [ConversationStatus.BLOCKED, ConversationStatus.DELETED],
       },
+      ...(input.viewerRole === UserRole.SUPER_ADMIN
+        ? {}
+        : {
+              NOT: {
+                source: {
+                  startsWith: WITHDRAWAL_PRIVATE_SUPPORT_SOURCE_PREFIX,
+                },
+              },
+          }),
     },
     select: {
       id: true,
       agentId: true,
+      source: true,
     },
   });
 
   if (!conversation) {
     throw new Error("Conversation not found");
+  }
+
+  if (
+    isHiddenPrivateWithdrawalSupportConversation(
+      conversation.source,
+      input.viewerRole,
+    )
+  ) {
+    throw new Error("Not allowed");
   }
 
   if (
@@ -1137,6 +1225,16 @@ export async function markSupportConversationRead(input: {
       ...(isSupportStaffRole(input.viewerRole)
         ? {
             type: { in: [...SUPPORT_CONVERSATION_TYPES] },
+            ...(input.viewerRole === UserRole.SUPER_ADMIN
+              ? {}
+              : {
+                  NOT: {
+                source: {
+                        startsWith:
+                          WITHDRAWAL_PRIVATE_SUPPORT_SOURCE_PREFIX,
+                },
+                  },
+                }),
           }
         : {
             members: {
@@ -1149,10 +1247,20 @@ export async function markSupportConversationRead(input: {
     select: {
       id: true,
       type: true,
+      source: true,
     },
   });
 
   if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  if (
+    isHiddenPrivateWithdrawalSupportConversation(
+      conversation.source,
+      input.viewerRole,
+    )
+  ) {
     throw new Error("Conversation not found");
   }
 
@@ -1226,11 +1334,18 @@ async function notifySupportStaffOfTicket(conversation: {
   subject: string;
   openedBy: SupportConversationParticipant;
   priority: ConversationPriority;
+  source?: string | null;
 }) {
+  const isPrivateWithdrawalSupport = isWithdrawalPrivateSupportConversationSource(
+    conversation.source,
+  );
+
   const staff = await prisma.user.findMany({
     where: {
       role: {
-        in: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+        in: isPrivateWithdrawalSupport
+          ? [UserRole.SUPER_ADMIN]
+          : [UserRole.ADMIN, UserRole.SUPER_ADMIN],
       },
     },
     select: {

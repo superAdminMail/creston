@@ -70,6 +70,7 @@ export type SupportConversationPreview = {
   createdAt: string;
   updatedAt: string;
   lastMessageAt: string | null;
+  source: string | null;
   isAssignedToMe: boolean;
   canReply: boolean;
 };

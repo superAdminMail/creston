@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const decimalPattern = /^\d+(?:\.\d{1,2})?$/;
+export const MIN_WITHDRAWAL_AMOUNT = 100;
 
 export const createSavingsAccountSchema = z.object({
   productId: z.string().trim().min(1, "Select a savings product."),
@@ -36,17 +37,38 @@ export const createWithdrawalOrderSchema = z.object({
     .trim()
     .min(1, "Enter an amount.")
     .refine((value) => decimalPattern.test(value), "Enter a valid amount.")
-    .refine((value) => Number(value) > 0, "Amount must be greater than zero."),
-  methodId: z.string().trim().min(1, "Select a payment method."),
-  sourceType: z
-    .string()
-    .trim()
+    .refine((value) => Number(value) > 0, "Amount must be greater than zero.")
     .refine(
-      (value) =>
-        value === "SAVINGS_POOL" || value === "INVESTMENT_POOL",
-      "Select a withdrawal source.",
+      (value) => Number(value) >= MIN_WITHDRAWAL_AMOUNT,
+      `Amount must be at least $${MIN_WITHDRAWAL_AMOUNT.toFixed(2)}.`,
     ),
-  sourceId: z.string().trim().min(1, "Select a withdrawal source."),
+  methodId: z.string().trim().min(1, "Select a payment method."),
+  allocationMode: z
+    .enum(["AUTO", "SINGLE"])
+    .nullish()
+    .transform((value) => value ?? "AUTO"),
+  sourceType: z
+    .enum(["SAVINGS_POOL", "INVESTMENT_POOL"])
+    .nullish(),
+  sourceId: z.string().trim().optional().or(z.literal("")).nullish(),
+}).superRefine((value, ctx) => {
+  if (value.allocationMode === "SINGLE") {
+    if (!value.sourceType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceType"],
+        message: "Select a withdrawal source.",
+      });
+    }
+
+    if (!value.sourceId || value.sourceId.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sourceId"],
+        message: "Select a withdrawal source.",
+      });
+    }
+  }
 });
 
 export const createPaymentMethodSchema = z

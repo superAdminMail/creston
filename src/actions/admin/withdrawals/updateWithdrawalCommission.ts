@@ -35,7 +35,7 @@ type FieldName =
 export type UpdateWithdrawalCommissionState = FormActionState<FieldName>;
 
 function buildNotificationMessage(
-  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT",
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" | "MIXED",
   hasCommissionFees: boolean,
   commissionPercent: string | null,
   feeAmount: string | null,
@@ -49,6 +49,10 @@ function buildNotificationMessage(
 
   if (sourceType === "SAVINGS_ACCOUNT") {
     return `Withdrawal fee has been updated to ${feeAmount ?? formatCurrency(0, currency)}.`;
+  }
+
+  if (sourceType === "MIXED") {
+    return "Withdrawal commission settings have been updated for a mixed allocation withdrawal.";
   }
 
   return `Withdrawal commission has been updated to ${commissionPercent ?? "0"}%.`;

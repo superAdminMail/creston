@@ -154,7 +154,7 @@ export function WithdrawalStatusActionMenu({
       </DropdownMenu>
 
       <Dialog open={reasonOpen} onOpenChange={setReasonOpen}>
-        <DialogContent className="border-white/10 bg-[#081224] text-white sm:max-w-lg">
+        <DialogContent className="border-white/10 text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedReasonOption?.status === "CANCELLED"

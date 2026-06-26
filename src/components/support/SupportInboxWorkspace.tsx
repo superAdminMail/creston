@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Inbox,
@@ -47,6 +47,7 @@ import {
   type SupportInboxMode,
   type SupportInboxSort,
 } from "@/lib/support/supportConversationView";
+import { isWithdrawalPrivateSupportConversationSource } from "@/lib/support/withdrawalPrivateSupportConversation";
 import { assignSupportConversationToMeAction } from "@/actions/inbox/admin/assignSupportConversationToMeAction";
 import { deleteSupportConversationsAction } from "@/actions/inbox/admin/deleteSupportConversationsAction";
 import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
@@ -82,10 +83,28 @@ const USER_FILTERS: FilterOption[] = [
   { key: "resolved", label: "Resolved" },
 ];
 
-function formatRelativeTime(value?: string | null) {
+function formatAbsoluteDate(value?: string | null) {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatRelativeTime(value?: string | null, hydrated = false) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  if (!hydrated) {
+    return formatAbsoluteDate(value);
+  }
+
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.round(diffMs / 60_000);
 
@@ -98,10 +117,7 @@ function formatRelativeTime(value?: string | null) {
   const diffDays = Math.round(diffHours / 24);
   if (Math.abs(diffDays) < 7) return `${diffDays}d ago`;
 
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+  return formatAbsoluteDate(value);
 }
 
 function getPreviewSubtitle(ticket: SupportConversationPreview) {
@@ -160,6 +176,7 @@ function buildNewConversationPreview(
     createdAt,
     updatedAt: createdAt,
     lastMessageAt: formattedLastMessage?.createdAt ?? createdAt,
+    source: null,
     isAssignedToMe: false,
     canReply: true,
   };
@@ -187,6 +204,11 @@ export default function SupportInboxWorkspace({
   const [selectedConversationIds, setSelectedConversationIds] = useState<
     string[]
   >([]);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const isStaffView = mode === "staff";
   const filters = isStaffView ? ADMIN_FILTERS : USER_FILTERS;
@@ -534,6 +556,8 @@ export default function SupportInboxWorkspace({
             <div className="space-y-3">
               {filteredConversations.length ? (
                 filteredConversations.map((ticket) => (
+                  // Private withdrawal support conversations are only visible to super-admins,
+                  // but we still surface a tiny label so they stand out in the queue.
                   <div
                     key={ticket.id}
                     role="button"
@@ -571,9 +595,20 @@ export default function SupportInboxWorkspace({
                         ) : null}
 
                         <div className="min-w-0 flex-1">
-                          <p className="break-words text-sm font-semibold leading-5 text-white sm:line-clamp-2">
-                            {ticket.subject}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="break-words text-sm font-semibold leading-5 text-white sm:line-clamp-2">
+                              {ticket.subject}
+                            </p>
+                            {isStaffView &&
+                            viewerRole === UserRole.SUPER_ADMIN &&
+                            isWithdrawalPrivateSupportConversationSource(
+                              ticket.source,
+                            ) ? (
+                              <Badge className="shrink-0 rounded-full bg-fuchsia-500/15 px-2.5 py-1 text-[11px] text-fuchsia-200">
+                                Private
+                              </Badge>
+                            ) : null}
+                          </div>
                           <p className="mt-1 break-words text-xs leading-5 text-slate-400">
                             {ticket.ticketId} | {getPreviewSubtitle(ticket)}
                           </p>
@@ -633,6 +668,7 @@ export default function SupportInboxWorkspace({
                         <span>
                           {formatRelativeTime(
                             ticket.lastMessageAt ?? ticket.updatedAt,
+                            isHydrated,
                           )}
                         </span>
                       </div>
@@ -808,7 +844,7 @@ export default function SupportInboxWorkspace({
 
       {!isStaffView ? (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogContent className="border-white/10 bg-zinc-950 text-white sm:max-w-xl">
+          <DialogContent className="border-white/10 text-white sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>Create support ticket</DialogTitle>
             </DialogHeader>

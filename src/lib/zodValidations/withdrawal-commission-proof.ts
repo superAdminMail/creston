@@ -10,5 +10,5 @@ export const submitWithdrawalCommissionProofSchema = z.object({
   depositorAccountNo: z.string().trim().max(80).optional(),
   transferReference: z.string().trim().max(120).optional(),
   note: z.string().trim().max(500).optional(),
-  receiptFileId: z.string().trim().max(100).optional(),
+  receiptFileId: z.string().trim().min(1).max(100),
 });
