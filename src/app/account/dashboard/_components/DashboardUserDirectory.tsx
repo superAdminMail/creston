@@ -242,7 +242,7 @@ export function DashboardUserDirectory({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#0a100d_0%,#070b08_100%)]">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
         <section className="overflow-hidden rounded-3xl border border-amber-200/20 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_28%),linear-gradient(135deg,#0e130f_0%,#11140d_45%,#181009_100%)] p-6 text-stone-50 shadow-[0_18px_60px_rgba(0,0,0,0.28)] md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

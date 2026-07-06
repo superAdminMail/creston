@@ -213,7 +213,7 @@
   body {
     @apply text-foreground;
     min-height: 100vh;
-    background-color: var(--background);
+    background-color: transparent;
     text-rendering: optimizeLegibility;
   }
 
