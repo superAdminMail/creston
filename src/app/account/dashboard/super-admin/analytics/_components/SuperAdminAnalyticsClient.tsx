@@ -446,7 +446,7 @@ export function SuperAdminAnalyticsClient({ data }: Props) {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)] text-white">
+    <div className="min-h-screen bg-[#020817] text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <Card className="overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_30%),linear-gradient(135deg,rgba(7,17,32,0.98),rgba(8,18,36,0.98))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
           <CardContent className="p-4 sm:p-6 md:p-8">

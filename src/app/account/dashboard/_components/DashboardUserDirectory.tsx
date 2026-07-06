@@ -2,15 +2,12 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  BriefcaseBusiness,
-  CreditCard,
   Filter,
   Search,
   ShieldCheck,
   TrendingUp,
   UserCheck,
   Users,
-  Wallet,
 } from "lucide-react";
 
 import type { UserRole } from "@/generated/prisma";
@@ -57,19 +54,19 @@ function getRoleBadge(role: UserRole) {
   switch (role) {
     case "SUPER_ADMIN":
       return (
-        <Badge className="border border-amber-500/20 bg-amber-500/10 text-amber-200 hover:bg-amber-500/10">
+        <Badge className="border border-[#3c9ee0]/30 bg-[#3c9ee0]/10 text-[#8ad0fb] hover:bg-[#3c9ee0]/10">
           Super Admin
         </Badge>
       );
     case "ADMIN":
       return (
-        <Badge className="border border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/10">
+        <Badge className="border border-violet-500/20 bg-violet-500/10 text-violet-300 hover:bg-violet-500/10">
           Admin
         </Badge>
       );
     case "MODERATOR":
       return (
-        <Badge className="border border-orange-500/20 bg-orange-500/10 text-orange-300 hover:bg-orange-500/10">
+        <Badge className="border border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-300 hover:bg-fuchsia-500/10">
           Moderator
         </Badge>
       );
@@ -181,20 +178,20 @@ function StatCard({
   icon: ReactNode;
 }) {
   return (
-    <Card className="border-amber-200/20 bg-[#120f0b] text-stone-50 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+    <Card className="border-white/10 bg-[#071120] text-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
       <CardContent className="p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-stone-400">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/50">
               {title}
             </p>
             <h3 className="break-words text-2xl font-semibold leading-tight tracking-tight">
               {value}
             </h3>
-            <p className="text-sm leading-6 text-stone-300">{description}</p>
+            <p className="text-sm leading-6 text-white/60">{description}</p>
           </div>
 
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-3 text-amber-300">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 px-3 py-3 text-[#7cc4f3]">
             {icon}
           </div>
         </div>
@@ -242,12 +239,12 @@ export function DashboardUserDirectory({
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef2f7_100%)]">
+    <div className="min-h-screen bg-[#020817]">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-3xl border border-amber-200/20 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_28%),linear-gradient(135deg,#0e130f_0%,#11140d_45%,#181009_100%)] p-6 text-stone-50 shadow-[0_18px_60px_rgba(0,0,0,0.28)] md:p-8">
+        <section className="overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(60,158,224,0.18),transparent_28%),linear-gradient(135deg,#071120_0%,#09182b_45%,#0a1220_100%)] p-6 text-white shadow-[0_18px_60px_rgba(0,0,0,0.28)] md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <Badge className="border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-200 hover:bg-amber-500/10">
+              <Badge className="border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 px-3 py-1 text-[#8acdfa] hover:bg-[#3c9ee0]/10">
                 {badgeLabel}
               </Badge>
 
@@ -255,23 +252,23 @@ export function DashboardUserDirectory({
                 <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
                   {title}
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-stone-300 md:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-white/70 md:text-base">
                   {description}
                 </p>
               </div>
             </div>
 
             <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl">
-              <div className="min-w-0 rounded-2xl border border-amber-200/15 bg-white/[0.05] p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-stone-400">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Users
                 </p>
                 <p className="mt-2 break-words text-2xl font-semibold leading-tight">
                   {stats.totalUsers}
                 </p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-amber-200/15 bg-white/[0.05] p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-stone-400">
+              <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-[0.22em] text-white/50">
                   Managed Funds
                 </p>
                 <p className="mt-2 break-words text-2xl font-semibold leading-tight">
@@ -309,30 +306,30 @@ export function DashboardUserDirectory({
           />
         </section>
 
-        <Card className="border-amber-200/20 bg-[#11130d] text-stone-50">
+        <Card className="border-white/10 bg-[#071120] text-white">
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
                 <CardTitle className="text-xl">{cardTitle}</CardTitle>
-                <CardDescription className="text-stone-300">
+                <CardDescription className="text-white/60">
                   {cardDescription}
                 </CardDescription>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="relative min-w-[260px]">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                   <Input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={searchPlaceholder}
-                    className="border-amber-200/15 bg-white/[0.05] pl-9 text-stone-50 placeholder:text-stone-400 focus-visible:ring-amber-500/40"
+                    className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-white/35 focus-visible:ring-[#3c9ee0]"
                   />
                 </div>
 
                 <Button
                   variant="outline"
-                  className="border-amber-200/15 bg-white/[0.05] text-stone-50 hover:bg-amber-500/10 hover:text-stone-50"
+                  className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                   disabled
                 >
                   <Filter className="mr-2 h-4 w-4" />
@@ -343,34 +340,37 @@ export function DashboardUserDirectory({
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="hidden overflow-hidden rounded-2xl border border-amber-200/15 lg:block">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[1100px] text-left">
-                  <thead className="bg-amber-500/5">
-                    <tr className="border-b border-amber-200/15">
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                <table className="w-full min-w-[980px] text-left">
+                  <thead className="bg-white/[0.04]">
+                    <tr className="border-b border-white/10">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         User
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Role
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Verification
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Account
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Deposits
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Invested
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Wallet
                       </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-stone-400">
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                         Joined
+                      </th>
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
+                        Action
                       </th>
                     </tr>
                   </thead>
@@ -379,28 +379,19 @@ export function DashboardUserDirectory({
                     {filteredUsers.map((user, index) => (
                       <tr
                         key={user.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => openUser(user)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openUser(user);
-                          }
-                        }}
-                        className={`cursor-pointer border-b border-amber-200/15 outline-none transition-colors hover:bg-amber-500/5 focus-visible:bg-amber-500/5 ${
+                        className={`border-b border-white/10 ${
                           index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent"
                         }`}
                       >
                         <td className="px-4 py-4">
                           <div className="space-y-1">
-                            <p className="font-medium text-stone-50">
+                            <p className="font-medium text-white">
                               {user.fullName}
                             </p>
-                            <p className="text-sm text-stone-300">
+                            <p className="text-sm text-white/55">
                               {user.email}
                             </p>
-                            <p className="text-xs text-stone-500">
+                            <p className="text-xs text-white/35">
                               {user.id} | {user.country}
                             </p>
                           </div>
@@ -412,17 +403,27 @@ export function DashboardUserDirectory({
                         <td className="px-4 py-4">
                           {getAccountStatusBadge(user.accountStatus)}
                         </td>
-                        <td className="px-4 py-4 text-sm text-stone-200">
+                        <td className="px-4 py-4 text-sm text-white/75">
                           {formatDirectoryCurrency(user.totalDeposits)}
                         </td>
-                        <td className="px-4 py-4 text-sm text-stone-200">
+                        <td className="px-4 py-4 text-sm text-white/75">
                           {formatDirectoryCurrency(user.totalInvested)}
                         </td>
-                        <td className="px-4 py-4 text-sm text-stone-200">
+                        <td className="px-4 py-4 text-sm text-white/75">
                           {formatDirectoryCurrency(user.walletBalance)}
                         </td>
-                        <td className="px-4 py-4 text-sm text-stone-400">
+                        <td className="px-4 py-4 text-sm text-white/55">
                           {user.joinedAt}
+                        </td>
+                        <td className="px-4 py-4">
+                          <button
+                            type="button"
+                            onClick={() => openUser(user)}
+                            className="inline-flex items-center text-sm font-medium text-[#8acdfa] transition-colors hover:text-[#b8e6ff] hover:underline"
+                            aria-label={`Open ${user.fullName} record`}
+                          >
+                            Record loaded -&gt;
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -430,8 +431,8 @@ export function DashboardUserDirectory({
                     {filteredUsers.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={8}
-                          className="px-4 py-12 text-center text-sm text-stone-400"
+                          colSpan={9}
+                          className="px-4 py-12 text-center text-sm text-white/45"
                         >
                           No records matched your search.
                         </td>
@@ -441,104 +442,6 @@ export function DashboardUserDirectory({
                 </table>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-4 lg:hidden">
-              {filteredUsers.length === 0 ? (
-                <div className="rounded-2xl border border-amber-200/15 bg-white/[0.03] px-4 py-10 text-center text-sm text-stone-400">
-                  No records matched your search.
-                </div>
-              ) : (
-                filteredUsers.map((user) => (
-                  <Card
-                    key={user.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openUser(user)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openUser(user);
-                      }
-                    }}
-                    className="border-amber-200/15 bg-white/[0.03] text-stone-50"
-                  >
-                    <CardContent className="space-y-4 p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <p className="font-semibold">{user.fullName}</p>
-                          <p className="text-sm text-stone-300">{user.email}</p>
-                          <p className="text-xs text-stone-500">
-                            {user.id} | {user.country}
-                          </p>
-                        </div>
-
-                        <div>{getRoleBadge(user.role)}</div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {getVerificationBadge(user.verificationStatus)}
-                        {getAccountStatusBadge(user.accountStatus)}
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-amber-200/15 bg-white/[0.04] p-3">
-                          <div className="mb-2 flex items-center gap-2 text-stone-400">
-                            <CreditCard className="h-4 w-4" />
-                            <span className="text-xs uppercase tracking-[0.16em]">
-                              Deposits
-                            </span>
-                          </div>
-                          <p className="text-sm font-medium text-stone-50">
-                            {formatDirectoryCurrency(user.totalDeposits)}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-amber-200/15 bg-white/[0.04] p-3">
-                          <div className="mb-2 flex items-center gap-2 text-stone-400">
-                            <BriefcaseBusiness className="h-4 w-4" />
-                            <span className="text-xs uppercase tracking-[0.16em]">
-                              Invested
-                            </span>
-                          </div>
-                          <p className="text-sm font-medium text-stone-50">
-                            {formatDirectoryCurrency(user.totalInvested)}
-                          </p>
-                        </div>
-
-                        <div className="rounded-2xl border border-amber-200/15 bg-white/[0.04] p-3">
-                          <div className="mb-2 flex items-center gap-2 text-stone-400">
-                            <Wallet className="h-4 w-4" />
-                            <span className="text-xs uppercase tracking-[0.16em]">
-                              Wallet
-                            </span>
-                          </div>
-                          <p className="text-sm font-medium text-stone-50">
-                            {formatDirectoryCurrency(user.walletBalance)}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between border-t border-amber-200/15 pt-4">
-                        <p className="text-xs text-stone-500">
-                          Joined {user.joinedAt}
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openUser(user);
-                          }}
-                          className="inline-flex items-center text-sm font-medium text-amber-300 transition-colors hover:text-amber-200 hover:underline"
-                        >
-                          Record loaded -&gt;
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -547,14 +450,14 @@ export function DashboardUserDirectory({
         open={Boolean(selectedUser)}
         onOpenChange={(open) => !open && setSelectedUser(null)}
       >
-        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-amber-200/20 bg-[#0f120d] p-0 text-stone-50 shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-white/10 p-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
           {selectedUser ? (
             <div className="flex max-h-[92dvh] flex-col">
-              <DialogHeader className="border-b border-amber-200/15 px-4 py-4 sm:px-6 sm:py-5">
-                <DialogTitle className="text-xl font-semibold tracking-tight text-stone-50 sm:text-2xl">
+              <DialogHeader className="border-b border-white/10 px-4 py-4 sm:px-6 sm:py-5">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
                   {selectedUser.fullName}
                 </DialogTitle>
-                <DialogDescription className="text-sm leading-6 text-stone-400">
+                <DialogDescription className="text-sm leading-6 text-slate-400">
                   User record loaded from the directory. Review the account
                   profile, balances, and verification state in one place.
                 </DialogDescription>
@@ -562,24 +465,24 @@ export function DashboardUserDirectory({
 
               <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.04] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Role
                     </p>
                     <div className="mt-3">
                       {getRoleBadge(selectedUser.role)}
                     </div>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.04] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Email verification
                     </p>
                     <div className="mt-3">
                       {getEmailVerificationBadge(selectedUser.emailVerified)}
                     </div>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.04] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       KYC
                     </p>
                     <div className="mt-3">
@@ -589,24 +492,24 @@ export function DashboardUserDirectory({
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Phone
                     </p>
-                    <p className="mt-2 truncate text-sm font-medium text-stone-50">
+                    <p className="mt-2 truncate text-sm font-medium text-white">
                       {selectedUser.phoneNumber?.trim() || "Not set"}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Email
                     </p>
-                    <p className="mt-2 truncate text-sm font-medium text-stone-50">
+                    <p className="mt-2 truncate text-sm font-medium text-white">
                       {selectedUser.email}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                       Account
                     </p>
                     <div className="mt-3">
@@ -615,47 +518,47 @@ export function DashboardUserDirectory({
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                     Country
                   </p>
-                  <p className="mt-2 text-sm font-medium text-stone-50">
+                  <p className="mt-2 text-sm font-medium text-white">
                     {selectedUser.country}
                   </p>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
                       Deposits
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-stone-50">
+                    <p className="mt-2 text-lg font-semibold text-white">
                       {formatDirectoryCurrency(selectedUser.totalDeposits)}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
                       Invested
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-stone-50">
+                    <p className="mt-2 text-lg font-semibold text-white">
                       {formatDirectoryCurrency(selectedUser.totalInvested)}
                     </p>
                   </div>
-                  <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-stone-400">
+                  <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">
                       Wallet
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-stone-50">
+                    <p className="mt-2 text-lg font-semibold text-white">
                       {formatDirectoryCurrency(selectedUser.walletBalance)}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-amber-200/15 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-stone-400">
+                <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                     Joined
                   </p>
-                  <p className="mt-2 text-sm text-stone-300">
+                  <p className="mt-2 text-sm text-white/80">
                     {selectedUser.joinedAt}
                   </p>
                 </div>
