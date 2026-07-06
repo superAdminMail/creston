@@ -82,7 +82,7 @@ export default function PromotionCampaignDetail({
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="space-y-1">
@@ -252,7 +252,7 @@ export default function PromotionCampaignDetail({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-lg">Delivery history</CardTitle>
         </CardHeader>

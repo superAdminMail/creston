@@ -111,7 +111,7 @@ export default function InvestmentPaymentReviewDetail({
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-xl">Payment review</CardTitle>
         </CardHeader>
@@ -174,7 +174,7 @@ export default function InvestmentPaymentReviewDetail({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-lg">
             {isCryptoProof ? "Crypto proof details" : "Submission details"}
@@ -248,7 +248,7 @@ export default function InvestmentPaymentReviewDetail({
       </Card>
 
       {payment.receipt?.url ? (
-        <Card className="border-border/60 shadow-sm">
+        <Card className="card-premium">
           <CardHeader>
             <CardTitle className="text-lg">
               {isUpgradeProof ? "Upgrade proof" : isCryptoProof ? "Crypto proof" : "Receipt"}
@@ -271,7 +271,7 @@ export default function InvestmentPaymentReviewDetail({
         </Card>
       ) : null}
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-lg">Review action</CardTitle>
         </CardHeader>

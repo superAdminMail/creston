@@ -59,7 +59,7 @@ export default function InvestmentBankInfoRequestForm({
   }, [request.orderId, state.message, state.status]);
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">
           Send bank details for {request.order.plan.name}

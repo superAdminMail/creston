@@ -104,7 +104,7 @@ export default function SavingsPaymentReviewDetail({
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-xl">Savings payment review</CardTitle>
         </CardHeader>
@@ -176,7 +176,7 @@ export default function SavingsPaymentReviewDetail({
         </CardContent>
       </Card>
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-lg">Submission details</CardTitle>
         </CardHeader>
@@ -210,7 +210,7 @@ export default function SavingsPaymentReviewDetail({
       </Card>
 
       {payment.bankMethod ? (
-        <Card className="border-border/60 shadow-sm">
+        <Card className="card-premium">
           <CardHeader>
             <CardTitle className="text-lg">Bank method</CardTitle>
           </CardHeader>
@@ -255,7 +255,7 @@ export default function SavingsPaymentReviewDetail({
       ) : null}
 
       {payment.receipt?.url ? (
-        <Card className="border-border/60 shadow-sm">
+        <Card className="card-premium">
           <CardHeader>
             <CardTitle className="text-lg">Receipt</CardTitle>
           </CardHeader>
@@ -272,7 +272,7 @@ export default function SavingsPaymentReviewDetail({
         </Card>
       ) : null}
 
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-lg">Review action</CardTitle>
         </CardHeader>

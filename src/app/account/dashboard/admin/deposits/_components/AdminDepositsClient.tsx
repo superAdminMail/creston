@@ -277,7 +277,7 @@ export default function AdminDepositsClient({
 
       <Card className="border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <CardContent className="p-0">
-          <div className="hidden overflow-hidden rounded-[1.5rem] lg:block">
+          <div className="overflow-hidden rounded-[1.5rem]">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="border-b border-white/10 text-left text-xs uppercase tracking-[0.18em] text-slate-400">
@@ -348,73 +348,6 @@ export default function AdminDepositsClient({
 
             {filteredDeposits.length === 0 ? (
               <div className="px-6 py-12 text-center text-slate-500">
-                No deposit entries match the current filters.
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-4 p-4 lg:hidden">
-            {filteredDeposits.map((deposit) => (
-              <Card
-                key={deposit.id}
-                className="border-white/8 bg-white/[0.04] backdrop-blur-xl"
-              >
-                <CardContent className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-2">
-                      <Badge
-                        variant="secondary"
-                        className={cn("border", getSourceTone(deposit.source))}
-                      >
-                        {getSourceLabel(deposit.source)}
-                      </Badge>
-                      <p className="text-sm text-slate-400">
-                        {deposit.sourceLabel}
-                      </p>
-                    </div>
-
-                    <Badge
-                      variant="secondary"
-                      className={cn("border", getStatusTone(deposit.status))}
-                    >
-                      {formatEnumLabel(deposit.status)}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-slate-300">
-                    <p>
-                      <span className="text-slate-500">Depositor: </span>
-                      {deposit.depositorName ?? deposit.requesterName ?? "Unknown depositor"}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Account: </span>
-                      {deposit.depositorAccountName ?? deposit.requesterEmail ?? "No account name"}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Reference: </span>
-                      {deposit.reference}
-                    </p>
-                    {deposit.paymentMethodLabel ? (
-                      <p>
-                        <span className="text-slate-500">Method: </span>
-                        {deposit.paymentMethodLabel}
-                      </p>
-                    ) : null}
-                    <p>
-                      <span className="text-slate-500">Submitted: </span>
-                      {formatDateLabel(deposit.submittedAt)}
-                    </p>
-                  </div>
-
-                  <div className="text-lg font-semibold text-emerald-300">
-                    {formatCurrency(deposit.amount, deposit.currency)}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {filteredDeposits.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-slate-500">
                 No deposit entries match the current filters.
               </div>
             ) : null}

@@ -8,7 +8,7 @@ export default function OrderPaymentSummaryCard({
   order: InvestmentOrderPaymentDetails;
 }) {
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">Order summary</CardTitle>
       </CardHeader>

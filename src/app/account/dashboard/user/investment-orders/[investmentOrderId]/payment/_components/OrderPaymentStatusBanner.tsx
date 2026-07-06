@@ -58,7 +58,7 @@ export default function OrderPaymentStatusBanner({
   const meta = getStatusMeta(order.status);
 
   return (
-    <Card className="border-border/60 bg-background/80 shadow-sm">
+    <Card className="card-premium">
       <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1.5">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">

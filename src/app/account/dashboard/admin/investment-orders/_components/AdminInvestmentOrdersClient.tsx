@@ -479,7 +479,6 @@ export function AdminInvestmentOrdersClient({
       <AdminResponsiveCollectionShell
         items={data.orders}
         getItemKey={(order) => order.id}
-        renderMobileCard={(order) => <MobileOrderCard order={order} />}
         emptyState={
           <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
             <CardContent className="space-y-3 p-8">

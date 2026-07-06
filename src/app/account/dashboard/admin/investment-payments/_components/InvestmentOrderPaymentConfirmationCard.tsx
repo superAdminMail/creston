@@ -40,7 +40,7 @@ export default function InvestmentOrderConfirmationCard({
   }
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">Final order confirmation</CardTitle>
       </CardHeader>

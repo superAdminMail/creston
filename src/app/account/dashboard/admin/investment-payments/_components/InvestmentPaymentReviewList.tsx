@@ -115,7 +115,7 @@ export default function InvestmentPaymentReviewList({
 
   return (
     <div className="space-y-6 px-4 py-12 md:px-12">
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-xl">Investment payment reviews</CardTitle>
         </CardHeader>

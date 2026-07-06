@@ -34,22 +34,14 @@ export function SuperAdminCollection<TItem>({
   getItemKey,
   renderMobileCard,
 }: SuperAdminCollectionProps<TItem>) {
+  void renderMobileCard;
+
   return (
     <>
-      <div className="space-y-4 lg:hidden">
-        {items.map((item) => (
-          <Card
-            key={getItemKey(item)}
-            className="rounded-[1.75rem] border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_18px_50px_rgba(2,6,23,0.14)]"
-          >
-            <CardContent className="p-5">{renderMobileCard(item)}</CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="hidden rounded-[2rem] border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_22px_60px_rgba(2,6,23,0.18)] lg:block">
+      <Card className="rounded-[2rem] border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_22px_60px_rgba(2,6,23,0.18)]">
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-max">
             <TableHeader>
               <TableRow className="border-white/8 hover:bg-transparent">
                 {columns.map((column) => (
@@ -80,7 +72,8 @@ export function SuperAdminCollection<TItem>({
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>

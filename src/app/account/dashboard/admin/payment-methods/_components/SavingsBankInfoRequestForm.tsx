@@ -64,7 +64,7 @@ export default function SavingsBankInfoRequestForm({
   }, [request.savingsAccountId, state.message, state.status]);
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">
           Send bank details for {request.savingsProductName}

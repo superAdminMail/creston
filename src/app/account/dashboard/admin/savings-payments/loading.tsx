@@ -50,62 +50,42 @@ export default function Loading() {
 
       <div className="rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-xl sm:p-6">
         <div className="space-y-4">
-          <div className="hidden lg:grid lg:grid-cols-7 lg:gap-4">
-            <Skeleton className="h-4 w-24 rounded-full" />
-            <Skeleton className="h-4 w-24 rounded-full" />
-            <Skeleton className="h-4 w-28 rounded-full" />
-            <Skeleton className="h-4 w-20 rounded-full" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-4 w-20 rounded-full" />
-          </div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[840px] rounded-[1.5rem] border border-white/10">
+              <div className="grid grid-cols-7 gap-4 border-b border-white/10 bg-white/[0.04] px-4 py-4">
+                <Skeleton className="h-4 w-24 rounded-full" />
+                <Skeleton className="h-4 w-24 rounded-full" />
+                <Skeleton className="h-4 w-28 rounded-full" />
+                <Skeleton className="h-4 w-20 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20 rounded-full" />
+              </div>
 
-          <div className="space-y-4 lg:hidden">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-7 gap-4 border-b border-white/10 bg-white/[0.03] px-4 py-5 last:border-b-0"
+                >
+                  <div className="space-y-2">
                     <Skeleton className="h-4 w-40 rounded-full" />
                     <Skeleton className="h-3 w-28 rounded-full" />
                   </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 rounded-full" />
+                    <Skeleton className="h-3 w-20 rounded-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-44 rounded-full" />
+                    <Skeleton className="h-3 w-24 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-28 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
                   <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-24 rounded-full" />
                 </div>
-                <div className="mt-4 grid gap-2">
-                  <Skeleton className="h-3 w-3/4 rounded-full" />
-                  <Skeleton className="h-3 w-2/3 rounded-full" />
-                  <Skeleton className="h-3 w-1/2 rounded-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="hidden space-y-0 overflow-hidden rounded-[1.5rem] border border-white/10 lg:block">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-7 gap-4 border-b border-white/10 bg-white/[0.03] px-4 py-5 last:border-b-0"
-              >
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-40 rounded-full" />
-                  <Skeleton className="h-3 w-28 rounded-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-32 rounded-full" />
-                  <Skeleton className="h-3 w-20 rounded-full" />
-                </div>
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-44 rounded-full" />
-                  <Skeleton className="h-3 w-24 rounded-full" />
-                </div>
-                <Skeleton className="h-4 w-28 rounded-full" />
-                <Skeleton className="h-6 w-24 rounded-full" />
-                <Skeleton className="h-6 w-20 rounded-full" />
-                <Skeleton className="h-4 w-24 rounded-full" />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -17,8 +17,6 @@ import {
   TableCell,
 } from "@/components/ui/table";
 
-import { Card, CardContent } from "@/components/ui/card";
-
 export function TransactionTable({
   transactions,
 }: {
@@ -32,7 +30,7 @@ export function TransactionTable({
         </h2>
       </div>
 
-      <div className="hidden lg:block">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-white/10">
@@ -89,48 +87,6 @@ export function TransactionTable({
             ))}
           </TableBody>
         </Table>
-
-        {transactions.length === 0 && (
-          <div className="py-10 text-center text-slate-500">
-            No transactions yet
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-4 lg:hidden">
-        {transactions.map((tx) => (
-          <Card
-            key={tx.id}
-            className="border-white/8 bg-white/[0.04] backdrop-blur-xl"
-          >
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <TypeBadge type={tx.type} />
-                <StatusBadge status={tx.status} />
-              </div>
-
-              <div
-                className={cn(
-                  "text-lg font-semibold",
-                  tx.direction === "CREDIT"
-                    ? "text-emerald-400"
-                    : "text-red-400",
-                )}
-              >
-                {tx.direction === "CREDIT" ? "+" : "-"}
-                {formatCurrency(tx.amount, tx.currency)}
-              </div>
-
-              <div className="text-xs text-slate-400 space-y-1">
-                <p>Ref: {tx.reference}</p>
-                <p>Plan: {tx.planName ?? "-"}</p>
-                {tx.description ? <p>{tx.description}</p> : null}
-                <p>{formatDateLabel(tx.createdAt)}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-
         {transactions.length === 0 && (
           <div className="py-10 text-center text-slate-500">
             No transactions yet

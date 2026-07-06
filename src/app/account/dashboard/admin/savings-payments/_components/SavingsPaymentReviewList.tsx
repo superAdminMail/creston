@@ -74,7 +74,7 @@ export default function SavingsPaymentReviewList({
 
   return (
     <div className="space-y-6 px-4 py-6 md:px-6">
-      <Card className="border-border/60 shadow-sm">
+      <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-xl">Savings payment reviews</CardTitle>
         </CardHeader>

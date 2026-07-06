@@ -170,7 +170,7 @@ export function WithdrawalRequestsTable({
 
       <Card className="border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <CardContent className="p-0">
-          <div className="hidden overflow-hidden rounded-[1.5rem] lg:block">
+          <div className="overflow-hidden rounded-[1.5rem]">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="border-b border-white/10 text-left text-xs uppercase tracking-[0.18em] text-slate-400">
@@ -313,131 +313,6 @@ export function WithdrawalRequestsTable({
 
             {filteredWithdrawals.length === 0 ? (
               <div className="px-6 py-12 text-center text-slate-500">
-                No withdrawals found for the selected filter.
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-4 p-4 lg:hidden">
-            {filteredWithdrawals.map((withdrawal) => (
-              <Card
-                key={withdrawal.id}
-                className="border-white/8 bg-white/[0.04] backdrop-blur-xl"
-              >
-                <CardContent className="space-y-4 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="font-medium text-white">
-                        {withdrawal.requester.name ?? "Unnamed investor"}
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        {withdrawal.requester.email ?? "Unknown email"}
-                      </p>
-                    </div>
-
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        "border",
-                        getWithdrawalStatusTone(withdrawal.status),
-                      )}
-                    >
-                      {formatEnumLabel(withdrawal.status)}
-                    </Badge>
-                  </div>
-
-                  <div className="space-y-2 text-sm text-slate-300">
-                    <p>
-                      <span className="text-slate-500">Source: </span>
-                      {withdrawal.sourceLabel}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Payout method: </span>
-                      {withdrawal.paymentMethodLabel}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Reference: </span>
-                      {withdrawal.reference ??
-                        withdrawal.externalReference ??
-                        withdrawal.id}
-                    </p>
-                    <p>
-                      <span className="text-slate-500">Requested: </span>
-                      {formatDateLabel(withdrawal.requestedAt)}
-                    </p>
-                  </div>
-
-                  <div className="text-lg font-semibold text-emerald-300">
-                    {formatCurrency(withdrawal.amount, withdrawal.currency)}
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm text-slate-300">
-                    {withdrawal.hasCommissionFees ? (
-                      withdrawal.sourceType === "INVESTMENT_ORDER" ? (
-                        <p>
-                          Commission fee:{" "}
-                          <span className="text-slate-100">
-                            {withdrawal.commissionPercent}%
-                          </span>
-                          {withdrawal.commissionReviewStatus ===
-                          "PENDING_REVIEW" ? (
-                            <span className="mt-1 block text-xs text-amber-300">
-                              Awaiting commission review
-                            </span>
-                          ) : null}
-                        </p>
-                      ) : withdrawal.savingsFeeAmount != null ? (
-                        <p>
-                          Fee amount:{" "}
-                          <span className="text-slate-100">
-                            {formatCurrency(
-                              withdrawal.savingsFeeAmount,
-                              withdrawal.currency,
-                            )}
-                          </span>
-                          {withdrawal.commissionReviewStatus ===
-                          "PENDING_REVIEW" ? (
-                            <span className="mt-1 block text-xs text-amber-300">
-                              Awaiting commission review
-                            </span>
-                          ) : null}
-                        </p>
-                      ) : (
-                        <p className="text-slate-500">Fee details unavailable</p>
-                      )
-                    ) : (
-                      <p className="text-slate-500">No commission fees applied</p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`${detailsBasePath}/${withdrawal.id}`}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                      {withdrawal.status === "PENDING"
-                        ? "Manage commission"
-                        : "View"}
-                    </Link>
-
-                    <WithdrawalStatusActionMenu
-                      withdrawalId={withdrawal.id}
-                      status={withdrawal.status}
-                    />
-                  </div>
-
-                  {withdrawal.rejectionReason ? (
-                    <div className="rounded-2xl border border-red-400/20 bg-red-500/5 p-3 text-sm text-red-200">
-                      {withdrawal.rejectionReason}
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ))}
-
-            {filteredWithdrawals.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-slate-500">
                 No withdrawals found for the selected filter.
               </div>
             ) : null}

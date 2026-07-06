@@ -88,7 +88,6 @@ export function AdminHistoryClient({ data }: { data: AdminHistoryData }) {
       <AdminResponsiveCollectionShell
         items={data.investors}
         getItemKey={(investor) => investor.id}
-        renderMobileCard={(investor) => <HistoryMobileCard investor={investor} />}
         emptyState={
           <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.98))] text-center shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
             <CardContent className="space-y-3 p-8">

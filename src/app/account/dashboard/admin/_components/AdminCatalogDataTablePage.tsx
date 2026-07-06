@@ -38,12 +38,13 @@ export function AdminCatalogDataTablePage<TItem>({
   emptyStateLabel,
   emptyStateDescription,
 }: AdminCatalogDataTablePageProps<TItem>) {
+  void renderMobileCard;
+
   return (
     <AdminOperationsShell title={title} description={description} stats={stats}>
       <AdminResponsiveCollectionShell
         items={items}
         getItemKey={getItemKey}
-        renderMobileCard={renderMobileCard}
         columns={columns}
         emptyState={
           <Card className="card-premium rounded-[1.9rem] text-center">

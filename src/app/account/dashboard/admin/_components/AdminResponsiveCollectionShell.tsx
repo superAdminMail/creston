@@ -33,6 +33,8 @@ export function AdminResponsiveCollectionShell<TItem>({
   columns,
   emptyState,
 }: AdminResponsiveCollectionShellProps<TItem>) {
+  void renderMobileCard;
+
   if (items.length === 0) {
     return emptyState ? (
       <>{emptyState}</>
@@ -50,21 +52,10 @@ export function AdminResponsiveCollectionShell<TItem>({
 
   return (
     <>
-      <div className="space-y-4 lg:hidden">
-        {items.map((item) => (
-          <Card
-            key={getItemKey(item)}
-            className="group relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_36%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:border-sky-400/20 hover:shadow-[0_28px_80px_rgba(0,0,0,0.28)]"
-          >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/40 to-transparent" />
-            <CardContent className="p-5">{renderMobileCard(item)}</CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)] lg:block">
+      <Card className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+            <Table className="min-w-max">
             <TableHeader>
               <TableRow className="border-white/8 hover:bg-transparent">
                 {columns.map((column) => (
@@ -84,18 +75,19 @@ export function AdminResponsiveCollectionShell<TItem>({
                   key={getItemKey(item)}
                   className="border-white/8 hover:bg-white/[0.03]"
                 >
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.key}
-                    className={column.cellClassName ?? "px-5 py-4 align-top"}
-                  >
-                    {column.render(item)}
-                  </TableCell>
-                ))}
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.key}
+                      className={column.cellClassName ?? "px-5 py-4 align-top"}
+                    >
+                      {column.render(item)}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </>

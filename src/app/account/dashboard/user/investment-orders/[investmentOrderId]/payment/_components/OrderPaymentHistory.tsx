@@ -33,7 +33,7 @@ export default function OrderPaymentHistory({
   payments: Payment[];
 }) {
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">Payment history</CardTitle>
       </CardHeader>

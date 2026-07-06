@@ -33,7 +33,7 @@ export default function MissingBankInfoCard({
   }
 
   return (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="card-premium">
       <CardHeader>
         <CardTitle className="text-lg">Bank info unavailable</CardTitle>
       </CardHeader>

@@ -52,7 +52,6 @@ export function AdminResourceCollectionPage({
       <AdminResponsiveCollectionShell
         items={collection.items}
         getItemKey={(item) => item.id}
-        renderMobileCard={(item) => <MobileResourceCard {...item} />}
         emptyState={
           <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
             <CardContent className="space-y-3 p-8">
