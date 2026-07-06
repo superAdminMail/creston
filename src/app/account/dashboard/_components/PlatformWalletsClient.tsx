@@ -53,6 +53,7 @@ export type PlatformPaymentMethodItem = PlatformPaymentMethodFormDefaults & {
 type PlatformWalletsClientProps = {
   roleLabel: string;
   wallets: PlatformPaymentMethodItem[];
+  surfaceVariant?: "premium" | "flat";
 };
 
 function maskSensitiveValue(value?: string | null) {
@@ -83,13 +84,21 @@ function StatCard({
   label,
   value,
   helper,
+  flat = false,
 }: {
   label: string;
   value: string;
   helper: string;
+  flat?: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
+    <div
+      className={
+        flat
+          ? "rounded-3xl border border-border/60 bg-card p-4 shadow-sm sm:p-5"
+          : "rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5"
+      }
+    >
       <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400 sm:text-xs">
         {label}
       </p>
@@ -124,9 +133,11 @@ function SetDefaultPaymentMethodForm({
 function PaymentMethodCard({
   method,
   onEdit,
+  flat = false,
 }: {
   method: PlatformPaymentMethodItem;
   onEdit: (method: PlatformPaymentMethodItem) => void;
+  flat?: boolean;
 }) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const router = useRouter();
@@ -162,11 +173,23 @@ function PaymentMethodCard({
   }, [deleteState.message, deleteState.status, method.id, router]);
 
   return (
-    <div className="relative rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:border-blue-400/20 hover:bg-white/[0.055]">
+    <div
+      className={
+        flat
+          ? "relative rounded-[1.5rem] border border-border/60 bg-card p-4 transition hover:border-blue-400/20 hover:bg-background/80"
+          : "relative rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:border-blue-400/20 hover:bg-white/[0.055]"
+      }
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+            <div
+              className={
+                flat
+                  ? "flex h-11 w-11 items-center justify-center rounded-2xl border border-border/60 bg-background/80"
+                  : "flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]"
+              }
+            >
               <WalletCards className="h-5 w-5 text-blue-300" />
             </div>
 
@@ -204,7 +227,13 @@ function PaymentMethodCard({
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-[#0B132B]/80 p-3">
+            <div
+              className={
+                flat
+                  ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                  : "rounded-2xl bg-[#0B132B]/80 p-3"
+              }
+            >
               <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                 Details
               </p>
@@ -231,7 +260,13 @@ function PaymentMethodCard({
               )}
             </div>
 
-            <div className="rounded-2xl bg-[#0B132B]/80 p-3">
+            <div
+              className={
+                flat
+                  ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                  : "rounded-2xl bg-[#0B132B]/80 p-3"
+              }
+            >
               <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                 Added
               </p>
@@ -244,7 +279,13 @@ function PaymentMethodCard({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {method.type === "BANK_INFO" ? (
               <>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div
+                  className={
+                    flat
+                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
+                  }
+                >
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Account Number
                   </p>
@@ -254,7 +295,13 @@ function PaymentMethodCard({
                     </p>
                   ) : null}
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div
+                  className={
+                    flat
+                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
+                  }
+                >
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Branch
                   </p>
@@ -267,7 +314,13 @@ function PaymentMethodCard({
               </>
             ) : (
               <>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div
+                  className={
+                    flat
+                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
+                  }
+                >
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Wallet Address
                   </p>
@@ -277,7 +330,13 @@ function PaymentMethodCard({
                     </p>
                   ) : null}
                 </div>
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-3">
+                <div
+                  className={
+                    flat
+                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
+                  }
+                >
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
                     Wallet Tag
                   </p>
@@ -371,7 +430,9 @@ function PaymentMethodCard({
 export default function PlatformWalletsClient({
   roleLabel,
   wallets,
+  surfaceVariant = "premium",
 }: PlatformWalletsClientProps) {
+  const isFlatSurface = surfaceVariant === "flat";
   const [addOpen, setAddOpen] = useState(false);
   const [editWallet, setEditWallet] =
     useState<PlatformPaymentMethodItem | null>(null);
@@ -385,15 +446,29 @@ export default function PlatformWalletsClient({
   }, [wallets]);
 
   return (
-    <div className="relative w-full overflow-hidden rounded-[2rem] bg-[#050B1F]">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
-        <div className="absolute right-[-6rem] top-20 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
-      </div>
+    <div
+      className={
+        isFlatSurface
+          ? "relative w-full overflow-hidden rounded-[2rem] bg-card"
+          : "relative w-full overflow-hidden rounded-[2rem] bg-[#050B1F]"
+      }
+    >
+      {!isFlatSurface ? (
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
+          <div className="absolute right-[-6rem] top-20 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_35%)]" />
+        </div>
+      ) : null}
 
       <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+        <div
+          className={
+            isFlatSurface
+              ? "rounded-[2rem] border border-border/60 bg-card p-6 shadow-sm"
+              : "rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl"
+          }
+        >
           <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-blue-200">
@@ -450,21 +525,30 @@ export default function PlatformWalletsClient({
               label="Total Methods"
               value={String(stats.total)}
               helper="Configured bank details and crypto destinations."
+              flat={isFlatSurface}
             />
             <StatCard
               label="Active Methods"
               value={String(stats.active)}
               helper="Methods currently eligible for funding operations."
+              flat={isFlatSurface}
             />
             <StatCard
               label="Default Methods"
               value={String(stats.defaults)}
               helper="Primary methods selected for routing."
+              flat={isFlatSurface}
             />
           </div>
 
           <div className="mt-8 grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-            <div className="rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:p-5">
+            <div
+              className={
+                isFlatSurface
+                  ? "rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-sm sm:p-5"
+                  : "rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:p-5"
+              }
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-white">
@@ -476,7 +560,13 @@ export default function PlatformWalletsClient({
                   </p>
                 </div>
 
-                <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300 sm:block">
+                <div
+                  className={
+                    isFlatSurface
+                      ? "hidden rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs text-slate-300 sm:block"
+                      : "hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300 sm:block"
+                  }
+                >
                   {roleLabel}
                 </div>
               </div>
@@ -486,6 +576,7 @@ export default function PlatformWalletsClient({
                   <PaymentMethodCard
                     key={wallet.id}
                     method={wallet}
+                    flat={isFlatSurface}
                     onEdit={(method) => setEditWallet(method)}
                   />
                 ))}
@@ -493,7 +584,13 @@ export default function PlatformWalletsClient({
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5">
+              <div
+                className={
+                  isFlatSurface
+                    ? "rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm"
+                    : "rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5"
+                }
+              >
                 <h2 className="text-lg font-semibold text-white">
                   Add payment method
                 </h2>
@@ -503,7 +600,13 @@ export default function PlatformWalletsClient({
                 </p>
               </div>
 
-              <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
+              <div
+                className={
+                  isFlatSurface
+                    ? "rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm"
+                    : "rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5"
+                }
+              >
                 <h3 className="text-base font-semibold text-white">
                   Operational guidance
                 </h3>

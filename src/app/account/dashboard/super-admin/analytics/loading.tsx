@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function MetricSkeleton() {
   return (
-    <Card className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+    <Card className="rounded-[1.5rem] border border-border/60 bg-card shadow-sm">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
@@ -21,7 +21,7 @@ export default function Loading() {
   return (
     <div className="min-h-screen bg-[#020817] text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <Card className="overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_30%),linear-gradient(135deg,rgba(7,17,32,0.98),rgba(8,18,36,0.98))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
+        <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card text-white shadow-sm">
           <CardContent className="p-4 sm:p-6 md:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-3xl space-y-4">
@@ -56,7 +56,7 @@ export default function Loading() {
         </div>
 
         <div className="mt-10 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <Card className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+          <Card className="rounded-[1.75rem] border border-border/60 bg-card text-white shadow-sm">
             <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
               <CardTitle className="text-base sm:text-lg">
                 <Skeleton className="h-5 w-40 bg-white/10" />
@@ -68,7 +68,7 @@ export default function Loading() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+          <Card className="rounded-[1.75rem] border border-border/60 bg-card text-white shadow-sm">
             <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
               <CardTitle className="text-base sm:text-lg">
                 <Skeleton className="h-5 w-36 bg-white/10" />
@@ -82,7 +82,7 @@ export default function Loading() {
         </div>
 
         <div className="mt-10 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-          <Card className="rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+          <Card className="rounded-[1.75rem] border border-border/60 bg-card text-white shadow-sm">
             <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
               <CardTitle className="text-base sm:text-lg">
                 <Skeleton className="h-5 w-36 bg-white/10" />
@@ -96,7 +96,7 @@ export default function Loading() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border border-white/10 bg-white/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+          <Card className="rounded-[1.75rem] border border-border/60 bg-card shadow-sm">
             <CardHeader className="border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
               <CardTitle className="text-base sm:text-lg">
                 <Skeleton className="h-5 w-40 bg-white/10" />

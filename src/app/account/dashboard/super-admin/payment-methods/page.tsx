@@ -9,6 +9,7 @@ export default async function SuperAdminPaymentMethodsPage() {
   return (
     <PlatformWalletsClient
       roleLabel="Super Admin"
+      surfaceVariant="flat"
       wallets={paymentMethods.map((wallet) => ({
         id: wallet.id,
         label: wallet.label,
