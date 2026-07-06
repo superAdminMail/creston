@@ -31,7 +31,7 @@ function DetailCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-3xl border border-white/8 bg-white/[0.03] p-5">
+    <div className="rounded-xl border border-white/10 px-4 py-4">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-blue-300" />
         <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
@@ -123,7 +123,7 @@ export function UserInvestmentProfileDetailsPage({
         </Link>
       </div>
 
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -160,7 +160,7 @@ export function UserInvestmentProfileDetailsPage({
             </div>
           </div>
 
-          <div className="w-full max-w-sm rounded-3xl border border-white/8 bg-white/[0.03] p-5">
+          <div className="w-full max-w-sm rounded-[1.75rem] border border-white/10 bg-white/[0.02] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
@@ -171,7 +171,7 @@ export function UserInvestmentProfileDetailsPage({
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/8 bg-[#0b1229]/70 px-3 py-2 text-right">
+              <div className="text-right">
                 <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
                   Status
                 </p>
@@ -200,7 +200,7 @@ export function UserInvestmentProfileDetailsPage({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
@@ -247,13 +247,13 @@ export function UserInvestmentProfileDetailsPage({
         </div>
 
         <div className="space-y-6">
-          <section className="glass-strong rounded-[2rem] p-6">
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6">
             <h2 className="text-lg font-semibold text-white">Next actions</h2>
 
             <div className="mt-5 space-y-3">
               <Link
                 href="/account/dashboard/user/investment-profile/edit"
-                className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
               >
                 Update investment profile
                 <ArrowRight className="h-4 w-4 text-blue-300" />
@@ -261,7 +261,7 @@ export function UserInvestmentProfileDetailsPage({
 
               <Link
                 href="/account/dashboard/profile"
-                className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.04] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
               >
                 Review your personal profile
                 <ArrowRight className="h-4 w-4 text-blue-300" />
@@ -269,7 +269,7 @@ export function UserInvestmentProfileDetailsPage({
             </div>
           </section>
 
-          <section className="card-premium rounded-[2rem] p-6">
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6">
             <h2 className="text-lg font-semibold text-white">
               Profile readiness
             </h2>
@@ -284,7 +284,7 @@ export function UserInvestmentProfileDetailsPage({
                 return (
                   <div
                     key={item.title}
-                    className={cn("rounded-2xl p-4", item.tone)}
+                    className={cn("rounded-xl border p-4", item.tone)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="px-2 py-2">

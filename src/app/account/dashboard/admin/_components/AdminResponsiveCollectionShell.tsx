@@ -21,7 +21,7 @@ type Column<TItem> = {
 type AdminResponsiveCollectionShellProps<TItem> = {
   items: TItem[];
   getItemKey: (item: TItem) => string;
-  renderMobileCard: (item: TItem) => ReactNode;
+  renderMobileCard?: (item: TItem) => ReactNode;
   columns: Column<TItem>[];
   emptyState?: ReactNode;
 };

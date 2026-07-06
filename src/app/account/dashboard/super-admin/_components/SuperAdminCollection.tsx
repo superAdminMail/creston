@@ -25,7 +25,7 @@ type SuperAdminCollectionProps<TItem> = {
   items: TItem[];
   columns: SuperAdminCollectionColumn<TItem>[];
   getItemKey: (item: TItem) => string;
-  renderMobileCard: (item: TItem) => ReactNode;
+  renderMobileCard?: (item: TItem) => ReactNode;
 };
 
 export function SuperAdminCollection<TItem>({
