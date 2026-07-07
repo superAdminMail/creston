@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import type { KycStatus } from "@/generated/prisma";
 import type { UpdateSuperAdminInvestorState } from "@/actions/super-admin/investors/updateSuperAdminInvestor";
 import { createInitialFormState } from "@/lib/forms/actionState";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
@@ -19,6 +17,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { SuperAdminActionSubmitButton } from "./SuperAdminActionSubmitButton";
 
 type InvestorFormValues = {
   name: string;
@@ -58,20 +57,6 @@ const initialInvestorFormState: UpdateSuperAdminInvestorState =
     | "kycStatus"
     | "isVerified"
   >() as UpdateSuperAdminInvestorState;
-
-function SubmitButton({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="btn-primary rounded-xl px-5"
-    >
-      {pending ? "Saving..." : label}
-    </Button>
-  );
-}
 
 export function InvestorForm({
   title,
@@ -326,7 +311,11 @@ export function InvestorForm({
                   Cancel
                 </Link>
               ) : null}
-              <SubmitButton label={submitLabel} />
+              <SuperAdminActionSubmitButton
+                idleLabel={submitLabel}
+                pendingLabel="Saving..."
+                className="btn-primary rounded-xl px-5"
+              />
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../_components/dashboardSurfaces";
 
 type SuperAdminStatCardProps = {
   label: string;
@@ -12,7 +13,7 @@ export function SuperAdminStatCard({
   description,
 }: SuperAdminStatCardProps) {
   return (
-    <Card className="rounded-[1.85rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
+    <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
       <CardContent className="space-y-2 p-5">
         <p className="text-sm text-slate-400">{label}</p>
         <p className="text-2xl font-semibold text-white">{value}</p>

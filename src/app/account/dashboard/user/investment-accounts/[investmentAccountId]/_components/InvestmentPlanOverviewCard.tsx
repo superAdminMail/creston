@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
+import { DashboardSectionCard } from "../../../../_components/DashboardSectionCard";
 
 export function InvestmentPlanOverviewCard({
   account,
@@ -10,7 +11,7 @@ export function InvestmentPlanOverviewCard({
   account: InvestmentAccountDetailsViewModel;
 }) {
   return (
-    <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+    <DashboardSectionCard>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
@@ -94,6 +95,6 @@ export function InvestmentPlanOverviewCard({
           </div>
         ))}
       </div>
-    </section>
+    </DashboardSectionCard>
   );
 }

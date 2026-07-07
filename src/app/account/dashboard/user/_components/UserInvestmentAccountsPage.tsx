@@ -15,6 +15,7 @@ import {
 import type { UserInvestmentAccountsPageData } from "@/actions/accounts/get-current-user-investment-accounts";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
+import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
 
 type UserInvestmentAccountsPageProps = {
   data: UserInvestmentAccountsPageData;
@@ -127,7 +128,7 @@ export function UserInvestmentAccountsPage({
         </Link>
       </div>
 
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/15 bg-blue-400/8 px-3 py-1 text-xs font-medium text-blue-200">
@@ -190,10 +191,10 @@ export function UserInvestmentAccountsPage({
             </div>
           </div>
         </div>
-      </section>
+      </DashboardSectionCard>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+        <DashboardSectionCard>
           <div className="flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
@@ -339,7 +340,7 @@ export function UserInvestmentAccountsPage({
               ))}
             </div>
           )}
-        </div>
+        </DashboardSectionCard>
 
         <div className="space-y-6">
           <section className="glass-strong rounded-[2rem] p-6">
@@ -377,7 +378,7 @@ export function UserInvestmentAccountsPage({
             </div>
           </section>
 
-          <section className="card-premium rounded-[2rem] p-6">
+          <DashboardSectionCard className="p-6">
             <h2 className="text-lg font-semibold text-white">Next actions</h2>
             <p className="mt-2 text-sm leading-6 text-slate-400">
               Keep your profile, orders, and portfolio views aligned as you open
@@ -396,7 +397,7 @@ export function UserInvestmentAccountsPage({
                 </Link>
               ))}
             </div>
-          </section>
+          </DashboardSectionCard>
         </div>
       </section>
     </div>

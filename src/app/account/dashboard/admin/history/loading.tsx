@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
 
 function SkeletonBar({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-full bg-white/10 ${className}`} />;
@@ -7,14 +8,14 @@ function SkeletonBar({ className }: { className: string }) {
 export default function Loading() {
   return (
     <div className="space-y-6">
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <SkeletonBar className="h-4 w-24" />
         <div className="mt-4 space-y-3">
           <SkeletonBar className="h-10 w-72 max-w-full" />
           <SkeletonBar className="h-4 w-full max-w-3xl" />
           <SkeletonBar className="h-4 w-5/6 max-w-2xl" />
         </div>
-      </section>
+      </DashboardSectionCard>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (

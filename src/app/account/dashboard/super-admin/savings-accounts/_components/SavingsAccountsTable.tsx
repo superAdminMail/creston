@@ -38,72 +38,6 @@ function SavingsAccountActions({
   );
 }
 
-function SavingsAccountMobileCard({
-  account,
-}: {
-  account: SuperAdminSavingsAccountListItem;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-white">{account.name}</h2>
-        <SavingsAccountStatusBadge status={account.status} />
-        {account.isLocked ? (
-          <span className="inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-300">
-            Locked
-          </span>
-        ) : null}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Owner
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.ownerName}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">{account.ownerEmail}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Product
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.productName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Balance
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.balance.toLocaleString("en-US", {
-              style: "currency",
-              currency: account.currency,
-            })}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Target
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.targetAmount !== null
-              ? account.targetAmount.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: account.currency,
-                })
-              : "Not set"}
-          </p>
-        </div>
-      </div>
-
-      <SavingsAccountActions account={account} />
-    </div>
-  );
-}
-
 export function SavingsAccountsTable({ data }: SavingsAccountsTableProps) {
   if (data.accounts.length === 0) {
     return <SavingsAccountsEmptyState />;
@@ -113,9 +47,6 @@ export function SavingsAccountsTable({ data }: SavingsAccountsTableProps) {
     <SuperAdminCollection
       items={data.accounts}
       getItemKey={(account) => account.id}
-      renderMobileCard={(account) => (
-        <SavingsAccountMobileCard account={account} />
-      )}
       columns={[
         {
           key: "account",

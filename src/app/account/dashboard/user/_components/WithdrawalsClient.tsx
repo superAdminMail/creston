@@ -34,7 +34,7 @@ import {
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
+import { formatCurrency } from "@/lib/formatters/formatters";
 import { getFirstFormFieldError } from "@/lib/forms/actionState";
 import type { AvailableWithdrawalBalanceSummary } from "@/lib/service/getAvailableWithdrawalBalance";
 import type { WithdrawalSourceOption } from "@/lib/service/getAvailableWithdrawalSource";
@@ -94,14 +94,6 @@ function getPaymentMethodLabel(method: PaymentMethod) {
   return `${method.network ?? "Crypto wallet"} ${mask(method.address)}`;
 }
 
-function getPaymentMethodDetail(method: PaymentMethod) {
-  if (method.type === "BANK") {
-    return method.bankName ?? "Bank transfer";
-  }
-
-  return method.network ?? "Crypto wallet";
-}
-
 function resolveWithdrawalPreviewAllocation(
   requestedAmount: number,
   selection: WithdrawalSourceSelection,
@@ -146,40 +138,6 @@ function resolveWithdrawalPreviewAllocation(
     savingsPortion: 0,
     investmentPortion: 0,
   };
-}
-
-function getWithdrawalSourceSelectionLabel(
-  selection: WithdrawalSourceSelection,
-  withdrawalSources: WithdrawalSourceOption[],
-) {
-  if (selection.allocationMode === "AUTO" || !selection.sourceType) {
-    return "Savings + Investment";
-  }
-
-  const matchedSource = withdrawalSources.find(
-    (source) =>
-      source.type === selection.sourceType && source.id === selection.sourceId,
-  );
-
-  return matchedSource?.label ?? "Selected source";
-}
-
-function getWithdrawalSourceSelectionDescription(
-  selection: WithdrawalSourceSelection,
-) {
-  if (selection.allocationMode === "AUTO" || !selection.sourceType) {
-    return "Savings and investment balances will both be used if needed.";
-  }
-
-  if (selection.sourceType === "SAVINGS_POOL") {
-    return "Savings only.";
-  }
-
-  if (selection.sourceType === "INVESTMENT_POOL") {
-    return "Investment only.";
-  }
-
-  return "Select a source.";
 }
 
 function getDefaultWithdrawalSourceSelection(
@@ -248,6 +206,24 @@ function getDefaultWithdrawalSourceSelection(
   };
 }
 
+function normalizeWithdrawalSourceSelection(
+  selection: WithdrawalSourceSelection,
+  withdrawalSources: WithdrawalSourceOption[],
+): WithdrawalSourceSelection {
+  if (!selection.sourceType || !selection.sourceId) {
+    return getDefaultWithdrawalSourceSelection(withdrawalSources);
+  }
+
+  const stillAvailable = withdrawalSources.some(
+    (source) =>
+      source.type === selection.sourceType && source.id === selection.sourceId,
+  );
+
+  return stillAvailable
+    ? selection
+    : getDefaultWithdrawalSourceSelection(withdrawalSources);
+}
+
 export default function WithdrawalsClient({
   kycStatus,
   paymentMethods,
@@ -275,17 +251,21 @@ export default function WithdrawalsClient({
   const lastToast = useRef<string | null>(null);
 
   const amountNumber = Number(amount);
-  const hasValidAmount = Number.isFinite(amountNumber) && amountNumber > 0;
   const totalAvailableBalance = availableBalance.totalBalance;
   const availableBalanceCurrency = availableBalance.currency ?? "USD";
   const savingsBalance = availableBalance.savingsBalance;
   const investmentBalance = availableBalance.accountBalance;
-  const isAutoAllocation = withdrawalSourceSelection.allocationMode === "AUTO";
-  const selectedWithdrawalSource = withdrawalSourceSelection.sourceType
+  const effectiveWithdrawalSourceSelection = normalizeWithdrawalSourceSelection(
+    withdrawalSourceSelection,
+    withdrawalSources,
+  );
+  const isAutoAllocation =
+    effectiveWithdrawalSourceSelection.allocationMode === "AUTO";
+  const selectedWithdrawalSource = effectiveWithdrawalSourceSelection.sourceType
     ? (withdrawalSources.find(
         (source) =>
-          source.type === withdrawalSourceSelection.sourceType &&
-          source.id === withdrawalSourceSelection.sourceId,
+          source.type === effectiveWithdrawalSourceSelection.sourceType &&
+          source.id === effectiveWithdrawalSourceSelection.sourceId,
       ) ?? null)
     : null;
   const selectedWithdrawalSourceAmount = selectedWithdrawalSource?.amount ?? 0;
@@ -314,7 +294,7 @@ export default function WithdrawalsClient({
     Number.isFinite(previewAmount) && previewAmount > 0;
   const previewAllocation = resolveWithdrawalPreviewAllocation(
     previewHasValidAmount ? previewAmount : 0,
-    withdrawalSourceSelection,
+    effectiveWithdrawalSourceSelection,
     savingsBalance,
     availableBalance.investmentOrders,
   );
@@ -329,12 +309,6 @@ export default function WithdrawalsClient({
   const investmentSource =
     withdrawalSources.find((source) => source.type === "INVESTMENT_POOL") ??
     null;
-  const selectedWithdrawalSourceLabel = getWithdrawalSourceSelectionLabel(
-    withdrawalSourceSelection,
-    withdrawalSources,
-  );
-  const selectedWithdrawalSourceDescription =
-    getWithdrawalSourceSelectionDescription(withdrawalSourceSelection);
   const earlyWithdrawalPreview = previewHasValidAmount
     ? isAutoAllocation
       ? calculateWithdrawalEarlyFeePreview({
@@ -342,7 +316,7 @@ export default function WithdrawalsClient({
           savingsBalance,
           investmentOrders: availableBalance.investmentOrders,
         })
-      : withdrawalSourceSelection.sourceType === "INVESTMENT_POOL"
+      : effectiveWithdrawalSourceSelection.sourceType === "INVESTMENT_POOL"
         ? calculateWithdrawalEarlyFeePreview({
             requestedAmount: previewAmount,
             savingsBalance: 0,
@@ -364,7 +338,7 @@ export default function WithdrawalsClient({
   const previewGrossDeductionAmount =
     earlyWithdrawalPreview?.estimatedGrossDeduction ?? previewAmount;
   const isMixedSourceSelection =
-    withdrawalSourceSelection.allocationMode === "AUTO" &&
+    effectiveWithdrawalSourceSelection.allocationMode === "AUTO" &&
     previewSavingsAmount > 0 &&
     previewInvestmentAmount > 0;
 
@@ -373,6 +347,14 @@ export default function WithdrawalsClient({
   function selectWithdrawalSource(selection: WithdrawalSourceSelection) {
     setWithdrawalSourceSelection(selection);
     setSourcePickerOpen(false);
+  }
+
+  function handleReviewOpenChange(nextOpen: boolean) {
+    setReviewOpen(nextOpen);
+
+    if (!nextOpen) {
+      setSourcePickerOpen(false);
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -409,7 +391,7 @@ export default function WithdrawalsClient({
     const confirmAmount = Number(reviewDraft.amount);
 
     if (
-      withdrawalSourceSelection.allocationMode === "SINGLE" &&
+      effectiveWithdrawalSourceSelection.allocationMode === "SINGLE" &&
       !selectedWithdrawalSource
     ) {
       toast.error("Select a valid withdrawal source.");
@@ -417,7 +399,7 @@ export default function WithdrawalsClient({
     }
 
     if (
-      withdrawalSourceSelection.allocationMode === "SINGLE" &&
+      effectiveWithdrawalSourceSelection.allocationMode === "SINGLE" &&
       selectedWithdrawalSourceAmount > 0 &&
       Number.isFinite(confirmAmount) &&
       confirmAmount > selectedWithdrawalSourceAmount
@@ -431,11 +413,20 @@ export default function WithdrawalsClient({
     const formData = new FormData();
     formData.set("amount", reviewDraft.amount);
     formData.set("methodId", reviewDraft.methodId);
-    formData.set("allocationMode", withdrawalSourceSelection.allocationMode);
+    formData.set(
+      "allocationMode",
+      effectiveWithdrawalSourceSelection.allocationMode,
+    );
 
-    if (withdrawalSourceSelection.allocationMode === "SINGLE") {
-      formData.set("sourceType", withdrawalSourceSelection.sourceType ?? "");
-      formData.set("sourceId", withdrawalSourceSelection.sourceId ?? "");
+    if (effectiveWithdrawalSourceSelection.allocationMode === "SINGLE") {
+      formData.set(
+        "sourceType",
+        effectiveWithdrawalSourceSelection.sourceType ?? "",
+      );
+      formData.set(
+        "sourceId",
+        effectiveWithdrawalSourceSelection.sourceId ?? "",
+      );
     }
 
     startTransition(() => {
@@ -459,43 +450,23 @@ export default function WithdrawalsClient({
 
     if (serverState.status === "success") {
       toast.success(toastMessage);
-      setReviewOpen(false);
-      setSourcePickerOpen(false);
-      setReviewDraft(null);
-      setAmount("");
-      setSelectedMethod(null);
-      setWithdrawalSourceSelection(
-        getDefaultWithdrawalSourceSelection(withdrawalSources),
-      );
-      router.refresh();
-      return;
+      const resetTimer = window.setTimeout(() => {
+        setReviewOpen(false);
+        setSourcePickerOpen(false);
+        setReviewDraft(null);
+        setAmount("");
+        setSelectedMethod(null);
+        setWithdrawalSourceSelection(
+          getDefaultWithdrawalSourceSelection(withdrawalSources),
+        );
+        router.refresh();
+      }, 0);
+
+      return () => window.clearTimeout(resetTimer);
     }
 
     toast.error(toastMessage);
-  }, [router, serverState]);
-
-  useEffect(() => {
-    if (!reviewOpen) {
-      setSourcePickerOpen(false);
-    }
-  }, [reviewOpen]);
-
-  useEffect(() => {
-    setWithdrawalSourceSelection((current) => {
-      if (!current.sourceType || !current.sourceId) {
-        return getDefaultWithdrawalSourceSelection(withdrawalSources);
-      }
-
-      const stillAvailable = withdrawalSources.some(
-        (source) =>
-          source.type === current.sourceType && source.id === current.sourceId,
-      );
-
-      return stillAvailable
-        ? current
-        : getDefaultWithdrawalSourceSelection(withdrawalSources);
-    });
-  }, [withdrawalSources]);
+  }, [router, serverState, withdrawalSources]);
 
   const availableBalanceLabel =
     savingsBalance > 0 && investmentBalance > 0
@@ -547,10 +518,6 @@ export default function WithdrawalsClient({
             }}
             className="border-white/10 bg-white/5 text-white/50 focus:border-[#3c9ee0]"
           />
-          {/* <p className="text-xs text-slate-500">
-            Minimum withdrawal amount is {minimumWithdrawalAmountLabel}. Maximum
-            withdrawal amount is {maximumWithdrawalAmountLabel}.
-          </p> */}
           <FieldError>{amountValidationMessage}</FieldError>
         </div>
 
@@ -627,7 +594,7 @@ export default function WithdrawalsClient({
         </Button>
       </form>
 
-      <Drawer open={reviewOpen} onOpenChange={setReviewOpen}>
+        <Drawer open={reviewOpen} onOpenChange={handleReviewOpenChange}>
         <DrawerContent className="text-white">
           <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
             <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
@@ -921,8 +888,9 @@ export default function WithdrawalsClient({
                     },
                   ].map(({ key, source, label }) => {
                     const isSelected =
-                      withdrawalSourceSelection.allocationMode === "SINGLE"
-                        ? withdrawalSourceSelection.sourceType === key
+                      effectiveWithdrawalSourceSelection.allocationMode ===
+                      "SINGLE"
+                        ? effectiveWithdrawalSourceSelection.sourceType === key
                         : isMixedSourceSelection
                           ? (key === "SAVINGS_POOL" &&
                               previewSavingsAmount > 0) ||

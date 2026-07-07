@@ -95,7 +95,7 @@ function formatCount(value: number) {
 
 export function AuditLogsView({ data }: AuditLogsViewProps) {
   return (
-    <div className="min-h-screen bg-[#020817] text-white">
+    <div className="min-h-screen bg-card text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <div className="rounded-[2rem] border border-white/10 bg-[#071120] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.18)] sm:p-5 md:p-8">
           <SuperAdminPageHeader

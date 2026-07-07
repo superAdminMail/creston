@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../_components/dashboardSurfaces";
 
 type Column<TItem> = {
   key: string;
@@ -21,7 +23,6 @@ type Column<TItem> = {
 type AdminResponsiveCollectionShellProps<TItem> = {
   items: TItem[];
   getItemKey: (item: TItem) => string;
-  renderMobileCard?: (item: TItem) => ReactNode;
   columns: Column<TItem>[];
   emptyState?: ReactNode;
 };
@@ -29,17 +30,14 @@ type AdminResponsiveCollectionShellProps<TItem> = {
 export function AdminResponsiveCollectionShell<TItem>({
   items,
   getItemKey,
-  renderMobileCard,
   columns,
   emptyState,
 }: AdminResponsiveCollectionShellProps<TItem>) {
-  void renderMobileCard;
-
   if (items.length === 0) {
     return emptyState ? (
       <>{emptyState}</>
     ) : (
-      <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.98))] text-center shadow-[0_22px_60px_rgba(0,0,0,0.2)]">
+      <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "text-center")}>
         <CardContent className="space-y-3 p-8">
           <h2 className="text-lg font-semibold text-white">No records found</h2>
           <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
@@ -52,7 +50,7 @@ export function AdminResponsiveCollectionShell<TItem>({
 
   return (
     <>
-      <Card className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] py-0 text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+      <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "py-0 text-white")}>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-max">

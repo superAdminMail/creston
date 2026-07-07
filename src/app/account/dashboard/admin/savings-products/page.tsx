@@ -117,45 +117,6 @@ export default async function AdminSavingsProductsPage() {
       items={products}
       getItemKey={(item) => item.id}
       columns={columns}
-      renderMobileCard={(product) => (
-        <div className="space-y-3">
-          <div>
-            <div className="flex justify-between">
-              <p className="text-base font-semibold text-white">
-                {product.name}
-              </p>
-            </div>
-            <p className="mt-1 text-sm text-slate-400">
-              {product.description ?? "No description provided"}
-            </p>
-          </div>
-          <div className="space-y-1 text-xs leading-6 text-slate-400">
-            <p>
-              Interest:
-              {product.interestRatePercent !== null
-                ? `${product.interestRatePercent}%`
-                : "Not set"}
-            </p>
-            <p>
-              Frequency: {getFrequencyLabel(product.interestPayoutFrequency)}
-            </p>
-            <p>Balance: {getBalanceRange(product)}</p>
-            <p>Accounts: {product.accountCount}</p>
-            <p>{formatDateLabel(product.createdAt)}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              {product.isActive ? "Active" : "Inactive"}
-            </Badge>
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              {product.allowsDeposits ? "Deposits on" : "Deposits off"}
-            </Badge>
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              {product.allowsWithdrawals ? "Withdrawals on" : "Withdrawals off"}
-            </Badge>
-          </div>
-        </div>
-      )}
       emptyStateLabel="savings products"
     />
   );

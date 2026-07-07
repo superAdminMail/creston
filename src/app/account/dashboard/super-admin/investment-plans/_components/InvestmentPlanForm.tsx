@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { slugify } from "@/lib/slugs/slugify";
 import { formatTierLevel } from "@/lib/formatters/formatters";
 import { SuperAdminFormSelect } from "../../_components/SuperAdminFormSelect";
+import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 
 type InvestmentPlanTierFormValue = {
   level: InvestmentTierLevel;
@@ -78,16 +78,6 @@ type InvestmentPlanFormProps = {
     formData: FormData,
   ) => Promise<InvestmentPlanFormActionState>;
 };
-
-function SubmitButton({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" className="btn-primary rounded-xl" disabled={pending}>
-      {pending ? "Saving..." : label}
-    </Button>
-  );
-}
 
 function SectionHeader({
   title,
@@ -881,8 +871,12 @@ export function InvestmentPlanForm({
             >
               <Link href={cancelHref}>Cancel</Link>
             </Button>
-            <SubmitButton label={submitLabel} />
-          </div>
+              <SuperAdminActionSubmitButton
+                idleLabel={submitLabel}
+                pendingLabel="Saving..."
+                className="btn-primary rounded-xl"
+              />
+            </div>
         </form>
       </section>
     </div>

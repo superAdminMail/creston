@@ -19,7 +19,7 @@ function MetricSkeleton() {
 
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[#020817] text-white">
+    <div className="min-h-screen bg-card text-white">
       <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
         <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card text-white shadow-sm">
           <CardContent className="p-4 sm:p-6 md:p-8">

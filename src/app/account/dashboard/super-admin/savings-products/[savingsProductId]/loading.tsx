@@ -1,9 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardSectionCard } from "../../../_components/DashboardSectionCard";
 
 export default function Loading() {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <div className="space-y-4">
           <Skeleton className="h-5 w-44 rounded-full bg-white/10" />
           <Skeleton className="h-10 w-72 rounded-2xl bg-white/10" />
@@ -18,7 +19,7 @@ export default function Loading() {
             />
           ))}
         </div>
-      </section>
+      </DashboardSectionCard>
 
       <aside className="space-y-6">
         <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6">

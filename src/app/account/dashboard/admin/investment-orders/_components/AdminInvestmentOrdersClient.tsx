@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { toast } from "sonner";
 
 import { pauseAdminInvestmentOrder } from "@/actions/admin/investment-order/pauseAdminInvestmentOrder";
 import { resumeAdminInvestmentOrder } from "@/actions/admin/investment-order/resumeAdminInvestmentOrder";
@@ -358,78 +357,6 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function MobileOrderCard({ order }: { order: AdminInvestmentOrderListItem }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-white">{order.planName}</h2>
-          <p className="text-sm text-slate-400">
-            {order.investorName} | {order.investorEmail}
-          </p>
-        </div>
-
-        <OrderActions order={order} />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <span
-          className={cn(
-            "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-            getStatusClasses(order.status),
-          )}
-        >
-          {order.statusLabel}
-        </span>
-        <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-slate-300">
-          {order.modelLabel}
-        </span>
-        <span
-          className={cn(
-            "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-            getRuntimeStatusClasses(order.runtimeStatus),
-          )}
-        >
-          {order.runtimeStatusLabel}
-        </span>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Amount
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">{order.amount}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Investment
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {order.investmentName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Account
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {order.accountName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Created
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {order.createdAtLabel}
-          </p>
-        </div>
-      </div>
-    </div>
   );
 }
 

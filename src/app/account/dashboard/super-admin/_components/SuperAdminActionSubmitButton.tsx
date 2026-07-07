@@ -1,10 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
-import { useFormStatus } from "react-dom";
-
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { DashboardActionSubmitButton } from "../../_components/DashboardActionSubmitButton";
 
 type SuperAdminActionSubmitButtonProps = {
   idleLabel: string;
@@ -21,17 +17,13 @@ export function SuperAdminActionSubmitButton({
   className,
   disabled = false,
 }: SuperAdminActionSubmitButtonProps) {
-  const { pending } = useFormStatus();
-
   return (
-    <Button
-      type="submit"
+    <DashboardActionSubmitButton
+      idleLabel={idleLabel}
+      pendingLabel={pendingLabel}
       variant={variant}
-      className={cn(className)}
-      disabled={disabled || pending}
-    >
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-      {pending ? pendingLabel : idleLabel}
-    </Button>
+      className={className}
+      disabled={disabled}
+    />
   );
 }

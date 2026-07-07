@@ -50,61 +50,6 @@ function InvestmentPlanActions({
   );
 }
 
-function InvestmentPlanMobileCard({
-  plan,
-}: {
-  plan: SuperAdminInvestmentPlanListItem;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
-        <InvestmentPlanStatusBadge isActive={plan.isActive} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Investment
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {plan.investmentName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Period
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {plan.periodLabel}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Tier options
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {plan.tiersCountLabel}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Updated
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {plan.updatedAt}
-          </p>
-        </div>
-      </div>
-
-      <InvestmentPlanActions plan={plan} />
-    </div>
-  );
-}
-
 export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
   if (data.plans.length === 0) {
     return <InvestmentPlansEmptyState />;
@@ -151,11 +96,10 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
         ]}
       />
 
-      <SuperAdminCollection
-        items={data.plans}
-        getItemKey={(plan) => plan.id}
-        renderMobileCard={(plan) => <InvestmentPlanMobileCard plan={plan} />}
-        columns={[
+    <SuperAdminCollection
+      items={data.plans}
+      getItemKey={(plan) => plan.id}
+      columns={[
           {
             key: "plan",
             header: "Plan",

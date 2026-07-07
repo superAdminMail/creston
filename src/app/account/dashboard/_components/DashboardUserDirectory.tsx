@@ -239,7 +239,7 @@ export function DashboardUserDirectory({
   }
 
   return (
-    <div className="min-h-screen bg-[#020817]">
+    <div className="min-h-screen bg-card">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
         <section className="overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(60,158,224,0.18),transparent_28%),linear-gradient(135deg,#071120_0%,#09182b_45%,#0a1220_100%)] p-6 text-white shadow-[0_18px_60px_rgba(0,0,0,0.28)] md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -379,7 +379,17 @@ export function DashboardUserDirectory({
                     {filteredUsers.map((user, index) => (
                       <tr
                         key={user.id}
-                        className={`border-b border-white/10 ${
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open ${user.fullName} record`}
+                        onClick={() => openUser(user)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openUser(user);
+                          }
+                        }}
+                        className={`border-b border-white/10 transition hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3c9ee0]/40 ${
                           index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent"
                         }`}
                       >

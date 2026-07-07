@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import type {
@@ -27,6 +26,7 @@ import {
 import { UploadButton } from "@/utils/uploadthing";
 import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
 import { deleteFileAction } from "@/actions/files/file";
+import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 
 type SiteSettingsFormProps = {
   defaultValues: SiteSettingsFormValues;
@@ -38,20 +38,6 @@ type SiteSettingsFormProps = {
 };
 
 type PhoneFieldKey = "supportPhone" | "supportPhoneSecondary";
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      className="btn-primary rounded-xl px-5"
-      disabled={pending}
-    >
-      {pending ? "Saving..." : "Save site settings"}
-    </Button>
-  );
-}
 
 function FileAssetPreview({
   title,
@@ -662,8 +648,12 @@ export function SiteSettingsForm({
           </Card>
 
           <div className="flex justify-end">
-            <SubmitButton />
-          </div>
+              <SuperAdminActionSubmitButton
+                idleLabel="Save site settings"
+                pendingLabel="Saving..."
+                className="btn-primary rounded-xl px-5"
+              />
+            </div>
         </div>
       </div>
     </form>

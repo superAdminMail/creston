@@ -49,7 +49,7 @@ export function AccountLayoutShell({
   };
 
   return (
-    <SidebarProvider className="min-h-screen bg-transparent text-slate-950 transition-colors dark:text-slate-100">
+    <SidebarProvider className="min-h-screen bg-card text-slate-950 transition-colors dark:text-slate-100">
       <div className="w-full">
         <DashboardNavbarClient
           user={user}
@@ -81,7 +81,7 @@ export function AccountLayoutShell({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.24, ease: "easeOut", delay: 0.04 }}
-            className="h-[calc(100dvh-4rem)] overflow-y-auto px-4 py-4 sm:px-6 sm:py-6"
+            className="h-[calc(100dvh-4rem)] overflow-y-auto bg-card px-4 py-4 sm:px-6 sm:py-6"
           >
             {children}
           </motion.main>

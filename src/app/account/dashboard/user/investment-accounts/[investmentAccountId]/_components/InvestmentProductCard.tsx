@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Layers3 } from "lucide-react";
 
 import type { InvestmentAccountDetailsViewModel } from "@/actions/investment-account/getInvestmentAccountDetails";
+import { DashboardSectionCard } from "../../../../_components/DashboardSectionCard";
 
 export function InvestmentProductCard({
   account,
@@ -9,7 +10,7 @@ export function InvestmentProductCard({
   account: InvestmentAccountDetailsViewModel;
 }) {
   return (
-    <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+    <DashboardSectionCard>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
@@ -74,6 +75,6 @@ export function InvestmentProductCard({
           </p>
         </div>
       </div>
-    </section>
+    </DashboardSectionCard>
   );
 }

@@ -51,68 +51,6 @@ function InvestmentActions({
   );
 }
 
-function InvestmentMobileCard({
-  investment,
-}: {
-  investment: SuperAdminInvestmentListItem;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        {investment.iconUrl ? (
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-            <Image
-              src={investment.iconUrl}
-              alt={`${investment.name} icon`}
-              width={28}
-              height={28}
-              className="h-7 w-7 object-contain"
-            />
-          </div>
-        ) : null}
-        <h2 className="text-lg font-semibold text-white">{investment.name}</h2>
-        <InvestmentStatusBadge
-          status={investment.status}
-          label={investment.statusLabel}
-        />
-        <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-slate-300">
-          {investment.isActive ? "Active" : "Inactive"}
-        </span>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Type
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investment.typeLabel}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Sort order
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investment.sortOrder}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Plans
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investment.plansCount}
-          </p>
-        </div>
-      </div>
-
-      <InvestmentActions investment={investment} />
-    </div>
-  );
-}
-
 export function InvestmentsTable({ data }: InvestmentsTableProps) {
   if (data.investments.length === 0) {
     return <InvestmentsEmptyState />;
@@ -152,12 +90,9 @@ export function InvestmentsTable({ data }: InvestmentsTableProps) {
       />
 
       <SuperAdminCollection
-        items={data.investments}
-        getItemKey={(investment) => investment.id}
-        renderMobileCard={(investment) => (
-          <InvestmentMobileCard investment={investment} />
-        )}
-        columns={[
+      items={data.investments}
+      getItemKey={(investment) => investment.id}
+      columns={[
           {
             key: "investment",
             header: "Investment",

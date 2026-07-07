@@ -12,28 +12,6 @@ type AdminResourceCollectionPageProps = {
   collection: DashboardResourceCollection;
 };
 
-function MobileResourceCard({
-  title,
-  subtitle,
-  balance,
-  meta,
-}: DashboardResourceCollection["items"][number]) {
-  return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-base font-semibold text-white">{title}</p>
-        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-      </div>
-      {balance ? (
-        <p className="text-sm font-medium text-sky-300">
-          Account balance: {balance}
-        </p>
-      ) : null}
-      <p className="text-xs leading-6 text-slate-500">{meta}</p>
-    </div>
-  );
-}
-
 export function AdminResourceCollectionPage({
   title,
   description,

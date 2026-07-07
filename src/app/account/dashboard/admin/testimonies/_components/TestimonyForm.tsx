@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
@@ -15,6 +14,7 @@ import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/compo
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { UploadButton } from "@/utils/uploadthing";
+import { DashboardActionSubmitButton } from "../../../_components/DashboardActionSubmitButton";
 
 type TestimonyFormMode = "create" | "edit";
 
@@ -37,16 +37,6 @@ type TestimonyFormProps = {
     formData: FormData,
   ) => Promise<TestimonyFormActionState>;
 };
-
-function SubmitButton({ mode }: { mode: TestimonyFormMode }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" className="btn-primary rounded-xl px-5" disabled={pending}>
-      {pending ? "Saving..." : mode === "edit" ? "Update testimony" : "Save testimony"}
-    </Button>
-  );
-}
 
 export function TestimonyForm({
   mode = "create",
@@ -213,7 +203,11 @@ export function TestimonyForm({
           </FieldGroup>
 
           <div className="flex justify-end">
-            <SubmitButton mode={mode} />
+            <DashboardActionSubmitButton
+              idleLabel={mode === "edit" ? "Update testimony" : "Save testimony"}
+              pendingLabel="Saving..."
+              className="btn-primary rounded-xl px-5"
+            />
           </div>
         </form>
       </CardContent>

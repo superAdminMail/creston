@@ -5,6 +5,7 @@ import { deleteInvestment } from "@/actions/super-admin/investments/deleteInvest
 import { updateInvestmentStatus } from "@/actions/super-admin/investments/updateInvestmentStatus";
 import { toggleInvestmentActive } from "@/actions/super-admin/investments/toggleInvestmentActive";
 import type { SuperAdminInvestmentDetails } from "@/actions/super-admin/investments/getSuperAdminInvestmentById";
+import { DashboardSectionCard } from "../../../_components/DashboardSectionCard";
 import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 import { InvestmentStatusBadge } from "./InvestmentStatusBadge";
 
@@ -17,7 +18,7 @@ export function InvestmentDetailsCard({
 }: InvestmentDetailsCardProps) {
   return (
     <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <div className="flex flex-wrap items-center gap-3">
           {investment.iconUrl ? (
             <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
@@ -129,7 +130,7 @@ export function InvestmentDetailsCard({
             </div>
           ) : null}
         </div>
-      </div>
+      </DashboardSectionCard>
 
       <aside className="space-y-6">
         <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
@@ -189,7 +190,7 @@ export function InvestmentDetailsCard({
           </div>
         </section>
 
-        <section className="card-premium rounded-[2rem] p-6">
+        <DashboardSectionCard className="p-6">
           <h2 className="text-lg font-semibold text-white">Next action</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
             Edit the investment details or manage related plans to keep your
@@ -201,7 +202,7 @@ export function InvestmentDetailsCard({
           >
             Edit investment
           </Link>
-        </section>
+        </DashboardSectionCard>
       </aside>
     </section>
   );

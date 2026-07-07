@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "./_components/dashboardSurfaces";
 
-const cardClassName =
-  "rounded-[1.75rem] border border-slate-200/80 bg-white/88 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]";
+const cardClassName = `${DASHBOARD_PAGE_SURFACE_CLASS} p-6`;
 
 function DashboardHeaderSkeleton() {
   return (

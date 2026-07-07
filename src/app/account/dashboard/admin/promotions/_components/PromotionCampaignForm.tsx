@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,6 +29,7 @@ import {
   CreatePromotionCampaignActionState,
   createPromotionCampaignAction,
 } from "@/actions/admin/promotions/createPromotionCampaignAction";
+import { DashboardActionSubmitButton } from "../../../_components/DashboardActionSubmitButton";
 
 type PromotionUserOption = {
   id: string;
@@ -75,22 +75,6 @@ const initialState: CreatePromotionCampaignActionState = {
 };
 
 const CLAIM_CTA_PATH = "/account/dashboard/user/investment-orders/new";
-
-function SubmitButton({ inviteMode }: { inviteMode: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending
-        ? inviteMode
-          ? "Creating..."
-          : "Sending..."
-        : inviteMode
-          ? "Create promotion"
-          : "Send promotion"}
-    </Button>
-  );
-}
 
 function formatDate(value: string | null) {
   if (!value) return "-";
@@ -505,7 +489,12 @@ export default function PromotionCampaignForm({
             ) : null}
 
               <div className="flex items-center justify-end">
-                <SubmitButton inviteMode={inviteMode} />
+                <DashboardActionSubmitButton
+                  idleLabel={
+                    inviteMode ? "Create promotion" : "Send promotion"
+                  }
+                  pendingLabel={inviteMode ? "Creating..." : "Sending..."}
+                />
               </div>
             </form>
         </CardContent>

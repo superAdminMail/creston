@@ -44,61 +44,6 @@ function InvestmentAccountActions({
   );
 }
 
-function InvestmentAccountMobileCard({
-  account,
-}: {
-  account: SuperAdminInvestmentAccountListItem;
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-white">{account.ownerName}</h2>
-        <InvestmentAccountStatusBadge status={account.status} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Plan
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.planName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Balance
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.balance.toLocaleString("en-US", {
-              style: "currency",
-              currency: account.currency,
-            })}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Investment
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.investmentName}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Orders
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {account.orderCount}
-          </p>
-        </div>
-      </div>
-
-      <InvestmentAccountActions account={account} />
-    </div>
-  );
-}
-
 export function InvestmentAccountsTable({ data }: InvestmentAccountsTableProps) {
   if (data.accounts.length === 0) {
     return <InvestmentAccountsEmptyState />;
@@ -108,9 +53,6 @@ export function InvestmentAccountsTable({ data }: InvestmentAccountsTableProps) 
     <SuperAdminCollection
       items={data.accounts}
       getItemKey={(account) => account.id}
-      renderMobileCard={(account) => (
-        <InvestmentAccountMobileCard account={account} />
-      )}
       columns={[
         {
           key: "account",

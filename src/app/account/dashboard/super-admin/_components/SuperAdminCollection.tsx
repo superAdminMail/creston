@@ -25,17 +25,13 @@ type SuperAdminCollectionProps<TItem> = {
   items: TItem[];
   columns: SuperAdminCollectionColumn<TItem>[];
   getItemKey: (item: TItem) => string;
-  renderMobileCard?: (item: TItem) => ReactNode;
 };
 
 export function SuperAdminCollection<TItem>({
   items,
   columns,
   getItemKey,
-  renderMobileCard,
 }: SuperAdminCollectionProps<TItem>) {
-  void renderMobileCard;
-
   return (
     <>
       <Card className="rounded-[2rem] border-white/8 bg-white/[0.03] py-0 text-white shadow-[0_22px_60px_rgba(2,6,23,0.18)]">

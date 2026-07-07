@@ -1,4 +1,3 @@
-import { useFormStatus } from "react-dom";
 import { ArrowLeft, BadgeCheck, Loader2, ShieldCheck } from "lucide-react";
 
 import type {
@@ -8,6 +7,7 @@ import type {
 import type { CreateInvestmentOrderActionState } from "@/actions/investment-order/createInvestmentOrder.state";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { DashboardActionSubmitButton } from "../../../../_components/DashboardActionSubmitButton";
 
 type InvestmentReviewStepProps = {
   investmentId: string;
@@ -21,27 +21,6 @@ type InvestmentReviewStepProps = {
   onBack: () => void;
   canSubmit: boolean;
 };
-
-function SubmitButton({ canSubmit }: { canSubmit: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      disabled={pending || !canSubmit}
-      className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold"
-    >
-      {pending ? (
-        <span className="inline-flex items-center gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Creating order...
-        </span>
-      ) : (
-        "Create investment order"
-      )}
-    </Button>
-  );
-}
 
 export function InvestmentReviewStep({
   investmentId,
@@ -179,7 +158,13 @@ export function InvestmentReviewStep({
           Back
         </Button>
 
-        <SubmitButton canSubmit={canSubmit} />
+        <DashboardActionSubmitButton
+          idleLabel="Create investment order"
+          pendingLabel="Creating order..."
+          pendingIcon={<Loader2 className="h-4 w-4 animate-spin" />}
+          disabled={!canSubmit}
+          className="btn-primary rounded-xl px-5 py-3 text-sm font-semibold"
+        />
       </div>
     </form>
   );

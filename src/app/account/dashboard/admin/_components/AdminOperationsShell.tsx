@@ -4,6 +4,9 @@ import { ArrowRight } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { DashboardResourceCollection } from "@/lib/services/dashboard/dashboardResourceService";
+import { cn } from "@/lib/utils";
+import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
+import { DASHBOARD_PAGE_SURFACE_CLASS, DASHBOARD_SECTION_INSET_CLASS } from "../../_components/dashboardSurfaces";
 
 export type AdminOperationsStat = {
   title: string;
@@ -28,21 +31,21 @@ export function AdminOperationsShell({
 }: AdminOperationsShellProps) {
   return (
     <div className="space-y-6">
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
           {title}
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400 sm:text-base">
           {description}
         </p>
-      </section>
+      </DashboardSectionCard>
 
       {stats?.length ? (
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat) => (
             <Card
               key={stat.title}
-              className="rounded-[1.85rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] shadow-[0_18px_50px_rgba(0,0,0,0.18)]"
+              className={DASHBOARD_PAGE_SURFACE_CLASS}
             >
               <CardContent className="space-y-2 p-5">
                 <p className="text-sm text-slate-400">{stat.title}</p>
@@ -63,7 +66,7 @@ export function AdminOperationsShell({
           {collections.map((collection) => (
             <article
               key={collection.href}
-              className="card-premium-hover rounded-[1.9rem] p-6 sm:p-7"
+              className="rounded-[1.9rem] border border-border/60 bg-card p-6 shadow-sm sm:p-7"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -89,7 +92,13 @@ export function AdminOperationsShell({
                   collection.items.slice(0, 5).map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-[1.2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.86),rgba(8,17,37,0.96))] px-4 py-3 shadow-[0_12px_30px_rgba(0,0,0,0.12)]"
+                      className={cn(
+                        DASHBOARD_SECTION_INSET_CLASS.replace(
+                          "rounded-[1.75rem]",
+                          "rounded-[1.2rem]",
+                        ),
+                        "px-4 py-3",
+                      )}
                     >
                       <p className="text-sm font-medium text-white">
                         {item.title}

@@ -1,30 +1,19 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import { respondToInvestmentOrderBankInfoRequest } from "@/actions/admin/investment-payments/respondToInvestmentOrderBankInfoRequest";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { RespondToInvestmentOrderBankInfoRequestState } from "@/actions/admin/investment-payments/respondToInvestmentOrderBankInfoRequest";
 import type { InvestmentBankInfoRequestItem } from "@/lib/types/payments/investmentPaymentReview.types";
+import { DashboardActionSubmitButton } from "../../../_components/DashboardActionSubmitButton";
 
 const initialState: RespondToInvestmentOrderBankInfoRequestState = {
   status: "idle",
 };
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
-      {pending ? "Sending bank details..." : "Send bank details"}
-    </Button>
-  );
-}
 
 export default function InvestmentBankInfoRequestForm({
   request,
@@ -188,7 +177,11 @@ export default function InvestmentBankInfoRequestForm({
           ) : null}
 
           <div className="flex justify-end">
-            <SubmitButton />
+            <DashboardActionSubmitButton
+              idleLabel="Send bank details"
+              pendingLabel="Sending bank details..."
+              className="w-full sm:w-auto"
+            />
           </div>
         </form>
       </CardContent>

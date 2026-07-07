@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import type { SavingsInterestFrequency } from "@/generated/prisma";
@@ -15,10 +14,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SavingsProductFormState } from "@/actions/super-admin/savings-products/savingsProductForm.state";
 import { initialSavingsProductFormState } from "@/actions/super-admin/savings-products/savingsProductForm.state";
+import { SuperAdminActionSubmitButton } from "./SuperAdminActionSubmitButton";
 
 type SavingsProductFormValues = {
   name: string;
@@ -49,16 +48,6 @@ type SavingsProductFormProps = {
     formData: FormData,
   ) => Promise<SavingsProductFormState>;
 };
-
-function SubmitButton({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" className="btn-primary rounded-xl px-5" disabled={pending}>
-      {pending ? "Saving..." : label}
-    </Button>
-  );
-}
 
 export function SavingsProductForm({
   title,
@@ -451,7 +440,11 @@ export function SavingsProductForm({
                   Cancel
                 </Link>
               ) : null}
-              <SubmitButton label={submitLabel} />
+              <SuperAdminActionSubmitButton
+                idleLabel={submitLabel}
+                pendingLabel="Saving..."
+                className="btn-primary rounded-xl px-5"
+              />
             </div>
           </div>
         </div>

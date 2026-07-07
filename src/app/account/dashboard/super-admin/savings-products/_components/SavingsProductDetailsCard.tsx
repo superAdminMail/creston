@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { toggleSavingsProductActive } from "@/actions/super-admin/savings-products/toggleSavingsProductActive";
 import type { SuperAdminSavingsProductDetails } from "@/actions/super-admin/savings-products/getSuperAdminSavingsProductById";
+import { DashboardSectionCard } from "../../../_components/DashboardSectionCard";
 import { SuperAdminActionSubmitButton } from "../../_components/SuperAdminActionSubmitButton";
 import { SavingsProductStatusBadge } from "./SavingsProductStatusBadge";
 
@@ -15,7 +16,7 @@ export function SavingsProductDetailsCard({
 }: SavingsProductDetailsCardProps) {
   return (
     <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-      <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <Link
           href="/account/dashboard/super-admin/savings-products"
           className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
@@ -114,7 +115,7 @@ export function SavingsProductDetailsCard({
             </p>
           </div>
         </div>
-      </div>
+      </DashboardSectionCard>
 
       <aside className="space-y-6">
         <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
@@ -136,7 +137,7 @@ export function SavingsProductDetailsCard({
           </div>
         </section>
 
-        <section className="card-premium rounded-[2rem] p-6">
+        <DashboardSectionCard className="p-6">
           <h2 className="text-lg font-semibold text-white">Next action</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
             Edit the product when interest rules, locking rules, or balance
@@ -148,7 +149,7 @@ export function SavingsProductDetailsCard({
           >
             Edit savings product
           </Link>
-        </section>
+        </DashboardSectionCard>
       </aside>
     </section>
   );

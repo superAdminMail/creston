@@ -19,7 +19,7 @@ export default async function AdminInvestmentProductsPage() {
         <div>
           <p className="text-sm font-semibold text-white">{product.name}</p>
           <p className="mt-1 text-xs text-slate-400">
-            {product.symbol ? `${product.symbol} • ` : ""}
+            {product.symbol ? `${product.symbol} â€¢ ` : ""}
             {product.slug}
           </p>
         </div>
@@ -88,40 +88,6 @@ export default async function AdminInvestmentProductsPage() {
       items={products}
       getItemKey={(item) => item.id}
       columns={columns}
-      renderMobileCard={(product) => (
-        <div className="space-y-3">
-          <div>
-            <p className="text-base font-semibold text-white">{product.name}</p>
-            <p className="mt-1 text-sm text-slate-400">
-              {product.symbol ? `${product.symbol} • ` : ""}
-              {product.slug}
-            </p>
-          </div>
-          <div className="space-y-1 text-xs leading-6 text-slate-400">
-            <p>{formatEnumLabel(product.type)}</p>
-            <p>{formatEnumLabel(product.status)}</p>
-            <p>Plans: {product.planCount}</p>
-            <p>Sort order: {product.sortOrder}</p>
-            <p>{formatDateLabel(product.createdAt)}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              variant="secondary"
-              className={cn(
-                "border",
-                product.isActive
-                  ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-300"
-                  : "border-slate-400/20 bg-slate-500/10 text-slate-300",
-              )}
-            >
-              {product.isActive ? "Active" : "Inactive"}
-            </Badge>
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              Plans: {product.planCount}
-            </Badge>
-          </div>
-        </div>
-      )}
       emptyStateLabel="investment products"
     />
   );

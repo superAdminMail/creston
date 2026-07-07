@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import {
@@ -28,6 +27,7 @@ import {
 
 import { createManagement } from "@/actions/super-admin/management/createManagement";
 import { updateManagement } from "@/actions/super-admin/management/updateManagement";
+import { SuperAdminActionSubmitButton } from "./SuperAdminActionSubmitButton";
 
 type ManagementFormMode = "create" | "edit";
 
@@ -47,21 +47,6 @@ type ManagementFormProps = {
   };
   initialPhotoUrl?: string | null;
 };
-
-/* ---------------- SUBMIT BUTTON ---------------- */
-function SubmitButton({ mode }: { mode: ManagementFormMode }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      className="btn-primary rounded-xl px-5"
-      disabled={pending}
-    >
-      {pending ? "Saving..." : mode === "edit" ? "Update profile" : "Save profile"}
-    </Button>
-  );
-}
 
 /* ---------------- FORM ---------------- */
 export function ManagementForm({
@@ -301,8 +286,12 @@ export function ManagementForm({
 
           {/* ACTION */}
           <div className="flex justify-end">
-            <SubmitButton mode={mode} />
-          </div>
+              <SuperAdminActionSubmitButton
+                idleLabel={mode === "edit" ? "Update profile" : "Save profile"}
+                pendingLabel="Saving..."
+                className="btn-primary rounded-xl px-5"
+              />
+            </div>
         </div>
       </div>
     </form>

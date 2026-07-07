@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import type { SuperAdminSavingsAccountDetailsViewModel } from "@/actions/super-admin/savings-accounts/getSuperAdminSavingsAccountById";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { DashboardSectionCard } from "../../../_components/DashboardSectionCard";
 
 export function SavingsAccountDetailsCard({
   account,
@@ -10,7 +11,7 @@ export function SavingsAccountDetailsCard({
 }) {
   return (
     <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <div className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold text-white sm:text-3xl">
             {account.title}
@@ -107,7 +108,7 @@ export function SavingsAccountDetailsCard({
             </p>
           )}
         </div>
-      </div>
+      </DashboardSectionCard>
 
       <aside className="space-y-6">
         <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
@@ -125,13 +126,13 @@ export function SavingsAccountDetailsCard({
           </Link>
         </section>
 
-        <section className="card-premium rounded-[2rem] p-6">
+        <DashboardSectionCard className="p-6">
           <h2 className="text-lg font-semibold text-white">Owner</h2>
           <p className="mt-2 text-sm leading-6 text-slate-400">
             {account.owner.name}
           </p>
           <p className="mt-1 text-sm text-slate-300">{account.owner.email}</p>
-        </section>
+        </DashboardSectionCard>
       </aside>
     </section>
   );

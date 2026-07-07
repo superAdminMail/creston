@@ -243,33 +243,6 @@ export function CreateInvestmentOrderWizard({
             />
           </div>
 
-          {/* <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-            {stepTitles.map((stepTitle, index) => {
-              const isActive = index === effectiveStep;
-              const isComplete = index < effectiveStep;
-
-              return (
-                <div
-                  key={stepTitle}
-                  className={cn(
-                    "rounded-3xl border p-4 transition-colors duration-200",
-                    isActive
-                      ? "border-blue-400/25 bg-blue-400/10"
-                      : isComplete
-                        ? "border-emerald-400/20 bg-emerald-400/10"
-                        : "border-white/8 bg-white/[0.03]",
-                  )}
-                >
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Step {index + 1}
-                  </p>
-                  <p className="mt-3 text-sm font-medium text-white">
-                    {stepTitle}
-                  </p>
-                </div>
-              );
-            })}
-          </div> */}
         </section>
 
         <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
@@ -371,103 +344,6 @@ export function CreateInvestmentOrderWizard({
       </div>
 
       <div className="space-y-6">
-        {/* <section className="glass-strong rounded-[2rem] p-6">
-          <h2 className="text-lg font-semibold text-white">Order guidance</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            Here&apos;s a few things to keep in mind when creating an order.
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {guidanceItems.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.title}
-                  className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <Icon className="mt-0.5 h-4 w-4 text-blue-300" />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {item.title}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-300">{item.body}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section> */}
-
-        {/* {selectedPlan ? (
-          <section className="card-premium rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">Order details</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              This summary updates as you make your selections. Review the plan
-              details and selected tier requirements before proceeding to
-              payment review.
-            </p>
-
-            <div className="mt-5 space-y-4">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                  Plan
-                </p>
-                <p className="mt-2 text-sm font-medium text-white">
-                  {selectedPlan.name}
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Tier options
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-white">
-                    {selectedPlan.tiersCountLabel}
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Available range
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-white">
-                    {selectedPlan.tierRangeLabel ??
-                      `Quoted in ${selectedPlan.currency}`}
-                  </p>
-                </div>
-              </div>
-
-              {selectedTier ? (
-                <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-                  <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-                    Selected tier
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-white">
-                    {selectedTier.levelLabel} |{" "}
-                    {selectedTier.returnLabel ?? "Return not configured"}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </section>
-        ) : (
-          <section className="card-premium rounded-[2rem] p-6">
-            <h2 className="text-lg font-semibold text-white">Plan summary</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Once you select a plan, {siteName} will surface its tier structure
-              and product profile here for a calmer review flow.
-            </p>
-
-            <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-5 text-sm text-slate-400">
-              Select an investment and plan to populate this summary.
-            </div>
-          </section>
-        )} */}
-
         {createdOrderId ? (
           <div className="flex justify-end">
             <Button

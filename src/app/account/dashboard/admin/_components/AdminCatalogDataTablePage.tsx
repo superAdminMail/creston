@@ -21,7 +21,6 @@ type AdminCatalogDataTablePageProps<TItem> = {
   stats?: AdminOperationsStat[];
   items: TItem[];
   getItemKey: (item: TItem) => string;
-  renderMobileCard: (item: TItem) => ReactNode;
   columns: AdminCatalogColumn<TItem>[];
   emptyStateLabel: string;
   emptyStateDescription?: string;
@@ -33,13 +32,10 @@ export function AdminCatalogDataTablePage<TItem>({
   stats,
   items,
   getItemKey,
-  renderMobileCard,
   columns,
   emptyStateLabel,
   emptyStateDescription,
 }: AdminCatalogDataTablePageProps<TItem>) {
-  void renderMobileCard;
-
   return (
     <AdminOperationsShell title={title} description={description} stats={stats}>
       <AdminResponsiveCollectionShell

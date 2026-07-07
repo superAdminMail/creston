@@ -5,6 +5,7 @@ import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-curre
 import { updateCurrentUserInvestorProfileAction } from "@/actions/profile/upsert-current-user-investor-profile";
 import { InvestmentProfileForm } from "@/components/onboarding/investment-profile-form";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { DashboardSectionCard } from "../../../_components/DashboardSectionCard";
 
 export default async function Page() {
   const profile = await getCurrentUserInvestmentProfileData();
@@ -37,7 +38,7 @@ export default async function Page() {
         </div>
       </div>
 
-      <section className="card-premium rounded-[2rem] p-6 sm:p-8">
+      <DashboardSectionCard>
         <div className="max-w-3xl">
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
             Investment profile details
@@ -59,7 +60,7 @@ export default async function Page() {
             siteName={siteName}
           />
         </div>
-      </section>
+      </DashboardSectionCard>
     </div>
   );
 }

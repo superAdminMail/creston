@@ -359,9 +359,9 @@ export function DashboardOverviewShell({
   cta,
 }: DashboardOverviewData) {
   return (
-    <div className="min-h-screen bg-[#020817]">
+    <div className="min-h-screen bg-card">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(60,158,224,0.18),transparent_28%),linear-gradient(135deg,#071120_0%,#09182b_45%,#0a1220_100%)] p-6 text-white shadow-[0_18px_60px_rgba(0,0,0,0.28)] md:p-8">
+        <section className="overflow-hidden rounded-3xl border border-border/60 bg-card p-6 text-white shadow-sm md:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
               <Badge className="border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 px-3 py-1 text-[#8acdfa] hover:bg-[#3c9ee0]/10">

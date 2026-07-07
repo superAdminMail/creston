@@ -59,56 +59,6 @@ function SavingsProductActions({ product }: { product: AdminSavingsProductItem }
   );
 }
 
-function SavingsProductMobileCard({ product }: { product: AdminSavingsProductItem }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-white">{product.name}</h2>
-        <SavingsProductStatusBadge isActive={product.isActive} />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Interest
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {product.interestRatePercent !== null
-              ? `${product.interestRatePercent}%`
-              : "Not set"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Frequency
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {getFrequencyLabel(product.interestPayoutFrequency)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Balance
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {getBalanceRange(product)}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Accounts
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {product.accountCount}
-          </p>
-        </div>
-      </div>
-
-      <SavingsProductActions product={product} />
-    </div>
-  );
-}
-
 export function SavingsProductsTable({ data }: SavingsProductsTableProps) {
   if (data.length === 0) {
     return <SavingsProductsEmptyState />;
@@ -118,9 +68,6 @@ export function SavingsProductsTable({ data }: SavingsProductsTableProps) {
     <SuperAdminCollection
       items={data}
       getItemKey={(product) => product.id}
-      renderMobileCard={(product) => (
-        <SavingsProductMobileCard product={product} />
-      )}
       columns={[
         {
           key: "product",

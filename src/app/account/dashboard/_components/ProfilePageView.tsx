@@ -72,7 +72,7 @@ export default function ProfilePageView({
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#050B1F]">
+    <div className="relative min-h-screen overflow-hidden bg-card">
       <div className="absolute inset-0">
         <div className="absolute left-[-8%] top-[-10%] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
         <div className="absolute bottom-[-12%] right-[-8%] h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />

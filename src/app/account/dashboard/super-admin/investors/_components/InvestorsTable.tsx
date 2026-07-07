@@ -34,51 +34,6 @@ function InvestorActions({ investor }: { investor: SuperAdminInvestorListItem })
   );
 }
 
-function InvestorMobileCard({ investor }: { investor: SuperAdminInvestorListItem }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-white">{investor.name}</h2>
-        <InvestorStatusBadge status={investor.kycStatus} />
-        {investor.isVerified ? (
-          <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
-            Verified
-          </span>
-        ) : null}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Email</p>
-          <p className="mt-2 text-sm font-medium text-white">{investor.email}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Username</p>
-          <p className="mt-2 text-sm font-medium text-white">{investor.username}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Accounts
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investor.investmentAccountsCount + investor.savingsAccountsCount}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
-            Location
-          </p>
-          <p className="mt-2 text-sm font-medium text-white">
-            {investor.city}
-          </p>
-        </div>
-      </div>
-
-      <InvestorActions investor={investor} />
-    </div>
-  );
-}
-
 export function InvestorsTable({ data }: InvestorsTableProps) {
   if (data.investors.length === 0) {
     return <InvestorsEmptyState />;
@@ -88,7 +43,6 @@ export function InvestorsTable({ data }: InvestorsTableProps) {
     <SuperAdminCollection
       items={data.investors}
       getItemKey={(investor) => investor.id}
-      renderMobileCard={(investor) => <InvestorMobileCard investor={investor} />}
       columns={[
         {
           key: "investor",

@@ -2,12 +2,10 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 
 import { adjustAccountBalance } from "@/actions/admin/adjustments/adjustAccountBalance";
 import type { AdminAccountAdjustmentState } from "@/actions/admin/adjustments/adjustAccountBalance";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -24,6 +22,7 @@ import type {
   AdminAdjustmentTargetType,
 } from "@/lib/types/adminAdjustments";
 import { cn } from "@/lib/utils";
+import { DashboardActionSubmitButton } from "../../../_components/DashboardActionSubmitButton";
 
 type Props = {
   data: AdminAdjustmentPageData;
@@ -32,16 +31,6 @@ type Props = {
 const initialState: AdminAccountAdjustmentState = {
   status: "idle",
 };
-
-function SubmitButton({ disabled }: { disabled?: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" disabled={pending || disabled}>
-      {pending ? "Saving..." : "Save adjustment"}
-    </Button>
-  );
-}
 
 function getTargetTypeLabel(targetType: AdminAdjustmentTargetType) {
   return targetType === "INVESTMENT_ORDER"
@@ -273,7 +262,11 @@ export function AdminAdjustmentsClient({ data }: Props) {
             ) : null}
 
             <div className="flex items-center justify-end">
-              <SubmitButton disabled={!canSubmit} />
+              <DashboardActionSubmitButton
+                idleLabel="Save adjustment"
+                pendingLabel="Saving..."
+                disabled={!canSubmit}
+              />
             </div>
           </form>
         </CardContent>

@@ -44,7 +44,7 @@ export default async function AdminInvestmentPlansPage() {
         <div className="space-y-1 text-sm text-slate-300">
           <p>{plan.investmentName}</p>
           <p>
-            {formatEnumLabel(plan.investmentType)} •{" "}
+            {formatEnumLabel(plan.investmentType)} â€¢{" "}
             {formatEnumLabel(plan.investmentModel)}
           </p>
           <p>{formatEnumLabel(plan.period)}</p>
@@ -127,47 +127,6 @@ export default async function AdminInvestmentPlansPage() {
       items={plans}
       getItemKey={(item) => item.id}
       columns={columns}
-      renderMobileCard={(plan) => (
-        <div className="space-y-3">
-          <div>
-            <p className="text-base font-semibold text-white">{plan.name}</p>
-            <p className="mt-1 text-sm text-slate-400">
-              {plan.description ?? "No description provided"}
-            </p>
-          </div>
-          <div className="space-y-1 text-xs leading-6 text-slate-400">
-            <p>{plan.investmentName}</p>
-            <p>
-              {formatEnumLabel(plan.investmentType)} •{" "}
-              {formatEnumLabel(plan.investmentModel)}
-            </p>
-            <p>{formatEnumLabel(plan.period)}</p>
-            <p>Returns: {getReturnRange(plan)}</p>
-            <p>Accounts: {plan.accountCount}</p>
-            <p>Orders: {plan.orderCount}</p>
-            <p>{formatDateLabel(plan.createdAt)}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              {plan.isActive ? "Active" : "Inactive"}
-            </Badge>
-            <Badge
-              variant="secondary"
-              className={cn(
-                "border",
-                plan.isLocked
-                  ? "border-amber-400/20 bg-amber-500/10 text-amber-300"
-                  : "border-white/10 bg-white/10",
-              )}
-            >
-              {plan.isLocked ? "Locked" : "Open"}
-            </Badge>
-            <Badge variant="secondary" className="border-white/10 bg-white/10">
-              {plan.allowWithdrawal ? "Withdrawable" : "Locked in"}
-            </Badge>
-          </div>
-        </div>
-      )}
       emptyStateLabel="investment plans"
     />
   );

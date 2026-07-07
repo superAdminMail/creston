@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../_components/dashboardSurfaces";
 
 type SuperAdminSectionCardProps = {
   title: string;
@@ -33,7 +34,7 @@ export function SuperAdminSectionCard({
   return (
     <Card
       className={cn(
-        "rounded-[1.75rem] border-slate-200/80 bg-white/90 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]",
+        DASHBOARD_PAGE_SURFACE_CLASS,
         className,
       )}
     >

@@ -430,7 +430,7 @@ function PaymentMethodCard({
 export default function PlatformWalletsClient({
   roleLabel,
   wallets,
-  surfaceVariant = "premium",
+  surfaceVariant = "flat",
 }: PlatformWalletsClientProps) {
   const isFlatSurface = surfaceVariant === "flat";
   const [addOpen, setAddOpen] = useState(false);
