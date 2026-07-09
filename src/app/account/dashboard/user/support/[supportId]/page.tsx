@@ -28,12 +28,10 @@ export default async function SupportConversationPage({
   }
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-7rem)] w-full max-w-none px-0 py-0">
-      <SupportConversationDetailWorkspace
-        mode="user"
-        viewerId={userId}
-        conversation={conversation}
-      />
-    </div>
+    <SupportConversationDetailWorkspace
+      mode="user"
+      viewerId={userId}
+      conversation={conversation}
+    />
   );
 }

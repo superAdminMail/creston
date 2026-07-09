@@ -3,9 +3,8 @@
 import { useEffect, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { createConversationAction } from "@/actions/inbox/createConversationAction";
 import { Button } from "@/components/ui/button";
@@ -117,7 +116,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
     <div>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 text-white/[0.85]"
+        className="space-y-6 text-slate-700 dark:text-white/[0.85]"
       >
         <Controller
           control={form.control}
@@ -130,7 +129,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   placeholder="John Doe"
                   {...field}
-                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                  className="border-border/60 bg-white/95 text-slate-950 placeholder:text-slate-400 focus:border-blue-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -150,7 +149,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   type="email"
                   {...field}
-                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                  className="border-border/60 bg-white/95 text-slate-950 placeholder:text-slate-400 focus:border-blue-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -168,7 +167,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
 
               <FieldContent>
                 <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger className="border-white/10 bg-white/[0.04]">
+                  <SelectTrigger className="border-border/60 bg-white/95 text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-white">
                     <SelectValue placeholder="Choose issue type" />
                   </SelectTrigger>
 
@@ -200,7 +199,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Input
                   placeholder={ISSUE_PLACEHOLDER[role] ?? "Enter reference ID"}
                   {...field}
-                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                  className="border-border/60 bg-white/95 text-slate-950 placeholder:text-slate-400 focus:border-blue-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                 />
               </FieldContent>
             </Field>
@@ -218,7 +217,7 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
                 <Textarea
                   rows={5}
                   {...field}
-                  className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                  className="border-border/60 bg-white/95 text-slate-950 placeholder:text-slate-400 focus:border-blue-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                 />
 
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -228,11 +227,19 @@ export default function NewConversationModal({ onCreated, onClose }: Props) {
         />
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="destructive" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="text-white"
+          >
             Cancel
           </Button>
 
-          <Button disabled={isPending} className="bg-[var(--brand-blue)]">
+          <Button
+            disabled={isPending}
+            className="bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+          >
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

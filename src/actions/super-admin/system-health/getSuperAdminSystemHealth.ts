@@ -3,8 +3,11 @@
 import { formatDistanceToNow } from "date-fns";
 
 import { DIDIT_STATUSES, isDiditSessionStale } from "@/lib/kyc/didit";
+import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { requireSuperAdminAccess } from "@/lib/permissions/requireSuperAdminAccess";
 import { prisma } from "@/lib/prisma";
+import { isSystemHealthProofDismissed } from "@/lib/system-health/submittedProofCleanup";
+import type { NotificationDTO } from "@/lib/types/notification";
 
 export type HealthTone = "healthy" | "warning" | "critical";
 
@@ -73,6 +76,52 @@ export type SystemHealthCronCard = {
   icon: "refreshCw" | "shieldCheck" | "clock3";
 };
 
+export type SystemHealthNotificationCleanupItem = NotificationDTO & {
+  userName: string;
+  userEmail: string;
+};
+
+export type SystemHealthNotificationCleanup = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  unreadCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  items: SystemHealthNotificationCleanupItem[];
+};
+
+export type SystemHealthSubmittedProofCleanupItem = {
+  id: string;
+  paymentId: string;
+  sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT";
+  paymentType: "BANK_DEPOSIT" | "CRYPTO_PROVIDER";
+  submissionKind: "STANDARD" | "UPGRADE" | null;
+  reviewStatus: "PENDING_REVIEW" | "APPROVED" | "REJECTED" | "CANCELED";
+  targetId: string;
+  targetLabel: string;
+  targetDetail: string | null;
+  userName: string;
+  userEmail: string;
+  claimedAmount: number;
+  currency: string;
+  submittedAt: string;
+  reviewedAt: string | null;
+};
+
+export type SystemHealthSubmittedProofCleanup = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  investmentCount: number;
+  savingsCount: number;
+  items: SystemHealthSubmittedProofCleanupItem[];
+};
+
 export type SuperAdminSystemHealthData = {
   checkedAtLabel: string;
   overallState: {
@@ -97,6 +146,8 @@ export type SuperAdminSystemHealthData = {
   integrityChecks: SystemHealthIntegrityCheck[];
   services: SystemHealthService[];
   cronCards: SystemHealthCronCard[];
+  notificationCleanup: SystemHealthNotificationCleanup;
+  submittedProofCleanup: SystemHealthSubmittedProofCleanup;
 };
 
 const CRON_LOCK_STALE_AFTER_MS = 15 * 60 * 1000;
@@ -107,6 +158,12 @@ const KYC_FAILURE_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const PROMOTION_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const FILE_UPLOAD_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 const CRON_OVERDUE_AFTER_MS = 36 * 60 * 60 * 1000;
+const SYSTEM_HEALTH_NOTIFICATION_PAGE_SIZE = 10;
+const SYSTEM_HEALTH_SUBMITTED_PROOF_PAGE_SIZE = 10;
+
+function toNumber(value: { toNumber(): number } | number | null | undefined) {
+  return typeof value === "number" ? value : value?.toNumber?.() ?? 0;
+}
 
 function formatCount(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
@@ -227,7 +284,12 @@ function hasRecentRun(lastRunAt: Date | null | undefined, now: Date) {
   return now.getTime() - lastRunAt.getTime() <= CRON_OVERDUE_AFTER_MS;
 }
 
-export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealthData> {
+export async function getSuperAdminSystemHealth(options?: {
+  notificationPage?: number;
+  notificationPageSize?: number;
+  proofPage?: number;
+  proofPageSize?: number;
+}): Promise<SuperAdminSystemHealthData> {
   await requireSuperAdminAccess();
 
   const now = new Date();
@@ -244,6 +306,20 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
   const failedKycLookback = new Date(now.getTime() - KYC_FAILURE_LOOKBACK_MS);
   const promotionLookback = new Date(now.getTime() - PROMOTION_LOOKBACK_MS);
   const fileUploadLookback = new Date(now.getTime() - FILE_UPLOAD_LOOKBACK_MS);
+  const notificationPageSize =
+    options?.notificationPageSize && options.notificationPageSize > 0
+      ? Math.floor(options.notificationPageSize)
+      : SYSTEM_HEALTH_NOTIFICATION_PAGE_SIZE;
+  const requestedNotificationPage =
+    options?.notificationPage && options.notificationPage > 0
+      ? Math.floor(options.notificationPage)
+      : 1;
+  const proofPageSize =
+    options?.proofPageSize && options.proofPageSize > 0
+      ? Math.floor(options.proofPageSize)
+      : SYSTEM_HEALTH_SUBMITTED_PROOF_PAGE_SIZE;
+  const requestedProofPage =
+    options?.proofPage && options.proofPage > 0 ? Math.floor(options.proofPage) : 1;
 
   const activeDiditStatuses = [
     DIDIT_STATUSES.NOT_STARTED,
@@ -331,6 +407,8 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     stalePendingReviewKyc,
     missingSavingsProviderReferences,
     approvedSavingsNotReflected,
+    investmentProofPayments,
+    savingsProofPayments,
   ] = await Promise.all([
     prisma.investmentOrderPayment.count({
       where: {
@@ -611,6 +689,117 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
         },
       },
     }),
+    prisma.investmentOrderPayment.findMany({
+      where: {
+        status: {
+          in: ["PENDING_REVIEW", "APPROVED", "REJECTED", "CANCELED"],
+        },
+      },
+      orderBy: {
+        submittedAt: "desc",
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        submissionKind: true,
+        claimedAmount: true,
+        currency: true,
+        submittedAt: true,
+        reviewedAt: true,
+        metadata: true,
+        submittedByUser: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        investmentOrder: {
+          select: {
+            id: true,
+            status: true,
+            investmentPlan: {
+              select: {
+                name: true,
+                investment: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            investorProfile: {
+              select: {
+                user: {
+                  select: {
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.savingsTransactionPayment.findMany({
+      where: {
+        status: {
+          in: ["PENDING_REVIEW", "APPROVED", "REJECTED", "CANCELED"],
+        },
+      },
+      orderBy: {
+        submittedAt: "desc",
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        claimedAmount: true,
+        currency: true,
+        submittedAt: true,
+        reviewedAt: true,
+        metadata: true,
+        submittedByUser: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        savingsFundingIntent: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+            savingsAccount: {
+              select: {
+                id: true,
+                name: true,
+                savingsProduct: {
+                  select: {
+                    name: true,
+                  },
+                },
+                investorProfile: {
+                  select: {
+                    user: {
+                      select: {
+                        name: true,
+                        email: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
   ]);
 
   const staleVerificationSessions = sessions.filter((session) => {
@@ -712,6 +901,122 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
   });
 
   const overallStateLabel = getStatusLabel(overallTone);
+
+  const totalNotifications = await prisma.notification.count();
+  const totalNotificationPages = Math.max(
+    1,
+    Math.ceil(totalNotifications / notificationPageSize),
+  );
+  const notificationPage = Math.min(
+    requestedNotificationPage,
+    totalNotificationPages,
+  );
+  const notificationRecords =
+    totalNotifications > 0
+      ? await prisma.notification.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip: (notificationPage - 1) * notificationPageSize,
+          take: notificationPageSize,
+          include: {
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        })
+      : [];
+
+  const notificationCleanupItems: SystemHealthNotificationCleanupItem[] =
+    notificationRecords.map((notification) => {
+      const dto = toNotificationDto(notification);
+
+      return {
+        ...dto,
+        userName: notification.user.name,
+        userEmail: notification.user.email,
+      };
+    });
+
+  const investmentProofItems: SystemHealthSubmittedProofCleanupItem[] =
+    investmentProofPayments
+      .filter((payment) => !isSystemHealthProofDismissed(payment.metadata))
+      .map((payment) => {
+        const submittedBy =
+          payment.submittedByUser ??
+          payment.investmentOrder.investorProfile.user ??
+          null;
+
+        return {
+          id: `investment:${payment.id}`,
+          paymentId: payment.id,
+          sourceType: "INVESTMENT_ORDER",
+          paymentType: payment.type,
+          submissionKind: payment.submissionKind,
+          reviewStatus: payment.status,
+          targetId: payment.investmentOrder.id,
+          targetLabel: payment.investmentOrder.investmentPlan.name,
+          targetDetail: payment.investmentOrder.investmentPlan.investment.name,
+          userName: submittedBy?.name ?? "Unknown user",
+          userEmail: submittedBy?.email ?? "Unknown email",
+          claimedAmount: toNumber(payment.claimedAmount),
+          currency: payment.currency,
+          submittedAt: payment.submittedAt.toISOString(),
+          reviewedAt: payment.reviewedAt?.toISOString() ?? null,
+        };
+      });
+
+  const savingsProofItems: SystemHealthSubmittedProofCleanupItem[] =
+    savingsProofPayments
+      .filter((payment) => !isSystemHealthProofDismissed(payment.metadata))
+      .map((payment) => {
+        const submittedBy =
+          payment.submittedByUser ??
+          payment.savingsFundingIntent.user ??
+          payment.savingsFundingIntent.savingsAccount.investorProfile.user ??
+          null;
+
+        return {
+          id: `savings:${payment.id}`,
+          paymentId: payment.id,
+          sourceType: "SAVINGS_ACCOUNT",
+          paymentType: payment.type,
+          submissionKind: null,
+          reviewStatus: payment.status,
+          targetId: payment.savingsFundingIntent.savingsAccount.id,
+          targetLabel: payment.savingsFundingIntent.savingsAccount.name,
+          targetDetail:
+            payment.savingsFundingIntent.savingsAccount.savingsProduct.name,
+          userName: submittedBy?.name ?? "Unknown user",
+          userEmail: submittedBy?.email ?? "Unknown email",
+          claimedAmount: toNumber(payment.claimedAmount),
+          currency: payment.currency,
+          submittedAt: payment.submittedAt.toISOString(),
+          reviewedAt: payment.reviewedAt?.toISOString() ?? null,
+        };
+      });
+
+  const submittedProofItems = [...investmentProofItems, ...savingsProofItems].sort(
+    (left, right) =>
+      new Date(right.submittedAt).getTime() - new Date(left.submittedAt).getTime(),
+  );
+
+  const totalSubmittedProofs = submittedProofItems.length;
+  const totalSubmittedProofPages = Math.max(
+    1,
+    Math.ceil(totalSubmittedProofs / proofPageSize),
+  );
+  const submittedProofPage = Math.min(
+    requestedProofPage,
+    totalSubmittedProofPages,
+  );
+  const submittedProofCleanupItems = submittedProofItems.slice(
+    (submittedProofPage - 1) * proofPageSize,
+    submittedProofPage * proofPageSize,
+  );
 
   const overviewCards: SystemHealthOverviewCard[] = [
     {
@@ -1045,6 +1350,29 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     },
   ];
 
+  const notificationCleanup: SystemHealthNotificationCleanup = {
+    page: notificationPage,
+    pageSize: notificationPageSize,
+    total: totalNotifications,
+    totalPages: totalNotificationPages,
+    unreadCount: unreadNotifications,
+    hasNextPage: notificationPage < totalNotificationPages,
+    hasPreviousPage: notificationPage > 1,
+    items: notificationCleanupItems,
+  };
+
+  const submittedProofCleanup: SystemHealthSubmittedProofCleanup = {
+    page: submittedProofPage,
+    pageSize: proofPageSize,
+    total: totalSubmittedProofs,
+    totalPages: totalSubmittedProofPages,
+    hasNextPage: submittedProofPage < totalSubmittedProofPages,
+    hasPreviousPage: submittedProofPage > 1,
+    investmentCount: investmentProofItems.length,
+    savingsCount: savingsProofItems.length,
+    items: submittedProofCleanupItems,
+  };
+
   return {
     checkedAtLabel: formatUtcDateTime(now),
     overallState: {
@@ -1069,5 +1397,7 @@ export async function getSuperAdminSystemHealth(): Promise<SuperAdminSystemHealt
     integrityChecks,
     services,
     cronCards,
+    notificationCleanup,
+    submittedProofCleanup,
   };
 }

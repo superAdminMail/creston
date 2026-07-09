@@ -248,6 +248,360 @@
 }
 
 @layer utilities {
+  .super-admin-shell {
+    min-height: 100vh;
+    color: #0f172a;
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .dark .super-admin-shell {
+    color: #f8fafc;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 24, 39, 0.98),
+      rgba(3, 7, 18, 1)
+    );
+  }
+
+  .super-admin-shell-panel {
+    border: 1px solid rgba(226, 232, 240, 0.82);
+    border-radius: 2rem;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dark .super-admin-shell-panel {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(
+      180deg,
+      rgba(8, 18, 36, 0.94),
+      rgba(5, 11, 31, 0.98)
+    );
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.34);
+  }
+
+  .super-admin-surface {
+    border: 1px solid rgba(226, 232, 240, 0.78);
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+  }
+
+  .dark .super-admin-surface {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    color: #f8fafc;
+  }
+
+  .super-admin-surface-lg {
+    border: 1px solid rgba(226, 232, 240, 0.78);
+    border-radius: 1.75rem;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+  }
+
+  .dark .super-admin-surface-lg {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    color: #f8fafc;
+  }
+
+  .super-admin-field {
+    border: 1px solid rgba(226, 232, 240, 0.82);
+    background: rgba(255, 255, 255, 0.82);
+    color: #0f172a;
+  }
+
+  .super-admin-field::placeholder {
+    color: #64748b;
+  }
+
+  .dark .super-admin-field {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f8fafc;
+  }
+
+  .dark .super-admin-field::placeholder {
+    color: #94a3b8;
+  }
+
+  .super-admin-table-shell {
+    border: 1px solid rgba(226, 232, 240, 0.78);
+    border-radius: 1.75rem;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+  }
+
+  .dark .super-admin-table-shell {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    color: #f8fafc;
+  }
+
+  .super-admin-table-shell thead th {
+    color: #64748b;
+  }
+
+  .dark .super-admin-table-shell thead th {
+    color: #94a3b8;
+  }
+
+  .super-admin-table-shell tbody tr:hover {
+    background: rgba(148, 163, 184, 0.08);
+  }
+
+  .dark .super-admin-table-shell tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .super-admin-shell
+    :where(
+      [class*="bg-card"],
+      [class*="bg-[#071120]"],
+      [class*="bg-[#08101d]"],
+      [class*="bg-[#091327]"],
+      [class*="bg-[#0b1728]"],
+      [class*="bg-[#0d1a2c]"],
+      [class*="bg-[#111827]"],
+      [class*="bg-[#050B1F]"],
+      [class*="bg-[#0B132B]"],
+      [class*="bg-white/75"],
+      [class*="bg-white/78"],
+      [class*="bg-white/80"],
+      [class*="bg-white/88"],
+      [class*="bg-[rgba(15,23,42,0.72)]"],
+      [class*="bg-[rgba(17,24,39,0.92)]"],
+      [class*="bg-[rgba(16,24,39,0.96)]"],
+      [class*="bg-[linear-gradient("],
+      [class*="bg-[radial-gradient("]
+    ) {
+    background: rgba(255, 255, 255, 0.75) !important;
+    border-color: rgba(148, 163, 184, 0.25) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .dark
+    .super-admin-shell
+    :where(
+      [class*="bg-card"],
+      [class*="bg-[#071120]"],
+      [class*="bg-[#08101d]"],
+      [class*="bg-[#091327]"],
+      [class*="bg-[#0b1728]"],
+      [class*="bg-[#0d1a2c]"],
+      [class*="bg-[#111827]"],
+      [class*="bg-[#050B1F]"],
+      [class*="bg-[#0B132B]"],
+      [class*="bg-white/75"],
+      [class*="bg-white/78"],
+      [class*="bg-white/80"],
+      [class*="bg-white/88"],
+      [class*="bg-[rgba(15,23,42,0.72)]"],
+      [class*="bg-[rgba(17,24,39,0.92)]"],
+      [class*="bg-[rgba(16,24,39,0.96)]"],
+      [class*="bg-[linear-gradient("],
+      [class*="bg-[radial-gradient("]
+    ) {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .super-admin-shell
+    :where(
+      [class*="bg-card"],
+      [class*="bg-[#071120]"],
+      [class*="bg-[#08101d]"],
+      [class*="bg-[#091327]"],
+      [class*="bg-[#0b1728]"],
+      [class*="bg-[#0d1a2c]"],
+      [class*="bg-[#111827]"],
+      [class*="bg-[#050B1F]"],
+      [class*="bg-[#0B132B]"],
+      [class*="bg-[rgba(15,23,42,0.72)]"],
+      [class*="bg-[rgba(17,24,39,0.92)]"],
+      [class*="bg-[rgba(16,24,39,0.96)]"],
+      [class*="bg-[linear-gradient("],
+      [class*="bg-[radial-gradient("]
+    )
+    :not(button):not(a):not(svg) {
+    color: #0f172a !important;
+  }
+
+  .dark
+    .super-admin-shell
+    :where(
+      [class*="bg-card"],
+      [class*="bg-[#071120]"],
+      [class*="bg-[#08101d]"],
+      [class*="bg-[#091327]"],
+      [class*="bg-[#0b1728]"],
+      [class*="bg-[#0d1a2c]"],
+      [class*="bg-[#111827]"],
+      [class*="bg-[#050B1F]"],
+      [class*="bg-[#0B132B]"],
+      [class*="bg-[rgba(15,23,42,0.72)]"],
+      [class*="bg-[rgba(17,24,39,0.92)]"],
+      [class*="bg-[rgba(16,24,39,0.96)]"],
+      [class*="bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]"]
+    )
+    :not(button):not(a):not(svg) {
+    color: #f8fafc !important;
+  }
+
+  .super-admin-shell
+    :where(
+      [class*="bg-white/5"],
+      [class*="bg-white/10"],
+      [class*="bg-white/[0.02]"],
+      [class*="bg-white/[0.03]"],
+      [class*="bg-white/[0.04]"],
+      [class*="bg-white/[0.05]"],
+      [class*="bg-white/[0.06]"],
+      [class*="bg-white/[0.07]"],
+      [class*="bg-white/[0.08]"],
+      [class*="bg-[rgba(15,23,42,0.92)]"],
+      [class*="bg-[rgba(10,31,68,0.86)]"],
+      [class*="bg-[rgba(7,18,38,0.98)]"]
+    ):not(button):not(a):not(svg) {
+    background: rgba(255, 255, 255, 0.75) !important;
+    border-color: rgba(226, 232, 240, 0.78) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+  }
+
+  .super-admin-shell
+    :where(
+      .text-white,
+      .text-white\/90,
+      .text-white\/80,
+      .text-white\/70,
+      .text-white\/60,
+      .text-white\/50
+    ):not(button):not(button *):not(a):not(a *):not(svg):not(svg *) {
+    color: #0f172a !important;
+  }
+
+  .dark
+    .super-admin-shell
+    :where(
+      [class*="bg-white/5"],
+      [class*="bg-white/10"],
+      [class*="bg-white/[0.02]"],
+      [class*="bg-white/[0.03]"],
+      [class*="bg-white/[0.04]"],
+      [class*="bg-white/[0.05]"],
+      [class*="bg-white/[0.06]"],
+      [class*="bg-white/[0.07]"],
+      [class*="bg-white/[0.08]"],
+      [class*="bg-[rgba(15,23,42,0.92)]"],
+      [class*="bg-[rgba(10,31,68,0.86)]"],
+      [class*="bg-[rgba(7,18,38,0.98)]"]
+    ):not(button):not(a):not(svg) {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+    color: #f8fafc !important;
+  }
+
+  .dark
+    .super-admin-shell
+    :where(
+      .text-white,
+      .text-white\/90,
+      .text-white\/80,
+      .text-white\/70,
+      .text-white\/60,
+      .text-white\/50
+    ):not(button):not(button *):not(a):not(a *):not(svg):not(svg *) {
+    color: #f8fafc !important;
+  }
+
+  .super-admin-shell .card-premium,
+  .super-admin-shell .card-premium-hover {
+    border: 1px solid rgba(226, 232, 240, 0.78) !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .dark .super-admin-shell .card-premium,
+  .dark .super-admin-shell .card-premium-hover {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+    color: #f8fafc !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .super-admin-shell .glass-strong {
+    border: 1px solid rgba(226, 232, 240, 0.78) !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .super-admin-shell :where(
+      [class*="backdrop-blur-xl"],
+      [class*="backdrop-blur-2xl"]
+    ) {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .super-admin-shell :where(
+      [class*="shadow-xl"],
+      [class*="shadow-2xl"],
+      [class*="shadow-[0_18px"],
+      [class*="shadow-[0_24px"]
+    ) {
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .dark .super-admin-shell :where(
+      [class*="shadow-xl"],
+      [class*="shadow-2xl"],
+      [class*="shadow-[0_18px"],
+      [class*="shadow-[0_24px"]
+    ) {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  .super-admin-shell :where(
+      [class*="hover:-translate"],
+      [class*="hover:scale"],
+      [class*="active:scale"]
+    ) {
+    transform: none !important;
+  }
+
+  .dark .super-admin-shell .glass-strong {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+    color: #f8fafc !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .bg-havenstone {
     background:
       radial-gradient(

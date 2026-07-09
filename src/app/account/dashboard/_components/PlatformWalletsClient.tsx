@@ -77,7 +77,7 @@ function formatDate(value: string) {
 }
 
 function formatType(type: PlatformPaymentMethodItem["type"]) {
-  return type === "BANK_INFO" ? "Bank info" : "Crypto wallet";
+  return type === "BANK_INFO" ? "Bank account" : "Crypto wallet";
 }
 
 function StatCard({
@@ -95,17 +95,17 @@ function StatCard({
     <div
       className={
         flat
-          ? "rounded-3xl border border-border/60 bg-card p-4 shadow-sm sm:p-5"
+          ? "rounded-3xl border border-border/60 bg-white/95 p-4 shadow-sm sm:p-5 dark:bg-white/[0.04]"
           : "rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5"
       }
     >
-      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400 sm:text-xs">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500 sm:text-xs dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-white sm:mt-3 sm:text-3xl">
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-3 sm:text-3xl dark:text-white">
         {value}
       </p>
-      <p className="mt-2 text-xs leading-5 text-slate-400 sm:text-sm">
+      <p className="mt-2 text-xs leading-5 text-slate-600 sm:text-sm dark:text-slate-400">
         {helper}
       </p>
     </div>
@@ -124,7 +124,7 @@ function SetDefaultPaymentMethodForm({
         type="submit"
         className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
       >
-        Set default
+        Mark as primary
       </button>
     </form>
   );
@@ -176,8 +176,8 @@ function PaymentMethodCard({
     <div
       className={
         flat
-          ? "relative rounded-[1.5rem] border border-border/60 bg-card p-4 transition hover:border-blue-400/20 hover:bg-background/80"
-          : "relative rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 transition hover:border-blue-400/20 hover:bg-white/[0.055]"
+          ? "relative rounded-[1.5rem] border border-border/60 bg-white/95 p-4 shadow-sm transition hover:border-sky-300/40 hover:bg-white/100 dark:bg-white/[0.04] dark:hover:bg-white/[0.06]"
+          : "relative rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition hover:border-blue-400/20 hover:bg-white/[0.055]"
       }
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -186,7 +186,7 @@ function PaymentMethodCard({
             <div
               className={
                 flat
-                  ? "flex h-11 w-11 items-center justify-center rounded-2xl border border-border/60 bg-background/80"
+                  ? "flex h-11 w-11 items-center justify-center rounded-2xl border border-border/60 bg-white/90 dark:bg-white/[0.04]"
                   : "flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]"
               }
             >
@@ -195,33 +195,33 @@ function PaymentMethodCard({
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-base font-semibold text-white">
+                <h3 className="text-base font-semibold text-slate-950 dark:text-white">
                   {method.label}
                 </h3>
 
-                {method.isDefault && (
+                {method.isDefault ? (
                   <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-                    Default
+                    Primary
                   </span>
-                )}
+                ) : null}
 
                 <span
                   className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                     method.isActive
-                      ? "border border-blue-400/20 bg-blue-500/10 text-blue-300"
-                      : "border border-white/10 bg-white/[0.06] text-slate-400"
+                      ? "border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300"
+                      : "border border-border/60 bg-white/90 text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-400"
                   }`}
                 >
-                  {method.isActive ? "Active" : "Inactive"}
+                  {method.isActive ? "Enabled" : "Disabled"}
                 </span>
 
-                <span className="rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium text-slate-300">
-                  {method.isPrivate ? "Private" : "Public"}
+                <span className="rounded-full border border-border/60 bg-white/90 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-slate-300">
+                  {method.isPrivate ? "Restricted" : "Public"}
                 </span>
               </div>
 
-              <p className="mt-1 text-sm text-slate-400">
-                {formatType(method.type)} • {method.currency}
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {formatType(method.type)} - {method.currency}
               </p>
             </div>
           </div>
@@ -230,31 +230,39 @@ function PaymentMethodCard({
             <div
               className={
                 flat
-                  ? "rounded-2xl border border-border/60 bg-background/80 p-3"
-                  : "rounded-2xl bg-[#0B132B]/80 p-3"
+                  ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
+                  : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
               }
             >
-              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Details
+              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                Payment details
               </p>
               {method.type === "BANK_INFO" ? (
-                <div className="mt-2 space-y-1 text-sm text-slate-200">
+                <div className="mt-2 space-y-1 text-sm text-slate-950 dark:text-slate-200">
                   {method.bankName ? <p>{method.bankName}</p> : null}
                   {method.accountName ? (
-                    <p className="text-slate-400">{method.accountName}</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {method.accountName}
+                    </p>
                   ) : null}
                   {method.reference ? (
-                    <p className="text-slate-400">{method.reference}</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {method.reference}
+                    </p>
                   ) : null}
                   {method.bankAddress ? (
-                    <p className="text-slate-400">{method.bankAddress}</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {method.bankAddress}
+                    </p>
                   ) : null}
                 </div>
               ) : (
-                <div className="mt-2 space-y-1 text-sm text-slate-200">
+                <div className="mt-2 space-y-1 text-sm text-slate-950 dark:text-slate-200">
                   {method.cryptoAsset ? <p>{method.cryptoAsset}</p> : null}
                   {method.cryptoNetwork ? (
-                    <p className="text-slate-400">{method.cryptoNetwork}</p>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      {method.cryptoNetwork}
+                    </p>
                   ) : null}
                 </div>
               )}
@@ -263,14 +271,14 @@ function PaymentMethodCard({
             <div
               className={
                 flat
-                  ? "rounded-2xl border border-border/60 bg-background/80 p-3"
-                  : "rounded-2xl bg-[#0B132B]/80 p-3"
+                  ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
+                  : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
               }
             >
-              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                Added
+              <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                Created
               </p>
-              <p className="mt-2 text-sm text-slate-200">
+              <p className="mt-2 text-sm text-slate-950 dark:text-slate-200">
                 {formatDate(method.createdAt)}
               </p>
             </div>
@@ -282,15 +290,15 @@ function PaymentMethodCard({
                 <div
                   className={
                     flat
-                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
                       : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
                   }
                 >
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                    Account Number
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Account number
                   </p>
                   {maskSensitiveValue(method.accountNumber) ? (
-                    <p className="mt-2 font-mono text-sm text-slate-200">
+                    <p className="mt-2 font-mono text-sm text-slate-950 dark:text-slate-200">
                       {maskSensitiveValue(method.accountNumber)}
                     </p>
                   ) : null}
@@ -298,15 +306,15 @@ function PaymentMethodCard({
                 <div
                   className={
                     flat
-                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
                       : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
                   }
                 >
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                     Branch
                   </p>
                   {method.branchName ? (
-                    <p className="mt-2 text-sm text-slate-200">
+                    <p className="mt-2 text-sm text-slate-950 dark:text-slate-200">
                       {method.branchName}
                     </p>
                   ) : null}
@@ -317,15 +325,15 @@ function PaymentMethodCard({
                 <div
                   className={
                     flat
-                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
                       : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
                   }
                 >
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                    Wallet Address
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Wallet address
                   </p>
                   {maskSensitiveValue(method.walletAddress) ? (
-                    <p className="mt-2 break-all font-mono text-sm text-slate-200">
+                    <p className="mt-2 break-all font-mono text-sm text-slate-950 dark:text-slate-200">
                       {maskSensitiveValue(method.walletAddress)}
                     </p>
                   ) : null}
@@ -333,15 +341,15 @@ function PaymentMethodCard({
                 <div
                   className={
                     flat
-                      ? "rounded-2xl border border-border/60 bg-background/80 p-3"
+                      ? "rounded-2xl border border-border/60 bg-white/90 p-3 dark:bg-white/[0.04]"
                       : "rounded-2xl border border-white/8 bg-white/[0.03] p-3"
                   }
                 >
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                    Wallet Tag
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Wallet tag
                   </p>
                   {method.walletTag ? (
-                    <p className="mt-2 text-sm text-slate-200">
+                    <p className="mt-2 text-sm text-slate-950 dark:text-slate-200">
                       {method.walletTag}
                     </p>
                   ) : null}
@@ -366,35 +374,44 @@ function PaymentMethodCard({
                 toast.error("Unable to copy.");
               }
             }}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
+            className={
+              flat
+                ? "inline-flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white/90 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-white/100 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:hover:bg-white/[0.08]"
+                : "inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
+            }
           >
             <Copy className="h-4 w-4" />
-            Copy
+            Copy value
           </button>
 
           <SetDefaultPaymentMethodForm wallet={method} />
 
           <button
             type="button"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
+            className={
+              flat
+                ? "inline-flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white/90 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-white/100 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:hover:bg-white/[0.08]"
+                : "inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-white transition hover:bg-white/[0.08]"
+            }
             onClick={() => onEdit(method)}
           >
             <Pencil className="h-4 w-4" />
-            Edit method
+            Edit details
           </button>
 
           <AlertDialog open={removeOpen} onOpenChange={setRemoveOpen}>
             <AlertDialogTrigger asChild>
               <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-200 transition hover:bg-red-500/15">
                 <Trash2 className="h-4 w-4" />
-                Remove
+                Remove method
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent className="border-white/10 text-white">
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove this payment method?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  This action will permanently remove {method.label}.
+                  This will permanently remove {method.label} from treasury
+                  routing.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <form action={deleteAction}>
@@ -415,7 +432,7 @@ function PaymentMethodCard({
                     disabled={deletePending}
                     className="bg-red-500 text-white hover:bg-red-600"
                   >
-                    {deletePending ? "Removing..." : "Remove wallet"}
+                    {deletePending ? "Removing..." : "Remove method"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </form>
@@ -446,13 +463,7 @@ export default function PlatformWalletsClient({
   }, [wallets]);
 
   return (
-    <div
-      className={
-        isFlatSurface
-          ? "relative w-full overflow-hidden rounded-[2rem] bg-card"
-          : "relative w-full overflow-hidden rounded-[2rem] bg-[#050B1F]"
-      }
-    >
+    <div>
       {!isFlatSurface ? (
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
@@ -461,58 +472,61 @@ export default function PlatformWalletsClient({
         </div>
       ) : null}
 
-      <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <div className="relative mx-auto w-full max-w-7xl">
         <div
           className={
             isFlatSurface
-              ? "rounded-[2rem] border border-border/60 bg-card p-6 shadow-sm"
+              ? "rounded-[2rem] border border-border/60 bg-white/95 p-6 shadow-sm dark:bg-white/[0.04]"
               : "rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl"
           }
         >
-          <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-5 border-b border-border/60 pb-6 lg:flex-row lg:items-end lg:justify-between dark:border-white/10">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-blue-200">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Treasury Configuration
+                Treasury control
               </div>
 
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                Platform Payment Methods
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
+                Platform payment methods
               </h1>
 
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400">
-                Manage the platform-controlled bank details and crypto wallets
-                used for funding flows, treasury routing, and operational
-                settlement.
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+                Manage the bank accounts and crypto wallets that power treasury
+                routing, funding operations, and settlement.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-white transition hover:bg-white/[0.08]">
+              <button className="inline-flex items-center gap-2 rounded-2xl border border-border/60 bg-white/90 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:hover:bg-white/[0.08]">
                 <ArrowUpRight className="h-4 w-4" />
-                View Funding Activity
+                Review funding activity
               </button>
 
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
                   <button className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.35)] transition hover:opacity-95">
                     <Plus className="h-4 w-4" />
-                    Add Payment Method
+                    New payment method
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+                <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-border/60 bg-white/95 p-0 text-slate-950 shadow-sm dark:border-white/10 dark:bg-zinc-950/95 dark:text-white sm:rounded-[1.75rem]">
                   <div className="max-h-[92dvh] overflow-y-auto">
                     <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
-                    <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                      Add platform payment method
-                    </DialogTitle>
-                    <DialogDescription className="text-sm text-slate-400">
-                      Configure a new treasury destination for bank or crypto
-                      funding.
-                    </DialogDescription>
+                      <DialogTitle className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl dark:text-white">
+                        New payment method
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-slate-600 dark:text-slate-400">
+                        Define a new treasury destination for bank or crypto
+                        funding.
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="px-4 pb-4 pt-4 sm:px-6 sm:pb-6">
-                    <PlatformWalletForm onSuccess={() => setAddOpen(false)} />
+                      <div className="rounded-[1.5rem] border border-border/60 bg-white/95 p-4 shadow-sm dark:border-white/10 dark:bg-zinc-950/95 sm:p-5">
+                        <PlatformWalletForm
+                          onSuccess={() => setAddOpen(false)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </DialogContent>
@@ -522,21 +536,21 @@ export default function PlatformWalletsClient({
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <StatCard
-              label="Total Methods"
+              label="Total methods"
               value={String(stats.total)}
-              helper="Configured bank details and crypto destinations."
+              helper="All configured bank accounts and crypto wallets."
               flat={isFlatSurface}
             />
             <StatCard
-              label="Active Methods"
+              label="Enabled methods"
               value={String(stats.active)}
-              helper="Methods currently eligible for funding operations."
+              helper="Methods currently available for routing."
               flat={isFlatSurface}
             />
             <StatCard
-              label="Default Methods"
+              label="Primary methods"
               value={String(stats.defaults)}
-              helper="Primary methods selected for routing."
+              helper="Methods currently designated as default."
               flat={isFlatSurface}
             />
           </div>
@@ -545,25 +559,25 @@ export default function PlatformWalletsClient({
             <div
               className={
                 isFlatSurface
-                  ? "rounded-[1.75rem] border border-border/60 bg-card p-4 shadow-sm sm:p-5"
+                  ? "rounded-[1.75rem] border border-border/60 bg-white/95 p-4 shadow-sm dark:bg-white/[0.04] sm:p-5"
                   : "rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:p-5"
               }
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    Configured payment methods
+                  <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+                    Treasury methods
                   </h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    Each method should be treated as a platform treasury
-                    destination.
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Review each configured bank account or wallet destination
+                    used for operational routing.
                   </p>
                 </div>
 
                 <div
                   className={
                     isFlatSurface
-                      ? "hidden rounded-full border border-border/60 bg-background/80 px-3 py-1 text-xs text-slate-300 sm:block"
+                      ? "hidden rounded-full border border-border/60 bg-white/90 px-3 py-1 text-xs text-slate-700 sm:block dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300"
                       : "hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300 sm:block"
                   }
                 >
@@ -587,41 +601,40 @@ export default function PlatformWalletsClient({
               <div
                 className={
                   isFlatSurface
-                    ? "rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm"
+                    ? "rounded-[1.75rem] border border-border/60 bg-white/95 p-5 shadow-sm dark:bg-white/[0.04]"
                     : "rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-5"
                 }
               >
-                <h2 className="text-lg font-semibold text-white">
-                  Add payment method
+                <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+                  Create payment method
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Configure a new treasury destination for supported bank or
-                  crypto flows.
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Register a new bank account or wallet destination for treasury
+                  operations.
                 </p>
               </div>
 
               <div
                 className={
                   isFlatSurface
-                    ? "rounded-[1.75rem] border border-border/60 bg-card p-5 shadow-sm"
+                    ? "rounded-[1.75rem] border border-border/60 bg-white/95 p-5 shadow-sm dark:bg-white/[0.04]"
                     : "rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5"
                 }
               >
-                <h3 className="text-base font-semibold text-white">
-                  Operational guidance
+                <h3 className="text-base font-semibold text-slate-950 dark:text-white">
+                  Routing guidance
                 </h3>
-                <div className="mt-4 space-y-3 text-sm leading-6 text-slate-400">
+                <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
                   <p>
-                    Keep a single default method per route to avoid treasury
-                    ambiguity.
+                    Keep one primary method per flow to avoid routing ambiguity.
                   </p>
                   <p>
-                    Keep backup methods inactive until they are operationally
-                    ready for settlement or failover.
+                    Leave backup methods disabled until they are ready for
+                    settlement or failover.
                   </p>
                   <p>
-                    Changes here should be audited because these destinations
-                    control treasury-bound funding flows.
+                    Treat changes here as treasury-sensitive and review them
+                    carefully.
                   </p>
                 </div>
               </div>
@@ -634,25 +647,27 @@ export default function PlatformWalletsClient({
         open={Boolean(editWallet)}
         onOpenChange={(open) => !open && setEditWallet(null)}
       >
-        <DialogContent className="max-h-[92dvh] w-[min(96vw,72rem)] overflow-hidden rounded-[1.35rem] border border-white/10 p-0 text-white shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:rounded-[1.75rem]">
+        <DialogContent className="max-h-[92dvh] w-[min(96vw,80rem)] overflow-hidden rounded-[1.35rem] border border-border/60 bg-white/95 p-0 text-slate-950 shadow-sm dark:border-white/10 dark:bg-zinc-950/95 dark:text-white sm:rounded-[1.75rem]">
           <div className="max-h-[92dvh] overflow-y-auto">
             <DialogHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
-              <DialogTitle className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+              <DialogTitle className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl dark:text-white">
                 Edit platform payment method
               </DialogTitle>
-              <DialogDescription className="text-sm text-slate-400">
-                Update the method details and default routing.
+              <DialogDescription className="text-sm text-slate-600 dark:text-slate-400">
+                Update the payment details and primary routing.
               </DialogDescription>
             </DialogHeader>
             <div className="px-4 pb-4 pt-4 sm:px-6 sm:pb-6">
               {editWallet ? (
-                <PlatformWalletForm
-                  key={editWallet.id}
-                  mode="edit"
-                  walletId={editWallet.id}
-                  defaultValues={editWallet}
-                  onSuccess={() => setEditWallet(null)}
-                />
+                <div className="rounded-[1.5rem] border border-border/60 bg-white/95 p-4 shadow-sm dark:border-white/10 dark:bg-zinc-950/95 sm:p-5">
+                  <PlatformWalletForm
+                    key={editWallet.id}
+                    mode="edit"
+                    walletId={editWallet.id}
+                    defaultValues={editWallet}
+                    onSuccess={() => setEditWallet(null)}
+                  />
+                </div>
               ) : null}
             </div>
           </div>

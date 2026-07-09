@@ -10,12 +10,14 @@ type AdminResourceCollectionPageProps = {
   title: string;
   description: string;
   collection: DashboardResourceCollection;
+  showTitleIcon?: boolean;
 };
 
 export function AdminResourceCollectionPage({
   title,
   description,
   collection,
+  showTitleIcon = true,
 }: AdminResourceCollectionPageProps) {
   const stats: AdminOperationsStat[] = [
     {
@@ -26,7 +28,12 @@ export function AdminResourceCollectionPage({
   ];
 
   return (
-    <AdminOperationsShell title={title} description={description} stats={stats}>
+    <AdminOperationsShell
+      title={title}
+      description={description}
+      stats={stats}
+      showTitleIcon={showTitleIcon}
+    >
       <AdminResponsiveCollectionShell
         items={collection.items}
         getItemKey={(item) => item.id}
@@ -59,7 +66,9 @@ export function AdminResourceCollectionPage({
                 {
                   key: "balance",
                   header: "Account balance",
-                  render: (item: DashboardResourceCollection["items"][number]) => (
+                  render: (
+                    item: DashboardResourceCollection["items"][number],
+                  ) => (
                     <p className="text-sm font-medium text-sky-300">
                       {item.balance ?? "Not available"}
                     </p>

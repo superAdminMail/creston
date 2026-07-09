@@ -11,6 +11,7 @@ export default async function AdminInvestmentAccountsPage() {
       title="Investment Accounts"
       description="Track live investment account records, balances, and status changes."
       collection={collection}
+      showTitleIcon={false}
     />
   );
 }

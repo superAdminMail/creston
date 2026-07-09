@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { changePasswordSchema } from "@/lib/zodValidations/password";
+import { cn } from "@/lib/utils";
 
 type FieldErrors = {
   currentPassword?: string;
@@ -55,6 +56,12 @@ export default function PasswordForm({
         [field]: undefined,
       }));
     };
+
+  const passwordFieldClassName = cn(
+    embedded
+      ? "h-11 rounded-xl border border-slate-300 bg-white px-3.5 text-slate-950 shadow-sm placeholder:text-slate-500 focus-visible:border-sky-400/40 focus-visible:ring-3 focus-visible:ring-sky-400/15 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:placeholder:text-slate-500 dark:focus-visible:border-sky-400/40 dark:focus-visible:ring-sky-400/15"
+      : "input-premium h-11 rounded-xl",
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -123,7 +130,13 @@ export default function PasswordForm({
         <form onSubmit={handleSubmit} className="space-y-6">
           <FieldGroup className="gap-5">
             <Field data-invalid={Boolean(fieldErrors.currentPassword)}>
-              <FieldLabel className="text-slate-100">
+              <FieldLabel
+                className={
+                  embedded
+                    ? "text-slate-900 dark:text-slate-100"
+                    : "text-slate-100"
+                }
+              >
                 Current password
               </FieldLabel>
               <FieldContent>
@@ -135,7 +148,7 @@ export default function PasswordForm({
                       event.target.value,
                     )
                   }
-                  className="input-premium h-11 rounded-xl"
+                  className={passwordFieldClassName}
                   autoComplete="current-password"
                 />
                 <FieldError>{fieldErrors.currentPassword}</FieldError>
@@ -143,7 +156,15 @@ export default function PasswordForm({
             </Field>
 
             <Field data-invalid={Boolean(fieldErrors.newPassword)}>
-              <FieldLabel className="text-slate-100">New password</FieldLabel>
+              <FieldLabel
+                className={
+                  embedded
+                    ? "text-slate-900 dark:text-slate-100"
+                    : "text-slate-100"
+                }
+              >
+                New password
+              </FieldLabel>
               <FieldContent>
                 <Input
                   type="password"
@@ -153,7 +174,7 @@ export default function PasswordForm({
                       event.target.value,
                     )
                   }
-                  className="input-premium h-11 rounded-xl"
+                  className={passwordFieldClassName}
                   autoComplete="new-password"
                 />
                 <FieldError>{fieldErrors.newPassword}</FieldError>
@@ -161,7 +182,13 @@ export default function PasswordForm({
             </Field>
 
             <Field data-invalid={Boolean(fieldErrors.confirmPassword)}>
-              <FieldLabel className="text-slate-100">
+              <FieldLabel
+                className={
+                  embedded
+                    ? "text-slate-900 dark:text-slate-100"
+                    : "text-slate-100"
+                }
+              >
                 Confirm new password
               </FieldLabel>
               <FieldContent>
@@ -173,13 +200,19 @@ export default function PasswordForm({
                       event.target.value,
                     )
                   }
-                  className="input-premium h-11 rounded-xl"
+                  className={passwordFieldClassName}
                   autoComplete="new-password"
                 />
                 {fieldErrors.confirmPassword ? (
                   <FieldError>{fieldErrors.confirmPassword}</FieldError>
                 ) : (
-                  <FieldDescription className="text-slate-400">
+                  <FieldDescription
+                    className={
+                      embedded
+                        ? "text-slate-500 dark:text-slate-400"
+                        : "text-slate-400"
+                    }
+                  >
                     Use a strong password with at least 6 characters.
                   </FieldDescription>
                 )}
@@ -202,7 +235,7 @@ export default function PasswordForm({
   );
 
   if (embedded) {
-    return <div className="text-white">{formContent}</div>;
+    return <div className="text-slate-950 dark:text-white">{formContent}</div>;
   }
 
   return (

@@ -1,91 +1,86 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../_components/dashboardSurfaces";
+
+function StatSkeleton() {
+  return (
+    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
+      <Skeleton className="h-3 w-24 rounded-full bg-white/10" />
+      <Skeleton className="mt-3 h-8 w-28 rounded-2xl bg-white/10" />
+      <Skeleton className="mt-3 h-4 w-full rounded-full bg-white/10" />
+    </div>
+  );
+}
+
+function CardSkeleton() {
+  return (
+    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4 sm:p-5"}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28 rounded-full bg-white/10" />
+          <Skeleton className="h-6 w-48 rounded-2xl bg-white/10" />
+        </div>
+        <Skeleton className="h-10 w-10 rounded-2xl bg-white/10" />
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-14 rounded-2xl bg-white/10" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Loading() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#050B1F]">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-blue-500/12 blur-3xl" />
-        <div className="absolute right-[-6rem] top-24 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-6">
-          <div className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-4">
-              <div className="h-8 w-56 animate-pulse rounded-full bg-white/10" />
-              <div className="h-11 w-full max-w-3xl animate-pulse rounded-2xl bg-white/10" />
-              <div className="h-4 w-full max-w-2xl animate-pulse rounded-full bg-white/10" />
-            </div>
-            <div className="flex gap-3">
-              <div className="h-12 w-36 animate-pulse rounded-2xl bg-white/10" />
-              <div className="h-12 w-32 animate-pulse rounded-2xl bg-white/10" />
-            </div>
+    <div className="space-y-8">
+      <section className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-4">
+            <Skeleton className="h-4 w-28 rounded-full bg-white/10" />
+            <Skeleton className="h-10 w-full max-w-xl rounded-2xl bg-white/10" />
+            <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-white/10" />
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-36 animate-pulse rounded-[1.85rem] border border-white/10 bg-white/5"
-              />
-            ))}
-          </div>
-
-          <div className="mt-8 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[rgba(15,23,42,0.72)] p-4 sm:p-5">
-            <div className="flex flex-col gap-4 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-3">
-                <div className="h-6 w-44 animate-pulse rounded-full bg-white/10" />
-                <div className="h-4 w-full max-w-2xl animate-pulse rounded-full bg-white/10" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-8 w-20 animate-pulse rounded-full bg-white/10"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-4 sm:p-5"
-                >
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                    <div className="min-w-0 flex-1 space-y-4">
-                      <div className="h-12 w-full animate-pulse rounded-2xl bg-white/10" />
-                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        {Array.from({ length: 4 }).map((_, tileIndex) => (
-                          <div
-                            key={tileIndex}
-                            className="h-20 animate-pulse rounded-2xl bg-[#0B132B]/80"
-                          />
-                        ))}
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="h-24 animate-pulse rounded-2xl bg-white/[0.03]" />
-                        <div className="h-24 animate-pulse rounded-2xl bg-white/[0.03]" />
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
-                        <div className="h-20 animate-pulse rounded-2xl bg-white/[0.03]" />
-                      </div>
-                    </div>
-                    <div className="flex w-full flex-wrap gap-2 xl:w-[220px] xl:flex-col">
-                      {Array.from({ length: 4 }).map((_, buttonIndex) => (
-                        <div
-                          key={buttonIndex}
-                          className="h-10 w-full animate-pulse rounded-2xl bg-white/10 xl:w-32"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl">
+            <StatSkeleton />
+            <StatSkeleton />
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <StatSkeleton key={index} />
+        ))}
+      </section>
+
+      <section className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5 sm:p-6"}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-28 rounded-full bg-white/10" />
+            <Skeleton className="h-8 w-56 rounded-2xl bg-white/10" />
+            <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-white/10" />
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <Skeleton className="h-10 w-32 rounded-2xl bg-white/10" />
+            <Skeleton className="h-10 w-36 rounded-2xl bg-white/10" />
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <CardSkeleton />
+          <div className="space-y-4">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

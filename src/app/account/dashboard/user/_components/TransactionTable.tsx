@@ -23,9 +23,9 @@ export function TransactionTable({
   transactions: TransactionItem[];
 }) {
   return (
-    <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+    <div className="rounded-[1.8rem] border border-border/70 bg-white/80 p-5 shadow-sm dark:bg-white/[0.04] sm:p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
           Transaction History
         </h2>
       </div>
@@ -33,13 +33,25 @@ export function TransactionTable({
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-white/10">
-              <TableHead className="text-slate-400">Type</TableHead>
-              <TableHead className="text-slate-400">Reference</TableHead>
-              <TableHead className="text-slate-400">Plan</TableHead>
-              <TableHead className="text-slate-400">Amount</TableHead>
-              <TableHead className="text-slate-400">Status</TableHead>
-              <TableHead className="text-slate-400">Date</TableHead>
+            <TableRow className="border-border/60 dark:border-white/10">
+              <TableHead className="text-sky-700/90 dark:text-sky-300/80">
+                Type
+              </TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">
+                Reference
+              </TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">
+                Plan
+              </TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">
+                Amount
+              </TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">
+                Status
+              </TableHead>
+              <TableHead className="text-slate-500 dark:text-slate-400">
+                Date
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -47,18 +59,20 @@ export function TransactionTable({
             {transactions.map((tx) => (
               <TableRow
                 key={tx.id}
-                className="border-white/5 hover:bg-white/[0.04]"
+                className="border-border/60 hover:bg-sky-50/70 dark:border-white/10 dark:hover:bg-white/[0.04]"
               >
                 <TableCell>
                   <TypeBadge type={tx.type} />
                 </TableCell>
 
-                <TableCell className="text-slate-300">{tx.reference}</TableCell>
+                <TableCell className="text-slate-700 dark:text-slate-300">
+                  {tx.reference}
+                </TableCell>
 
-                <TableCell className="text-slate-400">
+                <TableCell className="text-slate-600 dark:text-slate-400">
                   <div>{tx.planName ?? "-"}</div>
                   {tx.description ? (
-                    <div className="mt-1 text-xs leading-5 text-slate-500">
+                    <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-500">
                       {tx.description}
                     </div>
                   ) : null}
@@ -80,7 +94,7 @@ export function TransactionTable({
                   <StatusBadge status={tx.status} />
                 </TableCell>
 
-                <TableCell className="text-slate-500">
+                <TableCell className="text-slate-500 dark:text-slate-500">
                   {formatDateLabel(tx.createdAt)}
                 </TableCell>
               </TableRow>
@@ -88,7 +102,7 @@ export function TransactionTable({
           </TableBody>
         </Table>
         {transactions.length === 0 && (
-          <div className="py-10 text-center text-slate-500">
+          <div className="py-10 text-center text-slate-500 dark:text-slate-400">
             No transactions yet
           </div>
         )}
@@ -99,11 +113,11 @@ export function TransactionTable({
 
 function TypeBadge({ type }: { type: string }) {
   const styles = {
-    INVESTMENT: "bg-blue-500/10 text-blue-300",
-    WITHDRAWAL: "bg-red-500/10 text-red-300",
-    EARNING: "bg-emerald-500/10 text-emerald-300",
-    ADJUSTMENT: "bg-amber-500/10 text-amber-300",
-    SAVINGS: "bg-amber-500/10 text-amber-300",
+    INVESTMENT: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    WITHDRAWAL: "bg-red-500/10 text-red-500 dark:text-red-300",
+    EARNING: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    ADJUSTMENT: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    SAVINGS: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
   };
 
   return (
@@ -120,14 +134,14 @@ function TypeBadge({ type }: { type: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    PENDING: "bg-yellow-500/10 text-yellow-300",
-    APPROVED: "bg-blue-500/10 text-blue-300",
-    PROCESSING: "bg-purple-500/10 text-purple-300",
-    COMPLETED: "bg-emerald-500/10 text-emerald-300",
-    CONFIRMED: "bg-emerald-500/10 text-emerald-300",
-    PAID: "bg-emerald-500/10 text-emerald-300",
-    REJECTED: "bg-red-500/10 text-red-300",
-    CANCELLED: "bg-red-500/10 text-red-300",
+    PENDING: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    APPROVED: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    PROCESSING: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    COMPLETED: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    CONFIRMED: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    PAID: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    REJECTED: "bg-red-500/10 text-red-600 dark:text-red-300",
+    CANCELLED: "bg-red-500/10 text-red-600 dark:text-red-300",
   };
 
   return (

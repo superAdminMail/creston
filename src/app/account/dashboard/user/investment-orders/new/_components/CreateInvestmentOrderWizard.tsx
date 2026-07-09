@@ -189,9 +189,9 @@ export function CreateInvestmentOrderWizard({
     >
       <div className="space-y-6">
         {hasReachedActiveUnpaidOrderLimit ? (
-          <Alert className="rounded-[1.75rem] border border-amber-400/20 bg-amber-400/10 text-amber-100">
+          <Alert className="rounded-[1.75rem] border border-amber-200/70 bg-amber-50/90 text-amber-950 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
             <AlertTitle>Order limit reached</AlertTitle>
-            <AlertDescription className="text-amber-100/85">
+            <AlertDescription className="text-amber-900/80 dark:text-amber-100/85">
               You already have {options.activeUnpaidOrdersCount} active unpaid
               orders. Please complete or cancel an existing order before
               creating a new one.
@@ -200,19 +200,19 @@ export function CreateInvestmentOrderWizard({
         ) : null}
 
         {createdOrderId ? (
-          <div className="rounded-[1.75rem] border border-emerald-400/20 bg-emerald-400/10 p-5">
+          <div className="rounded-[1.75rem] border border-emerald-200/70 bg-emerald-50/90 p-5 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-500/10">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-300" />
+              <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
               <div>
-                <p className="text-sm font-semibold text-white">
-                  Investment order created successfully
+                <p className="text-sm font-semibold text-emerald-950 dark:text-white">
+                  Order created successfully
                 </p>
-                <p className="mt-1 text-sm leading-6 text-emerald-100/85">
-                  Order reference{" "}
-                  <span className="font-medium text-white">
+                <p className="mt-1 text-sm leading-6 text-emerald-900/80 dark:text-emerald-100/85">
+                  Reference{" "}
+                  <span className="font-medium text-emerald-950 dark:text-white">
                     {createdOrderId}
                   </span>{" "}
-                  is now pending payment. You can start another order below if
+                  is now pending payment. You can create another order below if
                   needed.
                 </p>
               </div>
@@ -220,20 +220,20 @@ export function CreateInvestmentOrderWizard({
           </div>
         ) : null}
 
-        <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
+        <section className="overflow-hidden rounded-[2rem] border border-border/60 bg-white/75 p-5 shadow-sm sm:p-6 lg:p-8 dark:border-white/10 dark:bg-white/[0.04]">
           <div className="mb-6 space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                   Order progress
                 </p>
-                <p className="mt-2 text-sm font-medium text-white">
+                <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                   Step {effectiveStep + 1} of {stepTitles.length}:{" "}
                   {stepTitles[effectiveStep]}
                 </p>
               </div>
 
-              <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-100">
+              <span className="rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
                 {Math.round(progressValue)}%
               </span>
             </div>
@@ -243,103 +243,103 @@ export function CreateInvestmentOrderWizard({
             />
           </div>
 
-        </section>
+          <div className="space-y-6">
+            {effectiveStep === 0 ? (
+              <InvestmentTypeStep
+                options={options.investments}
+                selectedInvestmentId={selectedInvestmentId}
+                onSelect={(value) => {
+                  const selectedInvestment =
+                    options.investments.find(
+                      (investment) => investment.id === value,
+                    ) ?? null;
+                  const nextPlan = selectedInvestment?.plans[0] ?? null;
+                  const nextTier = nextPlan?.tiers[0] ?? null;
 
-        <section className="card-premium overflow-hidden rounded-[2rem] p-5 sm:p-6 lg:p-8">
-          {effectiveStep === 0 ? (
-            <InvestmentTypeStep
-              options={options.investments}
-              selectedInvestmentId={selectedInvestmentId}
-              onSelect={(value) => {
-                const selectedInvestment =
-                  options.investments.find(
-                    (investment) => investment.id === value,
-                  ) ?? null;
-                const nextPlan = selectedInvestment?.plans[0] ?? null;
-                const nextTier = nextPlan?.tiers[0] ?? null;
+                  setSelectedInvestmentId(value);
+                  setSelectedPlanId(nextPlan?.id ?? null);
+                  setSelectedTierId(nextTier?.id ?? null);
+                  setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
+                }}
+                onContinue={() => setCurrentStep(1)}
+                canContinue={
+                  Boolean(effectiveSelectedInvestmentId) && canAdvance
+                }
+                featuredInvestment={featuredInvestment}
+                siteName={siteName}
+              />
+            ) : null}
 
-                setSelectedInvestmentId(value);
-                setSelectedPlanId(nextPlan?.id ?? null);
-                setSelectedTierId(nextTier?.id ?? null);
-                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
-              }}
-              onContinue={() => setCurrentStep(1)}
-              canContinue={
-                Boolean(effectiveSelectedInvestmentId) && canAdvance
-              }
-              featuredInvestment={featuredInvestment}
-              siteName={siteName}
-            />
-          ) : null}
+            {effectiveStep === 1 ? (
+              <InvestmentPlanStep
+                plans={matchingPlans}
+                selectedPlanId={selectedPlanId}
+                onSelect={(value) => {
+                  const nextPlan =
+                    matchingPlans.find((plan) => plan.id === value) ?? null;
+                  const nextTier = nextPlan?.tiers[0] ?? null;
 
-          {effectiveStep === 1 ? (
-            <InvestmentPlanStep
-              plans={matchingPlans}
-              selectedPlanId={selectedPlanId}
-              onSelect={(value) => {
-                const nextPlan =
-                  matchingPlans.find((plan) => plan.id === value) ?? null;
-                const nextTier = nextPlan?.tiers[0] ?? null;
+                  setSelectedPlanId(value);
+                  setSelectedTierId(nextTier?.id ?? null);
+                  setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
+                }}
+                onBack={() => setCurrentStep(0)}
+                onContinue={() => setCurrentStep(2)}
+                canContinue={Boolean(effectiveSelectedPlanId) && canAdvance}
+              />
+            ) : null}
 
-                setSelectedPlanId(value);
-                setSelectedTierId(nextTier?.id ?? null);
-                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
-              }}
-              onBack={() => setCurrentStep(0)}
-              onContinue={() => setCurrentStep(2)}
-              canContinue={Boolean(effectiveSelectedPlanId) && canAdvance}
-            />
-          ) : null}
+            {effectiveStep === 2 && selectedPlan ? (
+              <InvestmentTierStep
+                plan={selectedPlan}
+                tiers={selectedPlan.tiers}
+                selectedTierId={selectedTierId}
+                onSelect={(value) => {
+                  setSelectedTierId(value);
+                  const nextTier =
+                    selectedPlan.tiers.find((tier) => tier.id === value) ??
+                    null;
 
-          {effectiveStep === 2 && selectedPlan ? (
-            <InvestmentTierStep
-              plan={selectedPlan}
-              tiers={selectedPlan.tiers}
-              selectedTierId={selectedTierId}
-              onSelect={(value) => {
-                setSelectedTierId(value);
-                const nextTier =
-                  selectedPlan.tiers.find((tier) => tier.id === value) ?? null;
+                  setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
+                }}
+                onBack={() => setCurrentStep(1)}
+                onContinue={() => setCurrentStep(3)}
+                canContinue={Boolean(effectiveSelectedTierId) && canAdvance}
+              />
+            ) : null}
 
-                setAmount(nextTier ? nextTier.minAmount.toFixed(2) : "");
-              }}
-              onBack={() => setCurrentStep(1)}
-              onContinue={() => setCurrentStep(3)}
-              canContinue={Boolean(effectiveSelectedTierId) && canAdvance}
-            />
-          ) : null}
+            {effectiveStep === 3 && selectedPlan && selectedTier ? (
+              <InvestmentAmountStep
+                plan={selectedPlan}
+                tier={selectedTier}
+                amount={amount}
+                amountError={amountError}
+                serverAmountError={actionState.fieldErrors?.amount}
+                onAmountChange={setAmount}
+                onBack={() => setCurrentStep(2)}
+                onContinue={() => setCurrentStep(4)}
+                canContinue={!amountError && canAdvance}
+              />
+            ) : null}
 
-          {effectiveStep === 3 && selectedPlan && selectedTier ? (
-            <InvestmentAmountStep
-              plan={selectedPlan}
-              tier={selectedTier}
-              amount={amount}
-              amountError={amountError}
-              serverAmountError={actionState.fieldErrors?.amount}
-              onAmountChange={setAmount}
-              onBack={() => setCurrentStep(2)}
-              onContinue={() => setCurrentStep(4)}
-              canContinue={!amountError && canAdvance}
-            />
-          ) : null}
-
-          {effectiveStep === 4 &&
-          selectedPlan &&
-          selectedInvestment &&
-          selectedTier ? (
-            <InvestmentReviewStep
-              investmentId={selectedInvestment.id}
-              investmentName={selectedInvestment.name}
-              plan={selectedPlan}
-              tier={selectedTier}
-              investmentTypeLabel={selectedInvestment.typeLabel}
-              amount={amount}
-              formAction={formAction}
-              actionState={actionState}
-              onBack={() => setCurrentStep(3)}
-              canSubmit={canAdvance}
-            />
-          ) : null}
+            {effectiveStep === 4 &&
+            selectedPlan &&
+            selectedInvestment &&
+            selectedTier ? (
+              <InvestmentReviewStep
+                investmentId={selectedInvestment.id}
+                investmentName={selectedInvestment.name}
+                plan={selectedPlan}
+                tier={selectedTier}
+                investmentTypeLabel={selectedInvestment.typeLabel}
+                amount={amount}
+                formAction={formAction}
+                actionState={actionState}
+                onBack={() => setCurrentStep(3)}
+                canSubmit={canAdvance}
+              />
+            ) : null}
+          </div>
         </section>
       </div>
 

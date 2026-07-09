@@ -11,6 +11,7 @@ export default async function AdminInvestorsPage() {
       title="Investor Profiles"
       description="Monitor investor onboarding and KYC progress."
       collection={collection}
+      showTitleIcon={false}
     />
   );
 }

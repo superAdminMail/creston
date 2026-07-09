@@ -11,7 +11,11 @@ export function DashboardSectionCard({
 }: DashboardSectionCardProps) {
   return (
     <section
-      className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-6 sm:p-8", className)}
+      className={cn(
+        DASHBOARD_PAGE_SURFACE_CLASS,
+        "p-6 sm:p-8",
+        className,
+      )}
       {...props}
     />
   );

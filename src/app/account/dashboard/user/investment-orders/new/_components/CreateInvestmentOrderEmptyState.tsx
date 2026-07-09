@@ -35,7 +35,7 @@ export function CreateInvestmentOrderEmptyState({
   const isKycBlocked = hasInvestorProfile && !canCreateInvestmentOrder;
 
   const title = !hasInvestorProfile
-    ? "Complete your investment profile before starting"
+    ? "Complete your investment profile first"
     : isKycBlocked
       ? "Verify your KYC before creating an order"
       : "No active investment plans are available right now";
@@ -53,33 +53,33 @@ export function CreateInvestmentOrderEmptyState({
       : "/account/dashboard/user";
 
   const primaryLabel = !hasInvestorProfile
-    ? "Complete investment profile"
+    ? "Complete profile"
     : isKycBlocked
       ? "Verify KYC"
       : "Return to dashboard";
 
   return (
-    <Empty className="mx-auto max-w-4xl rounded-[2rem] card-premium p-8 text-left text-white sm:p-10">
+    <Empty className="mx-auto max-w-4xl rounded-[2rem] border border-border/60 bg-white/75 p-8 text-left text-slate-950 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-white sm:p-10">
       <EmptyHeader className="max-w-2xl items-start text-left">
-        <EmptyMedia className="flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
+        <EmptyMedia className="flex h-14 w-14 items-center justify-center rounded-3xl border border-border/60 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
           {!hasInvestorProfile ? (
-            <FileText className="h-6 w-6 text-blue-300" />
+            <FileText className="h-6 w-6 text-sky-700 dark:text-blue-300" />
           ) : isKycBlocked ? (
-            <ShieldAlert className="h-6 w-6 text-amber-300" />
+            <ShieldAlert className="h-6 w-6 text-amber-600 dark:text-amber-300" />
           ) : (
-            <Landmark className="h-6 w-6 text-blue-300" />
+            <Landmark className="h-6 w-6 text-sky-700 dark:text-blue-300" />
           )}
         </EmptyMedia>
-        <EmptyTitle className="text-2xl font-semibold tracking-[-0.03em] text-white">
+        <EmptyTitle className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
           {title}
         </EmptyTitle>
-        <EmptyDescription className="max-w-2xl text-sm leading-7 text-slate-400">
+        <EmptyDescription className="max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
           {description}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="max-w-none items-start">
         {isKycBlocked ? (
-          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-200">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-amber-200/70 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200">
             <BadgeCheck className="h-3.5 w-3.5" />
             KYC verification required
           </div>
@@ -88,7 +88,7 @@ export function CreateInvestmentOrderEmptyState({
         <div className="flex w-full flex-col gap-3 sm:flex-row">
           <Link
             href={primaryHref}
-            className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold"
+            className="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm"
           >
             {primaryLabel}
             <ArrowRight className="h-4 w-4" />
@@ -96,7 +96,7 @@ export function CreateInvestmentOrderEmptyState({
 
           <Link
             href="/account/dashboard/user"
-            className="btn-secondary inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-medium"
+            className="btn-secondary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-medium"
           >
             <CircleAlert className="h-4 w-4" />
             Back to dashboard

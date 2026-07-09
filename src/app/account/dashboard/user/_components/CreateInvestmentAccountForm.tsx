@@ -114,8 +114,8 @@ export function CreateInvestmentAccountForm({ plans }: { plans: Plan[] }) {
                         type="button"
                         onClick={() => field.onChange(plan.id)}
                         className={cn(
-                          "relative rounded-2xl border p-4 text-left transition-all duration-200",
-                          "hover:border-white/30 hover:bg-white/5 active:scale-[0.98]",
+                          "relative rounded-2xl border p-4 text-left transition-colors transition-shadow duration-200",
+                          "hover:border-white/30 hover:bg-white/5",
                           isSelected
                             ? "border-[var(--primary)] bg-[var(--primary)]/10"
                             : "border-white/10",

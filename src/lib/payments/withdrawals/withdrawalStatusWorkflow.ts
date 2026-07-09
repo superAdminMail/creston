@@ -73,17 +73,17 @@ export function requiresWithdrawalStatusReason(
 export function getWithdrawalStatusTone(status: WithdrawalStatus | string) {
   switch (status) {
     case WithdrawalStatus.PENDING:
-      return "bg-amber-500/10 text-amber-300 border-amber-400/20";
+      return "bg-amber-100 text-amber-900 border-amber-300/50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-400/20";
     case WithdrawalStatus.APPROVED:
-      return "bg-blue-500/10 text-blue-300 border-blue-400/20";
+      return "bg-sky-100 text-sky-900 border-sky-300/50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/20";
     case WithdrawalStatus.PROCESSING:
-      return "bg-amber-500/10 text-amber-300 border-amber-400/20";
+      return "bg-orange-100 text-orange-900 border-orange-300/50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-400/20";
     case WithdrawalStatus.COMPLETED:
-      return "bg-emerald-500/10 text-emerald-300 border-emerald-400/20";
+      return "bg-emerald-100 text-emerald-900 border-emerald-300/50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-400/20";
     case WithdrawalStatus.REJECTED:
-      return "bg-red-500/10 text-red-300 border-red-400/20";
+      return "bg-rose-100 text-rose-900 border-rose-300/50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-400/20";
     case WithdrawalStatus.CANCELLED:
-      return "bg-slate-500/10 text-slate-300 border-slate-400/20";
+      return "bg-slate-100 text-slate-900 border-slate-300/50 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-400/20";
   }
 }
 

@@ -39,8 +39,10 @@ export function AdminResponsiveCollectionShell<TItem>({
     ) : (
       <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "text-center")}>
         <CardContent className="space-y-3 p-8">
-          <h2 className="text-lg font-semibold text-white">No records found</h2>
-          <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
+            No records found
+          </h2>
+          <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
             New records will appear here once data becomes available.
           </p>
         </CardContent>
@@ -50,16 +52,16 @@ export function AdminResponsiveCollectionShell<TItem>({
 
   return (
     <>
-      <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "py-0 text-white")}>
+      <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "py-0")}>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-max">
             <TableHeader>
-              <TableRow className="border-white/8 hover:bg-transparent">
+              <TableRow className="border-border/60 hover:bg-transparent dark:border-white/10">
                 {columns.map((column) => (
                   <TableHead
                     key={column.key}
-                    className={column.className ?? "px-5 py-4 text-slate-400"}
+                    className={column.className ?? "px-5 py-4 text-slate-500 dark:text-slate-400"}
                   >
                     {column.header}
                   </TableHead>
@@ -71,12 +73,12 @@ export function AdminResponsiveCollectionShell<TItem>({
               {items.map((item) => (
                 <TableRow
                   key={getItemKey(item)}
-                  className="border-white/8 hover:bg-white/[0.03]"
+                  className="border-border/60 hover:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.03]"
                 >
                   {columns.map((column) => (
                     <TableCell
                       key={column.key}
-                      className={column.cellClassName ?? "px-5 py-4 align-top"}
+                      className={column.cellClassName ?? "px-5 py-4 align-top text-slate-700 dark:text-slate-300"}
                     >
                       {column.render(item)}
                     </TableCell>

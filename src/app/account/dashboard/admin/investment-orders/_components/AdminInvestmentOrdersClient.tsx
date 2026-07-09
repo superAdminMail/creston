@@ -73,31 +73,31 @@ const initialOrderActionState = createInitialFormState<OrderActionFieldName>();
 function getStatusClasses(status: string) {
   switch (status) {
     case "CONFIRMED":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+      return "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
     case "PENDING_CONFIRMATION":
     case "PAID":
     case "PARTIALLY_PAID":
-      return "border-amber-400/20 bg-amber-400/10 text-amber-200";
+      return "border-amber-200/70 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300";
     case "CANCELLED":
     case "REJECTED":
-      return "border-rose-400/20 bg-rose-400/10 text-rose-200";
+      return "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300";
     default:
-      return "border-white/10 bg-white/[0.04] text-slate-200";
+      return "border-slate-200/80 bg-white/80 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200";
   }
 }
 
 function getRuntimeStatusClasses(status: string) {
   switch (status) {
     case "PAUSED":
-      return "border-amber-400/20 bg-amber-400/10 text-amber-200";
+      return "border-amber-200/70 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300";
     case "ONGOING":
     case "ACTIVE":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+      return "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300";
     case "COMPLETED":
     case "CLOSED":
-      return "border-slate-400/20 bg-slate-400/10 text-slate-200";
+      return "border-slate-200/80 bg-white/80 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200";
     default:
-      return "border-sky-400/20 bg-sky-400/10 text-sky-200";
+      return "border-sky-200/70 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300";
   }
 }
 
@@ -156,10 +156,10 @@ function OrderActionDialog({
         </DropdownMenuItem>
       </DialogTrigger>
 
-      <DialogContent className="border-white/10 text-white sm:max-w-lg">
+      <DialogContent className="border-border/60 bg-white/95 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.18)] sm:max-w-lg dark:border-white/10 dark:bg-slate-950/95 dark:text-white dark:shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-600 dark:text-slate-400">
             {description}
           </DialogDescription>
         </DialogHeader>
@@ -193,12 +193,14 @@ function OrderActionDialog({
               Boolean(state.fieldErrors?.reason?.length) || undefined
             }
           >
-            <FieldLabel className="text-slate-200">{reasonLabel}</FieldLabel>
+            <FieldLabel className="text-slate-700 dark:text-slate-200">
+              {reasonLabel}
+            </FieldLabel>
             <FieldContent>
               <Textarea
                 name="reason"
                 placeholder={reasonPlaceholder}
-                className="min-h-24 rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                className="min-h-24 rounded-2xl border-border/60 bg-white/90 text-slate-950 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
                 onChange={() => {
                   if (clientReasonError) {
                     setClientReasonError(null);
@@ -219,26 +221,30 @@ function OrderActionDialog({
           </Field>
 
           <Field>
-            <FieldLabel className="text-slate-200">Admin notes</FieldLabel>
+            <FieldLabel className="text-slate-700 dark:text-slate-200">
+              Admin notes
+            </FieldLabel>
             <FieldContent>
               <Textarea
                 name="adminNotes"
                 placeholder={adminNotesPlaceholder}
-                className="min-h-24 rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                className="min-h-24 rounded-2xl border-border/60 bg-white/90 text-slate-950 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-500"
               />
             </FieldContent>
           </Field>
 
           {state.status === "error" && state.message ? (
-            <p className="text-sm text-rose-300">{state.message}</p>
+            <p className="text-sm text-rose-600 dark:text-rose-300">
+              {state.message}
+            </p>
           ) : null}
 
-          <DialogFooter className="border-white/10 bg-transparent px-0 pb-0 pt-2">
+          <DialogFooter className="border-border/60 bg-transparent px-0 pb-0 pt-2 dark:border-white/10">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="rounded-2xl border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+              className="rounded-2xl border-border/60 bg-white/90 text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
             >
               Close
             </Button>
@@ -269,7 +275,7 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
           type="button"
           variant="outline"
           size="icon"
-          className="h-10 w-10 rounded-2xl border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
+          className="h-10 w-10 rounded-2xl border-border/60 bg-white/90 text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
@@ -277,7 +283,7 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
 
       <DropdownMenuContent
         align="end"
-        className="w-48 rounded-2xl border border-white/10 p-1 text-white"
+        className="w-48 rounded-2xl border border-border/60 bg-white/96 p-1 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-slate-950/95 dark:text-white dark:shadow-[0_24px_70px_rgba(0,0,0,0.45)]"
       >
         <DropdownMenuItem asChild>
           <Link href={`/account/dashboard/admin/investment-orders/${order.id}`}>
@@ -397,8 +403,9 @@ export function AdminInvestmentOrdersClient({
       title="Investment Orders"
       description="Review and manage pending and confirmed orders from investors."
       stats={stats}
+      showTitleIcon={false}
     >
-      <Alert className="rounded-2xl border border-blue-400/20 bg-blue-400/10 text-blue-100">
+      <Alert className="rounded-2xl border border-sky-200/70 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300">
         <Wallet className="h-4 w-4" />
         <AlertTitle>Use action buttons to manage orders.</AlertTitle>
       </Alert>
@@ -407,12 +414,12 @@ export function AdminInvestmentOrdersClient({
         items={data.orders}
         getItemKey={(order) => order.id}
         emptyState={
-          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
+          <Card className="rounded-[1.75rem] border border-slate-200/80 bg-white/85 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <CardContent className="space-y-3 p-8">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                 No investment orders found
               </h2>
-              <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
+              <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
                 Orders created by investors will appear here for review and
                 confirmation.
               </p>
@@ -425,10 +432,10 @@ export function AdminInvestmentOrdersClient({
             header: "Investor",
             render: (order) => (
               <div>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-slate-950 dark:text-white">
                   {order.investorName}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   {order.investorEmail}
                 </p>
               </div>
@@ -439,10 +446,10 @@ export function AdminInvestmentOrdersClient({
             header: "Order",
             render: (order) => (
               <div>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-slate-950 dark:text-white">
                   {order.planName}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   {order.investmentName} | {order.tierLabel} |{" "}
                   {order.modelLabel}
                 </p>
@@ -477,14 +484,16 @@ export function AdminInvestmentOrdersClient({
             key: "amount",
             header: "Amount",
             render: (order) => (
-              <span className="text-sm text-slate-200">{order.amount}</span>
+              <span className="text-sm text-slate-700 dark:text-slate-200">
+                {order.amount}
+              </span>
             ),
           },
           {
             key: "account",
             header: "Account",
             render: (order) => (
-              <span className="text-sm text-slate-200">
+              <span className="text-sm text-slate-700 dark:text-slate-200">
                 {order.accountName}
               </span>
             ),
@@ -493,7 +502,7 @@ export function AdminInvestmentOrdersClient({
             key: "created",
             header: "Created",
             render: (order) => (
-              <span className="text-sm text-slate-200">
+              <span className="text-sm text-slate-700 dark:text-slate-200">
                 {order.createdAtLabel}
               </span>
             ),

@@ -10,7 +10,7 @@ export default function KYCVerifiedCard({
   siteName: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-xl">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 shadow-sm">
       {/* Gradient Glow */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-emerald-500/10" />
       <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-blue-500/20 blur-3xl" />

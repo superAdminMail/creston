@@ -167,12 +167,12 @@ export function ChatInput({
   };
 
   return (
-    <div className="bg-background pb-[max(env(safe-area-inset-bottom),0px)]">
-      <div className="px-4 py-3">
+    <div className="bg-transparent pb-[max(env(safe-area-inset-bottom),0px)]">
+      <div className="mx-auto w-full max-w-4xl px-4 py-3">
         <div className="space-y-3">
           {attachment ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-              <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/10">
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/88 p-3 dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-slate-200/80 dark:border-white/10">
                 <Image
                   src={attachment.url}
                   alt={attachment.name ?? "Attachment preview"}
@@ -182,10 +182,10 @@ export function ChatInput({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
+                <p className="truncate text-sm font-medium text-slate-950 dark:text-white">
                   {attachment.name ?? "Image attachment"}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-600 dark:text-muted-foreground">
                   Will send as an image message
                 </p>
               </div>
@@ -202,13 +202,13 @@ export function ChatInput({
             </div>
           ) : null}
 
-          <div className="flex items-end gap-2 rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-2 shadow-[0_14px_40px_rgba(2,6,23,0.16)] backdrop-blur-xl">
+          <div className="flex items-end gap-2 rounded-[1.5rem] border border-slate-200/80 bg-white/88 p-2 shadow-[0_14px_40px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_14px_40px_rgba(2,6,23,0.16)]">
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => setUploadOpen(true)}
-              className="h-11 w-11 shrink-0 rounded-full border border-white/10 bg-white/[0.03] text-slate-200 shadow-none hover:bg-white/[0.08] hover:text-white"
+              className="h-11 w-11 shrink-0 rounded-full border border-slate-200/80 bg-white text-slate-700 shadow-none hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
               aria-label="Add image attachment"
             >
               <Plus className="h-5 w-5" />
@@ -233,14 +233,14 @@ export function ChatInput({
                   }
                 }}
                 placeholder={placeholder}
-                className="no-scrollbar min-h-11 max-h-40 w-full resize-none overflow-y-auto border-0 bg-transparent px-2 py-3 text-[15px] leading-6 text-foreground shadow-none placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="no-scrollbar min-h-11 max-h-40 w-full resize-none overflow-y-auto border-0 bg-transparent px-2 py-3 text-[15px] leading-6 text-slate-950 shadow-none placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-white dark:placeholder:text-slate-500"
               />
             </div>
 
             <Button
               onClick={() => void send()}
               disabled={isSending || (!text.trim() && !attachment)}
-              className="h-11 shrink-0 rounded-full bg-[var(--brand-blue)] px-5 text-sm font-medium text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)] hover:bg-[var(--brand-blue)]/90 disabled:opacity-70"
+              className="h-11 shrink-0 rounded-full border border-sky-300/20 bg-sky-500 px-5 text-sm font-medium text-white shadow-[0_10px_24px_rgba(56,189,248,0.22)] hover:bg-sky-500/90 disabled:opacity-70 dark:border-sky-400/20 dark:bg-sky-500 dark:hover:bg-sky-500/90"
             >
               {isSending ? (
                 <span className="flex items-center gap-2">

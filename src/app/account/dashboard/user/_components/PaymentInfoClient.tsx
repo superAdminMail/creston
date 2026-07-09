@@ -64,6 +64,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createInitialFormState } from "@/lib/forms/actionState";
+import {
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../_components/dashboardSurfaces";
+import { cn } from "@/lib/utils";
 import PaymentMethodDrawer from "./PaymentMethodDrawer";
 
 type PaymentMethod = {
@@ -125,6 +129,7 @@ function PaymentMethodCard({
   const router = useRouter();
   const [isRemoving, startRemoving] = useTransition();
   const [removeOpen, setRemoveOpen] = useState(false);
+  const isBank = method.type === "BANK";
 
   const handleRemove = () => {
     startRemoving(async () => {
@@ -143,46 +148,57 @@ function PaymentMethodCard({
   };
 
   return (
-    <div className="relative rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl transition hover:border-white/20">
-      <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-[#3c9ee0]/20 blur-3xl" />
+    <div
+      className={cn(
+        DASHBOARD_PAGE_SURFACE_CLASS,
+        "relative overflow-hidden p-5 transition-colors hover:border-sky-300/60 hover:bg-sky-50/60 dark:hover:bg-white/[0.05] sm:p-6",
+      )}
+    >
+      <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-sky-200/20 blur-3xl dark:bg-sky-400/10" />
 
       {method.isDefault && (
-        <span className="absolute top-4 right-4 rounded-full border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 px-2 py-1 text-[10px] text-[#3c9ee0]">
+        <span className="absolute right-4 top-4 rounded-full border border-sky-200/70 bg-sky-50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
           Default
         </span>
       )}
 
-      <div className="mb-5 flex items-center gap-3">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-2">
-          {method.type === "BANK" ? (
-            <Landmark className="h-5 w-5 text-white" />
-          ) : (
-            <CreditCard className="h-5 w-5 text-white" />
-          )}
-        </div>
+      <div className="mb-5 flex flex-col gap-3 pr-20 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-200/70 bg-sky-50 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
+            {isBank ? (
+              <Landmark className="h-5 w-5 text-sky-700 dark:text-sky-300" />
+            ) : (
+              <CreditCard className="h-5 w-5 text-sky-700 dark:text-sky-300" />
+            )}
+          </div>
 
-        <div>
-          <p className="font-medium text-white">
-            {method.type === "BANK" ? method.bankName : "Crypto Wallet"}
-          </p>
-          <p className="text-xs text-slate-400">
-            {method.type === "BANK" ? "Bank Account" : method.network}
-          </p>
+          <div className="min-w-0">
+            <p className="truncate font-medium text-slate-950 dark:text-white">
+              {isBank ? method.bankName : "Crypto Wallet"}
+            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">
+              {isBank ? "Bank account" : method.network}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2 text-sm">
-        {method.type === "BANK" ? (
+      <div className="space-y-3 text-sm">
+        {isBank ? (
           <>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-400">Account Name</span>
-              <span className="text-right text-white">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Account Name
+              </span>
+              <span className="break-words text-right text-slate-950 dark:text-white">
                 {method.accountName}
               </span>
             </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-400">Account Number</span>
-              <span className="font-mono text-right text-white">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Account Number
+              </span>
+              <span className="break-words font-mono text-right text-slate-950 dark:text-white">
                 {maskSensitiveValue(method.accountNumber)}
               </span>
             </div>
@@ -191,37 +207,55 @@ function PaymentMethodCard({
             method.swiftCode ||
             method.routingNumber ||
             method.branchName ? (
-              <div className="mt-4 grid gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-3 text-xs sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 rounded-2xl border border-border/60 bg-white/75 p-4 text-xs shadow-sm sm:grid-cols-2 dark:border-white/10 dark:bg-white/[0.04]">
                 {method.bankCode ? (
                   <div className="space-y-1">
-                    <p className="text-slate-500">Bank code</p>
-                    <p className="text-slate-100">{method.bankCode}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                      Bank code
+                    </p>
+                    <p className="break-words text-slate-800 dark:text-slate-100">
+                      {method.bankCode}
+                    </p>
                   </div>
                 ) : null}
                 {method.iban ? (
                   <div className="space-y-1">
-                    <p className="text-slate-500">IBAN</p>
-                    <p className="font-mono text-slate-100">{method.iban}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                      IBAN
+                    </p>
+                    <p className="break-words font-mono text-slate-800 dark:text-slate-100">
+                      {method.iban}
+                    </p>
                   </div>
                 ) : null}
                 {method.swiftCode ? (
                   <div className="space-y-1">
-                    <p className="text-slate-500">SWIFT / BIC</p>
-                    <p className="font-mono text-slate-100">{method.swiftCode}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                      SWIFT / BIC
+                    </p>
+                    <p className="break-words font-mono text-slate-800 dark:text-slate-100">
+                      {method.swiftCode}
+                    </p>
                   </div>
                 ) : null}
                 {method.routingNumber ? (
                   <div className="space-y-1">
-                    <p className="text-slate-500">Routing number</p>
-                    <p className="font-mono text-slate-100">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                      Routing number
+                    </p>
+                    <p className="break-words font-mono text-slate-800 dark:text-slate-100">
                       {method.routingNumber}
                     </p>
                   </div>
                 ) : null}
                 {method.branchName ? (
                   <div className="space-y-1 sm:col-span-2">
-                    <p className="text-slate-500">Branch name</p>
-                    <p className="text-slate-100">{method.branchName}</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                      Branch name
+                    </p>
+                    <p className="break-words text-slate-800 dark:text-slate-100">
+                      {method.branchName}
+                    </p>
                   </div>
                 ) : null}
               </div>
@@ -229,13 +263,19 @@ function PaymentMethodCard({
           </>
         ) : (
           <>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-400">Network</span>
-              <span className="text-right text-white">{method.network}</span>
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Network
+              </span>
+              <span className="break-words text-right text-slate-950 dark:text-white">
+                {method.network}
+              </span>
             </div>
-            <div className="flex justify-between gap-4">
-              <span className="text-slate-400">Address</span>
-              <span className="max-w-[14rem] truncate font-mono text-right text-white">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <span className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Address
+              </span>
+              <span className="max-w-full break-words font-mono text-right text-slate-950 dark:text-white sm:max-w-[14rem]">
                 {maskSensitiveValue(method.address)}
               </span>
             </div>
@@ -243,19 +283,19 @@ function PaymentMethodCard({
         )}
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1 text-xs text-emerald-400">
+      <div className="mt-6 flex flex-col gap-3 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
           <ShieldCheck className="h-4 w-4" />
           Secure
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {!method.isDefault && (
             <form action={setDefaultPaymentMethod}>
               <input type="hidden" name="id" value={method.id} />
               <button
                 onClick={() => onSetDefault(method.id)}
-                className="flex items-center gap-1 text-xs text-[#3c9ee0] hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800 transition hover:bg-sky-100 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100 dark:hover:bg-sky-400/15"
               >
                 <Star className="h-4 w-4" />
                 Set Default
@@ -267,7 +307,7 @@ function PaymentMethodCard({
             <AlertDialogTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-1 text-xs text-red-300 hover:text-red-200"
+                className="inline-flex items-center gap-1.5 rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-100 dark:hover:bg-rose-500/15"
               >
                 <Trash2 className="h-4 w-4" />
                 Remove
@@ -666,19 +706,19 @@ export default function PaymentInfoClient({
     switch (kycStatus) {
       case "NOT_STARTED":
         return (
-          <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
+          <div className="rounded-2xl border border-yellow-200/70 bg-yellow-50 p-4 text-sm text-yellow-800 shadow-sm dark:border-yellow-400/20 dark:bg-yellow-500/5 dark:text-yellow-300">
             Complete your KYC to enable withdrawals and add payment methods.
           </div>
         );
       case "PENDING_REVIEW":
         return (
-          <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
+          <div className="rounded-2xl border border-yellow-200/70 bg-yellow-50 p-4 text-sm text-yellow-800 shadow-sm dark:border-yellow-400/20 dark:bg-yellow-500/5 dark:text-yellow-300">
             Verification in progress. Payment methods will unlock after review.
           </div>
         );
       case "REJECTED":
         return (
-          <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
+          <div className="rounded-2xl border border-yellow-200/70 bg-yellow-50 p-4 text-sm text-yellow-800 shadow-sm dark:border-yellow-400/20 dark:bg-yellow-500/5 dark:text-yellow-300">
             Verification failed. Update your KYC details to add payment methods.
           </div>
         );
@@ -712,11 +752,16 @@ export default function PaymentInfoClient({
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Payment Methods</h1>
-          <p className="mt-1 text-sm text-slate-400">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1.5">
+          <p className="text-xs uppercase tracking-[0.24em] text-sky-700 dark:text-sky-300">
+            Payment info
+          </p>
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+            Payment Methods
+          </h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Manage your withdrawal methods
           </p>
         </div>
@@ -724,7 +769,7 @@ export default function PaymentInfoClient({
         <Button
           onClick={() => setShowModal(true)}
           disabled={!canManageMethods}
-          className="gap-2 rounded-xl bg-[#3c9ee0] hover:bg-[#2f8bd0]"
+          className="h-11 gap-2 rounded-2xl bg-[#3c9ee0] px-4 shadow-sm hover:bg-[#2f8bd0]"
         >
           <Plus className="h-4 w-4" />
           Add Method
@@ -734,7 +779,7 @@ export default function PaymentInfoClient({
       {kycNotice}
 
       {paymentMethods.length ? (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {paymentMethods.map((method) => (
             <PaymentMethodCard
               key={method.id}
@@ -745,21 +790,21 @@ export default function PaymentInfoClient({
           ))}
         </div>
       ) : (
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-8 text-center shadow-xl backdrop-blur-xl">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#3c9ee0]/20 bg-[#3c9ee0]/10">
-            <WalletCards className="h-6 w-6 text-[#3c9ee0]" />
+        <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-[1.75rem] p-8 text-center shadow-sm`}>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-200/70 bg-sky-50 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
+            <WalletCards className="h-6 w-6 text-sky-700 dark:text-sky-300" />
           </div>
-          <h2 className="mt-5 text-lg font-semibold text-white">
+          <h2 className="mt-5 text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
             No payment method added yet
           </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-400">
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
             Add a verified bank account or crypto wallet to receive withdrawals
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {canManageMethods ? (
               <Button
                 onClick={() => setShowModal(true)}
-                className="gap-2 rounded-xl bg-[#3c9ee0] hover:bg-[#2f8bd0]"
+                className="h-11 gap-2 rounded-2xl bg-[#3c9ee0] px-5 shadow-sm hover:bg-[#2f8bd0]"
               >
                 <Plus className="h-4 w-4" />
                 Add Payment Method
@@ -767,7 +812,7 @@ export default function PaymentInfoClient({
             ) : (
               <Button
                 asChild
-                className="gap-2 rounded-xl bg-[#3c9ee0] hover:bg-[#2f8bd0]"
+                className="h-11 gap-2 rounded-2xl bg-[#3c9ee0] px-5 shadow-sm hover:bg-[#2f8bd0]"
               >
                 <Link href="/account/dashboard/user/kyc">
                   <ShieldCheck className="h-4 w-4" />

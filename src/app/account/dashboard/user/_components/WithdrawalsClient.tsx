@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerClose,
-  DrawerContent,
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
@@ -41,7 +40,13 @@ import type { WithdrawalSourceOption } from "@/lib/service/getAvailableWithdrawa
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { calculateWithdrawalEarlyFeePreview } from "@/lib/services/investment/withdrawalPenalty";
 import { MIN_WITHDRAWAL_AMOUNT } from "@/lib/zodValidations/account-operations";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../_components/dashboardSurfaces";
 import WithdrawalRequestsList from "../withdrawals/_components/WithdrawalRequestsList";
+import { cn } from "@/lib/utils";
+import { DrawerSurface } from "@/components/ui/drawer-surface";
 
 type PaymentMethod = {
   id: string;
@@ -478,24 +483,30 @@ export default function WithdrawalsClient({
           : "No eligible balance available";
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-white">Withdraw Funds</h1>
-        <p className="mt-1 text-sm text-slate-400">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+          Withdraw Funds
+        </h1>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Transfer funds securely to your preferred method
         </p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-xl">
-        <p className="text-sm text-slate-400">Available Balance</p>
-        <h2 className="mt-2 text-3xl font-bold text-white">
+      <div className={cn(DASHBOARD_PAGE_PANEL_CLASS, "space-y-2 p-5 sm:p-6")}>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Available Balance
+        </p>
+        <h2 className="text-3xl font-bold tracking-[-0.04em] text-slate-950 dark:text-white">
           {formatCurrency(totalAvailableBalance, availableBalanceCurrency)}
         </h2>
-        <p className="mt-2 text-sm text-slate-400">{availableBalanceLabel}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          {availableBalanceLabel}
+        </p>
       </div>
 
       {kycStatus !== "VERIFIED" ? (
-        <div className="flex gap-2 rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-400">
+        <div className="flex gap-2 rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-700 shadow-sm dark:text-yellow-400">
           <ShieldAlert className="mt-0.5 h-4 w-4" />
           Complete identity verification to enable withdrawals.
         </div>
@@ -503,12 +514,16 @@ export default function WithdrawalsClient({
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
+        className={cn(DASHBOARD_PAGE_PANEL_CLASS, "space-y-6 p-5 sm:p-6")}
       >
-        <h3 className="font-medium text-white">Withdrawal Request Form</h3>
+        <h3 className="text-base font-medium tracking-[-0.02em] text-slate-950 dark:text-white">
+          Withdrawal Request Form
+        </h3>
 
         <div className="space-y-2">
-          <label className="text-xs uppercase text-slate-400">Amount</label>
+          <label className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Amount
+          </label>
           <Input
             name="amount"
             placeholder="$0.00"
@@ -516,18 +531,18 @@ export default function WithdrawalsClient({
             onChange={(event) => {
               setAmount(event.target.value);
             }}
-            className="border-white/10 bg-white/5 text-white/50 focus:border-[#3c9ee0]"
+            className="super-admin-field h-11 rounded-2xl focus-visible:ring-sky-500"
           />
           <FieldError>{amountValidationMessage}</FieldError>
         </div>
 
         <div className="space-y-3">
-          <label className="text-xs uppercase text-slate-400">
+          <label className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
             Payment Method
           </label>
 
           {paymentMethods.length > 0 ? (
-            <p className="text-xs tracking-[0.2em] text-slate-400">
+            <p className="text-xs tracking-[0.2em] text-slate-500 dark:text-slate-400">
               Tap to select payment method
             </p>
           ) : null}
@@ -543,41 +558,46 @@ export default function WithdrawalsClient({
                 onClick={() => {
                   setSelectedMethod(method.id);
                 }}
-                className={`flex w-full items-center justify-between rounded-xl border p-4 transition ${
+                className={cn(
+                  "flex w-full items-start justify-between gap-3 rounded-2xl border p-4 text-left transition-colors duration-200",
                   active
-                    ? "border-[#3c9ee0] bg-[#3c9ee0]/10"
-                    : "border-white/10 bg-white/5"
-                }`}
+                    ? "border-sky-300/70 bg-sky-50/85 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10"
+                    : "border-border/60 bg-white/75 hover:border-sky-200/70 hover:bg-sky-50/60 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.06]",
+                )}
                 aria-pressed={active}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-start gap-3">
                   {method.type === "BANK" ? (
-                    <Landmark className="h-4 w-4 text-slate-300" />
+                    <Landmark className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                   ) : (
-                    <CreditCard className="h-4 w-4 text-slate-300" />
+                    <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                   )}
-                  <span className="text-sm text-white">{label}</span>
+                  <span className="min-w-0 break-words text-sm text-slate-950 dark:text-white">
+                    {label}
+                  </span>
                 </div>
 
                 {active ? (
-                  <span className="text-xs text-[#3c9ee0]">Selected</span>
+                  <span className="shrink-0 text-xs font-medium text-sky-700 dark:text-sky-300">
+                    Selected
+                  </span>
                 ) : null}
               </button>
             );
           })}
 
           {paymentMethods.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4">
-              <p className="text-sm text-slate-300">
+            <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-2xl border-dashed p-4")}>
+              <p className="text-sm text-slate-700 dark:text-slate-300">
                 No payment method has been added yet.
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Add a verified bank account or crypto wallet before requesting a
                 withdrawal.
               </p>
               <Link
                 href="/account/dashboard/user/payment-info"
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-full border border-[#3c9ee0]/30 bg-[#3c9ee0]/10 px-4 text-sm font-medium text-[#8fd0ff] transition hover:bg-[#3c9ee0]/15 hover:text-white"
+                className="mt-4 inline-flex h-10 items-center justify-center rounded-full border border-sky-200/70 bg-sky-50 px-4 text-sm font-medium text-sky-800 transition hover:bg-sky-100 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100 dark:hover:bg-sky-400/15"
               >
                 Add payment method
               </Link>
@@ -588,14 +608,17 @@ export default function WithdrawalsClient({
         <Button
           type="submit"
           disabled={isConfirmPending || !selectedMethod || !isAmountValid}
-          className="w-full gap-2 rounded-xl bg-[#3c9ee0]"
+          className="w-full gap-2 rounded-2xl bg-[#3c9ee0]"
         >
           Submit
         </Button>
       </form>
 
-        <Drawer open={reviewOpen} onOpenChange={handleReviewOpenChange}>
-        <DrawerContent className="text-white">
+      <Drawer open={reviewOpen} onOpenChange={handleReviewOpenChange}>
+        <DrawerSurface
+          tone="dark"
+          className="overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
+        >
           <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
             <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
               <DrawerTitle className="text-left text-xl">
@@ -620,7 +643,7 @@ export default function WithdrawalsClient({
                 </div>
               ) : null}
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
                   Withdrawal preview
                 </p>
@@ -754,7 +777,7 @@ export default function WithdrawalsClient({
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm uppercase tracking-[0.24em] text-slate-400">
                     Available balance (
@@ -809,13 +832,13 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-white/10 bg-white/[0.02] px-4 py-4 md:px-6">
+            <DrawerFooter className="border-t border-border/60 bg-white/75 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <div className="grid gap-3 sm:grid-cols-2">
                 <DrawerClose asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="rounded-xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+                    className="rounded-xl border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                   >
                     Edit details
                   </Button>
@@ -839,11 +862,14 @@ export default function WithdrawalsClient({
               </div>
             </DrawerFooter>
           </div>
-        </DrawerContent>
+        </DrawerSurface>
       </Drawer>
 
       <Drawer open={sourcePickerOpen} onOpenChange={setSourcePickerOpen}>
-        <DrawerContent className="z-[60] text-white data-[vaul-drawer-direction=bottom]:max-h-[42vh]">
+        <DrawerSurface
+          tone="dark"
+          className="z-[60] overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[84vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
+        >
           <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
             <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
               <DrawerTitle className="text-left text-lg">
@@ -855,7 +881,7 @@ export default function WithdrawalsClient({
             </DrawerHeader>
 
             <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm uppercase tracking-[0.24em] text-slate-400">
                     Available balance (
@@ -922,18 +948,22 @@ export default function WithdrawalsClient({
                             sourceId: source.id,
                           });
                         }}
-                        className={`flex w-full items-center justify-between gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-white/5 ${
-                          isSelected ? "bg-emerald-500/10" : ""
-                        } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-3 text-left transition-colors duration-200 hover:bg-sky-50/60 dark:hover:bg-white/[0.05]",
+                          isSelected
+                            ? "bg-emerald-500/10 dark:bg-emerald-400/10"
+                            : "bg-transparent",
+                          isDisabled ? "cursor-not-allowed opacity-50" : "",
+                        )}
                       >
-                        <span className="text-slate-400">
+                        <span className="min-w-0 break-words text-slate-600 dark:text-slate-300">
                           {label} (
                           {source
                             ? formatCurrency(source.amount, source.currency)
                             : "$0.00"}
                           )
                         </span>
-                        <span className="flex items-center gap-2 font-medium text-white">
+                        <span className="flex items-center gap-2 font-medium text-slate-950 dark:text-white">
                           {isSelected ? (
                             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                           ) : null}
@@ -945,19 +975,19 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-white/10 bg-white/[0.02] px-4 py-4 md:px-6">
+            <DrawerFooter className="border-t border-border/60 bg-white/75 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <DrawerClose asChild>
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+                  className="rounded-xl border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                 >
                   Close
                 </Button>
               </DrawerClose>
             </DrawerFooter>
           </div>
-        </DrawerContent>
+        </DrawerSurface>
       </Drawer>
 
       <WithdrawalRequestsList withdrawalOrders={withdrawalOrders} />

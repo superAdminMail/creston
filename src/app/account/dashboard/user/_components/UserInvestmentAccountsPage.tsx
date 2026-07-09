@@ -233,7 +233,7 @@ export function UserInvestmentAccountsPage({
               {data.accounts.map((account) => (
                 <article
                   key={account.id}
-                  className="rounded-[1.75rem] border border-white/8 bg-white/[0.03] p-5 transition-all duration-200 hover:border-white/12 hover:bg-white/[0.04]"
+                  className="rounded-[1.75rem] border border-white/8 bg-white/[0.03] p-5 transition-colors transition-shadow duration-200 hover:border-white/12 hover:bg-white/[0.04]"
                 >
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-4">
@@ -343,7 +343,7 @@ export function UserInvestmentAccountsPage({
         </DashboardSectionCard>
 
         <div className="space-y-6">
-          <section className="glass-strong rounded-[2rem] p-6">
+          <section className="super-admin-surface-lg rounded-[2rem] p-6">
             <h2 className="text-lg font-semibold text-white">
               Account readiness
             </h2>

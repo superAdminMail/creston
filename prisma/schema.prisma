@@ -34,6 +34,9 @@ model User {
   disposableCheckedAt       DateTime?
   emailVerifiedAt           DateTime?
 
+  isSuspended Boolean   @default(false)
+  suspendedAt DateTime?
+
   isDeleted           Boolean   @default(false)
   deletedAt           DateTime?
   scheduledDeletionAt DateTime?

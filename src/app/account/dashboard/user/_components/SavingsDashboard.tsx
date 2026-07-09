@@ -70,10 +70,8 @@ function SavingsAccountCard({
   return (
     <Card
       className={cn(
-        "h-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 shadow-lg shadow-black/10",
-        isActive
-          ? "bg-white/5"
-          : "bg-white/[0.03] ring-1 ring-white/5 backdrop-blur-sm",
+        "h-full min-w-0 overflow-hidden rounded-[1.75rem] border border-white/10 shadow-sm",
+        isActive ? "bg-white/5" : "bg-white/[0.03] ring-1 ring-white/5",
       )}
     >
       <CardContent className="flex h-full flex-col gap-4 p-4 sm:gap-5 sm:p-5">
@@ -230,8 +228,8 @@ export default function SavingsDashboard({
   ).length;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:gap-8 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-xl lg:flex-row lg:items-end lg:justify-between lg:p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6  sm:gap-8 ">
+      <div className="flex flex-col gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between lg:p-6">
         <div className="min-w-0 space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
             Personal savings accounts
@@ -274,7 +272,7 @@ export default function SavingsDashboard({
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.15),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.15),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-sm">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -291,7 +289,7 @@ export default function SavingsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-sm">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -308,7 +306,7 @@ export default function SavingsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-sm">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -325,7 +323,7 @@ export default function SavingsDashboard({
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
+        <Card className="relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(239,68,68,0.16),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(8,17,37,0.99))] text-white shadow-sm">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-300/50 to-transparent" />
           <CardContent className="space-y-3 p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -344,7 +342,7 @@ export default function SavingsDashboard({
       </div>
 
       {!hasActiveAccounts ? (
-        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center shadow-lg shadow-black/10">
+        <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center shadow-sm">
           <CardContent className="space-y-4 p-6 sm:p-8 lg:p-10">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
               <PiggyBank className="h-6 w-6 text-blue-200" />
@@ -392,7 +390,7 @@ export default function SavingsDashboard({
 
       {closedAccounts.length > 0 ? (
         <section className="space-y-4">
-          <div className="flex flex-col gap-2 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4 shadow-lg shadow-black/10 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="flex flex-col gap-2 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-white sm:text-xl">
                 Closed accounts

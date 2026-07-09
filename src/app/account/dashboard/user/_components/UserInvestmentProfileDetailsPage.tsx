@@ -15,6 +15,11 @@ import {
 
 import type { CurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import { cn } from "@/lib/utils";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../_components/dashboardSurfaces";
+import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
 
 type UserInvestmentProfileDetailsPageProps = {
   profile: CurrentUserInvestmentProfileData;
@@ -31,15 +36,15 @@ function DetailCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 px-4 py-4">
+    <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-4 shadow-sm dark:bg-white/[0.04]">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-blue-300" />
-        <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+        <Icon className="h-4 w-4 text-sky-700 dark:text-sky-300" />
+        <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
           {label}
         </p>
       </div>
 
-      <p className="mt-3 text-sm font-medium leading-6 text-white">
+      <p className="mt-3 text-sm font-medium leading-6 text-slate-950 dark:text-white">
         {value || "Not added yet"}
       </p>
     </div>
@@ -99,16 +104,16 @@ export function UserInvestmentProfileDetailsPage({
         <div>
           <Link
             href="/account/dashboard/user"
-            className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
+            className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to dashboard
           </Link>
 
-          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl">
+          <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
             Investment Profile
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base dark:text-slate-400">
             Review and update your investment profile details for secure
             servicing and account readiness.
           </p>
@@ -123,11 +128,13 @@ export function UserInvestmentProfileDetailsPage({
         </Link>
       </div>
 
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+      <section
+        className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-6 sm:p-8`}
+      >
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-xl font-semibold tracking-[-0.03em] text-white sm:text-2xl">
+              <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 sm:text-2xl dark:text-white">
                 Investment details
               </h2>
 
@@ -135,53 +142,53 @@ export function UserInvestmentProfileDetailsPage({
                 className={cn(
                   "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
                   profile.profileComplete
-                    ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                    : "border border-amber-400/20 bg-amber-400/10 text-amber-300",
+                    ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-700 dark:text-emerald-300"
+                    : "border border-amber-400/20 bg-amber-400/10 text-amber-700 dark:text-amber-300",
                 )}
               >
                 {profile.profileStatusLabel}
               </span>
             </div>
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
               Set-up your investment profile to be ready for secure servicing.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                <ShieldCheck className="h-4 w-4 text-blue-300" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/75 px-3 py-2 text-xs text-slate-700 shadow-sm dark:bg-white/[0.04] dark:text-slate-300">
+                <ShieldCheck className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                 Secure investment profile
               </div>
 
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 text-xs text-slate-300">
-                <FileText className="h-4 w-4 text-blue-300" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-white/75 px-3 py-2 text-xs text-slate-700 shadow-sm dark:bg-white/[0.04] dark:text-slate-300">
+                <FileText className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                 KYC status: {profile.kycStatusLabel}
               </div>
             </div>
           </div>
 
-          <div className="w-full max-w-sm rounded-[1.75rem] border border-white/10 bg-white/[0.02] p-5">
+          <div className="w-full max-w-sm rounded-[1.75rem] border border-border/60 bg-white/75 p-5 shadow-sm dark:bg-white/[0.04]">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.14em] text-sky-700/90 dark:text-sky-300/80">
                   Completion
                 </p>
-                <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-white">
+                <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                   {profile.completionPercent}%
                 </p>
               </div>
 
               <div className="text-right">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.14em] text-sky-700/90 dark:text-sky-300/80">
                   Status
                 </p>
-                <p className="mt-1 text-sm font-medium text-white">
+                <p className="mt-1 text-sm font-medium text-slate-950 dark:text-white">
                   {profile.profileComplete ? "Ready" : "Incomplete"}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 h-2.5 rounded-full bg-white/6">
+            <div className="mt-5 h-2.5 rounded-full bg-slate-200/80 dark:bg-white/6">
               <div
                 className="h-2.5 rounded-full bg-[linear-gradient(90deg,#2563eb_0%,#3b82f6_55%,#60a5fa_100%)] shadow-[0_0_18px_rgba(59,130,246,0.35)]"
                 style={{
@@ -190,7 +197,7 @@ export function UserInvestmentProfileDetailsPage({
               />
             </div>
 
-            <p className="mt-4 text-sm leading-6 text-slate-400">
+            <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
               {profile.profileComplete
                 ? "Your investment profile is fully completed and ready for secure financial servicing."
                 : "Complete the remaining investment fields to prepare your account for verification and investment readiness."}
@@ -200,13 +207,13 @@ export function UserInvestmentProfileDetailsPage({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <DashboardSectionCard className="p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
+            <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                 Investment details
               </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
                 Your investment profile details
               </p>
             </div>
@@ -244,36 +251,38 @@ export function UserInvestmentProfileDetailsPage({
               icon={MapPin}
             />
           </div>
-        </div>
+        </DashboardSectionCard>
 
         <div className="space-y-6">
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6">
-            <h2 className="text-lg font-semibold text-white">Next actions</h2>
+          <section className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-6`}>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+              Next actions
+            </h2>
 
             <div className="mt-5 space-y-3">
               <Link
                 href="/account/dashboard/user/investment-profile/edit"
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-white/75 px-4 py-4 text-sm font-medium text-slate-700 transition hover:border-sky-400/30 hover:bg-sky-50/80 hover:text-slate-950 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
               >
                 Update investment profile
-                <ArrowRight className="h-4 w-4 text-blue-300" />
+                <ArrowRight className="h-4 w-4 text-sky-700 dark:text-sky-300" />
               </Link>
 
               <Link
                 href="/account/dashboard/profile"
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-4 text-sm font-medium text-white transition hover:border-blue-400/25 hover:bg-blue-500/10"
+                className="flex items-center justify-between rounded-xl border border-border/60 bg-white/75 px-4 py-4 text-sm font-medium text-slate-700 transition hover:border-sky-400/30 hover:bg-sky-50/80 hover:text-slate-950 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
               >
                 Review your personal profile
-                <ArrowRight className="h-4 w-4 text-blue-300" />
+                <ArrowRight className="h-4 w-4 text-sky-700 dark:text-sky-300" />
               </Link>
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-white/10 bg-white/[0.02] p-6">
-            <h2 className="text-lg font-semibold text-white">
+          <section className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-6`}>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
               Profile readiness
             </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-400">
+            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
               Review and update your {siteName} investment profile.
             </p>
 
@@ -293,10 +302,10 @@ export function UserInvestmentProfileDetailsPage({
                         />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-slate-950 dark:text-white">
                           {item.title}
                         </p>
-                        <p className="mt-1 text-sm text-slate-300">
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
                           {item.body}
                         </p>
                       </div>

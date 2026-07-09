@@ -1,54 +1,91 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
-function SkeletonBar({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-full bg-white/10 ${className}`} />;
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+  DASHBOARD_TABLE_SHELL_CLASS,
+} from "../../_components/dashboardSurfaces";
+
+function StatSkeleton() {
+  return (
+    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
+      <Skeleton className="h-3 w-20 rounded-full bg-slate-200/80 dark:bg-white/10" />
+      <Skeleton className="mt-3 h-7 w-28 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+      <Skeleton className="mt-3 h-4 w-full rounded-full bg-slate-200/80 dark:bg-white/10" />
+    </div>
+  );
 }
 
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <DashboardSectionCard>
-        <SkeletonBar className="h-4 w-24" />
-        <div className="mt-4 space-y-3">
-          <SkeletonBar className="h-10 w-72 max-w-full" />
-          <SkeletonBar className="h-4 w-full max-w-3xl" />
-          <SkeletonBar className="h-4 w-5/6 max-w-2xl" />
+    <div className="space-y-8">
+      <section className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-4">
+            <Skeleton className="h-4 w-28 rounded-full bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-10 w-full max-w-xl rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-slate-200/80 dark:bg-white/10" />
+          </div>
+
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl">
+            <StatSkeleton />
+            <StatSkeleton />
+          </div>
         </div>
-      </DashboardSectionCard>
+      </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
-          <Card
-            key={index}
-            className="rounded-[1.85rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.98))] shadow-[0_18px_50px_rgba(0,0,0,0.18)]"
-          >
-            <CardContent className="space-y-3 p-5">
-              <SkeletonBar className="h-3 w-32" />
-              <SkeletonBar className="h-8 w-24" />
-              <SkeletonBar className="h-3 w-full" />
-            </CardContent>
-          </Card>
+          <StatSkeleton key={index} />
         ))}
       </section>
 
-      <Card className="rounded-[1.9rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(8,17,37,0.99))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.22)]">
-        <CardContent className="space-y-4 p-5 sm:p-6">
-          <div className="grid gap-4 lg:grid-cols-2">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <div
-                key={index}
-                className="rounded-[1.2rem] border border-white/10 bg-white/[0.03] p-4"
-              >
-                <SkeletonBar className="h-4 w-36" />
-                <SkeletonBar className="mt-3 h-3 w-52 max-w-full" />
-                <SkeletonBar className="mt-2 h-3 w-40 max-w-full" />
-                <SkeletonBar className="mt-4 h-10 w-full" />
-              </div>
-            ))}
+      <section className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5 sm:p-6"}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-32 rounded-full bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-8 w-56 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-slate-200/80 dark:bg-white/10" />
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-32 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-10 w-28 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+          </div>
+        </div>
+
+        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white/90 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="overflow-x-auto">
+            <div className={DASHBOARD_TABLE_SHELL_CLASS + " overflow-hidden"}>
+              <table className="min-w-[960px] w-full text-left">
+                <thead>
+                  <tr className="border-b border-slate-200/80 dark:border-white/10">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <th key={index} className="px-4 py-4">
+                        <Skeleton className="h-3 w-24 rounded-full bg-slate-200/80 dark:bg-white/10" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 8 }).map((_, rowIndex) => (
+                    <tr
+                      key={rowIndex}
+                      className="border-b border-slate-200/80 last:border-b-0 dark:border-white/10"
+                    >
+                      {Array.from({ length: 6 }).map((__, cellIndex) => (
+                        <td key={cellIndex} className="px-4 py-4">
+                          <Skeleton className="h-4 w-full max-w-44 rounded-full bg-slate-200/80 dark:bg-white/10" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

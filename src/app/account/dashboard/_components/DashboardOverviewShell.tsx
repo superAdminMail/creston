@@ -46,6 +46,11 @@ import type {
   DashboardOverviewSpotlight,
   DashboardOverviewStatusItem,
 } from "@/lib/services/dashboard/dashboardOverviewService";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+  DASHBOARD_SECTION_INSET_CLASS,
+} from "./dashboardSurfaces";
 
 const ICON_MAP: Record<DashboardOverviewIconKey, typeof Users> = {
   users: Users,
@@ -71,18 +76,22 @@ function MetricCard({
   const Icon = ICON_MAP[icon];
 
   return (
-    <Card className="border-white/10 bg-[#071120] text-white shadow-[0_10px_30px_rgba(0,0,0,0.18)]">
+    <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-white/55">
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80">
               {title}
             </p>
-            <h3 className="text-2xl font-semibold tracking-tight">{value}</h3>
-            <p className="text-sm text-white/60">{description}</p>
+            <h3 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+              {value}
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {description}
+            </p>
           </div>
 
-          <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 text-[#7cc4f3]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/10 px-3 py-3 text-sky-700 dark:text-sky-200">
             <Icon className="h-5 w-5" />
           </div>
         </div>
@@ -94,14 +103,18 @@ function MetricCard({
 function QuickAction({ title, description, href }: DashboardOverviewLinkCard) {
   return (
     <Link href={href}>
-      <Card className="group h-full border-white/10 bg-[#071120] text-white transition hover:border-[#3c9ee0]/40 hover:bg-[#0a1628]">
+      <Card className="group h-full border-border/60 bg-white/75 text-slate-950 transition hover:border-sky-400/30 hover:bg-white/90 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.06]">
         <CardContent className="flex h-full items-center justify-between gap-4 p-5">
           <div className="space-y-1">
-            <p className="font-medium text-white">{title}</p>
-            <p className="text-sm text-white/60">{description}</p>
+            <p className="font-medium text-slate-950 dark:text-white">
+              {title}
+            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {description}
+            </p>
           </div>
 
-          <div className="rounded-full border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 p-2 text-[#7cc4f3] transition group-hover:translate-x-0.5">
+          <div className="rounded-full border border-sky-400/20 bg-sky-500/10 p-2 text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-200">
             <ArrowRight className="h-4 w-4" />
           </div>
         </CardContent>
@@ -119,11 +132,13 @@ function SectionHeader({
 }) {
   return (
     <div className="space-y-1">
-      <h2 className="text-lg font-semibold tracking-tight text-white">
+      <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
         {title}
       </h2>
       {description ? (
-        <p className="text-sm text-white/60">{description}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          {description}
+        </p>
       ) : null}
     </div>
   );
@@ -138,17 +153,23 @@ function SpotlightCard({
   const Icon = ICON_MAP[icon];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5"}>
       <div className="flex items-center gap-3">
-        <div className="rounded-2xl border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 p-3 text-[#7cc4f3]">
+        <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-3 text-sky-700 dark:text-sky-200">
           <Icon className="h-5 w-5" />
         </div>
         <div>
-          <p className="text-sm font-medium text-white">{title}</p>
-          <p className="text-sm text-white/60">{description}</p>
+          <p className="text-sm font-medium text-slate-950 dark:text-white">
+            {title}
+          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {description}
+          </p>
         </div>
       </div>
-      <p className="mt-5 text-3xl font-semibold">{value}</p>
+      <p className="mt-5 text-3xl font-semibold text-slate-950 dark:text-white">
+        {value}
+      </p>
     </div>
   );
 }
@@ -159,17 +180,17 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
   return (
     <Alert
       variant="default"
-      className={`relative flex flex-col gap-4 overflow-hidden px-4 py-4 !text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] sm:flex-row sm:items-start sm:pr-32 ${
+      className={`relative flex flex-col gap-4 overflow-hidden px-4 py-4 !text-slate-950 shadow-sm sm:flex-row sm:items-start sm:pr-32 dark:!text-white ${
         alert.tone === "critical"
           ? "!border-rose-500/20 !bg-rose-500/10"
-          : "!border-white/10 !bg-white/[0.03]"
+          : "!border-border/60 !bg-white/75 dark:!bg-white/[0.04]"
       }`}
     >
       <div
         className={`rounded-2xl border p-3 ${
           alert.tone === "critical"
             ? "border-rose-500/20 bg-rose-500/10 text-rose-200"
-            : "border-[#3c9ee0]/20 bg-[#3c9ee0]/10 text-[#7cc4f3]"
+            : "border-sky-400/20 bg-sky-500/10 text-sky-700 dark:text-sky-200"
         }`}
       >
         <Icon className="h-5 w-5" />
@@ -177,21 +198,21 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
 
       <div className="min-w-0 flex-1 space-y-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-          <AlertTitle className="text-sm font-semibold !text-white">
+          <AlertTitle className="text-sm font-semibold !text-slate-950 dark:!text-white">
             {alert.title}
           </AlertTitle>
           <Badge
             className={`border ${
               alert.tone === "critical"
                 ? "border-rose-500/25 bg-rose-500/10 text-rose-200"
-                : "border-amber-500/25 bg-amber-500/10 text-amber-100"
+                : "border-amber-500/25 bg-amber-500/10 text-amber-900 dark:text-amber-100"
             }`}
           >
             {alert.countLabel}
           </Badge>
         </div>
 
-        <AlertDescription className="text-sm leading-6 !text-white/65">
+        <AlertDescription className="text-sm leading-6 !text-slate-600 dark:!text-slate-300">
           {alert.description}
         </AlertDescription>
       </div>
@@ -204,7 +225,7 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
           className={
             alert.tone === "critical"
               ? "border-rose-500/25 bg-rose-500/10 text-rose-100 hover:bg-rose-500/15"
-              : "border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+              : "border-border/60 bg-white text-slate-950 hover:bg-white/90 dark:bg-white/[0.04] dark:text-white dark:hover:bg-white/[0.08]"
           }
         >
           <Link href={alert.href}>{alert.actionLabel}</Link>
@@ -237,19 +258,23 @@ function ActivityCard({
   status,
 }: DashboardOverviewActivity) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " flex items-start justify-between gap-4 p-4"}>
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-full bg-[#3c9ee0]/12 p-2 text-[#7cc4f3]">
+        <div className="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-700 dark:text-sky-200">
           <ActivityIcon status={status} />
         </div>
 
         <div className="space-y-1">
-          <p className="font-medium text-white">{title}</p>
-          <p className="text-sm text-white/60">{detail}</p>
+          <p className="font-medium text-slate-950 dark:text-white">
+            {title}
+          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {detail}
+          </p>
         </div>
       </div>
 
-      <p className="whitespace-nowrap text-xs text-white/45">{time}</p>
+      <p className="whitespace-nowrap text-xs text-slate-500">{time}</p>
     </div>
   );
 }
@@ -272,9 +297,11 @@ function StatusList({ items }: { items: DashboardOverviewStatusItem[] }) {
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+          className="flex items-center justify-between rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:bg-white/[0.04]"
         >
-          <p className="text-sm text-white/75">{item.label}</p>
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            {item.label}
+          </p>
           <Badge className={getStatusBadgeClass(item.tone)}>{item.value}</Badge>
         </div>
       ))}
@@ -288,13 +315,13 @@ function ModuleLink({ label, href, icon }: DashboardOverviewModuleLink) {
   return (
     <Link
       href={href}
-      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/80 transition hover:border-[#3c9ee0]/35 hover:bg-white/[0.05]"
+      className="flex items-center justify-between rounded-2xl border border-border/60 bg-white/75 px-4 py-3 text-sm text-slate-700 transition hover:border-sky-400/30 hover:bg-white/90 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.06]"
     >
       <span className="flex items-center gap-3">
-        <Icon className="h-4 w-4 text-[#7cc4f3]" />
+        <Icon className="h-4 w-4 text-sky-700 dark:text-sky-200" />
         {label}
       </span>
-      <ArrowRight className="h-4 w-4 text-white/40" />
+      <ArrowRight className="h-4 w-4 text-slate-400 dark:text-slate-500" />
     </Link>
   );
 }
@@ -307,17 +334,23 @@ function CtaCard({
   label,
 }: DashboardOverviewCta) {
   return (
-    <Card className="overflow-hidden border border-[#3c9ee0]/20 bg-[linear-gradient(180deg,rgba(60,158,224,0.12),rgba(7,17,32,1))] text-white">
+    <Card className={DASHBOARD_SECTION_INSET_CLASS + " overflow-hidden"}>
       <CardContent className="space-y-4 p-5">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-[#9fd7fb]">{eyebrow}</p>
-          <h3 className="text-xl font-semibold tracking-tight">{title}</h3>
-          <p className="text-sm leading-6 text-white/70">{description}</p>
+          <p className="text-sm font-medium text-sky-700 dark:text-sky-300">
+            {eyebrow}
+          </p>
+          <h3 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            {title}
+          </h3>
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+            {description}
+          </p>
         </div>
 
         <Button
           asChild
-          className="w-full bg-[#3c9ee0] text-white hover:bg-[#3692d0]"
+          className="w-full bg-sky-700 text-white hover:bg-sky-800"
         >
           <Link href={href}>{label}</Link>
         </Button>
@@ -359,20 +392,25 @@ export function DashboardOverviewShell({
   cta,
 }: DashboardOverviewData) {
   return (
-    <div className="min-h-screen bg-card">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-3xl border border-border/60 bg-card p-6 text-white shadow-sm md:p-8">
+    <div className="space-y-8">
+      <div
+        className={
+          DASHBOARD_PAGE_PANEL_CLASS +
+          " mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8"
+        }
+      >
+        <section className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <Badge className="border border-[#3c9ee0]/25 bg-[#3c9ee0]/10 px-3 py-1 text-[#8acdfa] hover:bg-[#3c9ee0]/10">
+              <Badge className="border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-sky-700 hover:bg-sky-500/10 dark:text-sky-200">
                 {badgeLabel}
               </Badge>
 
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
                   {title}
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-white/70 md:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400 md:text-base">
                   {description}
                 </p>
               </div>
@@ -382,12 +420,12 @@ export function DashboardOverviewShell({
               {heroHighlights.map((highlight) => (
                 <div
                   key={highlight.label}
-                  className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.12)] backdrop-blur-sm sm:p-5"
+                  className="min-w-0 rounded-2xl border border-border/60 bg-white/75 p-4 shadow-sm dark:bg-white/[0.04] sm:p-5"
                 >
-                  <p className="text-xs uppercase tracking-[0.22em] text-white/50">
+                  <p className="text-xs uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80">
                     {highlight.label}
                   </p>
-                  <p className="mt-2 break-words text-xl font-semibold leading-tight sm:text-2xl">
+                  <p className="mt-2 break-words text-xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-2xl">
                     {highlight.kind === "currency"
                       ? formatCompactUsd(highlight.value)
                       : new Intl.NumberFormat("en-US").format(highlight.value)}
@@ -423,7 +461,7 @@ export function DashboardOverviewShell({
             <section className="space-y-3">
               <SectionHeader
                 title="Quick actions"
-                description="Jump into the highest-impact workflows from this dashboard."
+                description="Move directly into the highest-impact workflows from this workspace."
               />
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {quickActions.map((action) => (
@@ -433,10 +471,12 @@ export function DashboardOverviewShell({
             </section>
 
             <section>
-              <Card className="border-white/10 bg-[#071120] text-white">
+              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{spotlightTitle}</CardTitle>
-                  <CardDescription className="text-white/60">
+                  <CardTitle className="text-lg text-slate-950 dark:text-white">
+                    {spotlightTitle}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600 dark:text-slate-400">
                     {spotlightDescription}
                   </CardDescription>
                 </CardHeader>
@@ -451,10 +491,12 @@ export function DashboardOverviewShell({
             </section>
 
             <section>
-              <Card className="border-white/10 bg-[#071120] text-white">
+              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{activityTitle}</CardTitle>
-                  <CardDescription className="text-white/60">
+                  <CardTitle className="text-lg text-slate-950 dark:text-white">
+                    {activityTitle}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600 dark:text-slate-400">
                     {activityDescription}
                   </CardDescription>
                 </CardHeader>
@@ -472,10 +514,12 @@ export function DashboardOverviewShell({
 
           <div className="space-y-6 xl:col-span-4">
             <section>
-              <Card className="border-white/10 bg-[#071120] text-white">
+              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{statusTitle}</CardTitle>
-                  <CardDescription className="text-white/60">
+                  <CardTitle className="text-lg text-slate-950 dark:text-white">
+                    {statusTitle}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600 dark:text-slate-400">
                     {statusDescription}
                   </CardDescription>
                 </CardHeader>
@@ -484,10 +528,12 @@ export function DashboardOverviewShell({
             </section>
 
             <section>
-              <Card className="border-white/10 bg-[#071120] text-white">
+              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{modulesTitle}</CardTitle>
-                  <CardDescription className="text-white/60">
+                  <CardTitle className="text-lg text-slate-950 dark:text-white">
+                    {modulesTitle}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600 dark:text-slate-400">
                     {modulesDescription}
                   </CardDescription>
                 </CardHeader>

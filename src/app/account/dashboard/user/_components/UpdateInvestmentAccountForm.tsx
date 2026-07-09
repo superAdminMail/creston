@@ -122,8 +122,8 @@ export function UpdateInvestmentAccountForm({
                         onClick={() => field.onChange(option.value)}
                         disabled={isPending}
                         className={cn(
-                          "relative rounded-2xl border p-4 text-left transition-all duration-200",
-                          "hover:border-white/30 hover:bg-white/5 active:scale-[0.98] disabled:opacity-60",
+                          "relative rounded-2xl border p-4 text-left transition-colors transition-shadow duration-200",
+                          "hover:border-white/30 hover:bg-white/5 disabled:opacity-60",
                           isSelected
                             ? "border-[var(--primary)] bg-[var(--primary)]/10"
                             : "border-white/10",

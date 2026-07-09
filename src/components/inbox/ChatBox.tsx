@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { ChatMessage } from "@/lib/types/chat.types";
 import ChatHeader from "./ChatHeader";
 import MessageList from "./MessageList";
@@ -23,6 +24,7 @@ type Props = {
   incomingSenderTypes?: SenderType[];
   canReply?: boolean;
   sendLabel?: string;
+  fillViewport?: boolean;
   selfUserId?: string | null;
   senderLookup?: Record<
     string,
@@ -64,6 +66,7 @@ export default function ChatBox({
   incomingSenderTypes = [SenderType.SUPPORT, SenderType.SYSTEM],
   canReply = true,
   sendLabel,
+  fillViewport = false,
   selfUserId = null,
   senderLookup,
   sendAction,
@@ -152,8 +155,14 @@ export default function ChatBox({
   });
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-      <div className="shrink-0 border-b border-border/60 bg-background">
+    <div
+      className={cn(
+        "flex h-full min-h-0 w-full max-w-4xl mx-auto flex-col overflow-hidden rounded-[1.9rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-950/92 dark:text-white dark:shadow-[0_24px_60px_rgba(2,6,23,0.25)]",
+        fillViewport &&
+          "h-[calc(100dvh-9rem)] max-h-[calc(100dvh-9rem)]",
+      )}
+    >
+      <div className="shrink-0 rounded-t-[1.9rem] border-b border-slate-200/80 bg-white/75 dark:border-white/10 dark:bg-slate-950/92">
         <ChatHeader
           title={title}
           subtitle={subtitle}
@@ -173,7 +182,7 @@ export default function ChatBox({
       </div>
 
       {canReply ? (
-        <div className="shrink-0 border-t border-border/60 bg-background">
+        <div className="shrink-0 rounded-b-[1.9rem] border-t border-slate-200/80 bg-white/75 dark:border-white/10 dark:bg-slate-950/92">
           <ChatInput
             conversationId={conversationId}
             senderType={viewerSenderType}

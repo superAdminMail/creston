@@ -30,6 +30,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../../_components/dashboardSurfaces";
 import { formatUsd } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 
@@ -62,17 +63,23 @@ function StatCard({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-sm text-slate-400">{title}</p>
-            <h3 className="text-2xl font-semibold text-white">{value}</h3>
-            <p className="text-xs leading-6 text-slate-500">{hint}</p>
+    <Card className={surfaceCardClassName}>
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              {title}
+            </p>
+            <h3 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+              {value}
+            </h3>
+            <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
+              {hint}
+            </p>
           </div>
 
-          <div className="flex h-11 w-11 px-3 py-3 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
-            <Icon className="h-5 w-5 text-[#7dc5ff]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-200/70 bg-sky-50 shadow-sm sm:h-11 sm:w-11 dark:border-sky-400/20 dark:bg-sky-400/10">
+            <Icon className="h-5 w-5 text-sky-700 dark:text-sky-300" />
           </div>
         </div>
       </CardContent>
@@ -92,23 +99,30 @@ function ActivityRow({
   const Icon = isCredit ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-[1.4rem] border border-border/60 bg-white/75 px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/[0.04]">
       <div className="flex items-start gap-3">
         <div
           className={cn(
-            "mt-0.5 flex h-10 w-10 px-3 py-3 items-center justify-center rounded-2xl border",
+            "mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl border px-3 py-3 shadow-sm",
             isCredit
-              ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
-              : "border-rose-400/20 bg-rose-400/10 text-rose-200",
+              ? "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200"
+              : "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200",
           )}
         >
           <Icon className="h-4 w-4" />
         </div>
 
         <div>
-          <p className="text-sm font-medium text-white">{title}</p>
-          <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-          <p className="mt-1 truncate text-xs text-slate-500" title={reference}>
+          <p className="text-sm font-medium text-slate-950 dark:text-white">
+            {title}
+          </p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            {subtitle}
+          </p>
+          <p
+            className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400"
+            title={reference}
+          >
             {dateLabel} | {formatReferenceLabel(reference)}
           </p>
         </div>
@@ -117,7 +131,7 @@ function ActivityRow({
       <span
         className={cn(
           "text-sm font-medium",
-          isCredit ? "text-emerald-300" : "text-rose-300",
+          isCredit ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300",
         )}
       >
         {isCredit ? "+" : "-"}
@@ -145,47 +159,55 @@ const allocationChartConfig = {
   },
 };
 
+const surfaceCardClassName = cn(
+  DASHBOARD_PAGE_SURFACE_CLASS,
+  "rounded-[1.75rem] shadow-sm",
+);
+
+const softPillClassName =
+  "inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100";
+
 export function UserPerformancePageClient({ data }: Props) {
   const hasAssets = data.assets.length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-10 md:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 lg:px-8">
       <Tabs defaultValue="performance" className="space-y-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#3c9ee0]/20 bg-[#3c9ee0]/10 px-3 py-1 text-xs font-medium text-[#8fd0ff]">
-              <span className="h-2 w-2 rounded-full bg-[#3c9ee0]" />
+            <div className={softPillClassName}>
+              <span className="h-2 w-2 rounded-full bg-sky-500" />
               Portfolio intelligence
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-2xl font-semibold text-white sm:text-3xl">
-                Performance History
+              <h1 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-3xl dark:text-white">
+                Investment performance
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+              <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base dark:text-slate-400">
                 Track live portfolio value, realized gains, and historical
                 investment activity from your confirmed orders.
               </p>
             </div>
           </div>
 
-          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-1 text-slate-400 sm:inline-flex sm:w-auto sm:grid-cols-none sm:flex-row sm:items-center">
+          <TabsList className="grid w-full grid-cols-2 gap-2 rounded-[1.5rem] border border-border/60 bg-white/75 p-1 text-slate-400 shadow-sm sm:inline-flex sm:w-auto sm:grid-cols-none sm:flex-row sm:items-center dark:border-white/10 dark:bg-white/[0.04]">
             <TabsTrigger
               value="performance"
-              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm"
+              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-500 transition-colors transition-shadow duration-200 hover:text-slate-950 data-active:border-sky-200/70 data-active:bg-sky-50 data-active:text-sky-800 sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm dark:text-slate-400 dark:hover:text-white dark:data-active:border-sky-400/20 dark:data-active:bg-sky-400/10 dark:data-active:text-sky-100"
             >
               <div className="flex items-center gap-2.5">
-                <TrendingUp className="h-4.5 w-4.5 text-[#8fd0ff]" />
+                <TrendingUp className="h-4.5 w-4.5 text-sky-700 dark:text-sky-300" />
                 <span>Performance</span>
               </div>
             </TabsTrigger>
 
             <TabsTrigger
               value="analytics"
-              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-400 transition-all duration-200 hover:text-white data-active:border-white/10 data-active:bg-[#0d1a2c] data-active:text-white sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm"
+              className="h-10 w-full justify-center rounded-xl border border-transparent px-3 text-xs font-medium text-slate-500 transition-colors transition-shadow duration-200 hover:text-slate-950 data-active:border-sky-200/70 data-active:bg-sky-50 data-active:text-sky-800 sm:h-11 sm:w-[172px] sm:justify-start sm:px-4 sm:text-sm dark:text-slate-400 dark:hover:text-white dark:data-active:border-sky-400/20 dark:data-active:bg-sky-400/10 dark:data-active:text-sky-100"
             >
               <div className="flex items-center gap-2.5">
-                <BarChart3 className="h-4.5 w-4.5 text-emerald-300" />
+                <BarChart3 className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-300" />
                 <span>Analytics</span>
               </div>
             </TabsTrigger>
@@ -193,28 +215,33 @@ export function UserPerformancePageClient({ data }: Props) {
         </div>
 
         <TabsContent value="performance" className="mt-0 space-y-6">
-          <Card className="overflow-hidden rounded-[1.75rem] border border-blue-400/20 bg-[linear-gradient(135deg,rgba(10,31,68,0.88),rgba(7,18,38,0.98))]">
+          <Card
+            className={cn(
+              surfaceCardClassName,
+              "overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.94))] dark:bg-[linear-gradient(135deg,rgba(10,31,68,0.88),rgba(7,18,38,0.98))]",
+            )}
+          >
             <CardContent className="relative p-6 sm:p-7">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.18),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.10),transparent_28%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.08),transparent_28%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.18),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(34,197,94,0.10),transparent_28%)]" />
 
               <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                 <div className="space-y-3">
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     Total Portfolio Value
                   </p>
-                  <h2 className="text-3xl font-bold text-white sm:text-4xl">
+                  <h2 className="text-3xl font-bold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
                     {formatUsd(data.summary.totalPortfolioValue)}
                   </h2>
                   <div className="flex flex-wrap items-center gap-3 text-sm">
-                    <span className="font-medium text-emerald-300">
+                    <span className="font-medium text-emerald-700 dark:text-emerald-300">
                       {formatUsd(data.summary.totalProfit)}
                     </span>
                     <span
                       className={cn(
                         "font-medium",
                         data.summary.changePercent >= 0
-                          ? "text-emerald-300"
-                          : "text-rose-300",
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-rose-700 dark:text-rose-300",
                       )}
                     >
                       {formatPercent(data.summary.changePercent)}
@@ -222,30 +249,30 @@ export function UserPerformancePageClient({ data }: Props) {
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                       Invested capital
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-white">
+                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
                       {formatUsd(data.summary.totalInvestedCapital)}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                  <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                       Active orders
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-white">
+                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
                       {data.summary.activeOrdersCount}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                  <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                       Matured orders
                     </p>
-                    <p className="mt-2 text-lg font-semibold text-white">
+                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
                       {data.summary.maturedOrdersCount}
                     </p>
                   </div>
@@ -254,7 +281,7 @@ export function UserPerformancePageClient({ data }: Props) {
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Profitable assets"
               value={String(data.summary.profitableAssetsCount)}
@@ -275,21 +302,21 @@ export function UserPerformancePageClient({ data }: Props) {
             />
           </div>
 
-          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <Card className={surfaceCardClassName}>
             <CardContent className="space-y-5 p-6">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    Referral performance
+                  <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                    Referral overview
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Track your referral code, successful referrals, and rewards
                     credited to your account.
                   </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                   title="Referral code"
                   value={data.referral.referralCode ?? "Not generated"}
@@ -318,25 +345,25 @@ export function UserPerformancePageClient({ data }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <Card className={surfaceCardClassName}>
             <CardContent className="space-y-5 p-6">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    Welcome bonus
+                  <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                    Promotional bonus
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Track your reserved platform bonus and the action needed to
                     unlock it.
                   </p>
                 </div>
 
-                <div className="rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-200">
+                <div className={softPillClassName}>
                   {data.welcomeBonus.nextActionLabel}
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard
                   title="Reserved bonus"
                   value={formatUsd(data.welcomeBonus.pendingAmount)}
@@ -366,27 +393,32 @@ export function UserPerformancePageClient({ data }: Props) {
           </Card>
 
           {hasAssets ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {data.assets.map((asset) => (
                 <Card
                   key={asset.orderId}
-                  className="rounded-[1.75rem] border border-white/10 bg-white/5 transition hover:border-white/20"
+                  className={cn(
+                    surfaceCardClassName,
+                    "transition hover:border-sky-300/60 hover:bg-sky-50/60 dark:hover:bg-white/[0.05]",
+                  )}
                 >
-                  <CardContent className="space-y-4 p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-1">
-                        <p className="text-sm text-slate-400">{asset.name}</p>
-                        <p className="text-xs text-slate-500">
+                  <CardContent className="space-y-4 p-4 sm:p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-sm font-medium text-slate-950 dark:text-white">
+                          {asset.name}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {asset.planName} | {asset.typeLabel}
                         </p>
                       </div>
 
                       <span
                         className={cn(
-                          "inline-flex rounded-full border px-3 py-1 text-xs font-medium",
+                          "inline-flex w-fit self-start rounded-full border px-3 py-1 text-xs font-medium shadow-sm",
                           asset.model === "FIXED"
-                            ? "border-blue-400/20 bg-blue-400/10 text-blue-200"
-                            : "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+                            ? "border-sky-200/80 bg-sky-50 text-sky-800 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100"
+                            : "border-emerald-200/70 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100",
                         )}
                       >
                         {asset.model}
@@ -394,34 +426,34 @@ export function UserPerformancePageClient({ data }: Props) {
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-xl font-semibold text-white">
+                      <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                         {formatUsd(asset.value)}
                       </h3>
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
                         Principal {formatUsd(asset.principal)}
                       </p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                      <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                           Realized gain
                         </p>
-                        <p className="mt-2 text-sm font-medium text-white">
+                        <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                           {formatUsd(asset.profit)}
                         </p>
                       </div>
 
-                      <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                      <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                        <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                           Return
                         </p>
                         <p
                           className={cn(
                             "mt-2 text-sm font-medium",
                             asset.profitPercent >= 0
-                              ? "text-emerald-300"
-                              : "text-rose-300",
+                              ? "text-emerald-700 dark:text-emerald-300"
+                              : "text-rose-700 dark:text-rose-300",
                           )}
                         >
                           {formatPercent(asset.profitPercent)}
@@ -429,13 +461,13 @@ export function UserPerformancePageClient({ data }: Props) {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <span>{asset.periodLabel}</span>
-                      <span className="text-slate-600">|</span>
+                      <span className="text-slate-300 dark:text-slate-600">|</span>
                       <span>{asset.isMatured ? "Matured" : "Active"}</span>
                       {asset.symbol ? (
                         <>
-                          <span className="text-slate-600">|</span>
+                          <span className="text-slate-300 dark:text-slate-600">|</span>
                           <span>{asset.symbol}</span>
                         </>
                       ) : null}
@@ -445,15 +477,15 @@ export function UserPerformancePageClient({ data }: Props) {
               ))}
             </div>
           ) : (
-            <Card className="rounded-[1.75rem] border border-white/10 bg-white/5 text-center">
+            <Card className={cn(surfaceCardClassName, "text-center")}>
               <CardContent className="space-y-3 p-8">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-400/20 bg-blue-400/10">
-                  <TrendingUp className="h-6 w-6 text-[#8fd0ff]" />
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-200/70 bg-sky-50 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
+                  <TrendingUp className="h-6 w-6 text-sky-700 dark:text-sky-300" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                   No confirmed investments yet
                 </h3>
-                <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
+                <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
                   Once your investment orders are confirmed, this page will show
                   live valuation, realized gains, and performance activity from
                   the database.
@@ -462,13 +494,13 @@ export function UserPerformancePageClient({ data }: Props) {
             </Card>
           )}
 
-          <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+          <Card className={surfaceCardClassName}>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="text-lg font-semibold text-white">
-                  Recent Activity
+                <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+                  Recent activity
                 </h3>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   Latest investment orders, profit postings, and withdrawal
                   events tied to your portfolio.
                 </p>
@@ -480,7 +512,7 @@ export function UserPerformancePageClient({ data }: Props) {
                     <ActivityRow key={item.id} {...item} />
                   ))
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-5 text-sm text-slate-400">
+                  <div className="rounded-2xl border border-dashed border-border/60 bg-white/75 px-4 py-5 text-sm text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
                     No performance activity has been recorded yet.
                   </div>
                 )}
@@ -512,13 +544,13 @@ export function UserPerformancePageClient({ data }: Props) {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-            <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+            <Card className={surfaceCardClassName}>
               <CardContent className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                     Capital vs realized profit
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Six-month view of confirmed investment capital and realized
                     profit recorded in the ledger.
                   </p>
@@ -614,13 +646,13 @@ export function UserPerformancePageClient({ data }: Props) {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[1.75rem] border border-white/10 bg-white/5">
+            <Card className={surfaceCardClassName}>
               <CardContent className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                     Asset allocation
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     Current value by asset using confirmed orders and the latest
                     available valuation data.
                   </p>

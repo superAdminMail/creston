@@ -1,24 +1,28 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../_components/dashboardSurfaces";
 
 function NotificationsHeaderSkeleton() {
   return (
-    <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
+    <div className={`${DASHBOARD_PAGE_PANEL_CLASS} rounded-[1.8rem] p-6`}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <Skeleton className="h-3.5 w-32 bg-white/10" />
+          <Skeleton className="h-3.5 w-32 bg-slate-200/80 dark:bg-white/10" />
           <div className="space-y-3">
-            <Skeleton className="h-9 w-[17rem] bg-white/10" />
-            <Skeleton className="h-5 w-[31rem] max-w-full bg-white/10" />
+            <Skeleton className="h-9 w-[17rem] bg-slate-200/80 dark:bg-white/10" />
+            <Skeleton className="h-5 w-[17rem] max-w-full bg-slate-200/80 dark:bg-white/10" />
           </div>
         </div>
 
-        <Skeleton className="h-11 w-40 rounded-2xl bg-white/10" />
+        <Skeleton className="h-11 w-24 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <Skeleton className="h-[92px] rounded-2xl bg-white/10" />
-        <Skeleton className="h-[92px] rounded-2xl bg-white/10" />
-        <Skeleton className="h-[92px] rounded-2xl bg-white/10" />
+        <Skeleton className="h-[92px] rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+        <Skeleton className="h-[92px] rounded-2xl bg-slate-200/80 dark:bg-white/10" />
+        <Skeleton className="h-[92px] rounded-2xl bg-slate-200/80 dark:bg-white/10" />
       </div>
     </div>
   );
@@ -26,16 +30,18 @@ function NotificationsHeaderSkeleton() {
 
 function NotificationsToolbarSkeleton() {
   return (
-    <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.25)] sm:p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-3 py-2">
+    <div
+      className={`${DASHBOARD_PAGE_PANEL_CLASS} rounded-[1.8rem] p-3 sm:p-4`}
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white/75 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-4 w-4 rounded-sm bg-white/10" />
-          <Skeleton className="h-3.5 w-44 bg-white/10" />
+          <Skeleton className="h-4 w-4 rounded-sm bg-slate-200/80 dark:bg-white/10" />
+          <Skeleton className="h-3.5 w-44 bg-slate-200/80 dark:bg-white/10" />
         </div>
 
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-24 rounded-full bg-white/10" />
-          <Skeleton className="h-8 w-24 rounded-full bg-white/10" />
+          <Skeleton className="h-8 w-24 rounded-full bg-slate-200/80 dark:bg-white/10" />
+          <Skeleton className="h-8 w-24 rounded-full bg-slate-200/80 dark:bg-white/10" />
         </div>
       </div>
 
@@ -43,24 +49,24 @@ function NotificationsToolbarSkeleton() {
         {Array.from({ length: 6 }).map((_, index) => (
           <div
             key={index}
-            className="flex w-full items-start gap-3 rounded-[20px] border border-white/10 bg-white/[0.025] px-3 py-3.5 sm:px-4"
+            className={`${DASHBOARD_PAGE_SURFACE_CLASS} flex w-full items-start gap-3 rounded-[20px] px-3 py-3.5 sm:px-4`}
           >
-            <Skeleton className="mt-0.5 h-4 w-4 rounded-sm bg-white/10" />
+            <Skeleton className="mt-0.5 h-4 w-4 rounded-sm bg-slate-200/80 dark:bg-white/10" />
 
-            <Skeleton className="mt-0.5 h-10 w-10 shrink-0 rounded-2xl bg-white/10" />
+            <Skeleton className="mt-0.5 h-10 w-10 shrink-0 rounded-2xl bg-slate-200/80 dark:bg-white/10" />
 
             <div className="min-w-0 flex-1 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <Skeleton className="h-4 w-40 bg-white/10" />
-                <Skeleton className="h-3.5 w-24 bg-white/10" />
+                <Skeleton className="h-4 w-40 bg-slate-200/80 dark:bg-white/10" />
+                <Skeleton className="h-3.5 w-24 bg-slate-200/80 dark:bg-white/10" />
               </div>
 
-              <Skeleton className="h-4 w-full bg-white/10" />
-              <Skeleton className="h-4 w-11/12 bg-white/10" />
+              <Skeleton className="h-4 w-full bg-slate-200/80 dark:bg-white/10" />
+              <Skeleton className="h-4 w-11/12 bg-slate-200/80 dark:bg-white/10" />
 
               <div className="flex items-center justify-between">
-                <Skeleton className="h-3.5 w-28 bg-white/10" />
-                <Skeleton className="h-3.5 w-20 bg-white/10" />
+                <Skeleton className="h-3.5 w-28 bg-slate-200/80 dark:bg-white/10" />
+                <Skeleton className="h-3.5 w-20 bg-slate-200/80 dark:bg-white/10" />
               </div>
             </div>
           </div>
@@ -76,7 +82,7 @@ export default function Loading() {
       <NotificationsHeaderSkeleton />
       <NotificationsToolbarSkeleton />
       <div className="flex justify-end">
-        <Skeleton className="h-4 w-32 bg-white/10" />
+        <Skeleton className="h-4 w-32 bg-slate-200/80 dark:bg-white/10" />
       </div>
     </div>
   );

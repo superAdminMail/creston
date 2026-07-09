@@ -11,6 +11,7 @@ export default async function AdminSavingsAccountsPage() {
       title="Savings Accounts"
       description="Review saver accounts, product alignment, and account status."
       collection={collection}
+      showTitleIcon={false}
     />
   );
 }

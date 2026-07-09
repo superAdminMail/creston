@@ -13,14 +13,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormFieldWrapper } from "@/components/ui/form-field-wrapper";
 import { UploadButton } from "@/utils/uploadthing";
+import { cn } from "@/lib/utils";
 import { getUserInitials } from "@/lib/User-Initials/user";
 import {
   updateUserSchema,
   updateUserSchemaType,
 } from "@/lib/zodValidations/user";
-import { deleteProfileAvatarAction, updateUserProfile } from "@/actions/auth/user";
+import {
+  deleteProfileAvatarAction,
+  updateUserProfile,
+} from "@/actions/auth/user";
 import { type UserDTO } from "@/lib/types";
 import { CURRENT_USER_QUERY_KEY } from "@/stores/useCurrentUserQuery";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
 
 type Props = {
   userData: UserDTO;
@@ -74,22 +79,25 @@ export default function ProfileForm({ userData }: Props) {
 
       const nextProfileAvatar = form.getValues("profileAvatar");
 
-      queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
-        const base = current ?? userData;
+      queryClient.setQueryData<UserDTO | null>(
+        CURRENT_USER_QUERY_KEY,
+        (current) => {
+          const base = current ?? userData;
 
-        return {
-          ...base,
-          name: values.name ?? base?.name ?? null,
-          username: values.username ?? base?.username ?? null,
-          image: base?.image ?? null,
-          profileAvatar: nextProfileAvatar
-            ? {
-                url: nextProfileAvatar.url,
-                key: nextProfileAvatar.key,
-              }
-            : base?.profileAvatar ?? null,
-        };
-      });
+          return {
+            ...base,
+            name: values.name ?? base?.name ?? null,
+            username: values.username ?? base?.username ?? null,
+            image: base?.image ?? null,
+            profileAvatar: nextProfileAvatar
+              ? {
+                  url: nextProfileAvatar.url,
+                  key: nextProfileAvatar.key,
+                }
+              : (base?.profileAvatar ?? null),
+          };
+        },
+      );
       void queryClient.invalidateQueries({
         queryKey: CURRENT_USER_QUERY_KEY,
       });
@@ -111,15 +119,18 @@ export default function ProfileForm({ userData }: Props) {
       await deleteProfileAvatarAction();
       setValue("profileAvatar", null, { shouldDirty: true });
 
-      queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
-        const base = current ?? userData;
+      queryClient.setQueryData<UserDTO | null>(
+        CURRENT_USER_QUERY_KEY,
+        (current) => {
+          const base = current ?? userData;
 
-        return {
-          ...base,
-          image: base?.image ?? null,
-          profileAvatar: null,
-        };
-      });
+          return {
+            ...base,
+            image: base?.image ?? null,
+            profileAvatar: null,
+          };
+        },
+      );
       void queryClient.invalidateQueries({
         queryKey: CURRENT_USER_QUERY_KEY,
       });
@@ -147,26 +158,33 @@ export default function ProfileForm({ userData }: Props) {
   });
 
   return (
-    <Card>
-      <CardHeader className="flex items-center justify-between">
-        <CardTitle>Personal Information</CardTitle>
+    <Card
+      className={cn(
+        DASHBOARD_PAGE_SURFACE_CLASS,
+        "overflow-hidden rounded-[1.9rem]",
+      )}
+    >
+      <CardHeader className="flex items-center justify-between border-b border-slate-200/70 px-7 py-6 dark:border-white/10">
+        <CardTitle className="text-slate-950 dark:text-white">
+          Personal Information
+        </CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <section className="border-t pt-6">
-            <div className="flex flex-col items-center gap-4">
+      <CardContent className="p-7 sm:p-8 lg:p-9">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-7">
+          <section className="dark:border-white/10">
+            <div className="flex flex-col items-center gap-5">
               <div className="relative h-32 w-32">
                 {avatar ? (
                   <Image
                     src={avatar}
                     alt="Profile image"
                     fill
-                    className="rounded-full border object-cover"
+                    className="rounded-full border border-slate-200/80 object-cover dark:border-white/10"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full border text-sm text-muted-foreground">
-                    <div className="text-xl font-semibold uppercase">
+                  <div className="flex h-full w-full items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                    <div className="text-xl font-semibold uppercase text-slate-950 dark:text-white">
                       {initials}
                     </div>
                   </div>
@@ -198,18 +216,21 @@ export default function ProfileForm({ userData }: Props) {
                       return;
                     }
 
-                    queryClient.setQueryData<UserDTO | null>(CURRENT_USER_QUERY_KEY, (current) => {
-                      const base = current ?? userData;
+                    queryClient.setQueryData<UserDTO | null>(
+                      CURRENT_USER_QUERY_KEY,
+                      (current) => {
+                        const base = current ?? userData;
 
-                      return {
-                        ...base,
-                        image: base?.image ?? null,
-                        profileAvatar: {
-                          url: file.url,
-                          key: file.key,
-                        },
-                      };
-                    });
+                        return {
+                          ...base,
+                          image: base?.image ?? null,
+                          profileAvatar: {
+                            url: file.url,
+                            key: file.key,
+                          },
+                        };
+                      },
+                    );
                     void queryClient.invalidateQueries({
                       queryKey: CURRENT_USER_QUERY_KEY,
                     });
@@ -223,22 +244,27 @@ export default function ProfileForm({ userData }: Props) {
                     ut-button:!gap-2
                     ut-button:!rounded-full
                     ut-button:!border
-                    ut-button:!border-blue-300/30
-                    ut-button:!bg-slate-950
+                    ut-button:!border-border/60
+                    ut-button:!bg-white/95
                     ut-button:!px-5
                     ut-button:!py-2.5
                     ut-button:!text-sm
                     ut-button:!font-semibold
-                    ut-button:!text-white
-                    ut-button:!shadow-[0_12px_28px_rgba(2,6,23,0.42)]
+                    ut-button:!text-slate-950
+                    ut-button:!shadow-[0_12px_28px_rgba(15,23,42,0.12)]
                     ut-button:!ring-1
                     ut-button:!ring-inset
-                    ut-button:!ring-white/10
+                    ut-button:!ring-slate-900/5
                     ut-button:transition
                     ut-button:duration-200
                     hover:ut-button:!-translate-y-0.5
-                    hover:ut-button:!bg-blue-600
-                    hover:ut-button:!shadow-[0_16px_36px_rgba(37,99,235,0.34)]
+                    hover:ut-button:!bg-white
+                    hover:ut-button:!shadow-[0_16px_36px_rgba(15,23,42,0.16)]
+                    dark:ut-button:!border-white/10
+                    dark:ut-button:!bg-white/[0.04]
+                    dark:ut-button:!text-white
+                    dark:ut-button:!shadow-[0_12px_28px_rgba(0,0,0,0.18)]
+                    dark:hover:ut-button:!bg-white/[0.06]
                   "
                 />
 
@@ -248,7 +274,7 @@ export default function ProfileForm({ userData }: Props) {
                     variant="ghost"
                     disabled={deletingKeys.has(profileAvatar?.key ?? "")}
                     onClick={deleteProfileImage}
-                    className="text-sm text-red-600"
+                    className="text-sm text-red-600 dark:text-red-300"
                   >
                     Remove photo
                   </Button>
@@ -262,7 +288,7 @@ export default function ProfileForm({ userData }: Props) {
               <Input
                 {...field}
                 placeholder="John Doe"
-                className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                className="super-admin-field rounded-2xl focus-visible:ring-sky-400/20"
               />
             )}
           </FormFieldWrapper>
@@ -272,22 +298,24 @@ export default function ProfileForm({ userData }: Props) {
               <Input
                 {...field}
                 placeholder="johndoe"
-                className="border-white/10 bg-white/[0.04] focus:border-blue-400"
+                className="super-admin-field rounded-2xl focus-visible:ring-sky-400/20"
               />
             )}
           </FormFieldWrapper>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white/80 p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
               Email
             </p>
-            <p className="mt-2">{userData.email}</p>
+            <p className="mt-2 text-slate-950 dark:text-white">
+              {userData.email}
+            </p>
           </div>
 
           <Button
             type="submit"
             disabled={isPending}
-            className="bg-blue-600 text-white hover:bg-blue-500"
+            className="bg-[#3c9ee0] px-5 text-white hover:bg-[#2f8bd0]"
           >
             {isPending ? "Saving..." : "Save Changes"}
           </Button>

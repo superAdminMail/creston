@@ -9,7 +9,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { type ProfileDTO } from "@/lib/types";
 import {
   Drawer,
-  DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
@@ -20,6 +19,7 @@ import {
   AccountSidebarShell,
 } from "./AccountSidebarShell";
 import { DashboardNavbarClient } from "./DashboardNavbar.client";
+import { DrawerSurface } from "@/components/ui/drawer-surface";
 
 type AccountLayoutShellProps = {
   user: ProfileDTO;
@@ -81,7 +81,7 @@ export function AccountLayoutShell({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.24, ease: "easeOut", delay: 0.04 }}
-            className="h-[calc(100dvh-4rem)] overflow-y-auto bg-card px-4 py-4 sm:px-6 sm:py-6"
+            className="min-h-[calc(100dvh-4rem)] bg-card px-4 py-4 sm:px-6 sm:py-6"
           >
             {children}
           </motion.main>
@@ -93,7 +93,10 @@ export function AccountLayoutShell({
           direction="left"
           shouldScaleBackground={false}
         >
-          <DrawerContent className="h-dvh max-w-[86vw] rounded-none border-r border-slate-200 bg-transparent p-0 shadow-none dark:border-white/10">
+          <DrawerSurface
+            tone="ghost"
+            className="h-dvh max-w-[86vw] rounded-none border-r border-slate-200 bg-transparent p-0 shadow-none dark:border-white/10"
+          >
             <DrawerHeader className="sr-only">
               <DrawerTitle>Account navigation</DrawerTitle>
               <DrawerDescription>
@@ -121,7 +124,7 @@ export function AccountLayoutShell({
                 </motion.div>
               ) : null}
             </AnimatePresence>
-          </DrawerContent>
+          </DrawerSurface>
         </Drawer>
       </div>
     </SidebarProvider>

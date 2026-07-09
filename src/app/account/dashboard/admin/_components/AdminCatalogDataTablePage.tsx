@@ -43,12 +43,12 @@ export function AdminCatalogDataTablePage<TItem>({
         getItemKey={getItemKey}
         columns={columns}
         emptyState={
-          <Card className="card-premium rounded-[1.9rem] text-center">
+          <Card className="rounded-[1.9rem] border border-border/60 bg-white/75 text-center shadow-sm dark:bg-white/[0.04]">
             <CardContent className="space-y-3 p-8">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
                 No {emptyStateLabel} found
               </h2>
-              <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
+              <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
                 {emptyStateDescription ??
                   "Records for this catalog will appear here once they are available."}
               </p>

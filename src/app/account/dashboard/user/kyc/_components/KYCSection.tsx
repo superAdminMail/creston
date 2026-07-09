@@ -170,7 +170,7 @@ export default function KYCSection({
 
   if (status === "VERIFIED") {
     return (
-      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 backdrop-blur-xl p-6 space-y-3">
+      <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-6 space-y-3">
         <p className="text-emerald-400 font-semibold text-sm">
           ✅ Identity Verified
         </p>
@@ -183,7 +183,7 @@ export default function KYCSection({
 
   if (status === "PENDING_REVIEW") {
     return (
-      <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 backdrop-blur-xl p-6 space-y-3">
+      <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-6 space-y-3">
         <p className="text-yellow-400 font-medium text-sm">
           ⏳ Verification under review
         </p>
@@ -196,7 +196,7 @@ export default function KYCSection({
 
   if (canContinue) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-white">
             Continue verification
@@ -223,7 +223,7 @@ export default function KYCSection({
 
   if (status === "REJECTED" || canRetry || status === "NOT_STARTED") {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
         <div>
           <h3 className="text-lg font-semibold text-white">
             {status === "REJECTED"
@@ -253,7 +253,7 @@ export default function KYCSection({
   }
 
   return (
-    <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 backdrop-blur-xl p-6 space-y-3">
+    <div className="rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-6 space-y-3">
       <p className="text-yellow-400 font-medium text-sm">
         ⏳ Verification in progress
       </p>

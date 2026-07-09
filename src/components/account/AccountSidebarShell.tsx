@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronRight, LogOut } from "lucide-react";
+import { ChevronDown, ChevronRight, LogOut, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -142,9 +142,12 @@ function SidebarBody({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   {siteName}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-50">
-                  Account Workspace
-                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-sky-700 dark:text-sky-300" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                    Control Center
+                  </p>
+                </div>
               </div>
             )}
           </motion.div>

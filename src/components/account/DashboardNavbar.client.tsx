@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LogOut, Menu, Settings, User2 } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
@@ -60,7 +61,7 @@ export function getRoleLabel(role: DashboardRole) {
 function getPageTitle(pathname: string, role: DashboardRole) {
   const base = getDashboardHomeByRole(role);
 
-  if (pathname === base) return "Dashboard";
+  if (pathname === base) return "Workspace";
 
   const matched = getBestDashboardMenuMatch(pathname, role);
   if (matched) return matched.link.name;
@@ -141,7 +142,8 @@ export function DashboardNavbarClient({
                   {pageTitle}
                 </p>
                 <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block dark:bg-slate-600" />
-                <span className="hidden rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 sm:inline-flex dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                <span className="hidden items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 sm:inline-flex dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                  <ShieldCheck className="h-3 w-3" />
                   {roleLabel}
                 </span>
               </div>
@@ -204,7 +206,8 @@ export function DashboardNavbarClient({
                         <p className="mt-1 break-all text-[11px] leading-5 text-slate-500 dark:text-slate-400">
                           {user.email ?? "No email"}
                         </p>
-                        <div className="mt-2.5 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                          <ShieldCheck className="h-3 w-3" />
                           {roleLabel}
                         </div>
                       </div>

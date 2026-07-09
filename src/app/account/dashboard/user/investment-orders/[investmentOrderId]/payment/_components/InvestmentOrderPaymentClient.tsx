@@ -207,7 +207,7 @@ export default function InvestmentOrderPaymentClient({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
-      <div className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] sm:p-6 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+      <div className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-4 shadow-sm sm:rounded-[1.75rem] sm:p-6 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -253,7 +253,7 @@ export default function InvestmentOrderPaymentClient({
       </div>
 
       {isOrderFullySettled ? (
-        <Card className="w-full rounded-[1.35rem] border border-emerald-200/70 bg-emerald-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-emerald-400/20 dark:bg-white/[0.04]">
+        <Card className="w-full rounded-[1.35rem] border border-emerald-200/70 bg-emerald-50/90 shadow-sm sm:rounded-[1.75rem] dark:border-emerald-400/20 dark:bg-white/[0.04]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Investment order fully paid
@@ -281,7 +281,7 @@ export default function InvestmentOrderPaymentClient({
       ) : null}
 
       {!isOrderFullySettled ? (
-        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-sm sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           {selectedFundingMethod && (
             <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
               <div className="min-w-0">
@@ -297,7 +297,7 @@ export default function InvestmentOrderPaymentClient({
                 </p>
               </div>
 
-              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                 {isCryptoSelected ? (
                   <>
                     <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
@@ -314,7 +314,7 @@ export default function InvestmentOrderPaymentClient({
           )}
           <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
             {!selectedFundingMethod ? (
-              <div className="mb-4 rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+              <div className="mb-4 rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm leading-6 text-slate-600 shadow-sm sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Payment mode
                 </p>
@@ -367,7 +367,7 @@ export default function InvestmentOrderPaymentClient({
       {!isOrderFullySettled &&
       selectedFundingMethod === "BANK_TRANSFER" &&
       !bankMethod ? (
-        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-sm sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Bank details unavailable
@@ -407,7 +407,7 @@ export default function InvestmentOrderPaymentClient({
           {selectedFundingMethod === "BANK_TRANSFER" ? (
             selectedPaymentMode || isUpgradeFlow ? (
               order.hasBankMethod && order.bankMethod ? (
-                <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+                <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-sm sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
                   <CardHeader className="p-4 sm:p-6">
                     <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
                       Bank transfer funding
@@ -432,7 +432,7 @@ export default function InvestmentOrderPaymentClient({
                     </div>
 
                     {latestBankPaymentShortfallAmount > 0 ? (
-                      <div className="rounded-[1.15rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm leading-6 text-amber-900 shadow-sm backdrop-blur dark:border-amber-300/20 dark:bg-white/[0.04] dark:text-amber-100">
+                      <div className="rounded-[1.15rem] border border-amber-200/70 bg-amber-50/80 p-4 text-sm leading-6 text-amber-900 shadow-sm dark:border-amber-300/20 dark:bg-white/[0.04] dark:text-amber-100">
                         Includes previous bank shortfall of{" "}
                         {formatCurrency(
                           latestBankPaymentShortfallAmount,
@@ -457,7 +457,7 @@ export default function InvestmentOrderPaymentClient({
             ) : null
           ) : selectedFundingMethod === "CRYPTO_PROVIDER" ? (
             isCryptoSelected ? (
-              <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+              <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-sm sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
                 <CardHeader className="p-4 sm:p-6">
                   <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
                     Crypto wallet funding
@@ -468,7 +468,7 @@ export default function InvestmentOrderPaymentClient({
                 </CardHeader>
                 <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Funding method
                       </p>
@@ -476,7 +476,7 @@ export default function InvestmentOrderPaymentClient({
                         Crypto wallet
                       </p>
                     </div>
-                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                    <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Payment mode
                       </p>
@@ -497,7 +497,7 @@ export default function InvestmentOrderPaymentClient({
                     />
                   </div>
 
-                  <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 p-4 text-sm text-slate-700 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                  <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 p-4 text-sm text-slate-700 shadow-sm sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-sky-700/80 dark:text-sky-200/80">
                       Crypto proof mode
                     </p>
@@ -509,7 +509,7 @@ export default function InvestmentOrderPaymentClient({
                   </div>
 
                   {bankMethod?.walletAddress ? (
-                    <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                    <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Platform wallet address
                       </p>
@@ -565,7 +565,7 @@ export default function InvestmentOrderPaymentClient({
                           className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
                         />
                       ) : (
-                        <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                        <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/80 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm sm:rounded-[1.25rem] dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
                           {isUpgradeFlow
                             ? "Use the proof button above to submit the fixed upgrade amount."
                             : "Use the proof button above for partial crypto submissions."}
@@ -619,7 +619,7 @@ export default function InvestmentOrderPaymentClient({
           isUpgradeFlow={isUpgradeFlow}
         />
       ) : null}
-      <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+      <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-sm sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
         <Shield className="h-4 w-4 text-sky-500" />
         <span className="max-w-[32rem] text-center sm:text-left">
           Secure and encrypted payment flow

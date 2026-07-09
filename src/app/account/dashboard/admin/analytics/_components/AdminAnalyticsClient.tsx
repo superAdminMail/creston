@@ -32,6 +32,10 @@ import {
 import { formatCurrency } from "@/lib/formatters/formatters";
 import type { AdminAnalyticsData } from "@/lib/service/getAdminAnalyticsData";
 import type { ComponentType } from "react";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../../_components/dashboardSurfaces";
 
 const cashFlowChartConfig = {
   savingsDeposits: {
@@ -86,6 +90,15 @@ const queueChartConfig = {
   },
 } as const;
 
+const heroPillClass =
+  "inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm transition hover:shadow-md dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300";
+
+const summaryPillClass =
+  "inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white";
+
+const queuePillClass =
+  "inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700 shadow-sm transition hover:shadow-md dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300";
+
 function formatCompactCurrency(value: number) {
   const absolute = Math.abs(value);
 
@@ -127,20 +140,24 @@ function MetricCard({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <Card className="rounded-[1.5rem] border border-white/10 bg-white/[0.05] shadow-[0_14px_44px_rgba(0,0,0,0.16)] sm:rounded-[1.75rem]">
+    <Card
+      className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-[1.5rem] sm:rounded-[1.75rem]`}
+    >
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0 space-y-1.5 sm:space-y-2">
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400 sm:text-xs sm:tracking-[0.22em]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-sky-700 sm:text-xs sm:tracking-[0.22em] dark:text-sky-300">
               {title}
             </p>
-            <h3 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
+            <h3 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl dark:text-white">
               {value}
             </h3>
-            <p className="text-xs leading-5 text-slate-400 sm:text-sm">{hint}</p>
+            <p className="text-xs leading-5 text-slate-600 sm:text-sm dark:text-slate-400">
+              {hint}
+            </p>
           </div>
 
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-200 sm:h-11 sm:w-11">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-sky-200/80 bg-sky-50 text-sky-700 shadow-sm sm:h-11 sm:w-11 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300">
             <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>
@@ -159,12 +176,14 @@ function HeroHighlight({
   hint: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:tracking-[0.22em]">
+    <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-2xl p-4 sm:p-5`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700 sm:tracking-[0.22em] dark:text-sky-300">
         {label}
       </p>
-      <p className="mt-2 text-xl font-semibold text-white sm:text-2xl">{value}</p>
-      <p className="mt-1 text-xs leading-5 text-slate-400 sm:text-xs sm:leading-5">
+      <p className="mt-2 text-xl font-semibold text-slate-950 sm:text-2xl dark:text-white">
+        {value}
+      </p>
+      <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-xs sm:leading-5 dark:text-slate-400">
         {hint}
       </p>
     </div>
@@ -175,39 +194,41 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
   const hasQueueItems = data.reviewQueue.some((item) => item.value > 0);
 
   return (
-    <div className="space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-6">
-      <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_30%),linear-gradient(135deg,rgba(7,17,32,0.98),rgba(8,18,36,0.98))] text-white shadow-[0_24px_70px_rgba(0,0,0,0.24)] sm:rounded-[2rem]">
+    <div className="space-y-5 ">
+      <Card
+        className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden rounded-[1.75rem] sm:rounded-[2rem]`}
+      >
         <CardContent className="p-5 sm:p-6 md:p-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <Badge className="border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[11px] text-sky-100 hover:bg-sky-400/10 sm:text-sm">
+              <Badge className={heroPillClass}>
                 {data.siteName} Admin Analytics
               </Badge>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl md:text-4xl dark:text-white">
                   Platform analytics
                 </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-300 md:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-slate-600 md:text-base dark:text-slate-400">
                   A consolidated view of capital flow, review queues, user
                   growth, and operational activity across the platform.
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Badge className="border border-white/10 bg-white/[0.04] px-3 py-1 text-slate-200 hover:bg-white/[0.04]">
+                <Badge className={summaryPillClass}>
                   Active plans {formatCount(data.summary.activePlans)}
                 </Badge>
-                <Badge className="border border-white/10 bg-white/[0.04] px-3 py-1 text-slate-200 hover:bg-white/[0.04]">
+                <Badge className={summaryPillClass}>
                   Funded orders {formatCount(data.summary.fundedOrders)}
                 </Badge>
-                <Badge className="border border-white/10 bg-white/[0.04] px-3 py-1 text-slate-200 hover:bg-white/[0.04]">
+                <Badge className={summaryPillClass}>
                   Open queue {formatCount(data.summary.openReviewQueue)}
                 </Badge>
               </div>
             </div>
 
-            <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl">
+            <div className="grid w-full gap-3 md:grid-cols-2 lg:max-w-xl">
               <HeroHighlight
                 label="Capital tracked"
                 value={formatCompactCurrency(data.summary.totalCapitalTracked)}
@@ -223,7 +244,7 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
         </CardContent>
       </Card>
 
-      <section className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+      <section className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total users"
           value={formatCompactCount(data.summary.totalUsers)}
@@ -251,10 +272,14 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
       </section>
 
       <div className="grid gap-5 xl:grid-cols-12">
-        <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)] xl:col-span-8">
-          <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
-            <CardTitle className="text-base sm:text-lg">Capital flow</CardTitle>
-            <p className="text-sm leading-6 text-slate-400">
+        <Card
+          className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden rounded-[1.75rem] xl:col-span-8`}
+        >
+          <CardHeader className="space-y-2 border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Capital flow
+            </CardTitle>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
               Monthly movement across savings deposits, funded investment
               orders, withdrawals, and earnings.
             </p>
@@ -340,10 +365,14 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)] xl:col-span-4">
-          <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
-            <CardTitle className="text-base sm:text-lg">Current workload</CardTitle>
-            <p className="text-sm leading-6 text-slate-400">
+        <Card
+          className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden rounded-[1.75rem] xl:col-span-4`}
+        >
+          <CardHeader className="space-y-2 border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
+            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              Current workload
+            </CardTitle>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
               Live operational queue split by the main admin review surfaces.
             </p>
           </CardHeader>
@@ -402,12 +431,12 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
                   {data.reviewQueue.map((item) => (
                     <div
                       key={item.key}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]"
                     >
-                      <p className="min-w-0 text-sm text-slate-300">
+                      <p className="min-w-0 text-sm text-slate-600 dark:text-slate-300">
                         {item.label}
                       </p>
-                      <Badge className="border border-white/10 bg-white/[0.04] px-2.5 py-1 text-slate-100 hover:bg-white/[0.04]">
+                      <Badge className={queuePillClass}>
                         {formatCount(item.value)}
                       </Badge>
                     </div>
@@ -415,12 +444,12 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
                 </div>
               </>
             ) : (
-              <div className="flex h-[220px] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-white/10 bg-white/[0.02] px-6 text-center sm:h-[260px]">
-                <ShieldCheck className="h-8 w-8 text-sky-200" />
-                <p className="mt-4 text-base font-medium text-white">
+              <div className="flex h-[220px] flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-border/60 bg-white/75 px-6 text-center sm:h-[260px] dark:border-white/10 dark:bg-white/[0.04]">
+                <ShieldCheck className="h-8 w-8 text-sky-700 dark:text-sky-300" />
+                <p className="mt-4 text-base font-medium text-slate-950 dark:text-white">
                   No active workload
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
                   Pending review queues are clear right now, so this surface is
                   waiting for incoming admin tasks.
                 </p>
@@ -430,10 +459,14 @@ export function AdminAnalyticsClient({ data }: { data: AdminAnalyticsData }) {
         </Card>
       </div>
 
-      <Card className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] text-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
-        <CardHeader className="space-y-2 border-b border-white/8 px-4 py-4 sm:px-6 sm:py-5">
-          <CardTitle className="text-base sm:text-lg">Operational activity</CardTitle>
-          <p className="text-sm leading-6 text-slate-400">
+      <Card
+        className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden rounded-[1.75rem]`}
+      >
+        <CardHeader className="space-y-2 border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
+          <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+            Operational activity
+          </CardTitle>
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
             Monthly trend of new users, payment reviews, and withdrawal request
             volume.
           </p>

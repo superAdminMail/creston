@@ -8,10 +8,12 @@ import {
 } from "@/lib/formatters/formatters";
 import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../../_components/dashboardSurfaces";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
 import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { isWithdrawalCommissionSettledStatus } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
+import { cn } from "@/lib/utils";
 
 type Props = {
   withdrawalOrders: WithdrawalRequestItemDto[];
@@ -68,53 +70,60 @@ function canPayCommission(order: WithdrawalRequestItemDto) {
 
 export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
   return (
-    <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div>
-        <h4 className="text-sm font-medium text-white">Withdrawal Requests</h4>
-        <p className="mt-1 text-xs text-slate-500">
+    <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "space-y-4 p-4 sm:p-5")}>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h4 className="text-sm font-medium text-slate-950 dark:text-white">
+            Withdrawal Requests
+          </h4>
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
           Recent withdrawal submissions and their current status.
-        </p>
+          </p>
+        </div>
       </div>
 
       {withdrawalOrders.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {withdrawalOrders.map((order) => (
             <div
               key={order.id}
-              className="block rounded-2xl border border-white/10 bg-[#09111f]/70 p-4 transition hover:border-[#3c9ee0]/40 hover:bg-[#0d1729]"
+              className={cn(
+                DASHBOARD_PAGE_SURFACE_CLASS,
+                "block h-full p-4 transition-colors duration-200 hover:border-sky-300/60 hover:bg-sky-50/70 dark:hover:bg-white/[0.05]",
+              )}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-white">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-medium text-slate-950 dark:text-white">
                     {formatCurrency(Number(order.amount), order.currency ?? "USD")}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                     {getSourceLabel(order)}
                   </p>
                 </div>
-                <span title={formatEnumLabel(order.status)}>
+                <span title={formatEnumLabel(order.status)} className="self-start">
                   <CheckCircle2
-                    className="h-5 w-5 shrink-0 text-emerald-400"
+                    className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400"
                     aria-hidden="true"
                   />
                 </span>
               </div>
 
               <div className="mt-4 grid gap-3 text-xs text-slate-400 sm:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-3")}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                     Payment Method
                   </p>
-                  <p className="mt-1 text-sm text-slate-200">
+                  <p className="mt-1 break-words text-sm text-slate-950 dark:text-white">
                     {order.paymentMethodLabel}
                   </p>
                   <p
                     className={`mt-1 text-[10px] uppercase tracking-[0.2em] ${
                       order.paymentMethodStatus === "UNAVAILABLE"
-                        ? "text-amber-300"
+                        ? "text-amber-700 dark:text-amber-300"
                         : order.paymentMethodStatus === "UPDATED"
-                          ? "text-emerald-300"
-                          : "text-slate-500"
+                          ? "text-emerald-700 dark:text-emerald-300"
+                          : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     {order.paymentMethodStatus === "UNAVAILABLE"
@@ -124,25 +133,25 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                         : "Available"}
                   </p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-3")}>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                     Requested
                   </p>
-                  <p className="mt-1 text-sm text-slate-200">
+                  <p className="mt-1 text-sm text-slate-950 dark:text-white">
                     {formatDateLabel(order.requestedAt)}
                   </p>
                 </div>
               </div>
 
               {getAllocationModeLabel(order) || getAllocationSummary(order) ? (
-                <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-xs text-slate-300">
+                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "mt-3 p-3 text-xs")}>
                   {getAllocationModeLabel(order) ? (
-                    <p className="uppercase tracking-[0.2em] text-slate-500">
+                    <p className="uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                       {getAllocationModeLabel(order)}
                     </p>
                   ) : null}
                   {getAllocationSummary(order) ? (
-                    <p className="mt-2 leading-5 text-slate-300">
+                    <p className="mt-2 leading-5 text-slate-600 dark:text-slate-300">
                       {getAllocationSummary(order)}
                     </p>
                   ) : null}
@@ -150,20 +159,20 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
               ) : null}
 
               {isWithdrawalTerminalStatus(order.status) ? (
-                <div className="mt-3 rounded-xl border border-rose-200/40 bg-rose-500/10 p-3 text-xs text-rose-100">
+                <div className="mt-3 rounded-xl border border-rose-200/40 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-100">
                   This withdrawal request is no longer active.
                   {order.rejectionReason ? (
-                    <span className="block mt-1 text-rose-100/80">
+                    <span className="mt-1 block text-rose-700/80 dark:text-rose-100/80">
                       Reason: {order.rejectionReason}
                     </span>
                   ) : null}
                 </div>
               ) : order.commissionReviewStatus === "PENDING_REVIEW" &&
                 !isWithdrawalCommissionSettledStatus(order.commissionStatus) ? (
-                <div className="mt-3 rounded-xl border border-amber-200/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+                <div className="mt-3 rounded-xl border border-amber-200/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-100">
                   Withdrawal commission proof is waiting for admin review.
                   {order.commissionSubmittedAmount ? (
-                    <span className="block mt-1 text-amber-100/80">
+                    <span className="mt-1 block text-amber-700/80 dark:text-amber-100/80">
                       Submitted amount:{" "}
                       {formatCurrency(
                         Number(order.commissionSubmittedAmount),
@@ -191,7 +200,7 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-full border-white/10 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+                  className="rounded-full border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                 >
                   <Link href={`/account/dashboard/user/withdrawals/${order.id}`}>
                     View details
@@ -200,20 +209,20 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
               </div>
 
               {order.payoutSnapshot?.withdrawalMode ? (
-                <p className="mt-3 text-xs text-slate-500">
+                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                   {order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
                     ? `Early withdrawal penalty applied: ${formatCurrency(
                         Number(order.payoutSnapshot.earlyWithdrawalPenalty ?? 0),
                         order.currency ?? "USD",
                       )}`
-                  : "Normal withdrawal request"}
+                    : "Normal withdrawal request"}
                 </p>
               ) : null}
             </div>
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-sm text-slate-400">
+        <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-xl border-dashed p-4 text-sm text-slate-600 dark:text-slate-400")}>
           No withdrawal requests have been submitted yet.
         </div>
       )}

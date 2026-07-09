@@ -21,29 +21,29 @@ type UserInvestmentOrderCardProps = {
 function getStatusClasses(status: InvestmentOrderStatus) {
   switch (status) {
     case InvestmentOrderStatus.PENDING_PAYMENT:
-      return "border-amber-400/20 bg-amber-400/10 text-amber-300";
+      return "border-amber-200/70 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200";
     case InvestmentOrderStatus.CONFIRMED:
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-300";
+      return "border-emerald-200/70 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200";
     case InvestmentOrderStatus.CANCELLED:
-      return "border-slate-400/20 bg-slate-400/10 text-slate-300";
+      return "border-slate-200/80 bg-slate-50 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300";
     case InvestmentOrderStatus.REJECTED:
-      return "border-rose-400/20 bg-rose-400/10 text-rose-300";
+      return "border-rose-200/70 bg-rose-50 text-rose-800 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-200";
     case InvestmentOrderStatus.PAID:
     case InvestmentOrderStatus.PARTIALLY_PAID:
     default:
-      return "border-white/10 bg-white/[0.04] text-slate-200";
+      return "border-sky-200/70 bg-sky-50 text-sky-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-sky-200";
   }
 }
 
 function getRuntimeStatusClasses(status: string) {
   switch (status) {
     case "PAUSED":
-      return "border-amber-400/20 bg-amber-400/10 text-amber-200";
+      return "border-amber-200/70 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200";
     case "ONGOING":
     case "ACTIVE":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+      return "border-emerald-200/70 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200";
     default:
-      return "border-sky-400/20 bg-sky-400/10 text-sky-200";
+      return "border-sky-200/70 bg-sky-50 text-sky-800 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-200";
   }
 }
 
@@ -90,17 +90,17 @@ export function UserInvestmentOrderCard({
   return (
     <article
       id={`order-${order.id}`}
-      className="rounded-[1.75rem] border border-white/8 bg-white/[0.03] p-5 transition-all duration-200 hover:border-white/12 hover:bg-white/[0.04]"
+      className="rounded-[1.75rem] border border-border/60 bg-white/75 p-5 shadow-sm transition-colors transition-shadow duration-200 hover:border-border/80 hover:bg-white/80 dark:border-white/10 dark:bg-white/[0.04] dark:hover:bg-white/[0.05]"
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
               {order.plan.name}
             </h3>
             <span
               className={cn(
-                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm",
                 getStatusClasses(order.status),
               )}
             >
@@ -108,7 +108,7 @@ export function UserInvestmentOrderCard({
             </span>
             <span
               className={cn(
-                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium shadow-sm",
                 getRuntimeStatusClasses(order.runtimeStatus),
               )}
             >
@@ -119,70 +119,70 @@ export function UserInvestmentOrderCard({
               order.runtimeStatus,
               order,
             ) ? (
-              <Badge className="rounded-full border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-400/10">
+              <Badge className="rounded-full border-emerald-200/70 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 shadow-sm hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/10">
                 UPGRADED
               </Badge>
             ) : null}
           </div>
 
-          <p className="text-sm leading-6 text-slate-400">
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
             {order.investment.name} | {order.investment.typeLabel} |{" "}
             {order.plan.periodLabel}
           </p>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 Amount
               </p>
-              <p className="mt-2 text-sm font-medium text-white">
+              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                 {formatCurrency(order.amount, order.currency)}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 Plan tier
               </p>
-              <p className="mt-2 text-sm font-medium text-white">
+              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                 {order.tier.levelLabel}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 Target return
               </p>
-              <p className="mt-2 text-sm font-medium text-white">
+              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                 {order.tier.returnLabel ?? `${order.tier.roiPercent.toFixed(2)}%`}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 Plan period
               </p>
-              <p className="mt-2 text-sm font-medium text-white">
+              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                 {order.plan.periodLabel}
               </p>
             </div>
 
             <div>
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                 Created
               </p>
-              <p className="mt-2 text-sm font-medium text-white">
+              <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
                 {order.createdAt}
               </p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/8 bg-[#0b1229]/55 px-4 py-3 text-sm leading-6 text-slate-300">
+          <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             {statusNote}
           </div>
 
           {isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus) ? (
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm leading-6 text-amber-100">
+            <div className="rounded-2xl border border-amber-200/70 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-900 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
               This investment order is currently inactive. Please contact
               support if you need it reactivated.
             </div>
@@ -191,13 +191,13 @@ export function UserInvestmentOrderCard({
           {order.status === InvestmentOrderStatus.CANCELLED ||
           order.status === InvestmentOrderStatus.REJECTED ? (
             <div className="grid gap-3 xl:grid-cols-2">
-                <div className="rounded-2xl border border-rose-400/15 bg-rose-400/8 px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.14em] text-rose-200/80">
+                <div className="rounded-2xl border border-rose-200/70 bg-rose-50/90 px-4 py-3 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10">
+                  <p className="text-xs uppercase tracking-[0.14em] text-rose-700/80 dark:text-rose-200/80">
                     {order.status === InvestmentOrderStatus.REJECTED
                       ? "Rejection note"
                       : "Cancellation note"}
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-rose-100">
+                  <p className="mt-2 text-sm leading-6 text-rose-950 dark:text-rose-100">
                     {order.cancellationReason ||
                       (order.status === InvestmentOrderStatus.REJECTED
                         ? "No rejection reason was recorded."
@@ -205,11 +205,11 @@ export function UserInvestmentOrderCard({
                   </p>
                 </div>
 
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+              <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                   Admin note
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
+                <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-300">
                   {order.adminNotes ||
                     "No admin note was recorded for this order."}
                 </p>
@@ -221,7 +221,7 @@ export function UserInvestmentOrderCard({
         <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[14rem] lg:pl-6">
           <Link
             href={order.primaryAction.href}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/[0.07] hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white/80 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-border/80 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
           >
             <ActionIcon className="h-4 w-4" />
             {order.primaryAction.label}
@@ -229,9 +229,9 @@ export function UserInvestmentOrderCard({
 
           <Link
             href={`/account/dashboard/user/investment-orders/${order.id}`}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-sky-400/15 bg-sky-400/10 px-4 py-3 text-sm font-medium text-sky-100 transition hover:bg-sky-400/15 hover:text-white"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-sky-200/70 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-800 shadow-sm transition hover:border-sky-300 hover:bg-sky-100 hover:text-sky-950 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200 dark:hover:bg-sky-400/15 dark:hover:text-white"
           >
-            Order details
+            View details
           </Link>
 
           {order.status === InvestmentOrderStatus.PENDING_PAYMENT ? (

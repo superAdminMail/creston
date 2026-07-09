@@ -9,7 +9,6 @@ import { updateWithdrawalPaymentMethod } from "@/actions/accounts/withdrawal/upd
 import {
   Drawer,
   DrawerClose,
-  DrawerContent,
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
@@ -29,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { createInitialFormState } from "@/lib/forms/actionState";
+import { DrawerSurface } from "@/components/ui/drawer-surface";
 
 type Props = {
   withdrawalId: string;
@@ -109,7 +109,10 @@ export function WithdrawalPaymentMethodUpdateDrawer({
         Update payment method
       </Button>
 
-      <DrawerContent className="z-[70] data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]">
+      <DrawerSurface
+        tone="dark"
+        className="data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
+      >
         <div className="mx-auto flex h-full w-full max-w-2xl flex-col overflow-hidden">
           <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
             <DrawerTitle className="text-left text-xl text-white">
@@ -136,10 +139,10 @@ export function WithdrawalPaymentMethodUpdateDrawer({
               onValueChange={(value) => setMethodType(value as MethodType)}
               className="space-y-5"
             >
-              <TabsList className="h-auto w-full rounded-2xl border border-white/8 bg-white/[0.03] p-1">
+              <TabsList className="h-auto w-full rounded-2xl border border-white/10 bg-white/[0.04] p-1">
                 <TabsTrigger
                   value="WESTERN_UNION"
-                  className="h-11 rounded-xl data-active:bg-[#0d1a2c] data-active:text-white"
+                  className="h-11 rounded-xl data-active:bg-white/10 data-active:text-white"
                 >
                   <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4" />
@@ -148,7 +151,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                 </TabsTrigger>
                 <TabsTrigger
                   value="CASH_DELIVERY"
-                  className="h-11 rounded-xl data-active:bg-[#0d1a2c] data-active:text-white"
+                  className="h-11 rounded-xl data-active:bg-white/10 data-active:text-white"
                 >
                   <div className="flex items-center gap-2">
                     <Landmark className="h-4 w-4" />
@@ -434,7 +437,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
             </Tabs>
           </div>
         </div>
-      </DrawerContent>
+      </DrawerSurface>
     </Drawer>
   );
 }

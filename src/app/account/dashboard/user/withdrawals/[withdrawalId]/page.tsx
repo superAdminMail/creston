@@ -25,6 +25,11 @@ import {
 import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { getWithdrawalStatusTone } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { isWithdrawalCommissionSettledStatus } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../../_components/dashboardSurfaces";
+import { cn } from "@/lib/utils";
 import { WithdrawalPaymentMethodUpdateDrawer } from "../_components/WithdrawalPaymentMethodUpdateDrawer";
 import { WithdrawalPrivateSupportChatButton } from "../_components/WithdrawalPrivateSupportChatButton";
 
@@ -44,14 +49,16 @@ function ReceiptRow({
   helperText?: ReactNode;
 }) {
   return (
-    <div className="grid gap-2 py-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:items-start sm:py-4">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500 sm:pt-0.5">
+    <div className="grid gap-3 py-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:items-start sm:py-4">
+      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-600 sm:pt-1 dark:text-slate-400">
         {label}
       </p>
       <div className="min-w-0 space-y-1 sm:text-right">
-        <div className="break-words text-sm leading-6 text-white">{value}</div>
+        <div className="break-words text-sm font-medium leading-6 text-slate-950 sm:text-base dark:text-white">
+          {value}
+        </div>
         {helperText ? (
-          <div className="break-words text-xs leading-5 text-slate-400 sm:text-right">
+          <div className="break-words text-xs leading-5 text-slate-600 sm:text-right dark:text-slate-400">
             {helperText}
           </div>
         ) : null}
@@ -139,15 +146,16 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
           allocations?: Array<{
             sourceType?: string | null;
             sourceLabel?: string | null;
-          sourceGrossAmount?: string | null;
-          sourcePenaltyAmount?: string | null;
-          sourceNetAmount?: string | null;
-          currency?: string | null;
-        }>;
-      })
+            sourceGrossAmount?: string | null;
+            sourcePenaltyAmount?: string | null;
+            sourceNetAmount?: string | null;
+            currency?: string | null;
+          }>;
+        })
       : null;
   const storedPenaltyAmount =
-    payoutSnapshot?.penaltyAmount && payoutSnapshot.penaltyAmount.trim().length > 0
+    payoutSnapshot?.penaltyAmount &&
+    payoutSnapshot.penaltyAmount.trim().length > 0
       ? payoutSnapshot.penaltyAmount
       : null;
   const normalizedWithdrawalMode =
@@ -172,7 +180,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,
   );
-  const feePayment = readWithdrawalFeePaymentSnapshot(withdrawal.payoutSnapshot);
+  const feePayment = readWithdrawalFeePaymentSnapshot(
+    withdrawal.payoutSnapshot,
+  );
   const paymentMethodSnapshot = readWithdrawalPaymentMethodSnapshot(
     withdrawal.payoutSnapshot,
   );
@@ -207,8 +217,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
   const isFeeUnderReview = feePayment?.reviewStatus === "PENDING_REVIEW";
   const isFeeSettled =
     feePayment !== null &&
-    (feePayment.reviewStatus === "APPROVED" ||
-      feePayment.remainingAmount <= 0);
+    (feePayment.reviewStatus === "APPROVED" || feePayment.remainingAmount <= 0);
 
   const sourceType =
     payoutSnapshot?.sourceType ??
@@ -267,46 +276,50 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
     commissionPayment?.reviewStatus === "PENDING_REVIEW";
 
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-5rem)] max-w-6xl px-4 py-5 sm:px-6 sm:py-8 md:px-8">
+    <div className="relative mx-auto min-h-[calc(100vh-5rem)] w-full max-w-6xl ">
       <div className="absolute inset-x-4 top-8 -z-10 h-40 rounded-[2rem] bg-[#3c9ee0]/10 blur-3xl" />
 
       <div className="space-y-6">
         <Link
           href="/account/dashboard/user/withdrawals"
-          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
         >
           <span aria-hidden="true">←</span>
           Back to withdrawals
         </Link>
 
-        <section className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-[rgba(15,23,42,0.92)] shadow-2xl backdrop-blur-xl sm:rounded-[2rem]">
+        <section className={cn(DASHBOARD_PAGE_PANEL_CLASS, "overflow-hidden")}>
           <div className="relative p-4 sm:p-6 md:p-8">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
             <div className="relative space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0 space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-slate-300">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-sky-50 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
                     Withdrawal Receipt
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Requested amount</p>
-                    <h1 className="mt-2 break-words text-3xl font-semibold text-white sm:text-4xl">
-                      {formatCurrency(Number(requestedAmount), withdrawal.currency)}
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      Requested amount
+                    </p>
+                    <h1 className="mt-2 break-words text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
+                      {formatCurrency(
+                        Number(requestedAmount),
+                        withdrawal.currency,
+                      )}
                     </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700 dark:text-slate-400">
                       {sourceLabel}
                     </p>
                     {paymentMethodSnapshot.review.status === "UNAVAILABLE" &&
                     !isWithdrawalTerminalStatus(withdrawal.status) ? (
-                      <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-50 sm:p-5">
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
+                      <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
+                        <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
                           Payment method unavailable
                         </p>
-                        <p className="mt-2 text-base font-medium text-balance">
+                        <p className="mt-2 text-base font-medium text-balance text-amber-900 dark:text-amber-50">
                           Alternate payout details are required before this
                           withdrawal can be processed.
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-amber-100/80">
+                        <p className="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-100/80">
                           {paymentMethodSnapshot.review.reason ??
                             "Please update the payout method to continue."}
                         </p>
@@ -314,7 +327,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                           <WithdrawalPaymentMethodUpdateDrawer
                             withdrawalId={withdrawal.id}
                             paymentMethodLabel={effectivePaymentMethodLabel}
-                            unavailableReason={paymentMethodSnapshot.review.reason}
+                            unavailableReason={
+                              paymentMethodSnapshot.review.reason
+                            }
                           />
                         </div>
                       </div>
@@ -323,14 +338,17 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                 </div>
 
                 <span
-                  className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-medium ${statusTone}`}
+                  className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] shadow-sm ${statusTone}`}
                 >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80" />
                   {formatEnumLabel(withdrawal.status)}
                 </span>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 sm:px-5">
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div
+                  className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "px-4 sm:px-5")}
+                >
                   <ReceiptRow
                     label="Requested at"
                     value={withdrawal.requestedAt.toLocaleString()}
@@ -367,7 +385,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   />
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 sm:px-5">
+                <div
+                  className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "px-4 sm:px-5")}
+                >
                   <ReceiptRow
                     label="Source"
                     value={sourceLabel}
@@ -413,13 +433,13 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
               </div>
 
               {canShowCommissionCallout ? (
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-50 sm:p-5">
+                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 space-y-1">
-                      <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
+                      <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
                         Commission payment
                       </p>
-                      <p className="break-words text-lg font-medium text-balance">
+                      <p className="break-words text-lg font-medium text-balance text-slate-900 dark:text-white">
                         {isCommissionUnderReview
                           ? "Your commission proof is under review."
                           : `Pay commission ${formatCurrency(
@@ -427,10 +447,10 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                               withdrawal.currency,
                             )}`}
                       </p>
-                      <p className="text-sm leading-6 text-amber-100/80">
+                      <p className="text-sm leading-6 text-slate-700 dark:text-amber-100/80">
                         {isCommissionUnderReview
                           ? "You can check back once the admin team confirms the payment."
-                        : "Submit commission payment before this withdrawal can continue."}
+                          : "Submit commission payment before this withdrawal can continue."}
                       </p>
                     </div>
 
@@ -465,11 +485,11 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
               ) : null}
 
               {paymentMethodSnapshot.review.status === "UPDATED" ? (
-                <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-sky-50 sm:p-5">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-sky-200">
+                <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-slate-950 shadow-sm sm:p-5 dark:text-sky-50">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-sky-700 dark:text-sky-200">
                     Support note
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-100">
+                  <p className="mt-2 text-sm leading-6 text-slate-800 dark:text-slate-100">
                     For Western Union and cash delivery, a 2% fee is applied.
                     Contact support for more information.
                   </p>
@@ -510,22 +530,22 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
               ) : null}
 
               {isAutoAllocation ? (
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
+                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                     Allocation breakdown
                   </p>
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {allocations.map((allocation) => (
                       <div
                         key={`${allocation.sourceType ?? "source"}-${allocation.sourceLabel ?? "allocation"}-${allocation.sourceGrossAmount ?? "0"}`}
-                        className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.02)] p-4"
+                        className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4")}
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
-                            <p className="break-words text-sm text-white">
+                            <p className="break-words text-sm text-slate-950 dark:text-white">
                               {allocation.sourceLabel ?? "Withdrawal source"}
                             </p>
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                               Gross:{" "}
                               {formatCurrency(
                                 Number(allocation.sourceGrossAmount ?? 0),
@@ -533,7 +553,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                               )}
                             </p>
                           </div>
-                          <div className="text-xs text-slate-400 sm:text-right">
+                          <div className="text-xs text-slate-600 dark:text-slate-400 sm:text-right">
                             <p>
                               Penalty:{" "}
                               {formatCurrency(
@@ -541,7 +561,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                                 allocation.currency ?? withdrawal.currency,
                               )}
                             </p>
-                            <p className="mt-1 text-white">
+                            <p className="mt-1 text-slate-950 dark:text-white">
                               Net:{" "}
                               {formatCurrency(
                                 Number(allocation.sourceNetAmount ?? 0),
@@ -557,16 +577,16 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
               ) : null}
 
               {isWithdrawalTerminalStatus(withdrawal.status) ? (
-                <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-rose-50">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-rose-200">
+                <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-rose-950 shadow-sm dark:text-rose-50">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-rose-700 dark:text-rose-200">
                     {withdrawal.status === "CANCELLED"
                       ? "Withdrawal cancelled"
                       : "Withdrawal rejected"}
                   </p>
-                  <p className="mt-2 text-lg font-medium">
+                  <p className="mt-2 text-lg font-medium text-slate-900 dark:text-white">
                     This withdrawal request is no longer active.
                   </p>
-                  <p className="mt-1 text-sm text-rose-100/80">
+                  <p className="mt-1 text-sm text-rose-800 dark:text-rose-100/80">
                     {withdrawal.rejectionReason ??
                       "You can submit a new withdrawal request using the available balance."}
                   </p>
@@ -575,29 +595,30 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                 !isWithdrawalCommissionSettledStatus(
                   withdrawal.commissionStatus,
                 ) ? (
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-50 sm:p-5">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
+                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
                     Commission under review
                   </p>
-                  <p className="mt-2 text-lg font-medium text-balance">
+                  <p className="mt-2 text-lg font-medium text-balance text-slate-900 dark:text-white">
                     Your withdrawal commission proof is awaiting admin review.
                   </p>
-                  <p className="mt-1 text-sm text-amber-100/80">
+                  <p className="mt-1 text-sm text-amber-800 dark:text-amber-100/80">
                     You can check back once the admin team confirms the payment.
                   </p>
                 </div>
               ) : null}
 
               {paymentMethodSnapshot.review.status === "UPDATED" ? (
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-emerald-50 sm:p-5">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-emerald-200">
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-emerald-950 shadow-sm sm:p-5 dark:text-emerald-50">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-200">
                     Payment method updated
                   </p>
-                  <p className="mt-2 text-lg font-medium text-balance">
+                  <p className="mt-2 text-lg font-medium text-balance text-slate-900 dark:text-white">
                     Updated payout details have been submitted.
                   </p>
-                  <p className="mt-1 text-sm text-emerald-100/80">
-                    The current payout method is now {effectivePaymentMethodLabel}.
+                  <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-100/80">
+                    The current payout method is now{" "}
+                    {effectivePaymentMethodLabel}.
                   </p>
                 </div>
               ) : null}

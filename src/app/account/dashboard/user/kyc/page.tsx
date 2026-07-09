@@ -13,9 +13,7 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 
 type DiditCallbackStatus = "Approved" | "Declined" | "In Review";
 
-type PageSearchParams = Promise<
-  Record<string, string | string[] | undefined>
->;
+type PageSearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 type DiditCallback = {
   verificationSessionId: string;
@@ -31,7 +29,11 @@ function getSearchParam(
     if (typeof value === "string" && value.trim()) {
       return value;
     }
-    if (Array.isArray(value) && typeof value[0] === "string" && value[0].trim()) {
+    if (
+      Array.isArray(value) &&
+      typeof value[0] === "string" &&
+      value[0].trim()
+    ) {
       return value[0];
     }
   }
@@ -109,7 +111,9 @@ export default async function Page({
     : null;
   const shouldForceRemoteSync =
     Boolean(diditCallback) ||
-    Boolean(latestSessionProbe && isDiditActiveStatus(latestSessionProbe.status));
+    Boolean(
+      latestSessionProbe && isDiditActiveStatus(latestSessionProbe.status),
+    );
 
   const latestSession = profile
     ? await syncLatestKycSessionIfNeeded(profile.id, {
@@ -129,7 +133,7 @@ export default async function Page({
 
   const kycStatus = refreshedProfile?.isVerified
     ? "VERIFIED"
-    : refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED";
+    : (refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED");
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">

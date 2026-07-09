@@ -153,14 +153,14 @@ export default function MessageList({
     <div className="relative h-full min-h-0">
       <div
         ref={listRef}
-        className="h-full overflow-y-auto overscroll-contain px-4 py-3 [scrollbar-gutter:stable]"
+        className="h-full overflow-y-auto overscroll-contain px-4 py-4 [scrollbar-gutter:stable]"
       >
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 sm:gap-3">
           {items.map((item) =>
             item.type === "date" ? (
               <div
                 key={item.key}
-                className="sticky top-3 z-10 mx-auto rounded-full border border-white/10 bg-background/85 px-3 py-1 text-[11px] text-muted-foreground shadow-sm backdrop-blur"
+                className="sticky top-3 z-10 mx-auto mb-3 w-fit rounded-full border border-slate-200/80 bg-white/88 px-3 py-1 text-[11px] text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/85 dark:text-slate-400"
               >
                 {item.label}
               </div>
@@ -180,14 +180,16 @@ export default function MessageList({
       </div>
 
       {newCount > 0 ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
-          <button
-            type="button"
-            onClick={() => scrollToBottom("smooth")}
-            className="pointer-events-auto rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]"
-          >
-            {newCount} new message{newCount > 1 ? "s" : ""}
-          </button>
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 px-4">
+          <div className="mx-auto flex w-full max-w-4xl justify-center">
+            <button
+              type="button"
+              onClick={() => scrollToBottom("smooth")}
+              className="pointer-events-auto rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]"
+            >
+              {newCount} new message{newCount > 1 ? "s" : ""}
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

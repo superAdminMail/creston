@@ -13,7 +13,7 @@ export default async function Page() {
 
   if (!userId) {
     return (
-      <div className="mx-auto h-[calc(100dvh-4rem)] min-h-0 max-w-5xl overflow-hidden bg-white px-4 py-4 dark:bg-neutral-950 sm:px-6 lg:px-8">
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex h-full flex-col items-center justify-center gap-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Please log in to view your dashboard.
@@ -29,14 +29,14 @@ export default async function Page() {
   const transactions = await getUserTransactions(userId);
 
   return (
-    <main className="space-y-5">
+    <>
       <UserDashboardPage
         userName={userName}
         stats={stats}
         investmentProfileComplete={investmentProfile.profileComplete}
       />
       <TransactionTable transactions={transactions} />
-      <TradingViewMarketChart />
-    </main>
+      <TradingViewMarketChart tone="surface" />
+    </>
   );
 }

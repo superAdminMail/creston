@@ -36,6 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { DASHBOARD_FIELD_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
 import { cn } from "@/lib/utils";
 
 import {
@@ -70,6 +71,7 @@ type InvestmentProfileFormProps = {
   pendingLabel?: string;
   successMessage?: string;
   compactFields?: boolean;
+  tone?: "onboarding" | "dashboard";
   redirectHref?: string;
   siteName?: string;
 };
@@ -82,6 +84,7 @@ export function InvestmentProfileForm({
   pendingLabel = "Saving...",
   successMessage = "Investment profile saved.",
   compactFields = false,
+  tone = "onboarding",
   redirectHref,
   siteName,
 }: InvestmentProfileFormProps) {
@@ -112,6 +115,7 @@ export function InvestmentProfileForm({
     AddressAutofillSuggestion[]
   >([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [hasAddressAutocomplete, setHasAddressAutocomplete] = useState(false);
 
   const form = useForm<OnboardingSchemaInput, unknown, OnboardingSchemaType>({
     resolver: zodResolver(onboardingSchema),
@@ -138,6 +142,7 @@ export function InvestmentProfileForm({
     control: form.control,
     name: "addressLine1",
   });
+  const addressQuery = watchedAddressLine1?.trim() ?? "";
 
   const applySelectedAddress = (
     selectedAddress: OnboardingAddressFields,
@@ -232,13 +237,11 @@ export function InvestmentProfileForm({
   }, [form, watchedCountry]);
 
   useEffect(() => {
-    if (!addressAutofill || !MAPBOX_PUBLIC_TOKEN) {
+    if (!addressAutofill || !MAPBOX_PUBLIC_TOKEN || !hasAddressAutocomplete) {
       return;
     }
 
-    const query = watchedAddressLine1?.trim() ?? "";
-
-    if (query.length < 3) {
+    if (addressQuery.length < 3) {
       queueMicrotask(() => {
         setAddressSuggestions([]);
         setIsSearchingAddress(false);
@@ -246,7 +249,7 @@ export function InvestmentProfileForm({
       return;
     }
 
-    if (query === selectedAddressLineRef.current) {
+    if (addressQuery === selectedAddressLineRef.current) {
       setAddressSuggestions([]);
       setIsSearchingAddress(false);
       return;
@@ -255,7 +258,7 @@ export function InvestmentProfileForm({
     const timeout = window.setTimeout(async () => {
       try {
         setIsSearchingAddress(true);
-        const response = await addressAutofill.suggest(query, {
+        const response = await addressAutofill.suggest(addressQuery, {
           sessionToken: addressSessionTokenRef.current,
           language: "en",
         });
@@ -269,7 +272,7 @@ export function InvestmentProfileForm({
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [addressAutofill, watchedAddressLine1]);
+  }, [addressAutofill, addressQuery, hasAddressAutocomplete]);
 
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
@@ -324,33 +327,60 @@ export function InvestmentProfileForm({
     defaultValue: false,
   });
   const hasConfirmedAdultAge = compactFields ? true : watchedConfirmAdultAge;
+  const isDashboardTone = tone === "dashboard";
+  const labelClassName = isDashboardTone
+    ? "text-slate-600 dark:text-slate-300"
+    : "text-white/80";
+  const descriptionClassName = isDashboardTone
+    ? "text-sm text-slate-500 dark:text-slate-400"
+    : "text-sm text-slate-400";
+  const inputClassName = cn(
+    "h-11 rounded-xl",
+    isDashboardTone
+      ? `${DASHBOARD_FIELD_CLASS} px-3 shadow-sm focus-visible:ring-sky-400/30`
+      : "input-premium",
+  );
+  const dateTriggerClassName = cn(
+    "w-full justify-between rounded-xl border text-left font-normal transition-colors",
+    isDashboardTone
+      ? `${DASHBOARD_FIELD_CLASS} !text-slate-700 hover:border-sky-200/80 hover:bg-sky-50/70 hover:!text-slate-950 focus-visible:ring-sky-400/30 dark:!text-slate-200 dark:hover:bg-white/[0.06] dark:hover:!text-white`
+      : "input-premium hover:bg-white/5",
+  );
+  const popoverContentClassName = isDashboardTone
+    ? "w-auto border-border/60 bg-white p-0 text-slate-950 shadow-xl dark:bg-[var(--card)] dark:text-[var(--foreground)]"
+    : "w-auto border-white/10 bg-[var(--card)] p-0 text-[var(--foreground)]";
+  const suggestionPanelClassName = isDashboardTone
+    ? "absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.14)]"
+    : "absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] shadow-[0_24px_70px_rgba(0,0,0,0.34)]";
+  const suggestionItemClassName = isDashboardTone
+    ? "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-sky-50"
+    : "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5";
+  const suggestionTitleClassName = isDashboardTone
+    ? "truncate text-sm font-medium text-slate-950"
+    : "truncate text-sm font-medium text-white";
+  const suggestionDescriptionClassName = isDashboardTone
+    ? "mt-0.5 truncate text-xs text-slate-500"
+    : "mt-0.5 truncate text-xs text-slate-400";
+  const confirmationShellClassName = isDashboardTone
+    ? "items-start gap-3 rounded-xl border border-border/60 bg-white/75 px-4 py-3"
+    : "items-start gap-3 rounded-xl border border-white/8 px-4 py-3";
+  const confirmationTextClassName = isDashboardTone
+    ? "text-sm font-medium text-slate-700"
+    : "text-sm font-medium text-white";
+  const confirmationDescriptionClassName = isDashboardTone
+    ? "text-sm text-slate-500 dark:text-slate-400"
+    : "text-sm text-slate-400";
+  const checkboxClassName = isDashboardTone
+    ? "mt-0.5 border-border/70 data-[state=checked]:border-sky-500 data-[state=checked]:bg-sky-500"
+    : "mt-0.5 border-white/20 data-[state=checked]:border-[var(--primary)] data-[state=checked]:bg-[var(--primary)]";
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
       <FieldGroup>
         <Field>
-          <FieldLabel className="text-white/80">Phone number</FieldLabel>
+          <FieldLabel className={labelClassName}>Contact number</FieldLabel>
           <FieldContent>
             {compactFields ? (
-              <Controller
-                control={form.control}
-                name="phoneNumber"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldContent>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        inputMode="tel"
-                        autoComplete="tel-national"
-                        placeholder="555 123 4567"
-                        className="input-premium h-11 rounded-xl"
-                      />
-                    </FieldContent>
-                  </Field>
-                )}
-              />
-            ) : (
               <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
                 <Controller
                   control={form.control}
@@ -363,7 +393,7 @@ export function InvestmentProfileForm({
                           disabled={isPending}
                           inputMode="tel"
                           placeholder="+1"
-                          className="input-premium h-11 rounded-xl"
+                          className={inputClassName}
                         />
                       </FieldContent>
                     </Field>
@@ -382,7 +412,46 @@ export function InvestmentProfileForm({
                           inputMode="tel"
                           autoComplete="tel-national"
                           placeholder="555 123 4567"
-                          className="input-premium h-11 rounded-xl"
+                          className={inputClassName}
+                        />
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
+                <Controller
+                  control={form.control}
+                  name="countryCallingCode"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          inputMode="tel"
+                          placeholder="+1"
+                          className={inputClassName}
+                        />
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          placeholder="555 123 4567"
+                          className={inputClassName}
                         />
                       </FieldContent>
                     </Field>
@@ -390,14 +459,17 @@ export function InvestmentProfileForm({
                 />
               </div>
             )}
-            <FieldDescription className="pt-1">
-              We will use this number to send you important updates regarding
-              your account.
+            <FieldDescription className={cn("pt-1", descriptionClassName)}>
+              We will use this number for important account updates and
+              servicing messages.
             </FieldDescription>
             <FieldError
               errors={
                 compactFields
-                  ? [form.formState.errors.phoneNumber]
+                  ? [
+                      form.formState.errors.countryCallingCode,
+                      form.formState.errors.phoneNumber,
+                    ]
                   : [
                       form.formState.errors.countryCallingCode,
                       form.formState.errors.phoneNumber,
@@ -412,7 +484,7 @@ export function InvestmentProfileForm({
           name="dateOfBirth"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">Date of birth</FieldLabel>
+              <FieldLabel className={labelClassName}>Date of birth</FieldLabel>
               <FieldContent>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -421,7 +493,7 @@ export function InvestmentProfileForm({
                       variant="outline"
                       disabled={isPending}
                       className={cn(
-                        "input-premium h-11 w-full justify-between rounded-xl border text-left font-normal hover:bg-white/5",
+                        dateTriggerClassName,
                         !field.value && "text-slate-400",
                       )}
                     >
@@ -435,7 +507,7 @@ export function InvestmentProfileForm({
                   </PopoverTrigger>
                   <PopoverContent
                     align="start"
-                    className="w-auto border-white/10 bg-[var(--card)] p-0 text-[var(--foreground)]"
+                    className={popoverContentClassName}
                   >
                     <Calendar
                       mode="single"
@@ -470,7 +542,7 @@ export function InvestmentProfileForm({
             name="confirmAdultAge"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid || undefined}>
-                <FieldLabel className="items-start gap-3 rounded-xl border border-white/8 px-4 py-3">
+                <FieldLabel className={cn(confirmationShellClassName)}>
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={(checked) => {
@@ -484,15 +556,15 @@ export function InvestmentProfileForm({
                       }
                     }}
                     disabled={isPending || !derivedAge || !isAdult}
-                    className="mt-0.5 border-white/20 data-[state=checked]:border-[var(--primary)] data-[state=checked]:bg-[var(--primary)]"
+                    className={checkboxClassName}
                   />
                   <div className="space-y-1">
-                    <span className="text-sm font-medium text-white">
+                    <span className={confirmationTextClassName}>
                       {derivedAge
                         ? `Yes, I confirm I am ${derivedAge} years old.`
                         : "Select your date of birth to confirm your age."}
                     </span>
-                    <FieldDescription className="text-sm text-slate-400">
+                    <FieldDescription className={confirmationDescriptionClassName}>
                       {derivedAge && !isAdult
                         ? siteName?.trim()
                           ? `${siteName.trim()} onboarding is only available to adults age 18 and above.`
@@ -514,7 +586,7 @@ export function InvestmentProfileForm({
           name="addressLine1"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className="text-white/80">Address</FieldLabel>
+              <FieldLabel className={labelClassName}>Residential address</FieldLabel>
               <FieldContent className="relative overflow-visible">
                 {MAPBOX_PUBLIC_TOKEN ? (
                   <div className="relative z-50 overflow-visible">
@@ -524,20 +596,31 @@ export function InvestmentProfileForm({
                         onChange={(event) => {
                           const nextValue = event.target.value;
                           selectedAddressLineRef.current = "";
+                          setHasAddressAutocomplete(true);
                           field.onChange(nextValue);
                         }}
                         disabled={isPending}
                         inputMode="text"
                         autoComplete="shipping address-line1"
                         placeholder="Start typing your address"
-                        className="input-premium h-11 rounded-xl"
+                        className={inputClassName}
                       />
-                      {(addressSuggestions.length > 0 || isSearchingAddress) && (
-                        <div className="absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] shadow-[0_24px_70px_rgba(0,0,0,0.34)]">
+                      {hasAddressAutocomplete &&
+                        addressQuery.length >= 3 &&
+                        addressQuery !== selectedAddressLineRef.current &&
+                        (addressSuggestions.length > 0 || isSearchingAddress) && (
+                        <div className={suggestionPanelClassName}>
                           <div className="max-h-72 overflow-auto py-1">
                             {isSearchingAddress &&
                             addressSuggestions.length === 0 ? (
-                              <div className="px-4 py-3 text-sm text-slate-400">
+                              <div
+                                className={cn(
+                                  "px-4 py-3 text-sm",
+                                  isDashboardTone
+                                    ? "text-slate-500"
+                                    : "text-slate-400",
+                                )}
+                              >
                                 Searching addresses...
                               </div>
                             ) : null}
@@ -546,17 +629,17 @@ export function InvestmentProfileForm({
                               <button
                                 key={`${suggestion.mapbox_id}-${index}`}
                                 type="button"
-                                className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5"
+                                className={suggestionItemClassName}
                                 onMouseDown={(event) => {
                                   event.preventDefault();
                                   void selectAddressSuggestion(suggestion);
                                 }}
                               >
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium text-white">
+                                  <p className={suggestionTitleClassName}>
                                     {suggestion.feature_name}
                                   </p>
-                                  <p className="mt-0.5 truncate text-xs text-slate-400">
+                                  <p className={suggestionDescriptionClassName}>
                                     {suggestion.description}
                                   </p>
                                 </div>
@@ -574,10 +657,10 @@ export function InvestmentProfileForm({
                     inputMode="text"
                     autoComplete="shipping address-line1"
                     placeholder="Start typing your address"
-                    className="input-premium h-11 rounded-xl"
+                    className={inputClassName}
                   />
                 )}
-                <FieldDescription className="pt-1">
+                <FieldDescription className={cn("pt-1", descriptionClassName)}>
                   Start typing your address to get suggestions.
                 </FieldDescription>
                 {fieldState.error ? (
@@ -596,13 +679,15 @@ export function InvestmentProfileForm({
                 name="country"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className="text-white/80">Country</FieldLabel>
+                    <FieldLabel className={labelClassName}>
+                      Country of residence
+                    </FieldLabel>
                     <FieldContent>
                       <Input
                         {...field}
                         disabled={isPending}
                         placeholder="United States"
-                        className="input-premium h-11 rounded-xl"
+                        className={inputClassName}
                       />
                       {fieldState.error ? (
                         <FieldError errors={[fieldState.error]} />
@@ -617,13 +702,15 @@ export function InvestmentProfileForm({
                 name="state"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className="text-white/80">State</FieldLabel>
+                    <FieldLabel className={labelClassName}>
+                      State / province
+                    </FieldLabel>
                     <FieldContent>
                       <Input
                         {...field}
                         disabled={isPending}
                         placeholder="California"
-                        className="input-premium h-11 rounded-xl"
+                        className={inputClassName}
                       />
                       {fieldState.error ? (
                         <FieldError errors={[fieldState.error]} />
@@ -638,13 +725,13 @@ export function InvestmentProfileForm({
                 name="city"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className="text-white/80">City</FieldLabel>
+                    <FieldLabel className={labelClassName}>City / locality</FieldLabel>
                     <FieldContent>
                       <Input
                         {...field}
                         disabled={isPending}
                         placeholder="Los Angeles"
-                        className="input-premium h-11 rounded-xl"
+                        className={inputClassName}
                       />
                       {fieldState.error ? (
                         <FieldError errors={[fieldState.error]} />

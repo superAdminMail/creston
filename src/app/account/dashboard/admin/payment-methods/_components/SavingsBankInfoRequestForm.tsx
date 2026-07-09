@@ -53,16 +53,16 @@ export default function SavingsBankInfoRequestForm({
   }, [request.savingsAccountId, state.message, state.status]);
 
   return (
-    <Card className="card-premium">
-      <CardHeader>
-        <CardTitle className="text-lg">
-          Send bank details for {request.savingsProductName}
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Requested by {request.requesterName ?? request.requesterEmail ?? "Unknown"}{" "}
-          for savings account {request.savingsAccountId}.
-        </p>
-      </CardHeader>
+      <Card className="card-premium">
+        <CardHeader>
+          <CardTitle className="text-lg">
+            Prepare bank details for {request.savingsProductName}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Requested by {request.requesterName ?? request.requesterEmail ?? "Unknown"}{" "}
+            for savings account {request.savingsAccountId}.
+          </p>
+        </CardHeader>
 
       <CardContent>
         <form action={formAction} className="space-y-4">
@@ -189,8 +189,8 @@ export default function SavingsBankInfoRequestForm({
 
           <div className="flex justify-end">
             <DashboardActionSubmitButton
-              idleLabel="Send bank details"
-              pendingLabel="Sending bank details..."
+              idleLabel="Publish bank details"
+              pendingLabel="Publishing bank details..."
               className="w-full sm:w-auto"
             />
           </div>

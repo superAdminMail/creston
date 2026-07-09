@@ -1,40 +1,50 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../../_components/dashboardSurfaces";
+
 export default function Loading() {
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-xl backdrop-blur-xl sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-3">
-            <Skeleton className="h-3 w-32 rounded-full" />
-            <Skeleton className="h-9 w-72 max-w-full rounded-2xl" />
-            <Skeleton className="h-4 w-full max-w-2xl rounded-full" />
-            <Skeleton className="h-4 w-5/6 max-w-xl rounded-full" />
-          </div>
-          <Skeleton className="h-10 w-32 rounded-full" />
+    <div className="space-y-8">
+      <section className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}>
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-28 rounded-full bg-white/10" />
+          <Skeleton className="h-10 w-full max-w-xl rounded-2xl bg-white/10" />
+          <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-white/10" />
         </div>
-      </div>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
-        <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-xl sm:p-6">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Skeleton className="h-24 rounded-[1.5rem]" />
-            <Skeleton className="h-24 rounded-[1.5rem]" />
-            <Skeleton className="h-24 rounded-[1.5rem]" />
-            <Skeleton className="h-24 rounded-[1.5rem]" />
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5 sm:p-6"}>
+          <Skeleton className="h-6 w-44 rounded-full bg-white/10" />
+          <Skeleton className="mt-3 h-4 w-full max-w-2xl rounded-full bg-white/10" />
+          <div className="mt-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-20 rounded-2xl bg-white/10" />
+            ))}
           </div>
-          <Skeleton className="h-28 rounded-[1.5rem]" />
-          <Skeleton className="h-20 rounded-[1.5rem]" />
         </div>
 
-        <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-xl backdrop-blur-xl sm:p-6">
-          <Skeleton className="h-5 w-40 rounded-full" />
-          <div className="space-y-4">
-            <Skeleton className="h-16 rounded-[1.5rem]" />
-            <Skeleton className="h-16 rounded-[1.5rem]" />
-            <Skeleton className="h-16 rounded-[1.5rem]" />
+        <div className="space-y-6">
+          <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5 sm:p-6"}>
+            <Skeleton className="h-6 w-36 rounded-full bg-white/10" />
+            <Skeleton className="mt-3 h-4 w-full rounded-full bg-white/10" />
+            <div className="mt-6 space-y-3">
+              <Skeleton className="h-11 w-full rounded-2xl bg-white/10" />
+              <Skeleton className="h-11 w-full rounded-2xl bg-white/10" />
+            </div>
           </div>
-          <Skeleton className="h-12 w-full rounded-full" />
+
+          <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-5 sm:p-6"}>
+            <Skeleton className="h-6 w-32 rounded-full bg-white/10" />
+            <div className="mt-4 grid gap-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton key={index} className="h-11 rounded-2xl bg-white/10" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

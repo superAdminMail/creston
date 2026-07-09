@@ -50,7 +50,7 @@ export function SuperAdminTableFilters({
   const [values, setValues] = useState<Record<string, string>>(initialValues);
 
   return (
-    <form className="card-premium rounded-[2rem] p-5 sm:p-6">
+    <form className="super-admin-shell-panel p-5 sm:p-6">
       {fields.map((field) => (
         <input
           key={field.name}
@@ -101,10 +101,10 @@ export function SuperAdminTableFilters({
                   }))
                 }
               >
-                <SelectTrigger className="input-premium h-11 w-full rounded-xl border-white/10 bg-white/[0.04] text-left text-slate-100">
+                <SelectTrigger className="super-admin-field h-11 w-full rounded-xl text-left">
                   <SelectValue placeholder={field.placeholder} />
                 </SelectTrigger>
-                <SelectContent className="border-white/10 bg-[#0b1728] text-slate-100">
+                <SelectContent className="border-border/60 bg-white/95 text-slate-950 dark:border-white/10 dark:bg-[#0b1728] dark:text-slate-100">
                   <SelectItem value={ALL_VALUE}>{field.placeholder}</SelectItem>
                   {field.options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
