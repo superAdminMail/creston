@@ -110,15 +110,15 @@ export function WithdrawalPaymentMethodUpdateDrawer({
       </Button>
 
       <DrawerSurface
-        tone="dark"
+        tone="light"
         className="data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
       >
         <div className="mx-auto flex h-full w-full max-w-2xl flex-col overflow-hidden">
-          <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
-            <DrawerTitle className="text-left text-xl text-white">
+          <DrawerHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
+            <DrawerTitle className="text-left text-xl text-slate-950 dark:text-white">
               Update payment method
             </DrawerTitle>
-            <DrawerDescription className="text-left text-sm leading-6 text-slate-400">
+            <DrawerDescription className="text-left text-sm leading-6 text-slate-600 dark:text-slate-400">
               {paymentMethodLabel} is currently unavailable for this withdrawal.
               Provide alternate payout details so processing can continue.
             </DrawerDescription>
@@ -126,9 +126,9 @@ export function WithdrawalPaymentMethodUpdateDrawer({
 
           <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
             {unavailableReason ? (
-              <Alert className="mb-5 rounded-2xl border border-amber-400/20 bg-amber-500/10 text-amber-100">
+              <Alert className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle className="text-sm font-medium text-amber-50">
+                <AlertTitle className="text-sm font-medium text-amber-900 dark:text-amber-50">
                   {unavailableReason}
                 </AlertTitle>
               </Alert>
@@ -139,22 +139,22 @@ export function WithdrawalPaymentMethodUpdateDrawer({
               onValueChange={(value) => setMethodType(value as MethodType)}
               className="space-y-5"
             >
-              <TabsList className="h-auto w-full rounded-2xl border border-white/10 bg-white/[0.04] p-1">
+              <TabsList className="h-auto w-full rounded-2xl border border-slate-200/80 bg-slate-100/90 p-1 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
                 <TabsTrigger
                   value="WESTERN_UNION"
-                  className="h-11 rounded-xl data-active:bg-white/10 data-active:text-white"
+                  className="h-11 rounded-xl text-slate-700 data-active:bg-white data-active:text-slate-950 dark:text-slate-300 dark:data-active:bg-white/[0.08] dark:data-active:text-white"
                 >
                   <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4" />
+                    <Wallet className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                     Western Union
                   </div>
                 </TabsTrigger>
                 <TabsTrigger
                   value="CASH_DELIVERY"
-                  className="h-11 rounded-xl data-active:bg-white/10 data-active:text-white"
+                  className="h-11 rounded-xl text-slate-700 data-active:bg-white data-active:text-slate-950 dark:text-slate-300 dark:data-active:bg-white/[0.08] dark:data-active:text-white"
                 >
                   <div className="flex items-center gap-2">
-                    <Landmark className="h-4 w-4" />
+                    <Landmark className="h-4 w-4 text-sky-700 dark:text-sky-300" />
                     Cash delivery
                   </div>
                 </TabsTrigger>
@@ -167,14 +167,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                 {methodType === "WESTERN_UNION" ? (
                   <FieldGroup className="gap-5">
                     <Field data-invalid={Boolean(state.fieldErrors?.receiverName) || undefined}>
-                      <FieldLabel className="text-slate-200">
+                      <FieldLabel className="text-slate-700 dark:text-slate-200">
                         Receiver name
                       </FieldLabel>
                       <FieldContent>
                         <Input
                           name="receiverName"
                           placeholder="Full name of the receiver"
-                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                          className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         />
                         {state.fieldErrors?.receiverName ? (
                           <FieldError
@@ -188,14 +188,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <Field data-invalid={Boolean(state.fieldErrors?.receiverCountry) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Receiver country
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="receiverCountry"
                             placeholder="Country"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.receiverCountry ? (
                             <FieldError
@@ -208,14 +208,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                       </Field>
 
                       <Field data-invalid={Boolean(state.fieldErrors?.receiverCity) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Receiver city
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="receiverCity"
                             placeholder="City"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.receiverCity ? (
                             <FieldError
@@ -230,7 +230,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <Field data-invalid={Boolean(state.fieldErrors?.receiverPhone) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Receiver phone
                         </FieldLabel>
                         <FieldContent>
@@ -238,7 +238,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                             name="receiverPhone"
                             inputMode="tel"
                             placeholder="Phone number"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.receiverPhone ? (
                             <FieldError
@@ -251,14 +251,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                       </Field>
 
                       <Field>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Transfer reference
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="transferReference"
                             placeholder="Optional reference"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                         </FieldContent>
                       </Field>
@@ -267,14 +267,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                 ) : (
                   <FieldGroup className="gap-5">
                     <Field data-invalid={Boolean(state.fieldErrors?.recipientName) || undefined}>
-                      <FieldLabel className="text-slate-200">
+                      <FieldLabel className="text-slate-700 dark:text-slate-200">
                         Recipient name
                       </FieldLabel>
                       <FieldContent>
                         <Input
                           name="recipientName"
                           placeholder="Full name of the recipient"
-                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                          className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         />
                         {state.fieldErrors?.recipientName ? (
                           <FieldError
@@ -288,14 +288,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <Field data-invalid={Boolean(state.fieldErrors?.deliveryCountry) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Delivery country
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="deliveryCountry"
                             placeholder="Country"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.deliveryCountry ? (
                             <FieldError
@@ -308,14 +308,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                       </Field>
 
                       <Field data-invalid={Boolean(state.fieldErrors?.deliveryCity) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Delivery city
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="deliveryCity"
                             placeholder="City"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.deliveryCity ? (
                             <FieldError
@@ -329,14 +329,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                     </div>
 
                     <Field data-invalid={Boolean(state.fieldErrors?.deliveryAddress) || undefined}>
-                      <FieldLabel className="text-slate-200">
+                      <FieldLabel className="text-slate-700 dark:text-slate-200">
                         Delivery address
                       </FieldLabel>
                       <FieldContent>
                         <Input
                           name="deliveryAddress"
                           placeholder="Street address or pickup location"
-                          className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                          className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         />
                         {state.fieldErrors?.deliveryAddress ? (
                           <FieldError
@@ -350,7 +350,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <Field data-invalid={Boolean(state.fieldErrors?.contactPhone) || undefined}>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Contact phone
                         </FieldLabel>
                         <FieldContent>
@@ -358,7 +358,7 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                             name="contactPhone"
                             inputMode="tel"
                             placeholder="Phone number"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                           {state.fieldErrors?.contactPhone ? (
                             <FieldError
@@ -371,14 +371,14 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                       </Field>
 
                       <Field>
-                        <FieldLabel className="text-slate-200">
+                        <FieldLabel className="text-slate-700 dark:text-slate-200">
                           Delivery instructions
                         </FieldLabel>
                         <FieldContent>
                           <Input
                             name="deliveryInstructions"
                             placeholder="Optional instructions"
-                            className="h-11 rounded-2xl border-white/10 bg-white/[0.03] text-white"
+                            className="h-11 rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                           />
                         </FieldContent>
                       </Field>
@@ -387,13 +387,13 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                 )}
 
                 <Field>
-                  <FieldLabel className="text-slate-200">Notes</FieldLabel>
+                  <FieldLabel className="text-slate-700 dark:text-slate-200">Notes</FieldLabel>
                   <FieldContent>
                     <Textarea
                       name="note"
                       rows={4}
                       placeholder="Optional note for the processing team"
-                      className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                      className="rounded-2xl border-slate-300 bg-white text-slate-950 placeholder:text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                     />
                     {state.fieldErrors?.note ? (
                       <FieldError
@@ -406,18 +406,18 @@ export function WithdrawalPaymentMethodUpdateDrawer({
                 </Field>
 
                 {state.status === "error" && state.message ? (
-                  <Alert className="rounded-2xl border border-red-400/20 bg-red-400/10 text-red-200">
+                  <Alert className="rounded-2xl border border-red-200 bg-red-50 text-red-900 shadow-sm dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-200">
                     <AlertTitle>{state.message}</AlertTitle>
                   </Alert>
                 ) : null}
 
-                <DrawerFooter className="border-t border-white/10 px-0 pt-4">
+                <DrawerFooter className="border-t border-border/60 bg-white/85 px-0 pt-4 dark:border-white/10 dark:bg-white/[0.04]">
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
                     <DrawerClose asChild>
                       <Button
                         type="button"
                         variant="outline"
-                        className="w-full rounded-2xl border-white/10 bg-transparent text-slate-200 sm:w-auto"
+                        className="w-full rounded-2xl border-border/60 bg-white/90 text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-950 sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
                       >
                         Cancel
                       </Button>

@@ -616,15 +616,15 @@ export default function WithdrawalsClient({
 
       <Drawer open={reviewOpen} onOpenChange={handleReviewOpenChange}>
         <DrawerSurface
-          tone="dark"
+          tone="light"
           className="overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
         >
           <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
-            <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
-              <DrawerTitle className="text-left text-xl">
+            <DrawerHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
+              <DrawerTitle className="text-left text-xl text-slate-950 dark:text-white">
                 Review withdrawal
               </DrawerTitle>
-              <DrawerDescription className="text-left text-slate-400">
+              <DrawerDescription className="text-left text-slate-600 dark:text-slate-400">
                 Confirm the amount and payment method before we submit the
                 request.
               </DrawerDescription>
@@ -632,11 +632,11 @@ export default function WithdrawalsClient({
 
             <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-6">
               {serverState.status === "error" && serverState.message ? (
-                <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-4 text-sm text-rose-100">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-100">
                   <p className="font-medium">Unable to submit withdrawal</p>
                   <p className="mt-1 leading-6">{serverState.message}</p>
                   {getFirstFormFieldError(serverState.fieldErrors) ? (
-                    <p className="mt-2 text-rose-100/80">
+                    <p className="mt-2 text-rose-700 dark:text-rose-100/80">
                       {getFirstFormFieldError(serverState.fieldErrors)}
                     </p>
                   ) : null}
@@ -644,17 +644,17 @@ export default function WithdrawalsClient({
               ) : null}
 
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                   Withdrawal preview
                 </p>
 
                 <Table className="mt-3">
                   <TableBody>
                     <TableRow className="border-0 hover:bg-transparent">
-                      <TableCell className="px-0 py-2 text-slate-400">
+                      <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                         Requested amount
                       </TableCell>
-                      <TableCell className="px-0 py-2 text-right font-medium text-white">
+                      <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                         {formatCurrency(
                           previewHasValidAmount ? previewAmount : 0,
                           availableBalanceCurrency,
@@ -663,10 +663,10 @@ export default function WithdrawalsClient({
                     </TableRow>
 
                     <TableRow className="border-0 hover:bg-transparent">
-                      <TableCell className="px-0 py-2 text-slate-400">
+                      <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                         Payment method
                       </TableCell>
-                      <TableCell className="px-0 py-2 text-right font-medium text-white">
+                      <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                         {selectedPaymentMethod
                           ? selectedPaymentMethod.type === "BANK"
                             ? "Bank transfer"
@@ -678,18 +678,18 @@ export default function WithdrawalsClient({
                     {selectedPaymentMethod?.type === "BANK" ? (
                       <>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Bank name
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-white">
+                          <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                             {selectedPaymentMethod.bankName ?? "Not provided"}
                           </TableCell>
                         </TableRow>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Account number
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-white">
+                          <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                             {selectedPaymentMethod.accountNumber ??
                               "Not provided"}
                           </TableCell>
@@ -700,18 +700,18 @@ export default function WithdrawalsClient({
                     {selectedPaymentMethod?.type === "CRYPTO" ? (
                       <>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Network
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-white">
+                          <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                             {selectedPaymentMethod.network ?? "Not provided"}
                           </TableCell>
                         </TableRow>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Wallet address
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-white break-all">
+                          <TableCell className="px-0 py-2 text-right font-medium break-all text-slate-950 dark:text-white">
                             {maskWalletAddress(selectedPaymentMethod.address)}
                           </TableCell>
                         </TableRow>
@@ -721,24 +721,24 @@ export default function WithdrawalsClient({
                     {previewEarlyWithdrawalFee > 0 ? (
                       <>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Early withdrawal fee
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-amber-100">
+                          <TableCell className="px-0 py-2 text-right font-medium text-amber-700 dark:text-amber-100">
                             {formatCurrency(
                               previewEarlyWithdrawalFee,
                               availableBalanceCurrency,
                             )}{" "}
-                            <span className="ml-2 rounded-full border border-amber-200/20 bg-amber-500/20 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-amber-50">
+                            <span className="ml-2 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-amber-800 dark:border-amber-200/20 dark:bg-amber-500/20 dark:text-amber-50">
                               Applies now
                             </span>
                           </TableCell>
                         </TableRow>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Net payout
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-emerald-100">
+                          <TableCell className="px-0 py-2 text-right font-medium text-emerald-700 dark:text-emerald-100">
                             {formatCurrency(
                               previewNetPayoutAmount,
                               availableBalanceCurrency,
@@ -746,10 +746,10 @@ export default function WithdrawalsClient({
                           </TableCell>
                         </TableRow>
                         <TableRow className="border-0 hover:bg-transparent">
-                          <TableCell className="px-0 py-2 text-slate-400">
+                          <TableCell className="px-0 py-2 text-slate-600 dark:text-slate-400">
                             Gross deduction
                           </TableCell>
-                          <TableCell className="px-0 py-2 text-right font-medium text-white">
+                          <TableCell className="px-0 py-2 text-right font-medium text-slate-950 dark:text-white">
                             {formatCurrency(
                               previewGrossDeductionAmount,
                               availableBalanceCurrency,
@@ -763,14 +763,14 @@ export default function WithdrawalsClient({
               </div>
 
               <div className="flex items-start justify-between gap-3">
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                   Withdrawal source
                 </p>
 
                 <button
                   type="button"
                   onClick={() => setSourcePickerOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-slate-200 transition hover:border-[#3c9ee0]/30 hover:bg-[#3c9ee0]/10 hover:text-white"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-[#3c9ee0]/30 hover:bg-[#3c9ee0]/10 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-[#3c9ee0]/10 dark:hover:text-white"
                 >
                   Change
                   <ChevronRight className="h-4 w-4" />
@@ -779,7 +779,7 @@ export default function WithdrawalsClient({
 
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
-                  <p className="text-sm uppercase tracking-[0.24em] text-slate-400">
+                  <p className="text-sm uppercase tracking-[0.24em] text-slate-600 dark:text-slate-400">
                     Available balance (
                     {formatCurrency(
                       totalAvailableBalance,
@@ -789,21 +789,21 @@ export default function WithdrawalsClient({
                   </p>
 
                   <CheckCircle2
-                    className="h-5 w-5 shrink-0 text-emerald-400"
+                    className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400"
                     aria-hidden="true"
                   />
                 </div>
 
-                <div className="my-4 border-t border-dashed border-white/10" />
+                <div className="my-4 border-t border-dashed border-slate-200/80 dark:border-white/10" />
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-400">
+                    <span className="text-slate-600 dark:text-slate-400">
                       Savings (
                       {formatCurrency(savingsBalance, availableBalanceCurrency)}
                       )
                     </span>
-                    <span className="font-medium text-white">
+                    <span className="font-medium text-slate-950 dark:text-white">
                       -
                       {formatCurrency(
                         previewSavingsAmount,
@@ -812,7 +812,7 @@ export default function WithdrawalsClient({
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-400">
+                    <span className="text-slate-600 dark:text-slate-400">
                       Investment (
                       {formatCurrency(
                         investmentBalance,
@@ -820,7 +820,7 @@ export default function WithdrawalsClient({
                       )}
                       )
                     </span>
-                    <span className="font-medium text-white">
+                    <span className="font-medium text-slate-950 dark:text-white">
                       -
                       {formatCurrency(
                         previewInvestmentAmount,
@@ -832,13 +832,13 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-border/60 bg-white/75 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
+            <DrawerFooter className="border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <div className="grid gap-3 sm:grid-cols-2">
                 <DrawerClose asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    className="rounded-xl border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                    className="rounded-xl border-border/60 bg-white/90 text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                   >
                     Edit details
                   </Button>
@@ -867,15 +867,15 @@ export default function WithdrawalsClient({
 
       <Drawer open={sourcePickerOpen} onOpenChange={setSourcePickerOpen}>
         <DrawerSurface
-          tone="dark"
-          className="z-[60] overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[84vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
+          tone="light"
+          className="z-[90] overflow-hidden border-border/70 bg-white/98 text-slate-950 shadow-[0_32px_90px_rgba(15,23,42,0.24)] data-[vaul-drawer-direction=bottom]:max-h-[84vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem] dark:border-white/10 dark:bg-slate-950/98 dark:text-white dark:shadow-[0_32px_90px_rgba(15,23,42,0.44)]"
         >
           <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
-            <DrawerHeader className="border-b border-white/10 px-4 pb-4 pt-4 text-left md:px-6">
-              <DrawerTitle className="text-left text-lg">
+            <DrawerHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
+              <DrawerTitle className="text-left text-lg text-slate-950 dark:text-white">
                 Choose withdrawal source
               </DrawerTitle>
-              <DrawerDescription className="text-left text-slate-400">
+              <DrawerDescription className="text-left text-slate-600 dark:text-slate-400">
                 Choose the balance source you want this withdrawal to use.
               </DrawerDescription>
             </DrawerHeader>
@@ -883,7 +883,7 @@ export default function WithdrawalsClient({
             <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
-                  <p className="text-sm uppercase tracking-[0.24em] text-slate-400">
+                  <p className="text-sm uppercase tracking-[0.24em] text-slate-600 dark:text-slate-400">
                     Available balance (
                     {formatCurrency(
                       totalAvailableBalance,
@@ -893,12 +893,12 @@ export default function WithdrawalsClient({
                   </p>
 
                   <CheckCircle2
-                    className="h-5 w-5 shrink-0 text-emerald-400"
+                    className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400"
                     aria-hidden="true"
                   />
                 </div>
 
-                <div className="my-4 border-t border-dashed border-white/10" />
+                <div className="my-4 border-t border-dashed border-slate-200/80 dark:border-white/10" />
 
                 <div className="space-y-2 text-sm">
                   {[
@@ -949,14 +949,14 @@ export default function WithdrawalsClient({
                           });
                         }}
                         className={cn(
-                          "flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-3 text-left transition-colors duration-200 hover:bg-sky-50/60 dark:hover:bg-white/[0.05]",
+                          "flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-3 text-left transition-colors duration-200 hover:bg-sky-50/80 dark:hover:bg-white/[0.05]",
                           isSelected
-                            ? "bg-emerald-500/10 dark:bg-emerald-400/10"
+                            ? "bg-sky-50/90 ring-1 ring-sky-200/80 dark:bg-emerald-400/10 dark:ring-0"
                             : "bg-transparent",
                           isDisabled ? "cursor-not-allowed opacity-50" : "",
                         )}
                       >
-                        <span className="min-w-0 break-words text-slate-600 dark:text-slate-300">
+                        <span className="min-w-0 break-words text-slate-700 dark:text-slate-300">
                           {label} (
                           {source
                             ? formatCurrency(source.amount, source.currency)
@@ -965,7 +965,7 @@ export default function WithdrawalsClient({
                         </span>
                         <span className="flex items-center gap-2 font-medium text-slate-950 dark:text-white">
                           {isSelected ? (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                            <CheckCircle2 className="h-4 w-4 text-sky-600 dark:text-emerald-400" />
                           ) : null}
                         </span>
                       </button>
@@ -975,12 +975,12 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-border/60 bg-white/75 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
+            <DrawerFooter className="border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <DrawerClose asChild>
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                  className="rounded-xl border-border/60 bg-white/90 text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                 >
                   Close
                 </Button>
