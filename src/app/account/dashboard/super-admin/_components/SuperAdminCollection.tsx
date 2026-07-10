@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../_components/dashboardSurfaces";
+import { DASHBOARD_PAGE_PANEL_CLASS } from "../../_components/dashboardSurfaces";
 
 type SuperAdminCollectionColumn<TItem> = {
   key: string;
@@ -38,15 +38,15 @@ export function SuperAdminCollection<TItem>({
     <>
       <Card
         className={cn(
-          DASHBOARD_PAGE_SURFACE_CLASS,
+          DASHBOARD_PAGE_PANEL_CLASS,
           "overflow-hidden py-0",
         )}
       >
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-max">
-            <TableHeader>
-              <TableRow className="border-border/60 hover:bg-transparent">
+              <TableHeader>
+                <TableRow className="border-border/60 hover:bg-transparent dark:border-white/10">
                 {columns.map((column) => (
                   <TableHead
                     key={column.key}
@@ -58,28 +58,28 @@ export function SuperAdminCollection<TItem>({
                     {column.header}
                   </TableHead>
                 ))}
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {items.map((item) => (
-                <TableRow
-                  key={getItemKey(item)}
-                  className="border-border/60 hover:bg-slate-50/80 dark:hover:bg-white/[0.03]"
-                >
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      className={
-                        column.cellClassName ?? "px-5 py-4 align-top"
-                      }
-                    >
-                      {column.render(item)}
-                    </TableCell>
-                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
+              </TableHeader>
+
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow
+                    key={getItemKey(item)}
+                    className="border-border/60 hover:bg-white/70 dark:border-white/10 dark:hover:bg-white/[0.03]"
+                  >
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.key}
+                        className={
+                          column.cellClassName ?? "px-5 py-4 align-top"
+                        }
+                      >
+                        {column.render(item)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </div>
         </CardContent>

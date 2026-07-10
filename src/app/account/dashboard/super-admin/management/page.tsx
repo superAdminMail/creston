@@ -12,11 +12,12 @@ export default async function ManagementListPage() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Management Team</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">
+            Management Team
+          </h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Manage public-facing team members.
           </p>
         </div>
@@ -29,16 +30,14 @@ export default async function ManagementListPage() {
         </Link>
       </div>
 
-      {/* LIST */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {management.map((member) => (
           <div
             key={member.id}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+            className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.03]"
           >
-            {/* IMAGE */}
             <div className="flex items-center gap-4">
-              <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-white/10">
+              <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-slate-100/80 dark:bg-white/10">
                 {member.photoFile?.url ? (
                   <Image
                     src={member.photoFile.url}
@@ -50,18 +49,21 @@ export default async function ManagementListPage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-white">{member.name}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-sm font-medium text-slate-950 dark:text-white">
+                  {member.name}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {member.title || member.role}
                 </p>
               </div>
             </div>
 
-            {/* STATUS */}
             <div className="mt-4 flex items-center justify-between">
               <span
                 className={`text-xs ${
-                  member.isActive ? "text-green-400" : "text-red-400"
+                  member.isActive
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : "text-rose-700 dark:text-rose-400"
                 }`}
               >
                 {member.isActive ? "Active" : "Inactive"}
@@ -75,30 +77,31 @@ export default async function ManagementListPage() {
               >
                 <button
                   type="submit"
-                  className="text-xs text-blue-400 hover:underline"
+                  className="text-xs text-sky-700 hover:underline dark:text-sky-300"
                 >
                   Toggle
                 </button>
               </form>
             </div>
 
-            {/* ACTIONS */}
             <div className="mt-4 flex justify-between text-xs">
               <Link
                 href={`/account/dashboard/super-admin/management/${member.id}/edit`}
-                className="text-blue-400 hover:underline"
+                className="text-sky-700 hover:underline dark:text-sky-300"
               >
                 Edit
               </Link>
 
-              <span className="text-slate-500">Order: {member.sortOrder}</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                Order: {member.sortOrder}
+              </span>
             </div>
           </div>
         ))}
       </div>
       <div className="pt-12">
         {management.length === 0 && (
-          <p className="col-span-full text-center text-sm text-slate-400">
+          <p className="col-span-full text-center text-sm text-slate-600 dark:text-slate-400">
             No management members found. Add one using the button above.
           </p>
         )}

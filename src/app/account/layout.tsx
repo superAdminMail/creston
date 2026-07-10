@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { AccountLayoutShell } from "@/components/account/AccountLayoutShell";
 import NotificationListener from "@/components/notifications/NotificationListener";
+import { getCurrentUserAccessState } from "@/lib/auth/accountAccessState";
 import { getCurrentUser } from "@/lib/getCurrentUser";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
@@ -28,11 +29,25 @@ export default async function AccountLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, site, config] = await Promise.all([
-    getCurrentUser(),
+  const [accessState, site, config] = await Promise.all([
+    getCurrentUserAccessState(),
     getSiteSeoConfig(),
     getSiteConfigurationCached(),
   ]);
+
+  if (!accessState) {
+    redirect("/auth/login");
+  }
+
+  if (accessState.status === "DELETED") {
+    redirect("/auth/login?account=deleted");
+  }
+
+  if (accessState.status === "SUSPENDED") {
+    redirect("/account-suspended");
+  }
+
+  const user = await getCurrentUser();
 
   if (!user) {
     redirect("/auth/login");

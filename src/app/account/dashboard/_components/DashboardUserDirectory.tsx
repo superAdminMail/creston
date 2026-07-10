@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import {
   Filter,
   Search,
   ShieldCheck,
   TrendingUp,
+  ShieldAlert,
   UserCheck,
   Users,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import type { UserRole } from "@/generated/prisma";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { suspendUserAction } from "@/actions/super-admin/users/suspendUserAction";
 import { formatDirectoryCurrency } from "@/lib/formatters/directory";
 import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
 import {
@@ -48,6 +52,8 @@ const statusBadgeClass =
 const summaryPillClass =
   "inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white";
 
+const initialSuspendUserState = { status: "idle" as const };
+
 type VerificationStatus = DashboardDirectoryUser["verificationStatus"];
 type AccountStatus = DashboardDirectoryUser["accountStatus"];
 
@@ -65,6 +71,7 @@ type DashboardUserDirectoryProps = {
     activeUsers: number;
     totalManagedFunds: number;
   };
+  canSuspendUsers?: boolean;
 };
 
 function getRoleBadge(role: UserRole) {
@@ -196,6 +203,14 @@ function getAccountStatusBadge(status: AccountStatus) {
           Active
         </Badge>
       );
+    case "DELETED":
+      return (
+        <Badge
+          className={`${statusBadgeClass} border-rose-200/70 bg-rose-50 text-rose-700 hover:bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10`}
+        >
+          Deleted
+        </Badge>
+      );
     case "REVIEW":
       return (
         <Badge
@@ -260,10 +275,15 @@ export function DashboardUserDirectory({
   searchPlaceholder,
   users,
   stats,
+  canSuspendUsers = false,
 }: DashboardUserDirectoryProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] =
     useState<DashboardDirectoryUser | null>(null);
+  const [suspendTargetUser, setSuspendTargetUser] =
+    useState<DashboardDirectoryUser | null>(null);
+  const [isSuspendPending, startSuspendTransition] = useTransition();
 
   const filteredUsers = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -287,6 +307,39 @@ export function DashboardUserDirectory({
 
   function openUser(user: DashboardDirectoryUser) {
     setSelectedUser(user);
+  }
+
+  function openSuspendDialog(user: DashboardDirectoryUser) {
+    setSuspendTargetUser(user);
+  }
+
+  function handleSuspendUser() {
+    if (!suspendTargetUser) return;
+
+    startSuspendTransition(async () => {
+      const formData = new FormData();
+      formData.set("userId", suspendTargetUser.id);
+
+      const result = await suspendUserAction(initialSuspendUserState, formData);
+
+      if (result.status === "error") {
+        toast.error(result.message ?? "Unable to suspend this user.");
+        return;
+      }
+
+      toast.success(result.message ?? "User suspended successfully.");
+
+      if (selectedUser?.id === suspendTargetUser.id) {
+        setSelectedUser({
+          ...selectedUser,
+          isSuspended: true,
+          accountStatus: "SUSPENDED",
+        });
+      }
+
+      setSuspendTargetUser(null);
+      router.refresh();
+    });
   }
 
   return (
@@ -473,15 +526,49 @@ export function DashboardUserDirectory({
                           {user.joinedAt}
                         </td>
                         <td className="px-4 py-4">
-                          <button
-                            type="button"
-                            onClick={() => openUser(user)}
-                            className="inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10 dark:hover:text-sky-100"
-                            aria-label={`Open ${user.fullName} record`}
-                          >
-                            Record loaded
-                            <span aria-hidden="true">-&gt;</span>
-                          </button>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openUser(user);
+                              }}
+                              className="inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10 dark:hover:text-sky-100"
+                              aria-label={`Open ${user.fullName} record`}
+                            >
+                              Record loaded
+                              <span aria-hidden="true">-&gt;</span>
+                            </button>
+
+                            {canSuspendUsers ? (
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  if (user.isDeleted || user.isSuspended) {
+                                    return;
+                                  }
+                                  openSuspendDialog(user);
+                                }}
+                                disabled={user.isDeleted || user.isSuspended}
+                                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
+                                aria-label={
+                                  user.isDeleted
+                                    ? `${user.fullName} is deleted`
+                                    : user.isSuspended
+                                      ? `${user.fullName} is already suspended`
+                                      : `Suspend ${user.fullName}`
+                                }
+                              >
+                                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
+                                {user.isDeleted
+                                  ? "Deleted"
+                                  : user.isSuspended
+                                    ? "Suspended"
+                                    : "Suspend"}
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -503,6 +590,70 @@ export function DashboardUserDirectory({
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={Boolean(suspendTargetUser)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSuspendTargetUser(null);
+          }
+        }}
+      >
+        <DialogContent className="!rounded-[1.75rem] !border-slate-200 !bg-white !bg-none !p-0 !text-slate-950 !shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:!border-white/10 dark:!bg-zinc-950 dark:!text-white">
+          {suspendTargetUser ? (
+            <div className="space-y-5 p-5 sm:p-6">
+              <DialogHeader className="space-y-3">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-200/70 bg-rose-50 text-rose-700 shadow-sm dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
+                  <ShieldAlert className="h-5 w-5" />
+                </div>
+                <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                  Suspend user
+                </DialogTitle>
+                <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  {suspendTargetUser.fullName} will be suspended immediately and
+                  prevented from signing in until support reactivates the
+                  account.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-3 rounded-[1.35rem] border border-slate-200/80 bg-slate-50 p-4 text-sm text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+                <div className="flex items-center justify-between gap-4">
+                  <span>Email</span>
+                  <span className="font-medium text-slate-950 dark:text-white">
+                    {suspendTargetUser.email}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span>Account status</span>
+                  <span className="font-medium text-slate-950 dark:text-white">
+                    {getAccountStatusBadge(suspendTargetUser.accountStatus)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSuspendTargetUser(null)}
+                  className="rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+                  disabled={isSuspendPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSuspendUser}
+                  disabled={isSuspendPending}
+                  className="rounded-full bg-rose-600 text-white hover:bg-rose-700"
+                >
+                  {isSuspendPending ? "Suspending..." : "Suspend user"}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(selectedUser)}

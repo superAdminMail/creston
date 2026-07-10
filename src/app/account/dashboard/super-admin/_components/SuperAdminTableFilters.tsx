@@ -77,7 +77,7 @@ export function SuperAdminTableFilters({
                     }))
                   }
                   placeholder={field.placeholder}
-                  className="input-premium h-11 w-full rounded-xl px-3"
+                  className="input-premium h-11 w-full rounded-xl border-border/60 bg-white/90 px-3 text-slate-950 shadow-sm placeholder:text-slate-500 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-400"
                 />
                 {isLastField ? (
                   <Button type="submit" className="btn-secondary h-11 rounded-xl">
@@ -101,10 +101,10 @@ export function SuperAdminTableFilters({
                   }))
                 }
               >
-                <SelectTrigger className="super-admin-field h-11 w-full rounded-xl text-left">
+                <SelectTrigger className="super-admin-field h-11 w-full rounded-xl border-border/60 bg-white/90 text-left shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
                   <SelectValue placeholder={field.placeholder} />
                 </SelectTrigger>
-                <SelectContent className="border-border/60 bg-white/95 text-slate-950 dark:border-white/10 dark:bg-[#0b1728] dark:text-slate-100">
+                <SelectContent className="border-border/60 bg-white/96 text-slate-950 dark:border-white/10 dark:bg-slate-950/96 dark:text-slate-100">
                   <SelectItem value={ALL_VALUE}>{field.placeholder}</SelectItem>
                   {field.options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>

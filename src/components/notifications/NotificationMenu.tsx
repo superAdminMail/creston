@@ -109,28 +109,28 @@ export default function NotificationMenu() {
 
       <SheetContent
         side="right"
-        className="w-full max-w-[100vw] gap-0 border-l border-slate-200/80 bg-white/96 p-0 shadow-[0_30px_90px_-42px_rgba(15,23,42,0.55)] backdrop-blur duration-500 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right dark:border-zinc-800 dark:bg-zinc-950/96 sm:max-w-md lg:max-w-lg"
+        className="w-full max-w-[100vw] gap-0 border-l border-slate-200/80 bg-white/98 p-0 text-slate-950 shadow-[0_30px_90px_-42px_rgba(15,23,42,0.18)] backdrop-blur duration-500 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right dark:border-zinc-800 dark:bg-zinc-950/96 dark:text-white sm:max-w-md lg:max-w-lg"
       >
-        <SheetHeader className="relative overflow-hidden border-b border-[var(--brand-blue)]/20 bg-[linear-gradient(135deg,rgba(60,158,224,0.28)_0%,rgba(60,158,224,0.14)_40%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-left shadow-[inset_0_-1px_0_rgba(60,158,224,0.14)] dark:border-[var(--brand-blue)]/25 dark:bg-[linear-gradient(135deg,rgba(12,24,38,0.98)_0%,rgba(16,35,56,0.98)_45%,rgba(13,20,32,0.98)_100%)] dark:shadow-[inset_0_-1px_0_rgba(60,158,224,0.18)] sm:px-6 sm:py-5">
+        <SheetHeader className="relative overflow-hidden border-b border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(248,250,252,0.98)_100%)] px-4 py-4 text-left shadow-[inset_0_-1px_0_rgba(15,23,42,0.04)] dark:border-[var(--brand-blue)]/25 dark:bg-[linear-gradient(135deg,rgba(12,24,38,0.98)_0%,rgba(16,35,56,0.98)_45%,rgba(13,20,32,0.98)_100%)] dark:shadow-[inset_0_-1px_0_rgba(60,158,224,0.18)] sm:px-6 sm:py-5">
           <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(60,158,224,0.2)_0%,var(--brand-blue)_50%,rgba(60,158,224,0.2)_100%)] dark:bg-[linear-gradient(90deg,rgba(60,158,224,0.12)_0%,var(--brand-blue)_50%,rgba(60,158,224,0.12)_100%)]" />
-          <div className="absolute -left-10 top-0 h-24 w-24 rounded-full bg-[var(--brand-blue)]/16 blur-3xl dark:bg-[var(--brand-blue)]/18" />
-          <div className="absolute right-0 top-0 h-full w-32 bg-[radial-gradient(circle_at_top_right,_rgba(60,158,224,0.18),_transparent_70%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(60,158,224,0.14),_transparent_72%)]" />
+          <div className="absolute -left-10 top-0 h-24 w-24 rounded-full bg-sky-200/40 blur-3xl dark:bg-[var(--brand-blue)]/18" />
+          <div className="absolute right-0 top-0 h-full w-32 bg-[radial-gradient(circle_at_top_right,_rgba(60,158,224,0.12),_transparent_70%)] dark:bg-[radial-gradient(circle_at_top_right,_rgba(60,158,224,0.14),_transparent_72%)]" />
 
           <div className="relative flex flex-col gap-3 pr-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:pr-10">
             <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-600 dark:text-sky-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700 dark:text-sky-300">
                 Inbox
               </p>
               <SheetTitle className="text-base font-semibold tracking-tight text-slate-950 dark:text-white sm:text-lg">
                 Notifications
               </SheetTitle>
-              <SheetDescription className="max-w-[32rem] text-xs leading-5 text-slate-700/90 dark:text-slate-300/85 sm:text-sm sm:leading-6">
+              <SheetDescription className="max-w-[32rem] text-xs leading-5 text-slate-600 dark:text-slate-300/85 sm:text-sm sm:leading-6">
                 Track investment activity, promotion messages, profits
                 updates, and important announcements all in one place.
               </SheetDescription>
             </div>
 
-            <span className="inline-flex shrink-0 self-start rounded-full border border-blue-300 bg-black px-3 py-1 text-xs font-semibold shadow-[0_10px_24px_-18px_rgba(60,158,224,0.8)] backdrop-blur dark:border-[var(--brand-blue)]/25 dark:bg-white/8 dark:text-sky-200 dark:shadow-[0_12px_28px_-20px_rgba(60,158,224,0.7)]">
+            <span className="inline-flex shrink-0 self-start rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm backdrop-blur dark:border-[var(--brand-blue)]/25 dark:bg-white/8 dark:text-sky-200 dark:shadow-[0_12px_28px_-20px_rgba(60,158,224,0.7)]">
               {unread} unread
             </span>
           </div>
@@ -139,20 +139,20 @@ export default function NotificationMenu() {
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
             {isLoading && (
-              <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center text-sm text-muted-foreground dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400">
+              <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50/90 px-4 py-8 text-center text-sm text-slate-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70 dark:text-zinc-400">
                 Loading notifications...
               </div>
             )}
 
             {!isLoading && notifications.length === 0 && (
-              <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center dark:border-zinc-800 dark:bg-zinc-900/70">
+              <div className="rounded-[20px] border border-dashed border-slate-200 bg-slate-50/90 px-4 py-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
-                  <Bell className="h-5 w-5 text-slate-400 dark:text-zinc-500" />
+                  <Bell className="h-5 w-5 text-sky-500 dark:text-zinc-500" />
                 </div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                <p className="text-sm font-medium text-slate-950 dark:text-white">
                   No notifications yet
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground dark:text-zinc-400">
+                <p className="mt-1 text-xs text-slate-600 dark:text-zinc-400">
                   New notifications will appear here when you receive them.
                 </p>
               </div>
@@ -166,10 +166,10 @@ export default function NotificationMenu() {
                     type="button"
                     onClick={() => handleNotificationClick(notification)}
                     className={cn(
-                      "group mb-3 flex w-full items-start gap-3 rounded-[20px] border border-transparent px-3 py-3.5 text-left text-sm transition duration-300 last:mb-0 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-36px_rgba(15,23,42,0.25)] sm:px-4",
+                      "group mb-3 flex w-full items-start gap-3 rounded-[20px] border border-transparent px-3 py-3.5 text-left text-sm transition duration-300 last:mb-0 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-36px_rgba(15,23,42,0.18)] sm:px-4",
                       !notification.read
-                        ? "bg-sky-50/80 shadow-[0_18px_45px_-38px_rgba(14,165,233,0.45)] hover:border-sky-100 dark:border-[var(--brand-blue)]/10 dark:bg-[var(--brand-blue)]/10 dark:shadow-[0_18px_45px_-38px_rgba(60,158,224,0.35)] dark:hover:border-[var(--brand-blue)]/25 dark:hover:bg-[var(--brand-blue)]/12"
-                        : "bg-transparent hover:border-slate-200 hover:bg-slate-50/80 dark:hover:border-zinc-800 dark:hover:bg-zinc-900/70",
+                        ? "bg-sky-50/90 shadow-[0_18px_45px_-38px_rgba(14,165,233,0.3)] hover:border-sky-100 dark:border-[var(--brand-blue)]/10 dark:bg-[var(--brand-blue)]/10 dark:shadow-[0_18px_45px_-38px_rgba(60,158,224,0.35)] dark:hover:border-[var(--brand-blue)]/25 dark:hover:bg-[var(--brand-blue)]/12"
+                        : "bg-white/80 hover:border-slate-200 hover:bg-slate-50/90 dark:bg-transparent dark:hover:border-zinc-800 dark:hover:bg-zinc-900/70",
                     )}
                   >
                     <div
@@ -185,27 +185,27 @@ export default function NotificationMenu() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                        <p className="line-clamp-2 font-semibold tracking-tight text-slate-900 dark:text-white sm:line-clamp-1">
+                        <p className="line-clamp-2 font-semibold tracking-tight text-slate-950 dark:text-white sm:line-clamp-1">
                           {notification.title}
                         </p>
                         <div className="flex shrink-0 items-center gap-2 self-start">
                           {!notification.read && (
                             <span className="h-2 w-2 rounded-full bg-sky-500" />
                           )}
-                          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400 dark:text-zinc-400">
+                          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-400">
                             {formatNotificationTime(notification.createdAt)}
                           </span>
                         </div>
                       </div>
 
                       {notification.message ? (
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-zinc-400 sm:text-[13px]">
+                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-zinc-400 sm:text-[13px]">
                           {notification.message}
                         </p>
                       ) : null}
 
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-zinc-400">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-400">
                           {getNotificationDisplayType(notification)}
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-300">
@@ -222,11 +222,11 @@ export default function NotificationMenu() {
           </div>
 
           {notifications.length > 0 && (
-            <div className="border-t border-slate-200/80 p-4 dark:border-zinc-800">
+            <div className="border-t border-slate-200/80 bg-white/90 p-4 dark:border-zinc-800 dark:bg-transparent">
               <Link
                 href="/account/dashboard/notifications"
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-[#3c9ee0]/30 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-[#3c9ee0]/35 dark:hover:bg-zinc-900"
+                className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-200 hover:bg-white hover:text-slate-950 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-[#3c9ee0]/35 dark:hover:bg-zinc-900"
               >
                 <span>Open notification center</span>
               </Link>

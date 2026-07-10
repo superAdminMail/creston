@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import LoginForm from "../../_components/LoginForm";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
-import { getCurrentUserRole } from "@/lib/getCurrentUser";
+import { getCurrentUserAccessState } from "@/lib/auth/accountAccessState";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import type { DashboardRole } from "@/constants/dashboard-menu";
@@ -15,16 +15,30 @@ const STAFF_ROLES: DashboardRole[] = [
   UserRole.SUPER_ADMIN,
 ];
 
-const page = async () => {
-  const role = await getCurrentUserRole();
+const page = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ account?: string }>;
+}) => {
+  const accessState = await getCurrentUserAccessState();
+  const { account } = await searchParams;
 
-  if (role && STAFF_ROLES.includes(role as DashboardRole)) {
-    redirect(getDashboardHomeByRole(role as DashboardRole));
+  if (accessState?.status === "SUSPENDED") {
+    redirect("/account-suspended");
   }
 
-  if (role) {
+  if (accessState?.status === "ACTIVE") {
+    const role = accessState.role as DashboardRole;
+    if (STAFF_ROLES.includes(role)) {
+      redirect(getDashboardHomeByRole(role));
+    }
     redirect("/403");
   }
+
+  const blockedAccount =
+    accessState?.status === "DELETED" || account === "deleted"
+      ? "deleted"
+      : null;
 
   const [site, config] = await Promise.all([
     getSiteSeoConfig(),
@@ -40,6 +54,7 @@ const page = async () => {
         eyebrow="Staff Sign In"
         title={`Administrator access to ${site.siteName}`}
         description="Enter your credentials below to sign in."
+        blockedAccount={blockedAccount}
         footer={
           <div className="space-y-3 text-center">
             <p className="text-xs leading-relaxed text-slate-400">

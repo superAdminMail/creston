@@ -3,13 +3,27 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import {
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldAlert,
+} from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { inspectLoginAccountAccessStateAction } from "@/actions/auth/inspectLoginAccountAccessStateAction";
 import { AuthShell } from "@/app/auth/_components/AuthShell";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldContent,
@@ -20,7 +34,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
-import { getSession, signIn } from "@/lib/auth-client";
+import { getSession, signIn, signOut } from "@/lib/auth-client";
 import {
   loginUserSchema,
   loginUserSchemaType,
@@ -34,6 +48,7 @@ type LoginFormProps = {
   title: string;
   description: string;
   footer?: React.ReactNode;
+  blockedAccount?: "deleted" | null;
 };
 
 export default function LoginForm({
@@ -44,10 +59,14 @@ export default function LoginForm({
   title,
   description,
   footer,
+  blockedAccount,
 }: LoginFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
+  const [blockedAccountOpen, setBlockedAccountOpen] = useState(
+    blockedAccount === "deleted",
+  );
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<loginUserSchemaType>({
@@ -58,10 +77,34 @@ export default function LoginForm({
     },
   });
 
+  useEffect(() => {
+    if (blockedAccount !== "deleted") return;
+
+    setBlockedAccountOpen(true);
+    void signOut().catch(() => {});
+  }, [blockedAccount]);
+
   const handleSubmit = (values: loginUserSchemaType) => {
     setError(undefined);
 
     startTransition(async () => {
+      const accountAccess = await inspectLoginAccountAccessStateAction(
+        values.email,
+      );
+
+      if (accountAccess?.status === "DELETED") {
+        setBlockedAccountOpen(true);
+        form.reset();
+        await signOut().catch(() => {});
+        return;
+      }
+
+      if (accountAccess?.status === "SUSPENDED") {
+        router.replace("/account-suspended");
+        router.refresh();
+        return;
+      }
+
       const { error } = await signIn.email({
         email: values.email,
         password: values.password,
@@ -226,6 +269,44 @@ export default function LoginForm({
           </Button>
         </form>
       </div>
+
+      <Dialog open={blockedAccountOpen} onOpenChange={setBlockedAccountOpen}>
+        <DialogContent className="!max-w-[calc(100vw-2rem)] !rounded-[1.8rem] !border-slate-200 !bg-white !bg-none !p-0 !text-slate-950 !shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:!border-white/10 dark:!bg-slate-950 dark:!text-white">
+          <div className="space-y-5 p-5 sm:p-6">
+            <DialogHeader className="space-y-3">
+              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-200/70 bg-rose-50 text-rose-700 shadow-sm dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
+                Account deleted
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+                This account has been deleted. Please contact support to
+                restore your account before signing in again.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="border-t border-slate-200/80 pt-4 dark:border-white/10">
+              <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setBlockedAccountOpen(false)}
+                  className="rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+                >
+                  Close
+                </Button>
+                <Button
+                  asChild
+                  className="rounded-full bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+                >
+                  <Link href="/contact">Contact support</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AuthShell>
   );
 }

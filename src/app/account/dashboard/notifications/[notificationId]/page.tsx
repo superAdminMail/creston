@@ -13,10 +13,6 @@ import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/generated/prisma/client";
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "../../_components/dashboardSurfaces";
 
 function formatNotificationTime(value: string) {
   return new Date(value).toLocaleString("en-US", {
@@ -85,7 +81,7 @@ export default async function NotificationDetailsPage({
         <Button
           asChild
           variant="ghost"
-          className="w-fit hover:text-white hover:px-2 px-0 text-slate-600 dark:text-slate-300 dark:hover:text-white"
+          className="w-fit rounded-full border border-slate-200/80 bg-white/85 px-3 py-2 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:text-white"
         >
           <Link href="/account/dashboard/notifications">
             <ArrowLeft className="h-4 w-4" />
@@ -97,7 +93,7 @@ export default async function NotificationDetailsPage({
           <Button
             asChild
             variant="outline"
-            className="w-full rounded-2xl border-border/60 bg-white/80 text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] sm:w-auto"
+            className="w-full rounded-2xl border-slate-200/80 bg-slate-50/90 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08] sm:w-auto"
           >
             <Link href={supportLink ?? dto.link!}>
               {actionLabel ?? "Open linked page"}
@@ -108,7 +104,7 @@ export default async function NotificationDetailsPage({
       </div>
 
       <article
-        className={`${DASHBOARD_PAGE_PANEL_CLASS} rounded-[1.8rem] p-4 sm:p-6 lg:p-8`}
+        className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-4 shadow-sm sm:p-6 lg:p-8 dark:border-white/10 dark:bg-white/[0.03]"
       >
         <div className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-start">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-200/80 bg-sky-50 text-sky-700 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 sm:h-12 sm:w-12">
@@ -129,7 +125,7 @@ export default async function NotificationDetailsPage({
             </div>
 
             <div
-              className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-2xl p-4 sm:p-5`}
+              className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-5"
             >
               <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-200 sm:text-[15px] sm:leading-8">
                 {dto.message ??

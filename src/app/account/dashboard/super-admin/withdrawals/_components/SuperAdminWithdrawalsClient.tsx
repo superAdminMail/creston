@@ -55,22 +55,22 @@ export function SuperAdminWithdrawalsClient({
         />
       </section>
 
-      <div className="rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.25)] sm:p-6">
+      <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-4 shadow-sm sm:p-6 dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] dark:shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-300/80">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700/90 dark:text-sky-300/80">
               Super-admin operations
             </p>
-            <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+            <h2 className="mt-2 text-xl font-semibold text-slate-950 sm:text-2xl dark:text-white">
               Withdrawal management
             </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-400">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               Review payout details, inspect source information, and update
               statuses with a full platform-wide view.
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-slate-300 sm:self-auto">
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm sm:self-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             {completedRequests} completed
           </div>

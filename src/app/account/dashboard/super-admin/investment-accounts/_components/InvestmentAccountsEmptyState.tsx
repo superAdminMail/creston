@@ -2,12 +2,12 @@ import Link from "next/link";
 
 export function InvestmentAccountsEmptyState() {
   return (
-    <section className="card-premium rounded-[1.9rem] text-center">
+    <section className="rounded-[1.9rem] border border-slate-200/70 bg-white/90 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
       <div className="space-y-3 p-8">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
           No investment accounts found
         </h2>
-        <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">
+        <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-400">
           Investment accounts will appear here once users start opening them
           from the live investment catalog.
         </p>

@@ -15,10 +15,6 @@ import {
 } from "@/lib/notifications/notificationPresentation";
 import type { NotificationDTO } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "../../_components/dashboardSurfaces";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -202,12 +198,7 @@ export default function NotificationsPageClient({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <div
-        className={cn(
-          DASHBOARD_PAGE_PANEL_CLASS,
-          "rounded-[1.8rem] p-6 sm:p-8",
-        )}
-      >
+      <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700 dark:text-sky-300">
@@ -229,7 +220,7 @@ export default function NotificationsPageClient({
             variant="outline"
             onClick={handleMarkAllAsRead}
             disabled={!hasUnread || isMarkingAll}
-            className="rounded-2xl border-border/60 bg-white/80 px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-950 disabled:border-border/40 disabled:bg-white/60 disabled:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+            className="rounded-2xl border-slate-200/80 bg-slate-50/90 px-4 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-white hover:text-slate-950 disabled:border-slate-200/60 disabled:bg-slate-50/60 disabled:text-slate-400 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
           >
             <CheckCheck className="h-4 w-4" />
             {isMarkingAll ? "Marking..." : "Mark all as read"}
@@ -237,7 +228,7 @@ export default function NotificationsPageClient({
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200/80 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Total
             </p>
@@ -265,12 +256,7 @@ export default function NotificationsPageClient({
       </div>
 
       {!hasNotifications ? (
-        <div
-          className={cn(
-            DASHBOARD_PAGE_SURFACE_CLASS,
-            "rounded-[1.8rem] px-6 py-14 text-center",
-          )}
-        >
+        <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 px-6 py-14 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200/80 bg-white/75 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <Bell className="h-5 w-5 text-sky-700 dark:text-sky-300" />
           </div>
@@ -283,13 +269,8 @@ export default function NotificationsPageClient({
           </p>
         </div>
       ) : (
-        <div
-          className={cn(
-            DASHBOARD_PAGE_SURFACE_CLASS,
-            "rounded-[1.8rem] p-3 shadow-sm sm:p-4",
-          )}
-        >
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white/75 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-slate-50/90 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
               <Checkbox
                 checked={allVisibleSelected}
@@ -310,7 +291,7 @@ export default function NotificationsPageClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedIds([])}
-                  className="h-8 rounded-full border border-border/60 bg-white/80 px-3 text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.08] dark:hover:text-white"
+                  className="h-8 rounded-full border border-slate-200/80 bg-white/85 px-3 text-xs text-slate-600 shadow-sm hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.08] dark:hover:text-white"
                 >
                   Clear selection
                 </Button>
@@ -340,10 +321,10 @@ export default function NotificationsPageClient({
                 }
               }}
               className={cn(
-                "group mb-3 flex w-full items-start gap-3 rounded-[20px] border px-3 py-3.5 text-left text-sm transition duration-300 last:mb-0 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-36px_rgba(15,23,42,0.25)] sm:px-4",
+                "group mb-3 flex w-full items-start gap-3 rounded-[20px] border px-3 py-3.5 text-left text-sm transition duration-300 last:mb-0 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-36px_rgba(15,23,42,0.18)] sm:px-4",
                 !notification.read
-                  ? "border-sky-200/60 bg-sky-50/80 shadow-[0_18px_45px_-38px_rgba(14,165,233,0.22)] hover:border-sky-300/70 hover:bg-sky-50/90 dark:border-[var(--brand-blue)]/10 dark:bg-white/[0.04] dark:shadow-[0_18px_45px_-38px_rgba(60,158,224,0.18)] dark:hover:border-[var(--brand-blue)]/20 dark:hover:bg-white/[0.06]"
-                  : "border-slate-200/80 bg-white/80 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/15 dark:hover:bg-white/[0.06]",
+                  ? "border-sky-200/60 bg-sky-50/90 shadow-[0_18px_45px_-38px_rgba(14,165,233,0.18)] hover:border-sky-300/70 hover:bg-sky-50/95 dark:border-[var(--brand-blue)]/10 dark:bg-white/[0.04] dark:shadow-[0_18px_45px_-38px_rgba(60,158,224,0.18)] dark:hover:border-[var(--brand-blue)]/20 dark:hover:bg-white/[0.06]"
+                  : "border-slate-200/80 bg-white/90 hover:border-slate-300 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/15 dark:hover:bg-white/[0.06]",
               )}
             >
               <div
@@ -362,13 +343,13 @@ export default function NotificationsPageClient({
               </div>
 
               <div
-                className={cn(
-                  "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm",
-                  !notification.read
+                  className={cn(
+                    "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm",
+                    !notification.read
                     ? "border-sky-200 bg-white text-sky-700 dark:border-[var(--brand-blue)]/20 dark:bg-zinc-950 dark:text-sky-300"
-                    : "border-slate-200/80 bg-white/[0.92] text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400",
-                )}
-              >
+                    : "border-slate-200/80 bg-white text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400",
+                  )}
+                >
                 {renderNotificationIcon(notification, "h-4 w-4")}
               </div>
 
@@ -420,7 +401,7 @@ export default function NotificationsPageClient({
       </div>
 
       <AlertDialog open={clearOpen} onOpenChange={setClearOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-slate-200/80 bg-white/98 text-slate-950 shadow-[0_28px_80px_rgba(15,23,42,0.2)] dark:border-white/10 dark:bg-slate-950 dark:text-white">
           <AlertDialogHeader>
             <AlertDialogTitle>Clear selected notifications?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -428,8 +409,13 @@ export default function NotificationsPageClient({
               inbox.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearing}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="-mx-4 -mb-4 border-t border-slate-200/80 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+            <AlertDialogCancel
+              disabled={isClearing}
+              className="border-slate-200/80 bg-white/90 text-slate-700 hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();

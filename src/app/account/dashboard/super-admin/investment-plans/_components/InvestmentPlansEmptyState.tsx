@@ -11,15 +11,15 @@ import {
 
 export function InvestmentPlansEmptyState() {
   return (
-    <Empty className="max-w-4xl mx-auto rounded-[1.75rem] border-white/10 bg-white/[0.02] p-8 text-white sm:p-10">
+    <Empty className="mx-auto max-w-4xl rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-8 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:p-10">
       <EmptyHeader className="max-w-xl">
-        <EmptyMedia className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04]">
-          <WalletCards className="h-6 w-6 text-blue-300" />
+        <EmptyMedia className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl border border-slate-200/80 bg-slate-50/80 dark:border-white/10 dark:bg-white/[0.04]">
+          <WalletCards className="h-6 w-6 text-sky-700 dark:text-sky-300" />
         </EmptyMedia>
-        <EmptyTitle className="text-lg font-semibold text-white">
+        <EmptyTitle className="text-lg font-semibold text-slate-950 dark:text-white">
           No investment plans created yet
         </EmptyTitle>
-        <EmptyDescription className="text-sm leading-6 text-slate-400">
+        <EmptyDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
           Investment plans are used to group investments and offer them to
           users. Create your first investment plan to start offering investments
           to your users. You can create different plans for different types of

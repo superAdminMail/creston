@@ -18,6 +18,7 @@ export default async function SuperAdminUsersPage() {
       searchPlaceholder="Search users by name, email, role, or joined date..."
       users={data.users}
       stats={data.stats}
+      canSuspendUsers
     />
   );
 }

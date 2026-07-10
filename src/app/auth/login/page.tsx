@@ -3,15 +3,29 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import LoginForm from "../_components/LoginForm";
 import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
-import { getCurrentUserRole } from "@/lib/getCurrentUser";
+import { getCurrentUserAccessState } from "@/lib/auth/accountAccessState";
 import { redirect } from "next/navigation";
 
-const page = async () => {
-  const role = await getCurrentUserRole();
+const page = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ account?: string }>;
+}) => {
+  const accessState = await getCurrentUserAccessState();
+  const { account } = await searchParams;
 
-  if (role) {
-    redirect(getDashboardHomeByRole(role));
+  if (accessState?.status === "SUSPENDED") {
+    redirect("/account-suspended");
   }
+
+  if (accessState?.status === "ACTIVE") {
+    redirect(getDashboardHomeByRole(accessState.role));
+  }
+
+  const blockedAccount =
+    accessState?.status === "DELETED" || account === "deleted"
+      ? "deleted"
+      : null;
 
   const [site, config] = await Promise.all([
     getSiteSeoConfig(),
@@ -27,6 +41,7 @@ const page = async () => {
         eyebrow="Secure Sign In"
         title={`Sign in to ${site.siteName}`}
         description="Enter your credentials below to sign in."
+        blockedAccount={blockedAccount}
         footer={
           <div className="space-y-3 text-center">
             <p className="text-xs leading-relaxed text-slate-400">

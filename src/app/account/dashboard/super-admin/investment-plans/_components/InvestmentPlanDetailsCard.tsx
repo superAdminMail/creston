@@ -20,107 +20,109 @@ export function InvestmentPlanDetailsCard({
       <DashboardSectionCard>
         <Link
           href="/account/dashboard/super-admin/investment-plans"
-          className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-sky-700 transition hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
         >
           <ArrowLeft className="h-4 w-4" />
           View list
         </Link>
 
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-slate-950 sm:text-3xl dark:text-white">
             {plan.name}
           </h1>
           <InvestmentPlanStatusBadge isActive={plan.isActive} />
         </div>
 
-        <p className="mt-4 text-sm leading-7 text-slate-300">
+        <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">
           {plan.description}
         </p>
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Parent investment
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               <Link
                 href={`/account/dashboard/super-admin/investments/${plan.investmentId}`}
-                className="text-blue-200 transition hover:text-white"
+                className="text-sky-700 transition hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
               >
                 {plan.investmentName}
               </Link>
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Period
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.periodLabel}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Tier options
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.tiersCountLabel}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Tier range
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Currency
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.currency}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Created
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.createdAt}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+          <div className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]">
             <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
               Updated
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {plan.updatedAt}
             </dd>
           </div>
         </dl>
 
         <div className="mt-6">
-          <h2 className="text-lg font-semibold text-white">Plan tiers</h2>
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Plan tiers
+          </h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             {plan.tiers.map((tier) => (
               <div
                 key={tier.id}
-                className="rounded-2xl border border-white/8 bg-white/[0.03] p-4"
+                className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-white/[0.04]"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">
                     {tier.levelLabel}
                   </p>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     {tier.isActive ? "Active" : "Inactive"}
                   </span>
                 </div>
-                <p className="mt-3 text-base font-semibold text-white">
+                <p className="mt-3 text-base font-semibold text-slate-950 dark:text-white">
                   {tier.returnLabel ?? "ROI unavailable"}
                 </p>
-                <p className="mt-2 text-sm text-slate-300">
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                   {tier.minAmountLabel} - {tier.maxAmountLabel}
                 </p>
               </div>
@@ -130,9 +132,11 @@ export function InvestmentPlanDetailsCard({
       </DashboardSectionCard>
 
       <aside className="space-y-6">
-        <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
-          <h2 className="text-lg font-semibold text-white">Plan controls</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+        <DashboardSectionCard className="p-6">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Plan controls
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Keep this plan aligned with the live catalog by controlling whether
             it can be attached to future investor orders.
           </p>
@@ -145,7 +149,7 @@ export function InvestmentPlanDetailsCard({
                   plan.isActive ? "Deactivating..." : "Activating..."
                 }
                 variant="outline"
-                className="h-11 w-full rounded-xl border-white/10 bg-white/[0.03] text-slate-100 hover:border-white/15 hover:bg-white/[0.06] hover:text-white"
+                className="h-11 w-full rounded-xl border-border/60 bg-white/90 text-slate-700 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06] dark:hover:text-white"
               />
             </form>
 
@@ -158,11 +162,13 @@ export function InvestmentPlanDetailsCard({
               />
             </form>
           </div>
-        </section>
+        </DashboardSectionCard>
 
         <DashboardSectionCard className="p-6">
-          <h2 className="text-lg font-semibold text-white">Next action</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Next action
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Edit this plan when investment ranges, category mapping, or parent
             investment assignment changes.
           </p>

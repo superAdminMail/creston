@@ -1,29 +1,13 @@
-import type { UserRole } from "@/generated/prisma";
+import type { UserAccountStatus, UserRole } from "@/generated/prisma";
 
 import { formatCurrency, formatDateLabel } from "@/lib/formatters/formatters";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
 
 type DirectoryVerificationStatus = "VERIFIED" | "PENDING" | "REJECTED";
-type DirectoryAccountStatus = "ACTIVE" | "SUSPENDED" | "REVIEW";
-
-export type DashboardDirectoryUser = {
-  id: string;
-  fullName: string;
-  email: string;
-  phoneNumber: string | null;
-  country: string;
-  role: UserRole;
-  emailVerified: boolean;
-  kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
-  verificationStatus: DirectoryVerificationStatus;
-  accountStatus: DirectoryAccountStatus;
-  totalDeposits: number;
-  totalInvested: number;
-  walletBalance: number;
-  joinedAt: string;
-};
+type DirectoryAccountStatus = "ACTIVE" | "SUSPENDED" | "REVIEW" | "DELETED";
 
 export type DashboardUserDirectoryData = {
   users: DashboardDirectoryUser[];
@@ -91,14 +75,28 @@ function resolveVerificationStatus(user: {
 }
 
 function resolveAccountStatus(user: {
+  accountStatus: UserAccountStatus;
   isDeleted: boolean;
+  isSuspended: boolean;
   scheduledDeletionAt: Date | null;
   emailVerified: boolean;
   investorProfile: {
     kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
   } | null;
 }): DirectoryAccountStatus {
-  if (user.isDeleted || user.scheduledDeletionAt) {
+  if (
+    user.isDeleted ||
+    user.accountStatus === "DELETED"
+  ) {
+    return "DELETED";
+  }
+
+  if (
+    user.isSuspended ||
+    user.accountStatus === "SUSPENDED" ||
+    user.accountStatus === "BLOCKED" ||
+    user.scheduledDeletionAt
+  ) {
     return "SUSPENDED";
   }
 
@@ -133,7 +131,9 @@ export async function getDashboardUserDirectoryByHref(
       email: true,
       role: true,
       emailVerified: true,
+      accountStatus: true,
       isDeleted: true,
+      isSuspended: true,
       scheduledDeletionAt: true,
       createdAt: true,
       investorProfile: {
@@ -206,6 +206,8 @@ export async function getDashboardUserDirectoryByHref(
       kycStatus: user.investorProfile?.kycStatus ?? "NOT_STARTED",
       verificationStatus,
       accountStatus,
+      isSuspended: user.isSuspended,
+      isDeleted: user.isDeleted,
       totalDeposits,
       totalInvested,
       walletBalance,

@@ -25,14 +25,14 @@ function InvestmentPlanActions({
     <div className="flex flex-col gap-3 xl:w-[13rem]">
       <Link
         href={`/account/dashboard/super-admin/investment-plans/${plan.id}`}
-        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/[0.07] hover:text-white"
+        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.07] dark:hover:text-white"
       >
         View details
         <ArrowRight className="h-4 w-4" />
       </Link>
       <Link
         href={`/account/dashboard/super-admin/investment-plans/${plan.id}/edit`}
-        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/8 bg-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-white/12 hover:bg-white/[0.04] hover:text-white"
+        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/70 bg-transparent px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-white hover:text-slate-950 dark:border-white/8 dark:bg-transparent dark:text-slate-300 dark:hover:border-white/12 dark:hover:bg-white/[0.04] dark:hover:text-white"
       >
         <PencilLine className="h-4 w-4" />
         Edit
@@ -105,8 +105,12 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             header: "Plan",
             render: (plan) => (
               <div>
-                <p className="text-sm font-semibold text-white">{plan.name}</p>
-                <p className="mt-1 text-xs text-slate-400">{plan.slug}</p>
+                <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                  {plan.name}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {plan.slug}
+                </p>
               </div>
             ),
           },
@@ -114,7 +118,7 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             key: "investment",
             header: "Investment",
             render: (plan) => (
-              <span className="text-sm text-slate-200">
+              <span className="text-sm text-slate-700 dark:text-slate-200">
                 {plan.investmentName}
               </span>
             ),
@@ -123,7 +127,7 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             key: "period",
             header: "Period",
             render: (plan) => (
-              <span className="text-sm text-slate-200">
+              <span className="text-sm text-slate-700 dark:text-slate-200">
                 {plan.periodLabel}
               </span>
             ),
@@ -133,8 +137,10 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             header: "Tiers",
             render: (plan) => (
               <div className="space-y-1">
-                <span className="text-sm text-slate-200">{plan.tiersCountLabel}</span>
-                <p className="text-xs text-slate-400">
+                <span className="text-sm text-slate-700 dark:text-slate-200">
+                  {plan.tiersCountLabel}
+                </span>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {plan.tierRangeLabel ?? `Quoted in ${plan.currency}`}
                 </p>
               </div>
@@ -149,13 +155,15 @@ export function InvestmentPlansTable({ data }: InvestmentPlansTableProps) {
             key: "updatedAt",
             header: "Updated",
             render: (plan) => (
-              <span className="text-sm text-slate-200">{plan.updatedAt}</span>
+              <span className="text-sm text-slate-700 dark:text-slate-200">
+                {plan.updatedAt}
+              </span>
             ),
           },
           {
             key: "actions",
             header: "Actions",
-            className: "px-5 py-4 text-right text-slate-400",
+            className: "px-5 py-4 text-right text-slate-500 dark:text-slate-400",
             cellClassName: "px-5 py-4 align-top",
             render: (plan) => <InvestmentPlanActions plan={plan} />,
           },

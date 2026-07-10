@@ -13,68 +13,68 @@ export function SavingsAccountDetailsCard({
     <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <DashboardSectionCard>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold text-white sm:text-3xl">
+          <h1 className="text-2xl font-semibold text-slate-950 sm:text-3xl dark:text-white">
             {account.title}
           </h1>
-          <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-slate-300">
+          <span className="inline-flex items-center rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             {account.isLocked ? "Locked" : "Unlocked"}
           </span>
         </div>
 
-        <p className="mt-4 text-sm leading-7 text-slate-300">
+        <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-400">
           {account.product.description}
         </p>
 
         <dl className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
+            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Balance
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {formatCurrency(account.balance, account.currency)}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
+            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Target
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {account.targetAmountLabel}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
+            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Updated
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {account.updatedAt}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
+            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Transactions
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {account.counts.transactions}
             </dd>
           </div>
-          <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
-            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500">
+          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
+            <dt className="text-xs uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Funding intents
             </dt>
-            <dd className="mt-2 text-sm font-medium text-white">
+            <dd className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
               {account.counts.fundingIntents}
             </dd>
           </div>
         </dl>
 
-        <div className="mt-6 rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+        <div className="mt-6 rounded-2xl border border-slate-200/70 bg-slate-50/80 p-5 shadow-sm dark:border-white/8 dark:bg-white/[0.03]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                 Recent funding intents
               </h2>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 Latest funding attempts linked to this account.
               </p>
             </div>
@@ -85,17 +85,17 @@ export function SavingsAccountDetailsCard({
               {account.recentFundingIntents.map((intent) => (
                 <div
                   key={intent.id}
-                  className="flex flex-col gap-2 rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-white/85 px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-white/8 dark:bg-white/[0.02]"
                 >
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-slate-950 dark:text-white">
                       {intent.status}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       {intent.fundingMethodType} • {intent.createdAt}
                     </p>
                   </div>
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
                     {formatCurrency(intent.creditedAmount, account.currency)} /{" "}
                     {formatCurrency(intent.targetAmount, account.currency)}
                   </p>
@@ -103,7 +103,7 @@ export function SavingsAccountDetailsCard({
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-slate-400">
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
               No funding intents have been recorded yet.
             </p>
           )}
@@ -111,9 +111,11 @@ export function SavingsAccountDetailsCard({
       </DashboardSectionCard>
 
       <aside className="space-y-6">
-        <section className="rounded-[2rem] border border-white/8 bg-[#08101d]/96 p-6 shadow-[0_20px_55px_rgba(2,6,23,0.26)] backdrop-blur-xl">
-          <h2 className="text-lg font-semibold text-white">Account controls</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+        <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-white/8 dark:bg-[#08101d]/96 dark:shadow-[0_20px_55px_rgba(2,6,23,0.26)] dark:backdrop-blur-xl">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Account controls
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Use the edit page to change account lifecycle state, lock behavior,
             and target configuration.
           </p>
@@ -127,11 +129,15 @@ export function SavingsAccountDetailsCard({
         </section>
 
         <DashboardSectionCard className="p-6">
-          <h2 className="text-lg font-semibold text-white">Owner</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-400">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            Owner
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
             {account.owner.name}
           </p>
-          <p className="mt-1 text-sm text-slate-300">{account.owner.email}</p>
+          <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+            {account.owner.email}
+          </p>
         </DashboardSectionCard>
       </aside>
     </section>

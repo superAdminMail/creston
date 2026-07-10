@@ -1,12 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "../_components/dashboardSurfaces";
 
 function NotificationsHeaderSkeleton() {
   return (
-    <div className={`${DASHBOARD_PAGE_PANEL_CLASS} rounded-[1.8rem] p-6`}>
+    <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <Skeleton className="h-3.5 w-32 bg-slate-200/80 dark:bg-white/10" />
@@ -30,10 +26,8 @@ function NotificationsHeaderSkeleton() {
 
 function NotificationsToolbarSkeleton() {
   return (
-    <div
-      className={`${DASHBOARD_PAGE_PANEL_CLASS} rounded-[1.8rem] p-3 sm:p-4`}
-    >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-white/75 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+    <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[18px] border border-slate-200/80 bg-slate-50/90 px-3 py-2 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded-sm bg-slate-200/80 dark:bg-white/10" />
           <Skeleton className="h-3.5 w-44 bg-slate-200/80 dark:bg-white/10" />
@@ -49,7 +43,7 @@ function NotificationsToolbarSkeleton() {
         {Array.from({ length: 6 }).map((_, index) => (
           <div
             key={index}
-            className={`${DASHBOARD_PAGE_SURFACE_CLASS} flex w-full items-start gap-3 rounded-[20px] px-3 py-3.5 sm:px-4`}
+            className="flex w-full items-start gap-3 rounded-[20px] border border-slate-200/80 bg-white/90 px-3 py-3.5 shadow-sm sm:px-4 dark:border-white/10 dark:bg-white/[0.04]"
           >
             <Skeleton className="mt-0.5 h-4 w-4 rounded-sm bg-slate-200/80 dark:bg-white/10" />
 

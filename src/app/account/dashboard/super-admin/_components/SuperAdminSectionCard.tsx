@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../_components/dashboardSurfaces";
+import { DASHBOARD_PAGE_PANEL_CLASS } from "../../_components/dashboardSurfaces";
 
 type SuperAdminSectionCardProps = {
   title: string;
@@ -34,7 +34,7 @@ export function SuperAdminSectionCard({
   return (
     <Card
       className={cn(
-        DASHBOARD_PAGE_SURFACE_CLASS,
+        DASHBOARD_PAGE_PANEL_CLASS,
         className,
       )}
     >

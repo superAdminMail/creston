@@ -11,7 +11,9 @@ export type DashboardDirectoryUser = {
   emailVerified: boolean;
   kycStatus: "NOT_STARTED" | "PENDING_REVIEW" | "VERIFIED" | "REJECTED";
   verificationStatus: "VERIFIED" | "PENDING" | "REJECTED";
-  accountStatus: "ACTIVE" | "SUSPENDED" | "REVIEW";
+  accountStatus: "ACTIVE" | "SUSPENDED" | "REVIEW" | "DELETED";
+  isSuspended: boolean;
+  isDeleted: boolean;
   totalDeposits: number;
   totalInvested: number;
   walletBalance: number;
