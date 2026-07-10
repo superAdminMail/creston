@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { suspendUserAction } from "@/actions/super-admin/users/suspendUserAction";
+import { unsuspendUserAction } from "@/actions/super-admin/users/unsuspendUserAction";
 import { formatDirectoryCurrency } from "@/lib/formatters/directory";
 import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
 import {
@@ -56,6 +57,11 @@ const initialSuspendUserState = { status: "idle" as const };
 
 type VerificationStatus = DashboardDirectoryUser["verificationStatus"];
 type AccountStatus = DashboardDirectoryUser["accountStatus"];
+type UserActionMode = "suspend" | "unsuspend";
+type UserActionTarget = {
+  user: DashboardDirectoryUser;
+  mode: UserActionMode;
+} | null;
 
 type DashboardUserDirectoryProps = {
   badgeLabel: string;
@@ -281,9 +287,9 @@ export function DashboardUserDirectory({
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] =
     useState<DashboardDirectoryUser | null>(null);
-  const [suspendTargetUser, setSuspendTargetUser] =
-    useState<DashboardDirectoryUser | null>(null);
-  const [isSuspendPending, startSuspendTransition] = useTransition();
+  const [userActionTarget, setUserActionTarget] =
+    useState<UserActionTarget>(null);
+  const [isUserActionPending, startUserActionTransition] = useTransition();
 
   const filteredUsers = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -309,35 +315,54 @@ export function DashboardUserDirectory({
     setSelectedUser(user);
   }
 
-  function openSuspendDialog(user: DashboardDirectoryUser) {
-    setSuspendTargetUser(user);
+  function openUserActionDialog(
+    user: DashboardDirectoryUser,
+    mode: UserActionMode,
+  ) {
+    setUserActionTarget({ user, mode });
   }
 
-  function handleSuspendUser() {
-    if (!suspendTargetUser) return;
+  function handleUserAction() {
+    if (!userActionTarget) return;
 
-    startSuspendTransition(async () => {
+    startUserActionTransition(async () => {
       const formData = new FormData();
-      formData.set("userId", suspendTargetUser.id);
+      formData.set("userId", userActionTarget.user.id);
 
-      const result = await suspendUserAction(initialSuspendUserState, formData);
+      const action =
+        userActionTarget.mode === "suspend"
+          ? suspendUserAction
+          : unsuspendUserAction;
+
+      const result = await action(initialSuspendUserState, formData);
 
       if (result.status === "error") {
-        toast.error(result.message ?? "Unable to suspend this user.");
+        toast.error(
+          result.message ??
+            (userActionTarget.mode === "suspend"
+              ? "Unable to suspend this user."
+              : "Unable to reactivate this user."),
+        );
         return;
       }
 
-      toast.success(result.message ?? "User suspended successfully.");
+      toast.success(
+        result.message ??
+          (userActionTarget.mode === "suspend"
+            ? "User suspended successfully."
+            : "User reactivated successfully."),
+      );
 
-      if (selectedUser?.id === suspendTargetUser.id) {
+      if (selectedUser?.id === userActionTarget.user.id) {
         setSelectedUser({
           ...selectedUser,
-          isSuspended: true,
-          accountStatus: "SUSPENDED",
+          isSuspended: userActionTarget.mode === "suspend",
+          accountStatus:
+            userActionTarget.mode === "suspend" ? "SUSPENDED" : "ACTIVE",
         });
       }
 
-      setSuspendTargetUser(null);
+      setUserActionTarget(null);
       router.refresh();
     });
   }
@@ -541,32 +566,45 @@ export function DashboardUserDirectory({
                             </button>
 
                             {canSuspendUsers ? (
-                              <button
-                                type="button"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  if (user.isDeleted || user.isSuspended) {
-                                    return;
-                                  }
-                                  openSuspendDialog(user);
-                                }}
-                                disabled={user.isDeleted || user.isSuspended}
-                                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
-                                aria-label={
-                                  user.isDeleted
-                                    ? `${user.fullName} is deleted`
-                                    : user.isSuspended
-                                      ? `${user.fullName} is already suspended`
-                                      : `Suspend ${user.fullName}`
-                                }
-                              >
-                                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
-                                {user.isDeleted
-                                  ? "Deleted"
-                                  : user.isSuspended
-                                    ? "Suspended"
-                                    : "Suspend"}
-                              </button>
+                              user.isDeleted ? (
+                                <button
+                                  type="button"
+                                  onClick={(event) => event.stopPropagation()}
+                                  disabled
+                                  className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
+                                  aria-label={`${user.fullName} is deleted`}
+                                >
+                                  <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
+                                  Deleted
+                                </button>
+                              ) : user.isSuspended ||
+                                user.accountStatus === "SUSPENDED" ? (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openUserActionDialog(user, "unsuspend");
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-full border border-emerald-200/70 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-100"
+                                  aria-label={`Reactivate ${user.fullName}`}
+                                >
+                                  <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                                  Unsuspend
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    openUserActionDialog(user, "suspend");
+                                  }}
+                                  className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
+                                  aria-label={`Suspend ${user.fullName}`}
+                                >
+                                  <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
+                                  Suspend
+                                </button>
+                              )
                             ) : null}
                           </div>
                         </td>
@@ -592,27 +630,39 @@ export function DashboardUserDirectory({
       </div>
 
       <Dialog
-        open={Boolean(suspendTargetUser)}
+        open={Boolean(userActionTarget)}
         onOpenChange={(open) => {
           if (!open) {
-            setSuspendTargetUser(null);
+            setUserActionTarget(null);
           }
         }}
       >
         <DialogContent className="!rounded-[1.75rem] !border-slate-200 !bg-white !bg-none !p-0 !text-slate-950 !shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:!border-white/10 dark:!bg-zinc-950 dark:!text-white">
-          {suspendTargetUser ? (
+          {userActionTarget ? (
             <div className="space-y-5 p-5 sm:p-6">
               <DialogHeader className="space-y-3">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-200/70 bg-rose-50 text-rose-700 shadow-sm dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
-                  <ShieldAlert className="h-5 w-5" />
+                <div
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border shadow-sm ${
+                    userActionTarget.mode === "suspend"
+                      ? "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
+                      : "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+                  }`}
+                >
+                  {userActionTarget.mode === "suspend" ? (
+                    <ShieldAlert className="h-5 w-5" />
+                  ) : (
+                    <ShieldCheck className="h-5 w-5" />
+                  )}
                 </div>
                 <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-                  Suspend user
+                  {userActionTarget.mode === "suspend"
+                    ? "Suspend user"
+                    : "Unsuspend user"}
                 </DialogTitle>
                 <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  {suspendTargetUser.fullName} will be suspended immediately and
-                  prevented from signing in until support reactivates the
-                  account.
+                  {userActionTarget.mode === "suspend"
+                    ? `${userActionTarget.user.fullName} will be suspended immediately and prevented from signing in until support reactivates the account.`
+                    : `${userActionTarget.user.fullName} will regain access to the dashboard immediately after reactivation.`}
                 </DialogDescription>
               </DialogHeader>
 
@@ -620,13 +670,13 @@ export function DashboardUserDirectory({
                 <div className="flex items-center justify-between gap-4">
                   <span>Email</span>
                   <span className="font-medium text-slate-950 dark:text-white">
-                    {suspendTargetUser.email}
+                    {userActionTarget.user.email}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span>Account status</span>
                   <span className="font-medium text-slate-950 dark:text-white">
-                    {getAccountStatusBadge(suspendTargetUser.accountStatus)}
+                    {getAccountStatusBadge(userActionTarget.user.accountStatus)}
                   </span>
                 </div>
               </div>
@@ -635,19 +685,29 @@ export function DashboardUserDirectory({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setSuspendTargetUser(null)}
+                  onClick={() => setUserActionTarget(null)}
                   className="rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
-                  disabled={isSuspendPending}
+                  disabled={isUserActionPending}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleSuspendUser}
-                  disabled={isSuspendPending}
-                  className="rounded-full bg-rose-600 text-white hover:bg-rose-700"
+                  onClick={handleUserAction}
+                  disabled={isUserActionPending}
+                  className={`rounded-full text-white ${
+                    userActionTarget.mode === "suspend"
+                      ? "bg-rose-600 hover:bg-rose-700"
+                      : "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
                 >
-                  {isSuspendPending ? "Suspending..." : "Suspend user"}
+                  {isUserActionPending
+                    ? userActionTarget.mode === "suspend"
+                      ? "Suspending..."
+                      : "Unsuspending..."
+                    : userActionTarget.mode === "suspend"
+                      ? "Suspend user"
+                      : "Unsuspend user"}
                 </Button>
               </div>
             </div>
