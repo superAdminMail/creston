@@ -5,7 +5,7 @@ import {
 
 export default function Loading() {
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+    <main className="mx-auto max-w-6xl space-y-8">
       <section className={`${DASHBOARD_PAGE_PANEL_CLASS} p-5 sm:p-6 lg:p-8`}>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-4">

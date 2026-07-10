@@ -9,6 +9,7 @@ import { ourFileRouter } from "./api/uploadthing/core";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import QueryProvider from "@/providers/queryProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { AppLoadSeenMarker } from "@/components/layout/AppLoadSeenMarker";
 
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
@@ -55,6 +56,7 @@ export default async function RootLayout({
 
         <QueryProvider>
           <TooltipProvider>
+            <AppLoadSeenMarker />
             {children}
             <Toaster richColors closeButton position="top-right" />
           </TooltipProvider>
