@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -61,12 +60,7 @@ export function AccountLayoutShell({
         />
 
         <div className="md:pl-72">
-          <motion.aside
-            initial={{ opacity: 0, x: -14 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-            className="fixed left-0 top-16 z-30 hidden h-[calc(100dvh-4rem)] w-72 md:block"
-          >
+          <aside className="fixed left-0 top-16 z-30 hidden h-[calc(100dvh-4rem)] w-72 md:block">
             <div className="h-full px-4 py-4">
               <AccountSidebarShell
                 initialUser={user}
@@ -75,16 +69,11 @@ export function AccountLayoutShell({
                 isSigningOut={isSigningOut}
               />
             </div>
-          </motion.aside>
+          </aside>
 
-          <motion.main
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.24, ease: "easeOut", delay: 0.04 }}
-            className="min-h-[calc(100dvh-4rem)] bg-card px-4 py-4 sm:px-6 sm:py-6"
-          >
+          <main className="min-h-[calc(100dvh-4rem)] bg-card px-4 py-4 sm:px-6 sm:py-6">
             {children}
-          </motion.main>
+          </main>
         </div>
 
         <Drawer
@@ -104,26 +93,17 @@ export function AccountLayoutShell({
               </DrawerDescription>
             </DrawerHeader>
 
-            <AnimatePresence initial={false}>
-              {mobileOpen ? (
-                <motion.div
-                  key="mobile-account-nav"
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="h-full overflow-hidden p-0"
-                >
-                  <AccountMobileSideNavShell
-                    initialUser={user}
-                    siteName={siteName}
-                    onNavigate={() => setMobileOpen(false)}
-                    onLogout={handleLogout}
-                    isSigningOut={isSigningOut}
-                  />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+            {mobileOpen ? (
+              <div className="h-full overflow-hidden p-0">
+                <AccountMobileSideNavShell
+                  initialUser={user}
+                  siteName={siteName}
+                  onNavigate={() => setMobileOpen(false)}
+                  onLogout={handleLogout}
+                  isSigningOut={isSigningOut}
+                />
+              </div>
+            ) : null}
           </DrawerSurface>
         </Drawer>
       </div>
