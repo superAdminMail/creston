@@ -27,7 +27,7 @@ const publicAuthLinks = {
   login: "/auth/login",
 };
 
-const dashboardLink = "/account";
+const dashboardLink = "/account/continue";
 
 function BrandMark({
   siteName,

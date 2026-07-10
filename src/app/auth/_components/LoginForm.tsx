@@ -28,9 +28,11 @@ import {
 export default function LoginForm({
   siteName,
   siteLogoUrl,
+  callbackUrl,
 }: {
   siteName: string;
   siteLogoUrl?: string | null;
+  callbackUrl?: string | null;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
@@ -60,7 +62,11 @@ export default function LoginForm({
         return;
       }
 
-      router.replace("/account");
+      const nextUrl = callbackUrl?.trim()
+        ? `/auth/continue?callbackUrl=${encodeURIComponent(callbackUrl.trim())}`
+        : "/auth/continue";
+
+      router.replace(nextUrl);
       router.refresh();
     });
   };

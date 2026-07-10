@@ -43,7 +43,8 @@ function isProtectedPath(pathname: string) {
 function isAuthUtilityRoute(pathname: string) {
   return (
     matchesRoute(pathname, "/auth/verify-email") ||
-    matchesRoute(pathname, "/auth/send-verify-email")
+    matchesRoute(pathname, "/auth/send-verify-email") ||
+    matchesRoute(pathname, "/auth/continue")
   );
 }
 
@@ -85,7 +86,7 @@ export function middleware(request: NextRequest) {
     }
 
     if (hasCookie) {
-      return NextResponse.redirect(new URL("/account", request.url));
+      return NextResponse.redirect(new URL("/auth/continue", request.url));
     }
 
     return NextResponse.next();
