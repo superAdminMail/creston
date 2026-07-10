@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronRight, LogOut, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -46,7 +45,7 @@ type SidebarBodyProps = {
 };
 
 const sidebarShellClasses =
-  "h-full overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] dark:text-slate-100 dark:shadow-[0_28px_60px_rgba(0,0,0,0.34)]";
+  "h-full overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] dark:text-slate-100 dark:shadow-[0_28px_60px_rgba(0,0,0,0.34)]";
 
 function getActiveSectionTitle(
   pathname: string,
@@ -130,11 +129,7 @@ function SidebarBody({
     >
       <Sidebar collapsible="none" className="h-full border-0 bg-transparent">
         <SidebarHeader className="gap-3 p-3 pb-2">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-          >
+          <div>
             {isMobile ? (
               <AccountIdentity user={user} />
             ) : (
@@ -150,34 +145,27 @@ function SidebarBody({
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         </SidebarHeader>
 
         <SidebarSeparator className="mx-3 bg-slate-200/80 dark:bg-white/10" />
 
             <SidebarContent className="px-2 py-3">
-              {sections.map((section, index) => {
+              {sections.map((section) => {
                 const isOpen =
                   openSections[section.title] ??
                   (section.title === defaultOpenTitle ||
                     section.title === activeSectionTitle);
 
             return (
-              <motion.section
+              <section
                 key={section.title}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.22,
-                  ease: "easeOut",
-                  delay: index * 0.04,
-                }}
                 className="mb-2"
               >
                 <button
                   type="button"
                   onClick={() => handleToggle(section.title)}
-                  className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 transition-colors hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100"
+                  className="flex w-full items-center justify-between rounded-2xl px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/[0.05] dark:hover:text-slate-100"
                 >
                   <span>{section.title}</span>
                   {isOpen ? (
@@ -187,15 +175,8 @@ function SidebarBody({
                   )}
                 </button>
 
-                <AnimatePresence initial={false}>
-                  {isOpen ? (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: "easeInOut" }}
-                      className="overflow-hidden"
-                    >
+                {isOpen ? (
+                    <div className="overflow-hidden">
                       <SidebarMenu className="gap-1.5 px-1 pt-1">
                         {section.links.map(({ href, icon: Icon, name }) => {
                           const active = isLinkActive(href);
@@ -206,7 +187,7 @@ function SidebarBody({
                                 asChild
                                 isActive={active}
                                 className={cn(
-                                  "h-12 rounded-2xl border px-3 transition-all duration-200",
+                                  "h-12 rounded-2xl border px-3",
                                   active
                                     ? "border-sky-200 bg-sky-50 text-slate-950 shadow-[0_12px_28px_rgba(14,165,233,0.10)] dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-white"
                                     : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-950 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)] dark:text-slate-300 dark:hover:border-white/10 dark:hover:bg-white/[0.05] dark:hover:text-white",
@@ -215,7 +196,7 @@ function SidebarBody({
                                 <Link href={href} onClick={onNavigate}>
                                   <span
                                     className={cn(
-                                      "flex h-9 w-9 items-center justify-center rounded-2xl ring-1 transition-colors",
+                                      "flex h-9 w-9 items-center justify-center rounded-2xl ring-1",
                                       active
                                         ? "bg-sky-100 text-sky-700 ring-sky-200 dark:bg-sky-400/12 dark:text-sky-200 dark:ring-sky-400/20"
                                         : "bg-slate-100 text-slate-500 ring-slate-200 dark:bg-white/[0.05] dark:text-slate-400 dark:ring-white/10",
@@ -230,10 +211,9 @@ function SidebarBody({
                           );
                         })}
                       </SidebarMenu>
-                    </motion.div>
+                    </div>
                   ) : null}
-                </AnimatePresence>
-              </motion.section>
+              </section>
             );
           })}
         </SidebarContent>
@@ -247,7 +227,7 @@ function SidebarBody({
             variant="outline"
             type="button"
             disabled={isSigningOut}
-            className="h-11 w-full justify-center gap-2 rounded-2xl border-slate-200 bg-white text-red-600 shadow-sm transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
+            className="h-11 w-full justify-center gap-2 rounded-2xl border-slate-200 bg-white text-red-600 shadow-sm hover:border-red-200 hover:bg-red-50 hover:text-red-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
             onClick={() => {
               onLogout?.();
               onNavigate?.();

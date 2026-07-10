@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { LogOut, Menu, Settings, User2 } from "lucide-react";
 import { ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -96,12 +95,7 @@ export function DashboardNavbarClient({
   const avatarUrl = user.profileAvatar?.url || user.image || null;
 
   return (
-    <motion.nav
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, ease: "easeOut" }}
-      className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl transition-colors dark:border-white/10 dark:bg-[#08111d]/76"
-    >
+    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl dark:border-white/10 dark:bg-[#08111d]/76">
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Button
@@ -117,7 +111,7 @@ export function DashboardNavbarClient({
 
           <Link
             href={dashboardHome}
-            className="flex min-w-0 flex-none items-center gap-3 rounded-[1.35rem] px-1.5 py-1 transition-colors hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
+            className="flex min-w-0 flex-none items-center gap-3 rounded-[1.35rem] px-1.5 py-1 hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
               {siteLogoUrl ? (
@@ -158,7 +152,7 @@ export function DashboardNavbarClient({
             <MenubarMenu>
               <MenubarTrigger
                 className={cn(
-                  "rounded-2xl bg-transparent p-0 text-slate-700 transition-all duration-200 hover:bg-transparent hover:text-slate-950 data-[state=open]:bg-transparent data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white dark:data-[state=open]:bg-transparent dark:data-[state=open]:text-white",
+                  "rounded-2xl bg-transparent p-0 text-slate-700 hover:bg-transparent hover:text-slate-950 data-[state=open]:bg-transparent data-[state=open]:text-slate-950 dark:text-slate-200 dark:hover:bg-transparent dark:hover:text-white dark:data-[state=open]:bg-transparent dark:data-[state=open]:text-white",
                 )}
                 aria-label="Open account menu"
               >
@@ -181,11 +175,7 @@ export function DashboardNavbarClient({
                 sideOffset={14}
                 className="w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 bg-white/96 p-2 text-slate-950 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1728]/96 dark:text-white dark:shadow-[0_22px_54px_rgba(0,0,0,0.32)] sm:w-[18rem]"
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                >
+                <div>
                   <MenubarLabel className="px-3 py-3 font-normal">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 rounded-2xl ring-1 ring-slate-200 dark:ring-white/10">
@@ -253,12 +243,12 @@ export function DashboardNavbarClient({
                     <LogOut className="mr-3 h-4 w-4" />
                     {isSigningOut ? "Signing out..." : "Logout"}
                   </MenubarItem>
-                </motion.div>
+                </div>
               </MenubarContent>
             </MenubarMenu>
           </Menubar>
         </div>
       </div>
-    </motion.nav>
+    </nav>
   );
 }

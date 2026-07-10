@@ -48,7 +48,7 @@ export function AccountLayoutShell({
   };
 
   return (
-    <SidebarProvider className="min-h-screen bg-card text-slate-950 transition-colors dark:text-slate-100">
+    <SidebarProvider className="min-h-screen bg-card text-slate-950 dark:text-slate-100">
       <div className="w-full">
         <DashboardNavbarClient
           user={user}
