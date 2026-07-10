@@ -11,7 +11,7 @@ type EmailVerificationWatcherProps = {
 };
 
 export default function EmailVerificationWatcher({
-  redirectTo = "/account",
+  redirectTo = "/account/dashboard",
   intervalMs = 2000,
 }: EmailVerificationWatcherProps) {
   const router = useRouter();

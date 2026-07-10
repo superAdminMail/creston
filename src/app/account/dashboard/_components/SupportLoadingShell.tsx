@@ -21,7 +21,7 @@ export function SupportLoadingShell({
     <div
       className={cn(
         "mx-auto min-h-[calc(100dvh-7rem)] px-4 py-4 sm:px-6 lg:px-8",
-        isConversationVariant ? "max-w-7xl" : "max-w-[1600px]",
+        "max-w-7xl",
       )}
     >
       <div className="space-y-6">

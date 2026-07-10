@@ -29,7 +29,7 @@ export default async function Page() {
   const transactions = await getUserTransactions(userId);
 
   return (
-    <>
+    <div className="space-y-5">
       <UserDashboardPage
         userName={userName}
         stats={stats}
@@ -37,6 +37,6 @@ export default async function Page() {
       />
       <TransactionTable transactions={transactions} />
       <TradingViewMarketChart tone="surface" />
-    </>
+    </div>
   );
 }

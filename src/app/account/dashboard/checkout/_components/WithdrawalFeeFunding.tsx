@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/formatters/formatters";
+import { cn } from "@/lib/utils";
 import type { WithdrawalFeeCheckoutDetails } from "@/lib/types/payments/withdrawalFee.types";
 import {
   getCheckoutFundingMethodLabel,
@@ -17,6 +18,10 @@ import {
 
 import CheckoutFundingMethodSelector from "./CheckoutFundingMethodSelector";
 import WithdrawalFeeProofModal from "./WithdrawalFeeProofModal";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../_components/dashboardSurfaces";
 
 function normalizeFundingMethodType(
   value: string | null | undefined,
@@ -30,7 +35,7 @@ function normalizeFundingMethodType(
 
 function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+    <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-2xl p-4")}>
       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
         {label}
       </p>
@@ -130,7 +135,7 @@ export default function WithdrawalFeeFunding({
   if (details.isClosedWithdrawal) {
     return (
       <div className="mx-auto max-w-3xl px-3 py-4 sm:px-4 sm:py-6 md:px-6">
-        <Card className="rounded-[1.35rem] border border-rose-400/20 bg-rose-500/10 shadow-[0_24px_60px_rgba(15,23,42,0.08)] sm:rounded-[1.75rem]">
+        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "rounded-[1.35rem] border-rose-400/20 bg-rose-500/10 dark:border-rose-300/20 dark:bg-slate-900/60 sm:rounded-[1.75rem]")}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-white sm:text-lg">
               {details.withdrawal.status === "CANCELLED"
@@ -177,7 +182,7 @@ export default function WithdrawalFeeFunding({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
-      <div className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/78 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] sm:p-6 dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.92),rgba(5,11,31,0.96))]">
+      <div className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full p-4 sm:p-6")}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -226,7 +231,7 @@ export default function WithdrawalFeeFunding({
       />
 
       {details.isUnderReview ? (
-        <Card className="w-full rounded-[1.35rem] border border-amber-200/70 bg-amber-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-amber-400/20 dark:bg-white/[0.04]">
+        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full border-amber-200/70 bg-amber-50/90 dark:border-amber-400/20 dark:bg-slate-900/60")}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Fee under review
@@ -244,7 +249,7 @@ export default function WithdrawalFeeFunding({
       !details.isUnderReview &&
       selectedFundingMethod === "BANK_TRANSFER" &&
       !bankMethod ? (
-        <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Bank details unavailable
@@ -263,7 +268,7 @@ export default function WithdrawalFeeFunding({
       selectedFundingMethod &&
       (cryptoSelected || bankMethod) ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
-          <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+          <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
             <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
               <div className="min-w-0">
                 <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -276,7 +281,7 @@ export default function WithdrawalFeeFunding({
                 </p>
               </div>
 
-              <div className="inline-flex max-w-full items-center gap-2 self-start rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-1.5 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "inline-flex max-w-full items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300")}>
                 {cryptoSelected ? (
                   <>
                     <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
@@ -294,7 +299,7 @@ export default function WithdrawalFeeFunding({
             <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
               {cryptoSelected ? (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/90 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-slate-900/60">
                     <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                       Funding method
                     </p>
@@ -302,7 +307,7 @@ export default function WithdrawalFeeFunding({
                       Crypto wallet
                     </p>
                   </div>
-                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/80 p-4 shadow-sm backdrop-blur sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-white/[0.04]">
+                  <div className="w-full rounded-[1.15rem] border border-amber-200/20 bg-amber-50/90 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-slate-900/60">
                     <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                       Fee amount
                     </p>
@@ -337,7 +342,7 @@ export default function WithdrawalFeeFunding({
                   />
 
                   {bankMethod.instructions ? (
-                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:rounded-[1.25rem]">
+                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/95 p-4 dark:border-white/10 dark:bg-slate-900/60 sm:rounded-[1.25rem]">
                       <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         Instructions
                       </p>
@@ -348,7 +353,7 @@ export default function WithdrawalFeeFunding({
                   ) : null}
 
                   {bankMethod.notes ? (
-                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03] sm:rounded-[1.25rem]">
+                    <div className="w-full rounded-[1.15rem] border border-slate-200/80 bg-slate-50/95 p-4 dark:border-white/10 dark:bg-slate-900/60 sm:rounded-[1.25rem]">
                       <p className="text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                         Notes
                       </p>
@@ -388,7 +393,7 @@ export default function WithdrawalFeeFunding({
           </Card>
 
           {selectedFundingMethod === "CRYPTO_PROVIDER" && bankMethod ? (
-            <Card className="w-full rounded-[1.35rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+            <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
                   Crypto wallet details
@@ -420,12 +425,12 @@ export default function WithdrawalFeeFunding({
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+                  <div className="rounded-[1.15rem] border border-slate-200/80 bg-slate-50/95 p-4 text-sm text-slate-600 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300">
                     No wallet address is currently available for this fee payment.
                   </div>
                 )}
                 {bankMethod.notes ? (
-                  <div className="rounded-[1.15rem] border border-slate-200/80 bg-slate-50/80 p-4 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+                  <div className="rounded-[1.15rem] border border-slate-200/80 bg-slate-50/95 p-4 text-sm text-slate-600 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300">
                     {bankMethod.notes}
                   </div>
                 ) : null}
@@ -436,7 +441,7 @@ export default function WithdrawalFeeFunding({
       ) : null}
 
       {details.isSettled ? (
-        <Card className="w-full rounded-[1.35rem] border border-emerald-200/70 bg-emerald-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:rounded-[1.75rem] dark:border-emerald-400/20 dark:bg-white/[0.04]">
+        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full border-emerald-200/70 bg-emerald-50/90 dark:border-emerald-400/20 dark:bg-slate-900/60")}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Fee settled
@@ -490,7 +495,7 @@ export default function WithdrawalFeeFunding({
         />
       ) : null}
 
-      <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] bg-white/40 px-4 py-3 text-sm text-slate-400 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">
+      <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300")}>
         <Shield className="h-4 w-4 text-sky-500" />
         <span className="max-w-[32rem] text-center sm:text-left">
           Secure and encrypted payment flow

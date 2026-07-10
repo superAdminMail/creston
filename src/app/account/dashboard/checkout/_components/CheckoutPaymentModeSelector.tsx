@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { CheckoutPaymentMode } from "@/lib/types/payments/checkout.types";
+import { DASHBOARD_PAGE_PANEL_CLASS } from "../../_components/dashboardSurfaces";
 
 type Props = {
   value: CheckoutPaymentMode | null;
@@ -23,7 +24,7 @@ export default function CheckoutPaymentModeSelector({
   return (
     <Card
       className={cn(
-        "rounded-[1.75rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]",
+        DASHBOARD_PAGE_PANEL_CLASS,
         className,
       )}
     >
@@ -41,7 +42,7 @@ export default function CheckoutPaymentModeSelector({
           type="button"
           variant={value === "FULL" ? "default" : "outline"}
           onClick={() => onChange("FULL")}
-          className="rounded-2xl"
+          className="rounded-2xl border border-slate-200/80 bg-white/90 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
         >
           Full Payment
         </Button>
@@ -50,7 +51,7 @@ export default function CheckoutPaymentModeSelector({
           type="button"
           variant={value === "PARTIAL" ? "default" : "outline"}
           onClick={() => onChange("PARTIAL")}
-          className="rounded-2xl"
+          className="rounded-2xl border border-slate-200/80 bg-white/90 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
         >
           Partial Payment
         </Button>

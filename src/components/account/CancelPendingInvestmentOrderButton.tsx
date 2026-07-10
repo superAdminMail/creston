@@ -54,7 +54,7 @@ export function CancelPendingInvestmentOrderButton({
           type="button"
           variant="outline"
           className={cn(
-            "rounded-2xl border border-rose-400/20 bg-rose-400/8 text-rose-200 transition hover:border-rose-400/30 hover:bg-rose-400/12 hover:text-rose-100 dark:border-rose-400/20 dark:bg-rose-400/10 dark:hover:bg-rose-400/15",
+            "rounded-2xl border border-rose-300 bg-rose-100 px-4 font-semibold text-rose-900 shadow-sm transition hover:border-rose-400 hover:bg-rose-200 hover:text-rose-950 dark:border-rose-400/40 dark:bg-rose-500/20 dark:text-rose-50 dark:hover:bg-rose-500/30 dark:hover:text-white",
             className,
           )}
         >

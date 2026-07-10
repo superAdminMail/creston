@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { DASHBOARD_PAGE_PANEL_CLASS } from "../../../../../_components/dashboardSurfaces";
 
 type Props = {
   mode: "FULL" | "PARTIAL" | null;
@@ -24,7 +25,7 @@ export default function OrderPaymentSelector({
   return (
     <Card
       className={cn(
-        "rounded-[1.75rem] border border-slate-200/80 bg-white/88 shadow-sm dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]",
+        DASHBOARD_PAGE_PANEL_CLASS,
         className,
       )}
     >
@@ -41,18 +42,26 @@ export default function OrderPaymentSelector({
       <CardContent className="grid gap-3 px-4 pb-4 sm:grid-cols-2 sm:px-6 sm:pb-6">
         <Button
           type="button"
-          variant={mode === "FULL" ? "default" : "outline"}
+          variant="outline"
           onClick={() => onModeChange("FULL")}
-          className="rounded-2xl"
+          className={
+            mode === "FULL"
+              ? "rounded-2xl border-sky-300/70 bg-sky-600 text-white shadow-sm hover:bg-sky-500 dark:border-sky-300/40 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-400"
+              : "rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900/80"
+          }
         >
           Full Payment
         </Button>
 
         <Button
           type="button"
-          variant={mode === "PARTIAL" ? "default" : "outline"}
+          variant="outline"
           onClick={() => onModeChange("PARTIAL")}
-          className="rounded-2xl"
+          className={
+            mode === "PARTIAL"
+              ? "rounded-2xl border-sky-300/70 bg-sky-600 text-white shadow-sm hover:bg-sky-500 dark:border-sky-300/40 dark:bg-sky-500 dark:text-white dark:hover:bg-sky-400"
+              : "rounded-2xl border border-slate-200/80 bg-white/95 text-slate-700 shadow-sm hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900/80"
+          }
         >
           Partial Payment
         </Button>

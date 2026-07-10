@@ -36,7 +36,7 @@ export default function WithdrawalFeeProofModal({
       description={
         isCryptoMode
           ? "Enter the amount you sent and attach a receipt image. Partial crypto fee submissions are supported."
-          : "Attach proof for review"
+          : "Attach proof for admin review."
       }
       defaultAmount={defaultAmount}
       amountLabel={`${isCryptoMode ? "Claim" : "Fee"} amount (${currency})`}

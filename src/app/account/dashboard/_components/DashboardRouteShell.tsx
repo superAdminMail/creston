@@ -29,7 +29,7 @@ export function DashboardRouteShell({
     <div
       className={cn(
         DASHBOARD_PAGE_SHELL_CLASS,
-        "space-y-5 rounded-[2rem] border border-slate-200/80 px-4 py-6 md:px-6 lg:px-8 dark:border-white/10",
+        "rounded-[2rem] border border-slate-200/80 px-3 py-5 md:px-5 lg:px-7 dark:border-white/10",
         className,
       )}
     >

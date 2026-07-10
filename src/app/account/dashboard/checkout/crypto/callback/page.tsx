@@ -9,6 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  DASHBOARD_PAGE_PANEL_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "../../../_components/dashboardSurfaces";
 import { cn } from "@/lib/utils";
 import { resolvePaymentoStatus } from "@/lib/payments/crypto/paymentoStatus";
 
@@ -95,7 +99,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-7rem)] max-w-2xl items-center px-4 py-10 md:px-6">
-      <Card className="w-full rounded-[1.75rem] border border-slate-200/80 bg-white/88 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))]">
+      <Card className={`${DASHBOARD_PAGE_PANEL_CLASS} w-full`}>
         <CardHeader className="space-y-4">
           <div
             className={cn(
@@ -119,7 +123,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
 
         <CardContent className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-2xl p-4`}>
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                 Provider
               </p>
@@ -128,7 +132,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-2xl p-4`}>
               <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                 Target
               </p>
@@ -138,7 +142,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+          <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} rounded-2xl p-4`}>
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
               We are currently verifying your payment with {provider}. This may
               take a few minutes.
@@ -163,7 +167,7 @@ export default async function PaymentoReturnPage({ searchParams }: Props) {
             <Button
               asChild
               variant="outline"
-              className="rounded-full px-5 border-slate-200/80 bg-slate-400 dark:border-white/10 dark:bg-white/[0.04]"
+              className="rounded-full border-slate-200/80 bg-white/90 px-5 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900/80"
             >
               <Link href="/account/dashboard">Go to dashboard</Link>
             </Button>

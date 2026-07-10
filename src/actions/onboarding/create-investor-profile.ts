@@ -16,8 +16,8 @@ export async function createInvestorProfileAction(
   });
 
   if (result.success) {
-    revalidatePath("/account");
-    redirect("/account");
+    revalidatePath("/account/dashboard");
+    redirect("/account/dashboard");
   }
 
   return result;

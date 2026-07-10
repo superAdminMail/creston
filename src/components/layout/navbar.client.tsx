@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 import { useId, useState } from "react";
 
 import * as authClient from "@/lib/auth-client";
+import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { cn } from "@/lib/utils";
 
 export type NavbarClientProps = {
@@ -27,7 +28,7 @@ const publicAuthLinks = {
   login: "/auth/login",
 };
 
-const dashboardLink = "/account/continue";
+const dashboardLink = "/account/dashboard";
 
 function BrandMark({
   siteName,
@@ -106,11 +107,13 @@ function MarketingItems({
 function ActionLinks({
   isPending = false,
   isSignedIn = false,
+  dashboardHref = dashboardLink,
   mobile = false,
   onNavigate,
 }: {
   isPending?: boolean;
   isSignedIn?: boolean;
+  dashboardHref?: string;
   mobile?: boolean;
   onNavigate?: () => void;
 }) {
@@ -132,7 +135,7 @@ function ActionLinks({
     return (
       <div className={cn("flex items-center gap-3", mobile && "grid gap-3")}>
         <Link
-          href={dashboardLink}
+          href={dashboardHref}
           onClick={onNavigate}
           className={cn(
             "btn-primary inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold",
@@ -189,6 +192,12 @@ export function NavbarClient({
   const menuId = useId();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isSignedIn = Boolean(session?.user);
+  const sessionRole = (
+    session?.user as { role?: string | null } | undefined
+  )?.role;
+  const dashboardHref = sessionRole
+    ? getDashboardHomeByRole(sessionRole)
+    : dashboardLink;
 
   return (
     <header className="sticky top-0 z-[80] w-full px-4 pt-4 sm:px-6 lg:px-8">
@@ -208,7 +217,11 @@ export function NavbarClient({
             </div>
 
             <div className="hidden flex-1 items-center justify-end lg:flex">
-              <ActionLinks isPending={isPending} isSignedIn={isSignedIn} />
+              <ActionLinks
+                isPending={isPending}
+                isSignedIn={isSignedIn}
+                dashboardHref={dashboardHref}
+              />
             </div>
 
             <button
@@ -268,6 +281,7 @@ export function NavbarClient({
                   mobile
                   isPending={isPending}
                   isSignedIn={isSignedIn}
+                  dashboardHref={dashboardHref}
                   onNavigate={() => setIsMenuOpen(false)}
                 />
               </div>

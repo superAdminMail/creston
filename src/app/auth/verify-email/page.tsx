@@ -190,7 +190,7 @@ export default async function VerifyEmailPage({
                 asChild
                 className="btn-primary h-11 rounded-2xl px-5 text-sm font-semibold text-white"
               >
-                <Link href="/account">Continue to account</Link>
+                <Link href="/account/dashboard">Continue to dashboard</Link>
               </Button>
 
               <Button

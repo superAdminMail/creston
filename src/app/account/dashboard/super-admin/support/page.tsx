@@ -24,7 +24,7 @@ export default async function SuperAdminSupportPage({
   });
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <SupportInboxWorkspace
         mode="staff"
         viewerId={userId}

@@ -85,7 +85,7 @@ export default async function SavingsFunding({
         <SavingsCryptoCheckoutButton
           savingsAccountId={savingsAccountId}
           label={cryptoCheckoutLabel}
-          className="rounded-full border border-slate-200/80 bg-slate-50/80 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
+          className="rounded-full border border-slate-200/80 bg-slate-50/95 px-5 text-slate-700 shadow-sm hover:bg-slate-100 dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900/80"
         />
       }
     />

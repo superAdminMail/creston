@@ -1,6 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import SupportConversationDetailWorkspace from "@/components/support/SupportConversationDetailWorkspace";
+import SupportConversationUnavailableState from "@/components/support/SupportConversationUnavailableState";
 import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
 import { getSupportConversationThread } from "@/lib/support/supportConversationService";
 
@@ -24,7 +25,9 @@ export default async function SupportConversationPage({
   });
 
   if (!conversation) {
-    notFound();
+    return (
+      <SupportConversationUnavailableState backPath="/account/dashboard/user/support" />
+    );
   }
 
   return (

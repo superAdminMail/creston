@@ -34,7 +34,7 @@ export default function SavingsFundingProofModal({
       description={
         isCryptoMode
           ? "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
-          : "Attach proof for review"
+          : "Attach proof for admin review."
       }
       defaultAmount={defaultAmount}
       amountLabel={`${isCryptoMode ? "Claim" : "Deposit"} amount (${currency})`}

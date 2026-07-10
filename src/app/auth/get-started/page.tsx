@@ -25,7 +25,7 @@ const page = async ({
   const sessionUser = await getCurrentSessionUser();
 
   if (sessionUser?.id) {
-    redirect("/account");
+    redirect("/account/dashboard");
   }
 
   const params = await searchParams;

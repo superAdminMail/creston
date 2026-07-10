@@ -35,9 +35,9 @@ export default function PaymentProofModal({
       description={
         isCryptoMode
           ? isUpgradeFlow
-            ? "Enter the fixed upgrade amount shown above and attach a receipt image."
-            : "Enter the amount you sent and attach a receipt image. Partial crypto proof submissions are supported here."
-          : "Attach proof for review"
+            ? "Enter the fixed upgrade amount shown above, then attach a clear receipt image."
+            : "Enter the amount you sent and attach a clear receipt image. Partial crypto submissions are supported."
+          : "Attach proof for admin review."
       }
       defaultAmount={defaultAmount}
       amountLabel={`${isUpgradeFlow ? "Upgrade amount" : "Claim amount"} (${currency})`}

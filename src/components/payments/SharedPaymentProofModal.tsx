@@ -201,7 +201,7 @@ export default function SharedPaymentProofModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[1.35rem] border border-slate-200/90 bg-white p-0 text-slate-950 shadow-[0_32px_100px_rgba(15,23,42,0.28)] sm:max-w-2xl sm:rounded-[1.75rem] dark:border-white/10 dark:bg-gradient-to-b dark:from-[#0b1526] dark:via-[#09111f] dark:to-[#050b17] dark:text-white">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-[1.5rem] border border-slate-200/90 bg-white/96 p-0 text-slate-950 shadow-[0_32px_100px_rgba(15,23,42,0.22)] sm:max-w-2xl sm:rounded-[1.85rem] dark:border-white/10 dark:bg-slate-950 dark:text-white">
         <div className="border-b border-slate-200/80 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-lg font-semibold tracking-tight sm:text-xl">
@@ -234,7 +234,7 @@ export default function SharedPaymentProofModal({
                 onChange={(event) =>
                   setClaimedAmount(Number(event.target.value))
                 }
-                className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
               />
               {amountHint ? <div>{amountHint}</div> : null}
             </div>
@@ -248,7 +248,7 @@ export default function SharedPaymentProofModal({
                   value={transferReference}
                   onChange={(event) => setTransferReference(event.target.value)}
                   placeholder="Bank transfer reference"
-                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                  className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
                 />
               </div>
             ) : null}
@@ -264,7 +264,7 @@ export default function SharedPaymentProofModal({
                   value={depositorName}
                   onChange={(event) => setDepositorName(event.target.value)}
                   placeholder="Enter depositor name"
-                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                  className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export default function SharedPaymentProofModal({
                     setDepositorAccountName(event.target.value)
                   }
                   placeholder="Enter depositor account name"
-                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                  className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
                 />
               </div>
 
@@ -290,7 +290,7 @@ export default function SharedPaymentProofModal({
                   value={depositorAccountNo}
                   onChange={(event) => setDepositorAccountNo(event.target.value)}
                   placeholder="Enter depositor account number"
-                  className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                  className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
                 />
               </div>
             </>
@@ -303,7 +303,7 @@ export default function SharedPaymentProofModal({
                   Receipt image
                 </p>
                 <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
-                  Upload a proof image through Photo Manager.
+                  Upload a clear receipt or transfer screenshot.
                 </p>
               </div>
 
@@ -314,7 +314,7 @@ export default function SharedPaymentProofModal({
                   size="sm"
                   onClick={() => void removeReceiptAttachment()}
                   disabled={isRemovingReceipt}
-                  className="w-full rounded-full border border-slate-200/80 bg-white/70 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
+                  className="w-full rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
                 >
                   {isRemovingReceipt ? "Removing..." : "Delete"}
                 </Button>
@@ -322,7 +322,7 @@ export default function SharedPaymentProofModal({
             </div>
 
             {!receiptAttachment ? (
-              <div className="w-full rounded-[1.25rem] border border-dashed border-slate-300/70 bg-slate-600/10 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/90">
+              <div className="w-full rounded-[1.25rem] border border-dashed border-slate-300/70 bg-slate-50/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-slate-950 dark:text-white">
                     Add receipt image
@@ -334,7 +334,7 @@ export default function SharedPaymentProofModal({
 
                 <UploadButton
                   endpoint="photoManager"
-                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:!border ut-button:!border-white/10 ut-button:!bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:!text-white ut-button:shadow-[0_14px_34px_rgba(2,6,23,0.48)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:!bg-slate-900 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:!border-white/10 dark:ut-button:!bg-slate-950 dark:ut-button:!text-white dark:ut-button:hover:!bg-slate-900"
+                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:!border ut-button:!border-white/10 ut-button:!bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:!text-white ut-button:shadow-[0_14px_34px_rgba(2,6,23,0.36)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:!bg-slate-900 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:!border-white/10 dark:ut-button:!bg-slate-950 dark:ut-button:!text-white dark:ut-button:hover:!bg-slate-900"
                   onClientUploadComplete={async (res) => {
                     try {
                       const file = res?.[0];
@@ -370,7 +370,7 @@ export default function SharedPaymentProofModal({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-slate-200/80 bg-white/88 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.08)] sm:flex-row sm:items-center dark:border-white/10 dark:bg-white/[0.045]">
+              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-slate-200/80 bg-white/92 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.08)] sm:flex-row sm:items-center dark:border-white/10 dark:bg-slate-900/60">
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-white/[0.03]">
                   <Image
                     src={receiptAttachment.url}
@@ -412,7 +412,7 @@ export default function SharedPaymentProofModal({
                 onChange={(event) => setNote(event.target.value)}
                 placeholder="Add any useful details for admin review"
                 rows={4}
-                className="border-slate-200/80 bg-white/80 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+                className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
               />
             </div>
           ) : null}
@@ -420,10 +420,10 @@ export default function SharedPaymentProofModal({
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
             <Button
               type="button"
-              variant="destructive"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={pending}
-              className="w-full rounded-full border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.06]"
+              className="w-full rounded-full border-slate-200/80 bg-white/90 text-slate-700 hover:bg-slate-50 sm:w-auto dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:bg-slate-900/80"
             >
               Cancel
             </Button>

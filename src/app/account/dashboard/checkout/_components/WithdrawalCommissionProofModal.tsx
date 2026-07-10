@@ -34,7 +34,7 @@ export default function WithdrawalCommissionProofModal({
       description={
         isCryptoMode
           ? "Enter the amount you sent and attach a receipt image. Partial crypto commission submissions are supported."
-          : "Attach proof for review"
+          : "Attach proof for admin review."
       }
       defaultAmount={defaultAmount}
       amountLabel={`${isCryptoMode ? "Claim" : "Commission"} amount (${currency})`}

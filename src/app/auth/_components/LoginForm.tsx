@@ -19,21 +19,32 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/lib/auth-client";
+import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
+import { getSession, signIn } from "@/lib/auth-client";
 import {
   loginUserSchema,
   loginUserSchemaType,
 } from "@/lib/zodValidations/user";
 
+type LoginFormProps = {
+  siteName: string;
+  siteLogoUrl?: string | null;
+  successHref: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  footer?: React.ReactNode;
+};
+
 export default function LoginForm({
   siteName,
   siteLogoUrl,
-  callbackUrl,
-}: {
-  siteName: string;
-  siteLogoUrl?: string | null;
-  callbackUrl?: string | null;
-}) {
+  successHref,
+  eyebrow,
+  title,
+  description,
+  footer,
+}: LoginFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
@@ -62,47 +73,29 @@ export default function LoginForm({
         return;
       }
 
-      const nextUrl = callbackUrl?.trim()
-        ? `/auth/continue?callbackUrl=${encodeURIComponent(callbackUrl.trim())}`
-        : "/auth/continue";
+      const sessionResult = await getSession();
+      const session =
+        sessionResult && "data" in sessionResult ? sessionResult.data : null;
+      const sessionRole = (
+        session?.user as { role?: string | null } | undefined
+      )?.role;
+      const targetHref = sessionRole
+        ? getDashboardHomeByRole(sessionRole)
+        : successHref;
 
-      router.replace(nextUrl);
+      router.replace(targetHref);
       router.refresh();
     });
   };
 
   return (
     <AuthShell
-      eyebrow="Secure Sign In"
-      title={`Sign in to ${siteName}`}
-      description="Enter your credentials below to sign in."
+      eyebrow={eyebrow}
+      title={title}
+      description={description}
       siteName={siteName}
       siteLogoUrl={siteLogoUrl}
-      footer={
-        <div className="space-y-3 text-center">
-          <p className="text-xs leading-relaxed text-slate-400">
-            By signing in, you agree to {siteName}&apos;s{" "}
-            <Link href="/terms" className="text-blue-200 hover:text-white">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-blue-200 hover:text-white">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-
-          <p className="text-sm text-slate-400">
-            New to {siteName}?
-            <Link
-              href="/auth/get-started"
-              className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"
-            >
-              Create your account
-            </Link>
-          </p>
-        </div>
-      }
+      footer={footer}
     >
       <div className="space-y-6">
         {error ? (

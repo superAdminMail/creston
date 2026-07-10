@@ -19,7 +19,6 @@ export const authRoutes = [
   "/auth/get-started",
   "/auth/verify-email",
   "/auth/send-verify-email",
-  "/auth/continue",
   "/auth/reset-password",
   "/auth/forgot-password",
   "/error",
@@ -27,11 +26,11 @@ export const authRoutes = [
 
 export const apiAuthPrefix = "/api/auth";
 
-export const DEFAULT_LOGIN_REDIRECT = "/account";
+export const DEFAULT_LOGIN_REDIRECT = "/account/dashboard";
 export const DEFAULT_ONBOARDING_REDIRECT =
   "/account/dashboard/user/investment-profile/edit";
 
-export const protectedRoutePrefixes = ["/account"] as const;
+export const protectedRoutePrefixes = ["/account/dashboard"] as const;
 
 export const sharedRoutes = [
   "/account/dashboard/profile",

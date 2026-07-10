@@ -222,23 +222,25 @@ export default async function AssetCheckerPage({ searchParams }: PageProps) {
   const days = parsePositiveNumber(resolveSearchParam(params?.days), 30, 1);
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-3">
+    <main className="mx-auto max-w-6xl space-y-8 ">
       <section
         className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-5 sm:p-6 lg:p-8`}
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-4">
-            <Link
-              href="/account/dashboard/user"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to dashboard
-            </Link>
+            <div className="flex justify-between">
+              <Link
+                href="/account/dashboard/user"
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to dashboard
+              </Link>
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 shadow-[0_10px_24px_rgba(59,130,246,0.14)] dark:text-sky-200">
-              <Calculator className="h-3.5 w-3.5" />
-              Market asset checker
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700 shadow-[0_10px_24px_rgba(59,130,246,0.14)] dark:text-sky-200">
+                <Calculator className="h-3.5 w-3.5" />
+                Market asset checker
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -252,7 +254,7 @@ export default async function AssetCheckerPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white/75 px-4 py-3 text-sm text-slate-700 shadow-[0_12px_28px_rgba(59,130,246,0.14)] sm:w-auto sm:justify-start dark:bg-white/[0.04] dark:text-slate-200">
+          <div className="inline-flex  w-full items-center justify-center gap-2 rounded-2xl border border-border/60 bg-white/75 px-4 py-3 text-sm text-slate-700 shadow-[0_12px_28px_rgba(59,130,246,0.14)] sm:w-auto sm:justify-start dark:bg-white/[0.04] dark:text-slate-200">
             <LineChart className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
             <span>Live price snapshot</span>
           </div>

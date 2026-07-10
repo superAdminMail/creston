@@ -1,35 +1,76 @@
-export function AppSplashScreen() {
+import Image from "next/image";
+
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+
+export async function AppSplashScreen() {
+  const config = await getSiteConfigurationCached();
+  const siteName = config?.siteName?.trim() || "Company";
+  const logoUrl =
+    config?.siteLogoFileAsset?.url ??
+    "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuBkxrbXSXITnudeaK9QOqNCE546A1JZpjbHSU";
+
   return (
-    <div className="min-h-screen bg-background px-4 py-10 text-foreground">
-      <div className="mx-auto flex min-h-[60vh] w-full max-w-xl items-center justify-center">
-        <div className="w-full rounded-[1.5rem] border border-border/70 bg-card p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 text-sm font-semibold text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
-              H
-            </div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050B1F]">
+      <div className="absolute inset-0">
+        <div className="absolute left-1/2 top-1/2 h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.14),transparent_38%),linear-gradient(to_bottom,rgba(255,255,255,0.02),transparent)]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:72px_72px]" />
+      </div>
 
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">
-                Loading
-              </p>
-              <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
-                Preparing your workspace
-              </p>
-            </div>
-          </div>
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="relative flex items-center justify-center">
+          <span className="absolute h-36 w-36 rounded-full border border-blue-400/20 animate-ping" />
+          <span
+            className="absolute h-48 w-48 rounded-full border border-sky-300/10"
+            style={{ animation: "softPulse 2.8s ease-out infinite" }}
+          />
+          <span
+            className="absolute h-64 w-64 rounded-full border border-white/5"
+            style={{ animation: "softPulse 3.6s ease-out infinite" }}
+          />
 
-          <div className="mt-6 space-y-3">
-            <div className="h-3 w-24 rounded-full bg-muted" />
-            <div className="h-4 w-full max-w-sm rounded-full bg-muted/70" />
-            <div className="h-4 w-5/6 rounded-full bg-muted/70" />
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-dashed border-border/70 bg-muted/30 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-            <div className="h-4 w-36 rounded-full bg-muted/80" />
-            <div className="mt-3 h-3 w-full max-w-md rounded-full bg-muted/70" />
+          <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+            <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-blue-400/20 via-transparent to-sky-300/20" />
+            <div className="absolute inset-[1px] rounded-[calc(2rem-1px)] border border-white/5" />
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt={`${siteName} logo`}
+                fill
+                className="relative rounded-[2rem] object-cover p-3"
+                sizes="112px"
+              />
+            ) : (
+              <span className="relative text-4xl font-semibold tracking-[0.22em] text-white">
+                {siteName.slice(0, 1).toUpperCase()}
+              </span>
+            )}
           </div>
         </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.45em] text-blue-200/80">
+            {siteName}
+          </p>
+        </div>
       </div>
+
+      <style>{`
+        @keyframes softPulse {
+          0% {
+            transform: scale(0.82);
+            opacity: 0.18;
+          }
+          60% {
+            transform: scale(1);
+            opacity: 0.06;
+          }
+          100% {
+            transform: scale(1.12);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }

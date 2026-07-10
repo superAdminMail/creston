@@ -70,14 +70,14 @@ export default async function VerifyEmailRequestPage({
     verifiedState?.emailVerified &&
     verifiedState.accountStatus === "ACTIVE"
   ) {
-    redirect("/account");
+    redirect("/account/dashboard");
   }
 
   const defaultEmail = sessionUser?.email?.trim().toLowerCase() || queryEmail;
 
   return (
     <>
-      <EmailVerificationWatcher redirectTo="/account" />
+      <EmailVerificationWatcher redirectTo="/account/dashboard" />
       <VerifyEmailRequestForm
         siteName={site.siteName}
         siteLogoUrl={config?.siteLogoFileAsset?.url}

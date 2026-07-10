@@ -266,7 +266,7 @@ export function VerifyEmailRequestBody({
             disabled={isSubmitDisabled}
             className="btn-primary h-12 w-full rounded-2xl text-sm font-semibold text-white disabled:opacity-70"
           >
-            <Link href="/account">I already Verified</Link>
+            <Link href="/account/dashboard">I already Verified</Link>
           </Button>
         </div>
 

@@ -1,28 +1,15 @@
+import Link from "next/link";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import LoginForm from "../_components/LoginForm";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { redirect } from "next/navigation";
 
-type LoginPageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
-
-function getSingleParam(value: string | string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-const page = async ({ searchParams }: LoginPageProps) => {
+const page = async () => {
   const sessionUser = await getCurrentSessionUser();
-  const params = (await searchParams) ?? {};
-  const callbackUrl = getSingleParam(params.callbackUrl);
 
   if (sessionUser?.id) {
-    redirect(
-      callbackUrl?.startsWith("/account")
-        ? `/auth/continue?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        : "/auth/continue",
-    );
+    redirect("/account/dashboard/user");
   }
 
   const [site, config] = await Promise.all([
@@ -35,7 +22,45 @@ const page = async ({ searchParams }: LoginPageProps) => {
       <LoginForm
         siteName={site.siteName}
         siteLogoUrl={config?.siteLogoFileAsset?.url}
-        callbackUrl={callbackUrl}
+        successHref="/account/dashboard/user"
+        eyebrow="Secure Sign In"
+        title={`Sign in to ${site.siteName}`}
+        description="Enter your credentials below to sign in."
+        footer={
+          <div className="space-y-3 text-center">
+            <p className="text-xs leading-relaxed text-slate-400">
+              By signing in, you agree to {site.siteName}&apos;s{" "}
+              <Link href="/terms" className="text-blue-200 hover:text-white">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="text-blue-200 hover:text-white">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+
+            <p className="text-sm text-slate-400">
+              New to {site.siteName}?
+              <Link
+                href="/auth/get-started"
+                className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"
+              >
+                {""} Create your account
+              </Link>
+            </p>
+
+            <p className="text-xs text-slate-500">
+              Staff member?
+              <Link
+                href="/auth/login/administrator"
+                className="ml-1 font-medium text-blue-200 underline-offset-4 hover:text-white hover:underline"
+              >
+                Administrator
+              </Link>
+            </p>
+          </div>
+        }
       />
     </div>
   );

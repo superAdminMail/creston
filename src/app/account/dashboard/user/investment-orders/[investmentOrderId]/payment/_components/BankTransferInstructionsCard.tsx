@@ -62,18 +62,18 @@ export default function BankTransferInstructionsCard({
   ].filter((row) => Boolean(row.value));
 
   return (
-    <Card className="border-border/60 bg-white/88 shadow-sm dark:bg-white/[0.03]">
-      <CardHeader>
+    <Card className="border-border/60 bg-white/90 shadow-sm dark:bg-white/[0.03]">
+      <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
         <CardTitle className="text-lg">Bank transfer instructions</CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-5 px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-2xl border border-border/60 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
               Method
             </p>
-            <p className="mt-2 font-semibold text-slate-400">
+            <p className="mt-2 font-semibold text-slate-950 dark:text-white">
               {bankMethod.label}
             </p>
           </div>
@@ -82,7 +82,7 @@ export default function BankTransferInstructionsCard({
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
               Amount
             </p>
-            <p className="mt-2 font-semibold text-slate-400">
+            <p className="mt-2 font-semibold text-slate-950 dark:text-white">
               {selectedAmount.toLocaleString()} {currency}
             </p>
           </div>
@@ -95,19 +95,21 @@ export default function BankTransferInstructionsCard({
               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {row.label}
               </p>
-              <p className="mt-2 font-semibold text-slate-400">{row.value}</p>
+              <p className="mt-2 font-semibold text-slate-950 dark:text-white">
+                {row.value}
+              </p>
             </div>
           ))}
         </div>
 
         {bankMethod.instructions ? (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-slate-600/10 p-4 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="rounded-2xl border border-dashed border-border/60 bg-slate-50/90 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             {bankMethod.instructions}
           </div>
         ) : null}
 
         {bankMethod.notes ? (
-          <div className="rounded-2xl border border-dashed border-border/60 bg-slate-600/10 p-4 text-sm text-muted-foreground dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="rounded-2xl border border-dashed border-border/60 bg-slate-50/90 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             {bankMethod.notes}
           </div>
         ) : null}
