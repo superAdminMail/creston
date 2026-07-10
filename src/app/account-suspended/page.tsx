@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AccountSuspendedLogoutButton } from "./_components/AccountSuspendedLogoutButton";
 
 export default function AccountSuspendedPage() {
   return (
@@ -30,7 +31,7 @@ export default function AccountSuspendedPage() {
 
           <div className="grid gap-3 rounded-[1.4rem] border border-slate-200/80 bg-slate-50 p-4 text-sm text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-sky-700 dark:text-sky-300" />
+              <Mail className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
               <span>Need help? Reach out to support for reactivation.</span>
             </div>
             <p className="text-slate-600 dark:text-slate-400">
@@ -60,6 +61,8 @@ export default function AccountSuspendedPage() {
                 Back to home
               </Link>
             </Button>
+
+            <AccountSuspendedLogoutButton />
           </div>
         </CardContent>
       </Card>
