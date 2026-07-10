@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  ConversationRole,
   ConversationStatus,
   ConversationType,
 } from "@/generated/prisma/client";
@@ -52,6 +53,23 @@ export async function createWithdrawalPrivateSupportConversationAction({
   });
 
   if (existingConversation) {
+    await prisma.conversationMember.upsert({
+      where: {
+        conversationId_userId: {
+          conversationId: existingConversation.id,
+          userId: user.id,
+        },
+      },
+      create: {
+        conversationId: existingConversation.id,
+        userId: user.id,
+        role: ConversationRole.USER,
+      },
+      update: {
+        role: ConversationRole.USER,
+      },
+    });
+
     revalidatePath("/account/dashboard/user/support");
     revalidatePath("/account/dashboard/super-admin/support");
     revalidatePath("/account/dashboard/admin/support");

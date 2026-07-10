@@ -64,16 +64,16 @@ export default function ConversationImagePreview({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] text-white shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:max-w-4xl"
+          className="border border-slate-200/80 bg-white/96 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-950/92 dark:text-white dark:shadow-[0_30px_90px_rgba(2,6,23,0.38)] sm:max-w-4xl"
           showCloseButton={false}
         >
           <DialogHeader className="space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
-                <DialogTitle className="text-lg font-semibold text-white">
+                <DialogTitle className="text-lg font-semibold text-slate-950 dark:text-white">
                   Image preview
                 </DialogTitle>
-                <DialogDescription className="text-sm leading-6 text-slate-400">
+                <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
                   {caption?.trim()
                     ? caption.trim()
                     : "Tap outside the image or use the close button to dismiss."}
@@ -85,7 +85,7 @@ export default function ConversationImagePreview({
                 variant="ghost"
                 size="icon"
                 onClick={() => setOpen(false)}
-                className="h-9 w-9 rounded-full border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                className="h-9 w-9 rounded-full border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
                 aria-label="Close image preview"
               >
                 <span className="text-lg leading-none">&times;</span>
@@ -93,7 +93,7 @@ export default function ConversationImagePreview({
             </div>
           </DialogHeader>
 
-          <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/20">
+          <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-slate-50 dark:border-white/10 dark:bg-black/20">
             <Image
               src={src}
               alt={alt}

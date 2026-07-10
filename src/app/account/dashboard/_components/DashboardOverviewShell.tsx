@@ -20,11 +20,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -258,19 +254,20 @@ function ActivityCard({
   status,
 }: DashboardOverviewActivity) {
   return (
-    <div className={DASHBOARD_PAGE_SURFACE_CLASS + " flex items-start justify-between gap-4 p-4"}>
+    <div
+      className={
+        DASHBOARD_PAGE_SURFACE_CLASS +
+        " flex items-start justify-between gap-4 p-4"
+      }
+    >
       <div className="flex items-start gap-3">
         <div className="mt-0.5 rounded-full bg-sky-500/10 p-2 text-sky-700 dark:text-sky-200">
           <ActivityIcon status={status} />
         </div>
 
         <div className="space-y-1">
-          <p className="font-medium text-slate-950 dark:text-white">
-            {title}
-          </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            {detail}
-          </p>
+          <p className="font-medium text-slate-950 dark:text-white">{title}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{detail}</p>
         </div>
       </div>
 
@@ -393,162 +390,154 @@ export function DashboardOverviewShell({
 }: DashboardOverviewData) {
   return (
     <div className="space-y-8">
-      <div
-        className={
-          DASHBOARD_PAGE_PANEL_CLASS +
-          " mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 lg:px-8"
-        }
+      <section
+        className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}
       >
-        <section className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}>
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-4">
-              <Badge className="border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-sky-700 hover:bg-sky-500/10 dark:text-sky-200">
-                {badgeLabel}
-              </Badge>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl space-y-4">
+            <Badge className="border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-sky-700 hover:bg-sky-500/10 dark:text-sky-200">
+              {badgeLabel}
+            </Badge>
 
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
-                  {title}
-                </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400 md:text-base">
-                  {description}
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
+                {title}
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400 md:text-base">
+                {description}
+              </p>
+            </div>
+          </div>
+
+          <HeroHighlights>
+            {heroHighlights.map((highlight) => (
+              <div
+                key={highlight.label}
+                className="min-w-0 rounded-2xl border border-border/60 bg-white/75 p-4 shadow-sm dark:bg-white/[0.04] sm:p-5"
+              >
+                <p className="text-xs uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80">
+                  {highlight.label}
+                </p>
+                <p className="mt-2 break-words text-xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-2xl">
+                  {highlight.kind === "currency"
+                    ? formatCompactUsd(highlight.value)
+                    : new Intl.NumberFormat("en-US").format(highlight.value)}
                 </p>
               </div>
-            </div>
+            ))}
+          </HeroHighlights>
+        </div>
+      </section>
 
-            <HeroHighlights>
-              {heroHighlights.map((highlight) => (
-                <div
-                  key={highlight.label}
-                  className="min-w-0 rounded-2xl border border-border/60 bg-white/75 p-4 shadow-sm dark:bg-white/[0.04] sm:p-5"
-                >
-                  <p className="text-xs uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80">
-                    {highlight.label}
-                  </p>
-                  <p className="mt-2 break-words text-xl font-semibold leading-tight text-slate-950 dark:text-white sm:text-2xl">
-                    {highlight.kind === "currency"
-                      ? formatCompactUsd(highlight.value)
-                      : new Intl.NumberFormat("en-US").format(highlight.value)}
-                  </p>
-                </div>
-              ))}
-            </HeroHighlights>
+      {alerts.length > 0 ? (
+        <section className="space-y-3">
+          <SectionHeader title={alertsTitle} description={alertsDescription} />
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            {alerts.map((alert) => (
+              <ReviewAlert key={alert.title} alert={alert} />
+            ))}
           </div>
         </section>
+      ) : null}
 
-        {alerts.length > 0 ? (
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metrics.map((metric) => (
+          <MetricCard key={metric.title} {...metric} />
+        ))}
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="space-y-6 xl:col-span-8">
           <section className="space-y-3">
             <SectionHeader
-              title={alertsTitle}
-              description={alertsDescription}
+              title="Quick actions"
+              description="Move directly into the highest-impact workflows from this workspace."
             />
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {alerts.map((alert) => (
-                <ReviewAlert key={alert.title} alert={alert} />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {quickActions.map((action) => (
+                <QuickAction key={action.href} {...action} />
               ))}
             </div>
           </section>
-        ) : null}
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {metrics.map((metric) => (
-            <MetricCard key={metric.title} {...metric} />
-          ))}
-        </section>
+          <section>
+            <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-slate-950 dark:text-white">
+                  {spotlightTitle}
+                </CardTitle>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
+                  {spotlightDescription}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {spotlights.map((spotlight) => (
+                    <SpotlightCard key={spotlight.title} {...spotlight} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-          <div className="space-y-6 xl:col-span-8">
-            <section className="space-y-3">
-              <SectionHeader
-                title="Quick actions"
-                description="Move directly into the highest-impact workflows from this workspace."
-              />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {quickActions.map((action) => (
-                  <QuickAction key={action.href} {...action} />
+          <section>
+            <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-slate-950 dark:text-white">
+                  {activityTitle}
+                </CardTitle>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
+                  {activityDescription}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {activities.map((activity) => (
+                  <ActivityCard
+                    key={`${activity.title}-${activity.time}`}
+                    {...activity}
+                  />
                 ))}
-              </div>
-            </section>
+              </CardContent>
+            </Card>
+          </section>
+        </div>
 
-            <section>
-              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-slate-950 dark:text-white">
-                    {spotlightTitle}
-                  </CardTitle>
-                  <CardDescription className="text-slate-600 dark:text-slate-400">
-                    {spotlightDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {spotlights.map((spotlight) => (
-                      <SpotlightCard key={spotlight.title} {...spotlight} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
+        <div className="space-y-6 xl:col-span-4">
+          <section>
+            <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-slate-950 dark:text-white">
+                  {statusTitle}
+                </CardTitle>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
+                  {statusDescription}
+                </CardDescription>
+              </CardHeader>
+              <StatusList items={statusItems} />
+            </Card>
+          </section>
 
-            <section>
-              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-slate-950 dark:text-white">
-                    {activityTitle}
-                  </CardTitle>
-                  <CardDescription className="text-slate-600 dark:text-slate-400">
-                    {activityDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {activities.map((activity) => (
-                    <ActivityCard
-                      key={`${activity.title}-${activity.time}`}
-                      {...activity}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            </section>
-          </div>
+          <section>
+            <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-slate-950 dark:text-white">
+                  {modulesTitle}
+                </CardTitle>
+                <CardDescription className="text-slate-600 dark:text-slate-400">
+                  {modulesDescription}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {moduleLinks.map((link) => (
+                  <ModuleLink key={link.href} {...link} />
+                ))}
+              </CardContent>
+            </Card>
+          </section>
 
-          <div className="space-y-6 xl:col-span-4">
-            <section>
-              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-slate-950 dark:text-white">
-                    {statusTitle}
-                  </CardTitle>
-                  <CardDescription className="text-slate-600 dark:text-slate-400">
-                    {statusDescription}
-                  </CardDescription>
-                </CardHeader>
-                <StatusList items={statusItems} />
-              </Card>
-            </section>
-
-            <section>
-              <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-slate-950 dark:text-white">
-                    {modulesTitle}
-                  </CardTitle>
-                  <CardDescription className="text-slate-600 dark:text-slate-400">
-                    {modulesDescription}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {moduleLinks.map((link) => (
-                    <ModuleLink key={link.href} {...link} />
-                  ))}
-                </CardContent>
-              </Card>
-            </section>
-
-            <section>
-              <CtaCard {...cta} />
-            </section>
-          </div>
+          <section>
+            <CtaCard {...cta} />
+          </section>
         </div>
       </div>
     </div>

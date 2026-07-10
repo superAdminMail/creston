@@ -257,12 +257,12 @@ export function ChatInput({
 
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
         <DialogContent
-          className="border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] text-white shadow-[0_30px_90px_rgba(0,0,0,0.45)] sm:max-w-md"
+          className="border border-slate-200/80 bg-white/96 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-white/10 dark:bg-slate-950/92 dark:text-white dark:shadow-[0_30px_90px_rgba(2,6,23,0.38)] sm:max-w-md"
           showCloseButton={false}
         >
           <DialogHeader className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <DialogTitle className="text-lg font-semibold text-white">
+              <DialogTitle className="text-lg font-semibold text-slate-950 dark:text-white">
                 Add image
               </DialogTitle>
               <Button
@@ -270,29 +270,31 @@ export function ChatInput({
                 variant="ghost"
                 size="icon"
                 onClick={() => setUploadOpen(false)}
-                className="h-9 w-9 rounded-full border border-white/10 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08] hover:text-white"
+                className="h-9 w-9 rounded-full border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
                 aria-label="Close upload dialog"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <DialogDescription className="text-sm leading-6 text-slate-400">
+            <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
               Upload payment receipts or account screenshots for a faster
               review.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 rounded-[1.75rem] border border-dashed border-sky-400/25 bg-white/[0.03] p-4">
+          <div className="space-y-4 rounded-[1.75rem] border border-dashed border-sky-200/80 bg-sky-50/60 p-4 dark:border-sky-400/20 dark:bg-white/[0.03]">
             <div className="space-y-1">
-              <p className="text-sm font-medium text-white">Image upload</p>
-              <p className="text-xs leading-5 text-slate-400">
+              <p className="text-sm font-medium text-slate-950 dark:text-white">
+                Image upload
+              </p>
+              <p className="text-xs leading-5 text-slate-600 dark:text-slate-400">
                 PNG, JPG, and WEBP up to 8MB.
               </p>
             </div>
 
             <UploadButton
               endpoint="conversationImage"
-              className="ut-button:mx-auto ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-white/10 ut-button:bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-white ut-button:shadow-[0_12px_28px_rgba(2,6,23,0.42)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-800 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70"
+              className="ut-button:mx-auto ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-sky-200 ut-button:bg-[#3c9ee0] ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-white ut-button:shadow-[0_12px_28px_rgba(60,158,224,0.24)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-[#2f8bd0] ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:shadow-[0_12px_28px_rgba(2,6,23,0.42)] dark:ut-button:hover:bg-slate-800"
               onClientUploadComplete={async (res) => {
                 try {
                   const file = res?.[0];

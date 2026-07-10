@@ -2,14 +2,15 @@ import Link from "next/link";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import LoginForm from "../_components/LoginForm";
-import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
+import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { redirect } from "next/navigation";
 
 const page = async () => {
-  const sessionUser = await getCurrentSessionUser();
+  const role = await getCurrentUserRole();
 
-  if (sessionUser?.id) {
-    redirect("/account/dashboard/user");
+  if (role) {
+    redirect(getDashboardHomeByRole(role));
   }
 
   const [site, config] = await Promise.all([
@@ -22,7 +23,7 @@ const page = async () => {
       <LoginForm
         siteName={site.siteName}
         siteLogoUrl={config?.siteLogoFileAsset?.url}
-        successHref="/account/dashboard/user"
+        successHref="/account/dashboard"
         eyebrow="Secure Sign In"
         title={`Sign in to ${site.siteName}`}
         description="Enter your credentials below to sign in."

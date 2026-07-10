@@ -264,6 +264,7 @@ function isHiddenPrivateWithdrawalSupportConversation(
   viewerRole: UserRole,
 ) {
   return (
+    isSupportStaffRole(viewerRole) &&
     viewerRole !== UserRole.SUPER_ADMIN &&
     isWithdrawalPrivateSupportConversationSource(source)
   );
