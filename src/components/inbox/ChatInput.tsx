@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { ChevronRight, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { deleteFileAssetAction } from "@/actions/files/file";
@@ -240,15 +240,19 @@ export function ChatInput({
             <Button
               onClick={() => void send()}
               disabled={isSending || (!text.trim() && !attachment)}
-              className="h-11 shrink-0 rounded-full border border-sky-300/20 bg-sky-500 px-5 text-sm font-medium text-white shadow-[0_10px_24px_rgba(56,189,248,0.22)] hover:bg-sky-500/90 disabled:opacity-70 dark:border-sky-400/20 dark:bg-sky-500 dark:hover:bg-sky-500/90"
+              className="h-11 shrink-0 rounded-full border border-sky-300/20 bg-sky-500 px-4 text-sm font-medium text-white shadow-[0_10px_24px_rgba(56,189,248,0.22)] hover:bg-sky-500/90 disabled:opacity-70 dark:border-sky-400/20 dark:bg-sky-500 dark:hover:bg-sky-500/90 sm:px-5"
+              aria-label={sendLabel}
             >
               {isSending ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="h-4 w-4 animate-spin text-white" />
-                  Sending
+                  <span>Sending</span>
                 </span>
               ) : (
-                sendLabel
+                <>
+                  <span className="hidden sm:inline">{sendLabel}</span>
+                  <ChevronRight className="h-4 w-4 sm:hidden" />
+                </>
               )}
             </Button>
           </div>

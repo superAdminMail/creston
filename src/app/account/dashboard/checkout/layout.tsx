@@ -7,5 +7,5 @@ export default function SettingsLayout({
 }: {
   children: ReactNode;
 }) {
-  return <DashboardRouteShell>{children}</DashboardRouteShell>;
+  return <DashboardRouteShell mode="viewport">{children}</DashboardRouteShell>;
 }

@@ -10,11 +10,13 @@ import { DASHBOARD_PAGE_SHELL_CLASS } from "./dashboardSurfaces";
 type DashboardRouteShellProps = {
   children: ReactNode;
   className?: string;
+  mode?: "content" | "viewport";
 };
 
 export function DashboardRouteShell({
   children,
   className,
+  mode = "content",
 }: DashboardRouteShellProps) {
   const pathname = usePathname();
   const isSupportDetailRoute =
@@ -29,6 +31,7 @@ export function DashboardRouteShell({
     <div
       className={cn(
         DASHBOARD_PAGE_SHELL_CLASS,
+        mode === "viewport" && "super-admin-shell--viewport",
         "rounded-[2rem] border border-slate-200/80 px-3 py-5 md:px-5 lg:px-7 dark:border-white/10",
         className,
       )}

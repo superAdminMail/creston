@@ -160,7 +160,7 @@ export default function MessageList({
             item.type === "date" ? (
               <div
                 key={item.key}
-                className="sticky top-3 z-10 mx-auto mb-3 w-fit rounded-full border border-slate-200/80 bg-white/88 px-3 py-1 text-[11px] text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/85 dark:text-slate-400"
+                className="mx-auto my-2 w-fit rounded-full border border-slate-200/80 bg-white/92 px-3 py-1 text-[11px] font-medium text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-950/90 dark:text-slate-300"
               >
                 {item.label}
               </div>
@@ -181,15 +181,15 @@ export default function MessageList({
 
       {newCount > 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 px-4">
-          <div className="mx-auto flex w-full max-w-4xl justify-center">
-            <button
-              type="button"
-              onClick={() => scrollToBottom("smooth")}
-              className="pointer-events-auto rounded-full bg-[var(--brand-blue)] px-4 py-2 text-xs font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.28)]"
-            >
-              {newCount} new message{newCount > 1 ? "s" : ""}
-            </button>
-          </div>
+        <div className="mx-auto flex w-full max-w-4xl justify-center">
+          <button
+            type="button"
+            onClick={() => scrollToBottom("smooth")}
+            className="pointer-events-auto rounded-full border border-slate-700/60 bg-slate-950/95 px-4 py-2 text-xs font-medium text-white shadow-[0_16px_40px_rgba(15,23,42,0.38)] backdrop-blur-sm"
+          >
+            {newCount} new message{newCount > 1 ? "s" : ""}
+          </button>
+        </div>
         </div>
       ) : null}
     </div>

@@ -249,9 +249,14 @@
 
 @layer utilities {
   .super-admin-shell {
-    min-height: 100vh;
+    width: 100%;
     color: #0f172a;
     background: rgba(255, 255, 255, 0.88);
+  }
+
+  .super-admin-shell--viewport {
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .dark .super-admin-shell {
