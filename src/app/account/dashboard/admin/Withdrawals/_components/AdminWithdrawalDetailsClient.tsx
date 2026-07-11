@@ -521,12 +521,14 @@ export function AdminWithdrawalDetailsClient({
                   Withdrawal Receipt
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">Withdrawal amount</p>
+                  <p className="text-sm text-slate-400">
+                    Requested withdrawal amount
+                  </p>
                   <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
                     {withdrawal.amount}
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                    Requested by {requesterName} | {requesterEmail} |{" "}
+                    Requested by {requesterName} • {requesterEmail} •{" "}
                     {withdrawal.sourceLabel}
                   </p>
                 </div>
@@ -640,17 +642,17 @@ export function AdminWithdrawalDetailsClient({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
-                    Payout method details
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    Shows the payout rail used for this withdrawal and its
-                    current availability status.
-                  </p>
-                </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
+                      Payout method details
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      Shows the payout rail recorded for this withdrawal and
+                      its current availability status.
+                    </p>
+                  </div>
 
                 <Badge
                   variant="secondary"
@@ -693,7 +695,7 @@ export function AdminWithdrawalDetailsClient({
 
               <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
-                  Used method snapshot
+                  Recorded method snapshot
                 </p>
 
                 <div className="mt-3 grid gap-4 md:grid-cols-2">

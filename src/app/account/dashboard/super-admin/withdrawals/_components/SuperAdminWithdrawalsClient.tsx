@@ -29,14 +29,14 @@ export function SuperAdminWithdrawalsClient({
         backHref="/account/dashboard/super-admin"
         backLabel="Back to dashboard"
         title="Withdrawals"
-        description="Super-admin queue for withdrawal requests, payout method availability checks, and lifecycle oversight across the platform."
+        description="Super-admin queue for withdrawal review, payout method checks, and lifecycle oversight."
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SuperAdminStatCard
           label="Total requests"
           value={totalRequests}
-          description="All withdrawal requests currently loaded in the queue."
+          description="All withdrawal requests currently in the queue."
         />
         <SuperAdminStatCard
           label="Pending review"
@@ -46,12 +46,12 @@ export function SuperAdminWithdrawalsClient({
         <SuperAdminStatCard
           label="Payout updates needed"
           value={paymentMethodUpdatesNeeded}
-          description="Withdrawals whose selected payout method is unavailable."
+          description="Withdrawals whose selected payout method needs attention."
         />
         <SuperAdminStatCard
           label="Commission reviews"
           value={commissionReviewsPending}
-          description="Investment withdrawal commissions still awaiting review."
+          description="Investment withdrawal commissions awaiting review."
         />
       </section>
 
@@ -66,7 +66,7 @@ export function SuperAdminWithdrawalsClient({
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               Review payout details, inspect source information, and update
-              statuses with a full platform-wide view.
+              statuses from a single platform-wide workspace.
             </p>
           </div>
 

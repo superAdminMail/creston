@@ -70,7 +70,7 @@ export function getWithdrawalTerminalStatusTitle(
 ) {
   switch (status) {
     case WithdrawalStatus.COMPLETED:
-      return "This withdrawal has been completed successfully.";
+      return "Withdrawal completed successfully.";
     case WithdrawalStatus.CANCELLED:
       return "This withdrawal request was cancelled.";
     case WithdrawalStatus.REJECTED:
