@@ -6,6 +6,7 @@ import { useTransition } from "react";
 
 import { signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 export function AccountSuspendedLogoutButton() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function AccountSuspendedLogoutButton() {
       className="rounded-full bg-[#3c9ee0] px-5 text-white hover:bg-[#2f8bd0] disabled:cursor-not-allowed disabled:opacity-70"
     >
       <LogOut className="mr-2 h-4 w-4" />
-      {isSigningOut ? "Signing out..." : "Log out"}
+      {isSigningOut ? <Spinner /> : "Not my account!"}
     </Button>
   );
 }

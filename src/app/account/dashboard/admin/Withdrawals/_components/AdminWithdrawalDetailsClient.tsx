@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { WithdrawalTerminalNotice } from "@/components/withdrawals/WithdrawalTerminalNotice";
 import { cn } from "@/lib/utils";
 import {
   getWithdrawalCommissionFieldConfig,
@@ -36,7 +37,11 @@ import {
   getWithdrawalCommissionStatusTone,
   isWithdrawalCommissionSettledStatus,
 } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
-import { getWithdrawalStatusTone } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  getWithdrawalStatusTone,
+  isWithdrawalTerminalStatus,
+  getWithdrawalReceiptStatusHelperText,
+} from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import {
   getWithdrawalPaymentMethodStatusLabel,
   getWithdrawalPaymentMethodStatusTone,
@@ -516,12 +521,13 @@ export function AdminWithdrawalDetailsClient({
                   Withdrawal Receipt
                 </div>
                 <div>
-                  <p className="text-sm text-slate-400">Requested amount</p>
+                  <p className="text-sm text-slate-400">Withdrawal amount</p>
                   <h2 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
                     {withdrawal.amount}
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-                    {requesterName} | {requesterEmail} | {withdrawal.sourceLabel}
+                    Requested by {requesterName} | {requesterEmail} |{" "}
+                    {withdrawal.sourceLabel}
                   </p>
                 </div>
               </div>
@@ -583,13 +589,9 @@ export function AdminWithdrawalDetailsClient({
                 <ReceiptRow
                   label="Status"
                   value={withdrawal.statusLabel}
-                  helperText={
-                    withdrawal.status === "CANCELLED"
-                      ? "This request was cancelled."
-                      : withdrawal.status === "REJECTED"
-                        ? "This request was rejected."
-                        : "This request is still active."
-                  }
+                  helperText={getWithdrawalReceiptStatusHelperText(
+                    withdrawal.status,
+                  )}
                 />
                 <ReceiptRow
                   label="Commission status"
@@ -642,10 +644,11 @@ export function AdminWithdrawalDetailsClient({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-1">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">
-                    Payment method details
+                    Payout method details
                   </p>
                   <p className="text-sm text-slate-400">
-                    Used payout rail and availability controls.
+                    Shows the payout rail used for this withdrawal and its
+                    current availability status.
                   </p>
                 </div>
 
@@ -1070,22 +1073,11 @@ export function AdminWithdrawalDetailsClient({
               </div>
             ) : null}
 
-            {withdrawal.status === "REJECTED" ||
-            withdrawal.status === "CANCELLED" ? (
-              <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-rose-50">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-rose-200">
-                  {withdrawal.status === "CANCELLED"
-                    ? "Withdrawal cancelled"
-                    : "Withdrawal rejected"}
-                </p>
-                <p className="mt-2 text-lg font-medium">
-                  This withdrawal request is no longer active.
-                </p>
-                <p className="mt-1 text-sm text-rose-100/80">
-                  {withdrawal.rejectionReason ??
-                    "No terminal reason was recorded."}
-                </p>
-              </div>
+            {isWithdrawalTerminalStatus(withdrawal.status) ? (
+              <WithdrawalTerminalNotice
+                status={withdrawal.status}
+                reason={withdrawal.rejectionReason}
+              />
             ) : null}
 
             {commissionReviewStatus === "PENDING_REVIEW" &&

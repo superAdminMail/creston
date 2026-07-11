@@ -6,12 +6,16 @@ import {
   formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
-import { CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { WithdrawalTerminalNotice } from "@/components/withdrawals/WithdrawalTerminalNotice";
 import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../../_components/dashboardSurfaces";
 import type { WithdrawalRequestItemDto } from "@/lib/types/withdrawalRequests";
 import { buildWithdrawalCommissionCheckoutUrl } from "@/lib/withdrawals/withdrawalCommissionCheckout";
-import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  isWithdrawalCompletedStatus,
+  isWithdrawalTerminalStatus,
+} from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { isWithdrawalCommissionSettledStatus } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 import { cn } from "@/lib/utils";
 
@@ -102,10 +106,17 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                   </p>
                 </div>
                 <span title={formatEnumLabel(order.status)} className="self-start">
-                  <CheckCircle2
-                    className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400"
-                    aria-hidden="true"
-                  />
+                  {isWithdrawalCompletedStatus(order.status) ? (
+                    <CheckCircle2
+                      className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <AlertTriangle
+                      className="h-5 w-5 shrink-0 text-rose-500 dark:text-rose-300"
+                      aria-hidden="true"
+                    />
+                  )}
                 </span>
               </div>
 
@@ -159,14 +170,12 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
               ) : null}
 
               {isWithdrawalTerminalStatus(order.status) ? (
-                <div className="mt-3 rounded-xl border border-rose-200/40 bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-100">
-                  This withdrawal request is no longer active.
-                  {order.rejectionReason ? (
-                    <span className="mt-1 block text-rose-700/80 dark:text-rose-100/80">
-                      Reason: {order.rejectionReason}
-                    </span>
-                  ) : null}
-                </div>
+                <WithdrawalTerminalNotice
+                  status={order.status}
+                  reason={order.rejectionReason}
+                  variant="compact"
+                  className="mt-3"
+                />
               ) : order.commissionReviewStatus === "PENDING_REVIEW" &&
                 !isWithdrawalCommissionSettledStatus(order.commissionStatus) ? (
                 <div className="mt-3 rounded-xl border border-amber-200/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-100">

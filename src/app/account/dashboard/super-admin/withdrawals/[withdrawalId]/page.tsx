@@ -32,7 +32,7 @@ export default async function SuperAdminWithdrawalDetailsPage(
       backHref="/account/dashboard/super-admin/withdrawals"
       backLabel="Back to withdrawals"
       headerLabel="Withdrawal receipt"
-      headerDescription="Super-admin view for withdrawal review, payout availability, and lifecycle controls."
+      headerDescription="Super-admin receipt view for payout review, payment availability, and lifecycle controls."
     />
   );
 }

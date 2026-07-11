@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { WithdrawalStatus } from "@/generated/prisma";
+import { Prisma, WithdrawalStatus } from "@/generated/prisma";
 import {
   createErrorFormState,
   createSuccessFormState,
@@ -33,6 +33,21 @@ type FieldName =
   | "feeAmount";
 
 export type UpdateWithdrawalCommissionState = FormActionState<FieldName>;
+
+function removeCommissionPaymentSnapshot(payoutSnapshot: unknown) {
+  if (!payoutSnapshot || typeof payoutSnapshot !== "object") {
+    return payoutSnapshot ?? {};
+  }
+
+  if (Array.isArray(payoutSnapshot)) {
+    return payoutSnapshot;
+  }
+
+  const snapshot = payoutSnapshot as Record<string, unknown>;
+  const { commissionPayment: _commissionPayment, ...rest } = snapshot;
+
+  return rest;
+}
 
 function buildNotificationMessage(
   sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" | "MIXED",
@@ -193,6 +208,9 @@ export async function updateWithdrawalCommission(
       hasCommissionFees && sourceType === "SAVINGS_ACCOUNT"
         ? toDecimal(commissionInput ?? "0")
         : null;
+    const updatedPayoutSnapshot = hasCommissionFees
+      ? withdrawal.payoutSnapshot
+      : removeCommissionPaymentSnapshot(withdrawal.payoutSnapshot);
 
     await prisma.withdrawalOrder.update({
       where: {
@@ -203,13 +221,17 @@ export async function updateWithdrawalCommission(
         commissionPercent,
         commissionStatus: hasCommissionFees ? "PENDING" : "VOID",
         savingsFeeAmount,
+        payoutSnapshot: updatedPayoutSnapshot as Prisma.InputJsonValue,
       },
     });
 
     revalidatePath("/account/dashboard/admin/Withdrawals");
     revalidatePath(`/account/dashboard/admin/Withdrawals/${withdrawal.id}`);
+    revalidatePath("/account/dashboard/super-admin/withdrawals");
+    revalidatePath(`/account/dashboard/super-admin/withdrawals/${withdrawal.id}`);
     revalidatePath("/account/dashboard/user/withdrawals");
     revalidatePath(`/account/dashboard/user/withdrawals/${withdrawal.id}`);
+    revalidatePath("/account/dashboard/checkout");
     revalidatePath("/account/dashboard/notifications");
 
     await createRealtimeNotification({

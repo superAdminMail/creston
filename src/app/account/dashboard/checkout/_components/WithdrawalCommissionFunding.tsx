@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import CryptoQRCode from "@/components/payments/CryptoQRCode";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { WithdrawalTerminalNotice } from "@/components/withdrawals/WithdrawalTerminalNotice";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { cn } from "@/lib/utils";
 import type { WithdrawalCommissionCheckoutDetails } from "@/lib/types/payments/withdrawalCommission.types";
@@ -16,6 +17,11 @@ import {
   getCheckoutFundingMethodLabel,
   type CheckoutFundingMethodType,
 } from "@/lib/types/payments/checkout.types";
+import {
+  getWithdrawalTerminalStatusDescription,
+  getWithdrawalTerminalStatusTitle,
+  isWithdrawalCompletedStatus,
+} from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 
 import CheckoutFundingMethodSelector from "./CheckoutFundingMethodSelector";
 import WithdrawalCommissionProofModal from "./WithdrawalCommissionProofModal";
@@ -134,34 +140,48 @@ export default function WithdrawalCommissionFunding({
     !details.isUnderReview;
 
   if (details.isClosedWithdrawal) {
+    const isCompletedWithdrawal = isWithdrawalCompletedStatus(
+      details.withdrawal.status,
+    );
+
     return (
       <div className="mx-auto max-w-3xl px-3 py-4 sm:px-4 sm:py-6 md:px-6">
-        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "rounded-[1.35rem] border-rose-400/20 bg-rose-500/10 dark:border-rose-300/20 dark:bg-slate-900/60 sm:rounded-[1.75rem]")}>
+        <Card
+          className={cn(
+            DASHBOARD_PAGE_PANEL_CLASS,
+            "rounded-[1.35rem] sm:rounded-[1.75rem]",
+            isCompletedWithdrawal
+              ? "border-emerald-400/20 bg-emerald-500/10 dark:border-emerald-300/20 dark:bg-slate-900/60"
+              : "border-rose-400/20 bg-rose-500/10 dark:border-rose-300/20 dark:bg-slate-900/60",
+          )}
+        >
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base text-white sm:text-lg">
-              {details.withdrawal.status === "CANCELLED"
-                ? "Withdrawal cancelled"
-                : "Withdrawal rejected"}
+            <CardTitle
+              className={cn(
+                "text-base sm:text-lg",
+                isCompletedWithdrawal
+                  ? "text-emerald-950 dark:text-white"
+                  : "text-white",
+              )}
+            >
+              {getWithdrawalTerminalStatusTitle(details.withdrawal.status)}
             </CardTitle>
-            <p className="mt-1 text-sm leading-6 text-rose-100/90">
-              This withdrawal request is no longer active, so no commission
-              payment is required.
+            <p
+              className={cn(
+                "mt-1 text-sm leading-6",
+                isCompletedWithdrawal
+                  ? "text-emerald-900/90 dark:text-emerald-100/90"
+                  : "text-rose-100/90",
+              )}
+            >
+              {getWithdrawalTerminalStatusDescription(details.withdrawal.status)}
             </p>
           </CardHeader>
           <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
-            <div className="rounded-[1.15rem] border border-white/10 bg-white/[0.04] p-4 sm:rounded-[1.25rem]">
-              <p className="text-xs uppercase tracking-[0.18em] text-rose-200/80">
-                {details.withdrawal.status === "CANCELLED"
-                  ? "Cancellation reason"
-                  : "Rejection reason"}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-rose-50">
-                {details.withdrawal.rejectionReason ??
-                  (details.withdrawal.status === "CANCELLED"
-                    ? "Your withdrawal request was cancelled by the admin team."
-                    : "Your withdrawal request was rejected by the admin team.")}
-              </p>
-            </div>
+            <WithdrawalTerminalNotice
+              status={details.withdrawal.status}
+              reason={details.withdrawal.rejectionReason}
+            />
 
             <div className="flex justify-end">
               <Button

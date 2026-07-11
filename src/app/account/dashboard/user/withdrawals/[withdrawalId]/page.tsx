@@ -6,6 +6,7 @@ import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import { WithdrawalTerminalNotice } from "@/components/withdrawals/WithdrawalTerminalNotice";
 import {
   buildWithdrawalFeeCheckoutUrl,
   calculateWithdrawalAppliedFeeAmount,
@@ -22,8 +23,11 @@ import {
   calculateWithdrawalCommissionDueAmount,
   getWithdrawalCommissionSourceType,
 } from "@/lib/payments/withdrawals/withdrawalCommissionSettings";
-import { isWithdrawalTerminalStatus } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
-import { getWithdrawalStatusTone } from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
+import {
+  getWithdrawalStatusTone,
+  getWithdrawalReceiptStatusHelperText,
+  isWithdrawalTerminalStatus,
+} from "@/lib/payments/withdrawals/withdrawalStatusWorkflow";
 import { isWithdrawalCommissionSettledStatus } from "@/lib/payments/withdrawals/withdrawalCommissionStatusWorkflow";
 import {
   DASHBOARD_PAGE_PANEL_CLASS,
@@ -298,7 +302,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      Requested amount
+                      Withdrawal amount
                     </p>
                     <h1 className="mt-2 break-words text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
                       {formatCurrency(
@@ -375,13 +379,9 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   <ReceiptRow
                     label="Status"
                     value={formatEnumLabel(withdrawal.status)}
-                    helperText={
-                      isWithdrawalTerminalStatus(withdrawal.status)
-                        ? withdrawal.status === "CANCELLED"
-                          ? "This request was cancelled."
-                          : "This request was rejected."
-                        : "This request is still active."
-                    }
+                    helperText={getWithdrawalReceiptStatusHelperText(
+                      withdrawal.status,
+                    )}
                   />
                 </div>
 
@@ -577,20 +577,10 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
               ) : null}
 
               {isWithdrawalTerminalStatus(withdrawal.status) ? (
-                <div className="rounded-2xl border border-rose-400/20 bg-rose-500/10 p-5 text-rose-950 shadow-sm dark:text-rose-50">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-rose-700 dark:text-rose-200">
-                    {withdrawal.status === "CANCELLED"
-                      ? "Withdrawal cancelled"
-                      : "Withdrawal rejected"}
-                  </p>
-                  <p className="mt-2 text-lg font-medium text-slate-900 dark:text-white">
-                    This withdrawal request is no longer active.
-                  </p>
-                  <p className="mt-1 text-sm text-rose-800 dark:text-rose-100/80">
-                    {withdrawal.rejectionReason ??
-                      "You can submit a new withdrawal request using the available balance."}
-                  </p>
-                </div>
+                <WithdrawalTerminalNotice
+                  status={withdrawal.status}
+                  reason={withdrawal.rejectionReason}
+                />
               ) : commissionPayment?.reviewStatus === "PENDING_REVIEW" &&
                 !isWithdrawalCommissionSettledStatus(
                   withdrawal.commissionStatus,

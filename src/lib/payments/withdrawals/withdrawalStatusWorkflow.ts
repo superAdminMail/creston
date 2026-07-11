@@ -61,6 +61,70 @@ export function getWithdrawalStatusActionDescription(
   return formatEnumLabel(status);
 }
 
+export function isWithdrawalCompletedStatus(status: WithdrawalStatus | string) {
+  return status === WithdrawalStatus.COMPLETED;
+}
+
+export function getWithdrawalTerminalStatusTitle(
+  status: WithdrawalStatus | string,
+) {
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "This withdrawal has been completed successfully.";
+    case WithdrawalStatus.CANCELLED:
+      return "This withdrawal request was cancelled.";
+    case WithdrawalStatus.REJECTED:
+      return "This withdrawal request was rejected.";
+    default:
+      return "This withdrawal request is no longer active.";
+  }
+}
+
+export function getWithdrawalTerminalStatusDescription(
+  status: WithdrawalStatus | string,
+) {
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "The payout lifecycle is closed and no further action is required.";
+    case WithdrawalStatus.CANCELLED:
+      return "The request was cancelled and no further payout action is required.";
+    case WithdrawalStatus.REJECTED:
+      return "The request was rejected and no further payout action is required.";
+    default:
+      return "No further action is available for this request.";
+  }
+}
+
+export function getWithdrawalTerminalStatusReasonLabel(
+  status: WithdrawalStatus | string,
+) {
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "Completion note";
+    case WithdrawalStatus.CANCELLED:
+      return "Cancellation reason";
+    case WithdrawalStatus.REJECTED:
+      return "Rejection reason";
+    default:
+      return "Reason";
+  }
+}
+
+export function getWithdrawalTerminalStatusFallbackReason(
+  status: WithdrawalStatus | string,
+) {
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "This withdrawal was completed successfully.";
+    case WithdrawalStatus.CANCELLED:
+      return "Your withdrawal request was cancelled by the admin team.";
+    case WithdrawalStatus.REJECTED:
+      return "Your withdrawal request was rejected by the admin team.";
+    default:
+      return "No terminal reason was recorded.";
+  }
+}
+
 export function requiresWithdrawalStatusReason(
   status: WithdrawalStatus | string,
 ) {
@@ -79,7 +143,7 @@ export function getWithdrawalStatusTone(status: WithdrawalStatus | string) {
     case WithdrawalStatus.PROCESSING:
       return "bg-orange-100 text-orange-900 border-orange-300/50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-400/20";
     case WithdrawalStatus.COMPLETED:
-      return "bg-emerald-100 text-emerald-900 border-emerald-300/50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-400/20";
+      return "bg-emerald-50 text-emerald-800 border-emerald-200/70 shadow-[0_0_0_1px_rgba(16,185,129,0.06)] dark:bg-emerald-500/10 dark:text-emerald-100 dark:border-emerald-400/20";
     case WithdrawalStatus.REJECTED:
       return "bg-rose-100 text-rose-900 border-rose-300/50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-400/20";
     case WithdrawalStatus.CANCELLED:
@@ -173,5 +237,29 @@ export function getWithdrawalStatusLifecyclePatch(
 }
 
 export function getWithdrawalStatusSuccessMessage(status: WithdrawalStatus) {
-  return `Withdrawal marked as ${formatEnumLabel(status).toLowerCase()}.`;
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "Withdrawal completed successfully.";
+    case WithdrawalStatus.CANCELLED:
+      return "Withdrawal cancelled successfully.";
+    case WithdrawalStatus.REJECTED:
+      return "Withdrawal rejected successfully.";
+    default:
+      return `Withdrawal marked as ${formatEnumLabel(status).toLowerCase()}.`;
+  }
+}
+
+export function getWithdrawalReceiptStatusHelperText(
+  status: WithdrawalStatus | string,
+) {
+  switch (status) {
+    case WithdrawalStatus.COMPLETED:
+      return "This request has been completed successfully.";
+    case WithdrawalStatus.CANCELLED:
+      return "This request was cancelled.";
+    case WithdrawalStatus.REJECTED:
+      return "This request was rejected.";
+    default:
+      return "This request is still active.";
+  }
 }
