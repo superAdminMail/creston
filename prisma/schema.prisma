@@ -1355,11 +1355,13 @@ model SiteConfiguration {
   supportPhone          String?
   supportPhoneSecondary String?
 
-  siteDescription String?
-  siteTagline     String?
-  siteAddress     String?
-  siteCRN         String?
-  siteFRN         String?
+  siteDescription         String?
+  siteTagline             String?
+  siteAddress             String?
+  siteCRN                 String?
+  siteFRN                 String?
+  maintenanceModeEnabled  Boolean @default(false)
+  disclaimerBannerEnabled Boolean @default(false)
 
   siteLogoFileAssetId String?    @unique
   siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)

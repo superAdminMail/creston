@@ -36,6 +36,8 @@ const optionalEmailString = z
     return trimmed ? trimmed : null;
   });
 
+const formBoolean = z.boolean().default(false);
+
 export const siteConfigurationSchema = z.object({
   siteName: z.string().trim().min(1, "Site name is required."),
   siteDescription: optionalTrimmedString,
@@ -43,6 +45,8 @@ export const siteConfigurationSchema = z.object({
   siteAddress: optionalTrimmedString,
   siteCRN: optionalTrimmedString,
   siteFRN: optionalTrimmedString,
+  maintenanceModeEnabled: formBoolean,
+  disclaimerBannerEnabled: formBoolean,
   supportEmail: optionalEmailString,
   supportPhone: optionalTrimmedString,
   supportPhoneSecondary: optionalTrimmedString,
@@ -73,6 +77,8 @@ export function normalizeSiteConfigurationValues(
     siteAddress: values.siteAddress,
     siteCRN: values.siteCRN,
     siteFRN: values.siteFRN,
+    maintenanceModeEnabled: values.maintenanceModeEnabled,
+    disclaimerBannerEnabled: values.disclaimerBannerEnabled,
     supportEmail: values.supportEmail,
     supportPhone: values.supportPhone,
     supportPhoneSecondary: values.supportPhoneSecondary,

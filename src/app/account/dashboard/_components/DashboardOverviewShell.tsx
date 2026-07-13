@@ -183,7 +183,7 @@ function ReviewAlert({ alert }: { alert: DashboardOverviewAlert }) {
       }`}
     >
       <div
-        className={`rounded-2xl border p-3 ${
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border p-0 ${
           alert.tone === "critical"
             ? "border-rose-500/20 bg-rose-500/10 text-rose-200"
             : "border-sky-400/20 bg-sky-500/10 text-sky-700 dark:text-sky-200"

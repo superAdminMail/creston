@@ -15,8 +15,14 @@ import { initialSiteSettingsFormActionState } from "@/actions/super-admin/site-s
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldContent, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldContent,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 
 import {
   normalizePhoneToE164,
@@ -94,6 +100,12 @@ export function SiteSettingsForm({
   const [siteAddress, setSiteAddress] = useState(defaultValues.siteAddress);
   const [siteCRN, setSiteCRN] = useState(defaultValues.siteCRN);
   const [siteFRN, setSiteFRN] = useState(defaultValues.siteFRN);
+  const [maintenanceModeEnabled, setMaintenanceModeEnabled] = useState(
+    defaultValues.maintenanceModeEnabled,
+  );
+  const [disclaimerBannerEnabled, setDisclaimerBannerEnabled] = useState(
+    defaultValues.disclaimerBannerEnabled,
+  );
   const [supportEmail, setSupportEmail] = useState(defaultValues.supportEmail);
   const [locale, setLocale] = useState(defaultValues.locale);
   const [seoTitle, setSeoTitle] = useState(defaultValues.seoTitle);
@@ -136,8 +148,7 @@ export function SiteSettingsForm({
 
   const [keywords, setKeywords] = useState<string[]>(defaultValues.keywords);
   const siteTitlePlaceholder = useMemo(
-    () =>
-      `${siteName.trim() || "Company"} | Smarter investing`,
+    () => `${siteName.trim() || "Company"} | Smarter investing`,
     [siteName],
   );
   const twitterHandlePlaceholder = useMemo(() => {
@@ -177,7 +188,7 @@ export function SiteSettingsForm({
   const defaultOgImagePreview =
     uploadedOgImagePreview?.id === defaultOgImageFileAssetId
       ? uploadedOgImagePreview
-      : defaultOgImageAsset ?? previews.defaultOgImage;
+      : (defaultOgImageAsset ?? previews.defaultOgImage);
 
   useEffect(() => {
     if (state.status === "success" && state.message) {
@@ -281,8 +292,67 @@ export function SiteSettingsForm({
           }
         })()}
       />
+      <input
+        type="hidden"
+        name="maintenanceModeEnabled"
+        value={maintenanceModeEnabled ? "true" : "false"}
+      />
+      <input
+        type="hidden"
+        name="disclaimerBannerEnabled"
+        value={disclaimerBannerEnabled ? "true" : "false"}
+      />
 
       {/* CONTENT */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Operational controls</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-white">
+                  Maintenance mode
+                </p>
+                <p className="max-w-xl text-sm leading-6 text-slate-400">
+                  Prevent users from accessing the public site and dashboard
+                  during maintenance.
+                </p>
+              </div>
+
+              <Switch
+                checked={maintenanceModeEnabled}
+                aria-label="Toggle maintenance mode"
+                onCheckedChange={(checked) =>
+                  setMaintenanceModeEnabled(Boolean(checked))
+                }
+              />
+            </div>
+
+            <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/8 bg-white/[0.02] p-4">
+              <div className="space-y-1.5">
+                <p className="text-sm font-medium text-white">
+                  Test system disclaimer
+                </p>
+                <p className="max-w-xl text-sm leading-6 text-slate-400">
+                  Display a test system banner to users.
+                </p>
+              </div>
+
+              <Switch
+                checked={disclaimerBannerEnabled}
+                aria-label="Toggle test system disclaimer"
+                onCheckedChange={(checked) =>
+                  setDisclaimerBannerEnabled(Boolean(checked))
+                }
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="space-y-6">
           {/* GENERAL */}
@@ -648,12 +718,12 @@ export function SiteSettingsForm({
           </Card>
 
           <div className="flex justify-end">
-              <SuperAdminActionSubmitButton
-                idleLabel="Save site settings"
-                pendingLabel="Saving..."
-                className="btn-primary rounded-xl px-5"
-              />
-            </div>
+            <SuperAdminActionSubmitButton
+              idleLabel="Save site settings"
+              pendingLabel="Saving..."
+              className="btn-primary rounded-xl px-5"
+            />
+          </div>
         </div>
       </div>
     </form>

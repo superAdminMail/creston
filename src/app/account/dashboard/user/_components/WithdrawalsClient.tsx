@@ -507,7 +507,7 @@ export default function WithdrawalsClient({
 
       {kycStatus !== "VERIFIED" ? (
         <div className="flex gap-2 rounded-2xl border border-yellow-400/20 bg-yellow-500/5 p-4 text-sm text-yellow-700 shadow-sm dark:text-yellow-400">
-          <ShieldAlert className="mt-0.5 h-4 w-4" />
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" />
           Complete identity verification to enable withdrawals.
         </div>
       ) : null}

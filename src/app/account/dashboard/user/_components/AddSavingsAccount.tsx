@@ -138,7 +138,7 @@ export default function AddSavingsAccount({
               <ArrowLeft className="h-4 w-4" />
               Back to savings
             </Link>
-            <span className="inline-flex md:hidden items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/12 dark:text-sky-100">
+            <span className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/12 dark:text-sky-100 md:hidden">
               <PiggyBank className="h-3.5 w-3.5" />
               Savings setup
             </span>

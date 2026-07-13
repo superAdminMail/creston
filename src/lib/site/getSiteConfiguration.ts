@@ -3,12 +3,15 @@ import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
 
 export const siteConfigurationSelect = {
   id: true,
+  updatedAt: true,
   siteName: true,
   siteDescription: true,
   siteTagline: true,
   siteAddress: true,
   siteCRN: true,
   siteFRN: true,
+  maintenanceModeEnabled: true,
+  disclaimerBannerEnabled: true,
   seoTitle: true,
   seoDescription: true,
   supportEmail: true,

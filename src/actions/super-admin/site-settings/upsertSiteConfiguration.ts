@@ -42,6 +42,12 @@ function getFormData(formData: FormData) {
     siteAddress: String(formData.get("siteAddress") ?? ""),
     siteCRN: String(formData.get("siteCRN") ?? ""),
     siteFRN: String(formData.get("siteFRN") ?? ""),
+    maintenanceModeEnabled: String(
+      formData.get("maintenanceModeEnabled") ?? "false",
+    ) === "true",
+    disclaimerBannerEnabled: String(
+      formData.get("disclaimerBannerEnabled") ?? "false",
+    ) === "true",
     supportEmail: String(formData.get("supportEmail") ?? ""),
     supportPhone: String(formData.get("supportPhone") ?? ""),
     supportPhoneSecondary: String(
@@ -150,6 +156,8 @@ export async function upsertSiteConfiguration(
     siteAddress: values.siteAddress,
     siteCRN: values.siteCRN,
     siteFRN: values.siteFRN,
+    maintenanceModeEnabled: values.maintenanceModeEnabled,
+    disclaimerBannerEnabled: values.disclaimerBannerEnabled,
     supportEmail: values.supportEmail,
     supportPhone: values.supportPhone,
     supportPhoneSecondary: values.supportPhoneSecondary,
@@ -187,6 +195,8 @@ export async function upsertSiteConfiguration(
     metadata: {
       siteName: values.siteName,
       locale: values.locale,
+      maintenanceModeEnabled: values.maintenanceModeEnabled,
+      disclaimerBannerEnabled: values.disclaimerBannerEnabled,
       keywords: values.keywords,
       hasSiteLogo: Boolean(values.siteLogoFileAssetId),
       hasDefaultOgImage: Boolean(values.defaultOgImageFileAssetId),
@@ -194,6 +204,7 @@ export async function upsertSiteConfiguration(
   });
 
   revalidatePath("/", "layout");
+  revalidatePath("/account", "layout");
   revalidatePath("/account/dashboard/super-admin/settings");
 
   return {

@@ -66,8 +66,8 @@ export default function Loading() {
       <div className="flex flex-col gap-5 border-b border-slate-200/70 pb-5 sm:gap-6 sm:pb-6 lg:flex-row lg:items-center lg:justify-between dark:border-white/10">
         <div className="space-y-3">
           <div className="flex justify-between ">
-            <Skeleton className="inline-flex h-6 w-36 rounded-full bg-sky-200/80 dark:bg-sky-400/20 md:hidden" />
-            <Skeleton className="inline-flex h-6 w-36 rounded-full bg-sky-200/80 dark:bg-sky-400/20 md:hidden" />
+            <Skeleton className="inline-flex h-6 w-36 rounded-full bg-sky-200/80 dark:bg-sky-400/20" />
+            <Skeleton className="hidden h-6 w-36 rounded-full bg-sky-200/80 dark:bg-sky-400/20 md:inline-flex" />
           </div>
           <Skeleton className="h-8 w-64 rounded-full bg-slate-200/80 dark:bg-white/10 sm:h-10 sm:w-80" />
 

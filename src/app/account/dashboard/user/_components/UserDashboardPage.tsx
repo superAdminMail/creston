@@ -113,7 +113,7 @@ export default function UserDashboardPage({
 
       {!investmentProfileComplete ? (
         <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50/90 px-5 py-4 text-amber-950 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-200" />
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
           <AlertTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-semibold">
               Your investment profile is not set up yet
@@ -130,7 +130,7 @@ export default function UserDashboardPage({
 
       {stats.inactiveInvestmentOrder ? (
         <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50/90 px-5 py-4 text-amber-950 shadow-sm dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-200" />
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
           <AlertTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-semibold">
               One of your investment orders is now inactive

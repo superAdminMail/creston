@@ -26,7 +26,7 @@ export function CreateInvestmentOrderHeader({
         </p>
       </div>
 
-      <div className="inline-flex md:hidden items-center gap-3 rounded-3xl border border-border/60 bg-white/75 px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
+      <div className="inline-flex items-center gap-3 rounded-3xl border border-border/60 bg-white/75 px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 md:hidden">
         <Landmark className="h-4 w-4 text-sky-700 dark:text-sky-300" />
         5-step workflow
       </div>

@@ -19,11 +19,15 @@ import {
 } from "./AccountSidebarShell";
 import { DashboardNavbarClient } from "./DashboardNavbar.client";
 import { DrawerSurface } from "@/components/ui/drawer-surface";
+import { AppNoticeBanner } from "@/components/layout/AppNoticeBanner";
 
 type AccountLayoutShellProps = {
   user: ProfileDTO;
   siteName: string;
   siteLogoUrl?: string | null;
+  disclaimerBannerEnabled: boolean;
+  disclaimerBannerDismissalKey: string;
+  initialDisclaimerBannerDismissed: boolean;
   children: React.ReactNode;
 };
 
@@ -31,6 +35,9 @@ export function AccountLayoutShell({
   user,
   siteName,
   siteLogoUrl,
+  disclaimerBannerEnabled,
+  disclaimerBannerDismissalKey,
+  initialDisclaimerBannerDismissed,
   children,
 }: AccountLayoutShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,6 +57,13 @@ export function AccountLayoutShell({
   return (
     <SidebarProvider className="min-h-screen bg-card text-slate-950 dark:text-slate-100">
       <div className="w-full">
+        <AppNoticeBanner
+          key={disclaimerBannerDismissalKey}
+          enabled={disclaimerBannerEnabled}
+          dismissalKey={disclaimerBannerDismissalKey}
+          initialDismissed={initialDisclaimerBannerDismissed}
+        />
+
         <DashboardNavbarClient
           user={user}
           siteName={siteName}

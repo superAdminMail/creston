@@ -98,7 +98,7 @@ export default async function Page() {
               <ArrowLeft className="h-4 w-4" />
               Back to profile
             </Link>
-            <div className="inline-flex md:hidden items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
+            <div className="hidden items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100 md:inline-flex">
               <ShieldCheck className="h-3.5 w-3.5" />
               Personal Profile
             </div>

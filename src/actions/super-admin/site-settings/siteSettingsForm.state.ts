@@ -5,6 +5,8 @@ export type SiteSettingsFieldName =
   | "siteAddress"
   | "siteCRN"
   | "siteFRN"
+  | "maintenanceModeEnabled"
+  | "disclaimerBannerEnabled"
   | "seoTitle"
   | "seoDescription"
   | "supportEmail"

@@ -263,7 +263,7 @@ export default function SavingsDashboard({
 
       {!canCreateSavingsAccount ? (
         <Alert className="rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-100">
-          <ShieldAlert className="h-4 w-4" />
+          <ShieldAlert className="h-5 w-5 shrink-0" />
           <AlertTitle>
             Savings accounts are locked until KYC is verified. Current status:{" "}
             {formatEnumLabel(kycStatus, "Not available")}.

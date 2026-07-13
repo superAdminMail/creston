@@ -15,6 +15,8 @@ export type SiteSettingsFormValues = {
   siteAddress: string;
   siteCRN: string;
   siteFRN: string;
+  maintenanceModeEnabled: boolean;
+  disclaimerBannerEnabled: boolean;
   supportEmail: string;
   supportPhone: string;
   supportPhoneSecondary: string;
@@ -80,6 +82,8 @@ export async function getSiteConfiguration(): Promise<SiteSettingsData> {
       siteAddress: config?.siteAddress ?? "",
       siteCRN: config?.siteCRN ?? "",
       siteFRN: config?.siteFRN ?? "",
+      maintenanceModeEnabled: config?.maintenanceModeEnabled ?? false,
+      disclaimerBannerEnabled: config?.disclaimerBannerEnabled ?? false,
       supportEmail: config?.supportEmail ?? "",
       supportPhone: config?.supportPhone ?? "",
       supportPhoneSecondary: config?.supportPhoneSecondary ?? "",
