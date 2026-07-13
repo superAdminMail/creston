@@ -56,8 +56,6 @@ export default async function SiteLayout({
         siteAddress={site.siteAddress ?? ""}
         siteCRN={site.siteCRN ?? ""}
         siteFRN={site.siteFRN ?? ""}
-        maintenanceModeEnabled={isMaintenanceMode}
-        maintenanceBypassed={maintenanceBypassed}
         disclaimerBannerEnabled={config?.disclaimerBannerEnabled ?? false}
         disclaimerBannerDismissalKey={disclaimerBannerDismissalKey}
         initialDisclaimerBannerDismissed={

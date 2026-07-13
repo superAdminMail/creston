@@ -28,12 +28,12 @@ export function ComplianceStrip() {
               <ShieldCheck className="h-4 w-4 text-blue-300" />
               <span>Secure and encrypted</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-blue-300" />
-              <span className="flex items-center gap-2">Data protection</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-blue-300" />
+            <span>Data protection</span>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

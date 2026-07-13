@@ -1,7 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 import { AppNoticeBanner } from "@/components/layout/AppNoticeBanner";
 import { ComplianceStrip } from "@/components/layout/ComplianceStrip";
 import { NavbarClient } from "@/components/layout/navbar.client";
@@ -23,8 +21,6 @@ export type SiteLayoutClientProps = {
   siteAddress: string;
   siteCRN: string;
   siteFRN: string;
-  maintenanceModeEnabled: boolean;
-  maintenanceBypassed: boolean;
   disclaimerBannerEnabled: boolean;
   disclaimerBannerDismissalKey: string;
   initialDisclaimerBannerDismissed: boolean;
@@ -44,8 +40,6 @@ export default function SiteLayoutClient({
   siteAddress,
   siteCRN,
   siteFRN,
-  maintenanceModeEnabled,
-  maintenanceBypassed,
   disclaimerBannerEnabled,
   disclaimerBannerDismissalKey,
   initialDisclaimerBannerDismissed,
@@ -53,10 +47,6 @@ export default function SiteLayoutClient({
   year,
   children,
 }: SiteLayoutClientProps) {
-  const pathname = usePathname();
-  const showChrome =
-    maintenanceBypassed || !(maintenanceModeEnabled && pathname === "/");
-
   return (
     <>
       <AppNoticeBanner
@@ -66,35 +56,29 @@ export default function SiteLayoutClient({
         initialDismissed={initialDisclaimerBannerDismissed}
       />
 
-      {showChrome ? (
-        <NavbarClient
-          siteName={siteName}
-          siteLogoUrl={siteLogoUrl}
-          siteTagline={siteTagline}
-        />
-      ) : null}
+      <NavbarClient
+        siteName={siteName}
+        siteLogoUrl={siteLogoUrl}
+        siteTagline={siteTagline}
+      />
 
       <main className="flex min-h-0 flex-1 flex-col">{children}</main>
 
-      {showChrome ? (
-        <>
-          <FooterClient
-            siteName={siteName}
-            siteLogoUrl={siteLogoUrl}
-            siteDescription={siteDescription}
-            siteTagline={siteTagline}
-            supportEmail={supportEmail}
-            supportPhone={supportPhone}
-            supportPhoneSecondary={supportPhoneSecondary}
-            siteAddress={siteAddress}
-            siteCRN={siteCRN}
-            siteFRN={siteFRN}
-            footerLinkGroups={footerLinkGroups}
-            year={year}
-          />
-          <ComplianceStrip />
-        </>
-      ) : null}
+      <FooterClient
+        siteName={siteName}
+        siteLogoUrl={siteLogoUrl}
+        siteDescription={siteDescription}
+        siteTagline={siteTagline}
+        supportEmail={supportEmail}
+        supportPhone={supportPhone}
+        supportPhoneSecondary={supportPhoneSecondary}
+        siteAddress={siteAddress}
+        siteCRN={siteCRN}
+        siteFRN={siteFRN}
+        footerLinkGroups={footerLinkGroups}
+        year={year}
+      />
+      <ComplianceStrip />
     </>
   );
 }

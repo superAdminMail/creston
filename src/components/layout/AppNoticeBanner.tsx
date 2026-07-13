@@ -1,9 +1,8 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { cn } from "@/lib/utils";
 import { getAppNoticeBannerCookieName } from "./appNoticeBannerCookie";
 
 type AppNoticeBannerProps = {
@@ -19,10 +18,6 @@ export function AppNoticeBanner({
 }: AppNoticeBannerProps) {
   const [dismissed, setDismissed] = useState(initialDismissed);
   const cookieName = getAppNoticeBannerCookieName(dismissalKey);
-
-  useEffect(() => {
-    setDismissed(initialDismissed);
-  }, [initialDismissed, cookieName]);
 
   if (!enabled || dismissed) {
     return null;
@@ -56,13 +51,11 @@ export function AppNoticeBanner({
         </div>
 
         <button
-          type="button"
-          onClick={handleDismiss}
-          className={cn(
-            "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-white text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-100 dark:hover:bg-sky-500/20",
-          )}
-          aria-label="Dismiss test system notice"
-        >
+        type="button"
+        onClick={handleDismiss}
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-white text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-100 dark:hover:bg-sky-500/20"
+        aria-label="Dismiss test system notice"
+      >
           <X className="h-4 w-4" />
         </button>
       </div>
