@@ -1,5 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { ResponsiveCollectionLoading } from "../../_components/ResponsiveCollectionLoading";
+
 function StatCardSkeleton() {
   return (
     <div className="rounded-[1.5rem] border border-slate-200/80 bg-white/95 p-5 shadow-sm dark:border-white/10 dark:bg-zinc-950/95">
@@ -53,34 +55,14 @@ export default function Loading() {
           </div>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white/90 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-          <div className="overflow-x-auto">
-            <table className="min-w-[980px] w-full text-left">
-              <thead className="bg-white/80 dark:bg-white/[0.04]">
-                <tr className="border-b border-slate-200/80 dark:border-white/10">
-                  {Array.from({ length: 9 }).map((_, index) => (
-                    <th key={index} className="px-4 py-4">
-                      <Skeleton className="h-3 w-24 rounded-full bg-slate-200/80 dark:bg-white/10" />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: 6 }).map((_, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className="border-b border-slate-200/80 last:border-b-0 dark:border-white/10"
-                  >
-                    {Array.from({ length: 9 }).map((__, cellIndex) => (
-                      <td key={cellIndex} className="px-4 py-4">
-                        <Skeleton className="h-4 w-full max-w-40 rounded-full bg-slate-200/80 dark:bg-white/10" />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="mt-6">
+          <ResponsiveCollectionLoading
+            mobileCards={6}
+            desktopColumns={9}
+            desktopRows={6}
+            mobileCardFields={6}
+            tableMinWidthClassName="min-w-[980px]"
+          />
         </div>
       </section>
     </div>

@@ -66,7 +66,7 @@ const page = async ({
               </Link>
             </p>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 hidden">
               Staff member?
               <Link
                 href="/auth/login/administrator"

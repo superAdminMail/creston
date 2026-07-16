@@ -537,6 +537,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/super-admin/audit-logs",
           icon: ScrollText,
         },
+        {
+          name: "KYC Reviews",
+          href: "/account/dashboard/super-admin/kyc-reviews",
+          icon: BadgeCheck,
+        },
       ],
     },
     {

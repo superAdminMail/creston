@@ -272,6 +272,162 @@ function StatCard({
   );
 }
 
+function DetailField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-sky-700/90 dark:text-sky-300/80">
+        {label}
+      </p>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+function UserDirectoryMobileCard({
+  user,
+  canSuspendUsers,
+  openUser,
+  openUserActionDialog,
+}: {
+  user: DashboardDirectoryUser;
+  canSuspendUsers: boolean;
+  openUser: (user: DashboardDirectoryUser) => void;
+  openUserActionDialog: (
+    user: DashboardDirectoryUser,
+    mode: UserActionMode,
+  ) => void;
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${user.fullName} record`}
+      onClick={() => openUser(user)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openUser(user);
+        }
+      }}
+      className={DASHBOARD_PAGE_SURFACE_CLASS + " cursor-pointer overflow-hidden"}
+    >
+      <div className="space-y-4 p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <p className="break-words text-base font-semibold text-slate-950 dark:text-white">
+              {user.fullName}
+            </p>
+            <p className="break-words text-sm text-slate-600 dark:text-slate-400">
+              {user.email}
+            </p>
+            <p className="break-words text-xs text-slate-500">
+              {user.id} | {user.country}
+            </p>
+          </div>
+          <div className="shrink-0">{getRoleBadge(user.role)}</div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <DetailField label="Verification">
+            {getVerificationBadge(user.verificationStatus)}
+          </DetailField>
+          <DetailField label="Account">
+            {getAccountStatusBadge(user.accountStatus)}
+          </DetailField>
+          <DetailField label="Email verification">
+            {getEmailVerificationBadge(user.emailVerified)}
+          </DetailField>
+          <DetailField label="KYC">
+            {getKycBadge(user.kycStatus)}
+          </DetailField>
+          <DetailField label="Deposits">
+            <p className="text-sm font-semibold text-slate-950 dark:text-white">
+              {formatDirectoryCurrency(user.totalDeposits)}
+            </p>
+          </DetailField>
+          <DetailField label="Invested">
+            <p className="text-sm font-semibold text-slate-950 dark:text-white">
+              {formatDirectoryCurrency(user.totalInvested)}
+            </p>
+          </DetailField>
+          <DetailField label="Wallet">
+            <p className="text-sm font-semibold text-slate-950 dark:text-white">
+              {formatDirectoryCurrency(user.walletBalance)}
+            </p>
+          </DetailField>
+          <DetailField label="Joined">
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {user.joinedAt}
+            </p>
+          </DetailField>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              openUser(user);
+            }}
+            className="inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10 dark:hover:text-sky-100"
+            aria-label={`Open ${user.fullName} record`}
+          >
+            Record loaded
+            <span aria-hidden="true">-&gt;</span>
+          </button>
+
+          {canSuspendUsers ? (
+            user.isDeleted ? (
+              <button
+                type="button"
+                onClick={(event) => event.stopPropagation()}
+                disabled
+                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
+                aria-label={`${user.fullName} is deleted`}
+              >
+                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
+                Deleted
+              </button>
+            ) : user.isSuspended || user.accountStatus === "SUSPENDED" ? (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openUserActionDialog(user, "unsuspend");
+                }}
+                className="inline-flex items-center justify-center rounded-full border border-emerald-200/70 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-100"
+                aria-label={`Reactivate ${user.fullName}`}
+              >
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                Unsuspend
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openUserActionDialog(user, "suspend");
+                }}
+                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
+                aria-label={`Suspend ${user.fullName}`}
+              >
+                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
+                Suspend
+              </button>
+            )
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardUserDirectory({
   badgeLabel,
   title,
@@ -463,7 +619,25 @@ export function DashboardUserDirectory({
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className={DASHBOARD_TABLE_SHELL_CLASS + " overflow-hidden"}>
+            <div className="grid gap-3 md:hidden">
+              {filteredUsers.map((user) => (
+                <UserDirectoryMobileCard
+                  key={user.id}
+                  user={user}
+                  canSuspendUsers={canSuspendUsers}
+                  openUser={openUser}
+                  openUserActionDialog={openUserActionDialog}
+                />
+              ))}
+
+              {filteredUsers.length === 0 ? (
+                <div className="rounded-[1.35rem] border border-border/60 bg-white/70 px-4 py-8 text-center text-sm text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                  No records matched your search.
+                </div>
+              ) : null}
+            </div>
+
+            <div className={DASHBOARD_TABLE_SHELL_CLASS + " hidden overflow-hidden md:block"}>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[980px] text-left">
                   <thead className="bg-white/80 dark:bg-white/[0.04]">

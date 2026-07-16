@@ -36,10 +36,35 @@ export function SuperAdminCollection<TItem>({
 }: SuperAdminCollectionProps<TItem>) {
   return (
     <>
+      <div className="grid gap-3 md:hidden">
+        {items.map((item) => (
+          <Card
+            key={getItemKey(item)}
+            className={cn(
+              DASHBOARD_PAGE_PANEL_CLASS,
+              "overflow-hidden",
+            )}
+          >
+            <CardContent className="space-y-4 p-4 sm:p-5">
+              <div className="grid gap-4">
+                {columns.map((column) => (
+                  <div key={column.key} className="space-y-1.5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      {column.header}
+                    </p>
+                    <div className="min-w-0">{column.render(item)}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card
         className={cn(
           DASHBOARD_PAGE_PANEL_CLASS,
-          "overflow-hidden py-0",
+          "hidden overflow-hidden py-0 md:block",
         )}
       >
         <CardContent className="p-0">

@@ -52,40 +52,73 @@ export function AdminResponsiveCollectionShell<TItem>({
 
   return (
     <>
-      <Card className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "py-0")}>
+      <div className="grid gap-3 md:hidden">
+        {items.map((item) => (
+          <Card
+            key={getItemKey(item)}
+            className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "overflow-hidden")}
+          >
+            <CardContent className="space-y-4 p-4 sm:p-5">
+              <div className="grid gap-4">
+                {columns.map((column) => (
+                  <div key={column.key} className="space-y-1.5">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      {column.header}
+                    </p>
+                    <div className="min-w-0">{column.render(item)}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card
+        className={cn(
+          DASHBOARD_PAGE_SURFACE_CLASS,
+          "hidden py-0 md:block",
+        )}
+      >
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-max">
-            <TableHeader>
-              <TableRow className="border-border/60 hover:bg-transparent dark:border-white/10">
-                {columns.map((column) => (
-                  <TableHead
-                    key={column.key}
-                    className={column.className ?? "px-5 py-4 text-slate-500 dark:text-slate-400"}
-                  >
-                    {column.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {items.map((item) => (
-                <TableRow
-                  key={getItemKey(item)}
-                  className="border-border/60 hover:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.03]"
-                >
+              <TableHeader>
+                <TableRow className="border-border/60 hover:bg-transparent dark:border-white/10">
                   {columns.map((column) => (
-                    <TableCell
+                    <TableHead
                       key={column.key}
-                      className={column.cellClassName ?? "px-5 py-4 align-top text-slate-700 dark:text-slate-300"}
+                      className={
+                        column.className ??
+                        "px-5 py-4 text-slate-500 dark:text-slate-400"
+                      }
                     >
-                      {column.render(item)}
-                    </TableCell>
+                      {column.header}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
+              </TableHeader>
+
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow
+                    key={getItemKey(item)}
+                    className="border-border/60 hover:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.03]"
+                  >
+                    {columns.map((column) => (
+                      <TableCell
+                        key={column.key}
+                        className={
+                          column.cellClassName ??
+                          "px-5 py-4 align-top text-slate-700 dark:text-slate-300"
+                        }
+                      >
+                        {column.render(item)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </div>
         </CardContent>

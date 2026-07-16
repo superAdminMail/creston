@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   formatCurrency,
-  formatDateLabel,
   formatEnumLabel,
 } from "@/lib/formatters/formatters";
 import type { AdminWithdrawalItem } from "@/lib/service/getAdminWithdrawals";
@@ -171,7 +170,167 @@ export function WithdrawalRequestsTable({
       <Card className="border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <CardContent className="p-0">
           <div className="overflow-hidden rounded-[1.5rem]">
-            <div className="overflow-x-auto">
+            <div className="grid gap-3 p-4 md:hidden">
+              {filteredWithdrawals.map((withdrawal) => (
+                <div
+                  key={withdrawal.id}
+                  className="rounded-[1.35rem] border border-white/10 bg-white/[0.03] p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <div className="font-medium text-white">
+                        {withdrawal.requester.name ?? "Unnamed investor"}
+                      </div>
+                      <div className="text-sm text-slate-400">
+                        {withdrawal.requester.email ?? "Unknown email"}
+                      </div>
+                    </div>
+
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "border",
+                        getWithdrawalStatusTone(withdrawal.status),
+                      )}
+                    >
+                      {formatEnumLabel(withdrawal.status)}
+                    </Badge>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Source
+                      </p>
+                      <div className="text-sm font-medium text-slate-200">
+                        {withdrawal.sourceLabel}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Ref:{" "}
+                        {withdrawal.reference ??
+                          withdrawal.externalReference ??
+                          withdrawal.id}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Payout method
+                      </p>
+                      <p className="text-slate-200">
+                        {withdrawal.paymentMethodLabel}
+                      </p>
+                      <p
+                        className={`text-[10px] uppercase tracking-[0.2em] ${
+                          withdrawal.paymentMethodStatus === "UNAVAILABLE"
+                            ? "text-amber-300"
+                            : withdrawal.paymentMethodStatus === "UPDATED"
+                              ? "text-emerald-300"
+                              : "text-slate-500"
+                        }`}
+                      >
+                        {withdrawal.paymentMethodStatus === "UNAVAILABLE"
+                          ? "Update required"
+                          : withdrawal.paymentMethodStatus === "UPDATED"
+                            ? "Updated details submitted"
+                            : "Available"}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Amount
+                      </p>
+                      <p className="font-medium text-emerald-300">
+                        {formatCurrency(
+                          withdrawal.amount,
+                          withdrawal.currency,
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Fees
+                      </p>
+                      <div className="text-sm text-slate-300">
+                        {withdrawal.hasCommissionFees ? (
+                          withdrawal.sourceType === "INVESTMENT_ORDER" ? (
+                            <div className="space-y-1">
+                              <p className="text-slate-200">
+                                Commission: {withdrawal.commissionPercent}%
+                              </p>
+                              {withdrawal.commissionReviewStatus ===
+                              "PENDING_REVIEW" ? (
+                                <p className="text-xs text-amber-300">
+                                  Awaiting commission review
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : withdrawal.savingsFeeAmount != null ? (
+                            <div className="space-y-1">
+                              <p className="text-slate-200">
+                                Fee amount:{" "}
+                                {formatCurrency(
+                                  withdrawal.savingsFeeAmount,
+                                  withdrawal.currency,
+                                )}
+                              </p>
+                              {withdrawal.commissionReviewStatus ===
+                              "PENDING_REVIEW" ? (
+                                <p className="text-xs text-amber-300">
+                                  Awaiting commission review
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">Not available</span>
+                          )
+                        ) : (
+                          <span className="text-slate-500">
+                            No commission fees
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 sm:col-span-2">
+                      <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Requested
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {formatDateTime(withdrawal.requestedAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`${detailsBasePath}/${withdrawal.id}`}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.08] hover:text-white"
+                    >
+                      <ArrowRight className="h-3.5 w-3.5" />
+                      {withdrawal.status === "PENDING"
+                        ? "Manage commission"
+                        : "View"}
+                    </Link>
+
+                    <WithdrawalStatusActionMenu
+                      withdrawalId={withdrawal.id}
+                      status={withdrawal.status}
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {filteredWithdrawals.length === 0 ? (
+                <div className="px-2 py-12 text-center text-slate-500">
+                  No withdrawals found for the selected filter.
+                </div>
+              ) : null}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full">
                 <thead className="border-b border-white/10 text-left text-xs uppercase tracking-[0.18em] text-slate-400">
                   <tr>

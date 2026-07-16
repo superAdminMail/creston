@@ -3,8 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   DASHBOARD_PAGE_PANEL_CLASS,
   DASHBOARD_PAGE_SURFACE_CLASS,
-  DASHBOARD_TABLE_SHELL_CLASS,
 } from "../_components/dashboardSurfaces";
+import { ResponsiveCollectionLoading } from "../_components/ResponsiveCollectionLoading";
 
 function StatSkeleton() {
   return (
@@ -27,14 +27,14 @@ export default function Loading() {
             <Skeleton className="h-5 w-full max-w-2xl rounded-full bg-slate-200/80 dark:bg-white/10" />
           </div>
 
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-xl">
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl">
             <StatSkeleton />
             <StatSkeleton />
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <StatSkeleton key={index} />
         ))}
@@ -54,36 +54,14 @@ export default function Loading() {
           </div>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-border/60 bg-white/75 shadow-sm dark:bg-white/[0.04]">
-          <div className="overflow-x-auto">
-            <div className={DASHBOARD_TABLE_SHELL_CLASS + " overflow-hidden"}>
-              <table className="min-w-[960px] w-full text-left">
-                <thead>
-                  <tr className="border-b border-border/60 dark:border-white/10">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <th key={index} className="px-4 py-4">
-                        <Skeleton className="h-3 w-24 rounded-full bg-slate-200/80 dark:bg-white/10" />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.from({ length: 8 }).map((_, rowIndex) => (
-                    <tr
-                      key={rowIndex}
-                      className="border-b border-border/60 last:border-b-0 dark:border-white/10"
-                    >
-                      {Array.from({ length: 6 }).map((__, cellIndex) => (
-                        <td key={cellIndex} className="px-4 py-4">
-                          <Skeleton className="h-4 w-full max-w-40 rounded-full bg-slate-200/80 dark:bg-white/10" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="mt-6">
+          <ResponsiveCollectionLoading
+            mobileCards={6}
+            desktopColumns={6}
+            desktopRows={8}
+            mobileCardFields={4}
+            tableMinWidthClassName="min-w-[960px]"
+          />
         </div>
       </section>
     </div>

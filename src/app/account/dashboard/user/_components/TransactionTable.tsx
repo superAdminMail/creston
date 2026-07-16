@@ -30,7 +30,68 @@ export function TransactionTable({
         </h2>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="grid gap-3 md:hidden">
+        {transactions.map((tx) => (
+          <div
+            key={tx.id}
+            className="rounded-[1.35rem] border border-border/70 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <TypeBadge type={tx.type} />
+                <p className="break-words text-sm font-medium text-slate-950 dark:text-white">
+                  {tx.reference}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {formatDateLabel(tx.createdAt)}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "text-sm font-semibold",
+                  tx.direction === "CREDIT"
+                    ? "text-emerald-600 dark:text-emerald-300"
+                    : "text-red-600 dark:text-red-300",
+                )}
+              >
+                {tx.direction === "CREDIT" ? "+" : "-"}
+                {formatCurrency(tx.amount, tx.currency)}
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Plan
+                </p>
+                <div className="text-sm text-slate-700 dark:text-slate-300">
+                  <div>{tx.planName ?? "-"}</div>
+                  {tx.description ? (
+                    <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-500">
+                      {tx.description}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Status
+                </p>
+                <StatusBadge status={tx.status} />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {transactions.length === 0 && (
+          <div className="py-10 text-center text-slate-500 dark:text-slate-400">
+            No transactions yet
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <Table>
           <TableHeader>
             <TableRow className="border-border/60 dark:border-white/10">
@@ -101,12 +162,13 @@ export function TransactionTable({
             ))}
           </TableBody>
         </Table>
-        {transactions.length === 0 && (
-          <div className="py-10 text-center text-slate-500 dark:text-slate-400">
-            No transactions yet
-          </div>
-        )}
       </div>
+
+      {transactions.length === 0 && (
+        <div className="hidden py-10 text-center text-slate-500 dark:text-slate-400 md:block">
+          No transactions yet
+        </div>
+      )}
     </div>
   );
 }
