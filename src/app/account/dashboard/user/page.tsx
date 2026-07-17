@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { getUserDashboardDataAction } from "@/actions/dashboard/get-user-dashboard-data";
 import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
 import UserDashboardPage from "./_components/UserDashboardPage";
-import { TransactionTable } from "./_components/TransactionTable";
+import { UserTransactionsClient } from "./_components/UserTransactionsClient";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { TradingViewMarketChart } from "@/components/home/TradingViewMarketChart";
@@ -35,7 +35,7 @@ export default async function Page() {
         stats={stats}
         investmentProfileComplete={investmentProfile.profileComplete}
       />
-      <TransactionTable transactions={transactions} />
+      <UserTransactionsClient transactions={transactions} />
       <TradingViewMarketChart tone="surface" />
     </div>
   );

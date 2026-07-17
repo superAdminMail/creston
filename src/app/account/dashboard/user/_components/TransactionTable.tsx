@@ -34,7 +34,7 @@ export function TransactionTable({
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className="w-full overflow-hidden rounded-[1.25rem] border border-border/60 bg-white p-4 dark:border-white/10 dark:bg-slate-900"
+            className="w-full overflow-hidden rounded-[1.25rem] border border-border/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-1">

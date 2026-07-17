@@ -115,9 +115,9 @@ export default function SavingsPaymentReviewDetail({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card shadow-sm">
-        <CardHeader className="space-y-2 px-4 pt-5 sm:px-6 sm:pt-6">
+        <CardHeader className="space-y-2">
           <CardTitle className="text-xl text-slate-950 dark:text-white">
             Savings payment review
           </CardTitle>
@@ -177,12 +177,15 @@ export default function SavingsPaymentReviewDetail({
                 Balance progress
               </p>
               <p className="mt-2 font-semibold text-slate-950 dark:text-white">
-                Balance: {payment.fundingIntent.account.balance.toLocaleString()} /{" "}
-                {payment.fundingIntent.account.targetAmount?.toLocaleString() ?? "Not set"}{" "}
+                Balance:{" "}
+                {payment.fundingIntent.account.balance.toLocaleString()} /{" "}
+                {payment.fundingIntent.account.targetAmount?.toLocaleString() ??
+                  "Not set"}{" "}
                 {payment.fundingIntent.account.currency}
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                Funding intent credited: {payment.fundingIntent.creditedAmount.toLocaleString()}{" "}
+                Funding intent credited:{" "}
+                {payment.fundingIntent.creditedAmount.toLocaleString()}{" "}
                 {payment.currency}
               </p>
             </div>
@@ -330,7 +333,9 @@ export default function SavingsPaymentReviewDetail({
               </div>
 
               {payment.bankMethod.instructions ? (
-                <div className={`${surfaceTileClass()} md:col-span-2 xl:col-span-3`}>
+                <div
+                  className={`${surfaceTileClass()} md:col-span-2 xl:col-span-3`}
+                >
                   <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                     Instructions
                   </span>

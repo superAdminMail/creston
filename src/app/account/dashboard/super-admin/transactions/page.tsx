@@ -2,10 +2,10 @@ import { Wallet } from "lucide-react";
 
 import { getAdminTransactions } from "@/lib/service/getAdminTransactions";
 import { formatCurrencyCompact } from "@/components/helper/CompactCurrency";
+import { AdminTransactionsClient } from "../../admin/transactions/_components/AdminTransactionsClient";
 
 import { SuperAdminPageHeader } from "../_components/SuperAdminPageHeader";
 import { SuperAdminStatCard } from "../_components/SuperAdminStatCard";
-import { TransactionTable } from "../../user/_components/TransactionTable";
 
 export default async function SuperAdminTransactionsPage() {
   const transactions = await getAdminTransactions();
@@ -101,7 +101,7 @@ export default async function SuperAdminTransactionsPage() {
           </div>
         </div>
 
-        <TransactionTable transactions={transactions} />
+        <AdminTransactionsClient transactions={transactions} />
       </div>
     </div>
   );
