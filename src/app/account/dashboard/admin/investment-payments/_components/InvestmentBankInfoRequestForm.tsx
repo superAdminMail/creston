@@ -48,19 +48,19 @@ export default function InvestmentBankInfoRequestForm({
   }, [request.orderId, state.message, state.status]);
 
   return (
-    <Card className="card-premium">
-      <CardHeader>
-        <CardTitle className="text-lg">
+    <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card shadow-sm">
+      <CardHeader className="space-y-2 px-4 pt-5 sm:px-6 sm:pt-6">
+        <CardTitle className="text-lg text-slate-950 dark:text-white">
           Send bank details for {request.order.plan.name}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Requested by {request.requester.name ?? request.requester.email ?? "Unknown"}
-          {" "}
-          for order {request.orderId}.
+        <p className="max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+          Requested by{" "}
+          {request.requester.name ?? request.requester.email ?? "Unknown"} for
+          order {request.orderId}.
         </p>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="px-4 pb-5 sm:px-6 sm:pb-6">
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="orderId" value={request.orderId} />
           <input type="hidden" name="type" value="BANK_INFO" />
@@ -73,94 +73,174 @@ export default function InvestmentBankInfoRequestForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2 md:col-span-2">
-              <label className="text-sm font-medium">Label</label>
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Label
+              </label>
               <Input
                 name="label"
                 defaultValue={`Bank details for ${request.order.plan.name}`}
                 required
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
               />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Provider name</label>
-              <Input name="providerName" placeholder="Bank or provider name" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Provider name
+              </label>
+              <Input
+                name="providerName"
+                placeholder="Bank or provider name"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Country</label>
-              <Input name="country" placeholder="Country" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Country
+              </label>
+              <Input
+                name="country"
+                placeholder="Country"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Bank name</label>
-              <Input name="bankName" required placeholder="Bank name" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Bank name
+              </label>
+              <Input
+                name="bankName"
+                required
+                placeholder="Bank name"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Bank code</label>
-              <Input name="bankCode" placeholder="Bank code or sort code" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Bank code
+              </label>
+              <Input
+                name="bankCode"
+                placeholder="Bank code or sort code"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Account name</label>
-              <Input name="accountName" required placeholder="Account name" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Account name
+              </label>
+              <Input
+                name="accountName"
+                required
+                placeholder="Account name"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Reference</label>
-              <Input name="reference" placeholder="Optional payment reference" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Reference
+              </label>
+              <Input
+                name="reference"
+                placeholder="Optional payment reference"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Bank address</label>
-              <Input name="bankAddress" placeholder="Optional bank address" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Bank address
+              </label>
+              <Input
+                name="bankAddress"
+                placeholder="Optional bank address"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Account number</label>
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Account number
+              </label>
               <Input
                 name="accountNumber"
                 required
                 placeholder="Account number"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
               />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">IBAN</label>
-              <Input name="iban" placeholder="Optional IBAN" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                IBAN
+              </label>
+              <Input
+                name="iban"
+                placeholder="Optional IBAN"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Swift code</label>
-              <Input name="swiftCode" placeholder="Optional SWIFT/BIC" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Swift code
+              </label>
+              <Input
+                name="swiftCode"
+                placeholder="Optional SWIFT/BIC"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Routing number</label>
-              <Input name="routingNumber" placeholder="Optional routing number" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Routing number
+              </label>
+              <Input
+                name="routingNumber"
+                placeholder="Optional routing number"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
 
             <div className="grid gap-2">
-              <label className="text-sm font-medium">Branch name</label>
-              <Input name="branchName" placeholder="Optional branch" />
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Branch name
+              </label>
+              <Input
+                name="branchName"
+                placeholder="Optional branch"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Instructions</label>
+            <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+              Instructions
+            </label>
             <Textarea
               name="instructions"
               rows={4}
               placeholder="Transfer instructions the user should follow."
+              className="rounded-2xl border-border/70 bg-background px-4 py-3 text-slate-800 shadow-sm dark:text-slate-100"
             />
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-medium">Notes</label>
+            <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+              Notes
+            </label>
             <Textarea
               name="notes"
               rows={3}
               placeholder="Internal or user-facing notes."
+              className="rounded-2xl border-border/70 bg-background px-4 py-3 text-slate-800 shadow-sm dark:text-slate-100"
             />
           </div>
 
@@ -178,7 +258,7 @@ export default function InvestmentBankInfoRequestForm({
 
           <div className="flex justify-end">
             <DashboardActionSubmitButton
-              idleLabel="Send bank details"
+              idleLabel="Send bank details to user"
               pendingLabel="Sending bank details..."
               className="w-full sm:w-auto"
             />

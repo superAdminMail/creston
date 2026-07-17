@@ -172,8 +172,8 @@ export function SystemHealthSubmittedProofCleanup({
 
         toast.success(
           mode === "all"
-            ? `Cleared ${deletedCount} submitted proof record(s) across investment and savings.`
-            : `Cleared ${deletedCount} selected submitted proof record(s).`,
+            ? `Deleted ${deletedCount} submitted proof record(s) across investment and savings.`
+            : `Deleted ${deletedCount} selected submitted proof record(s).`,
         );
 
         setSelectedIds([]);
@@ -190,8 +190,8 @@ export function SystemHealthSubmittedProofCleanup({
 
   const confirmationTitle =
     confirmMode === "all"
-      ? "Clear all submitted proofs?"
-      : "Clear selected submitted proofs?";
+      ? "Delete all submitted proofs?"
+      : "Delete selected submitted proofs?";
   const confirmationDescription =
     confirmMode === "all"
       ? "This will permanently delete every pending proof submission from investment and savings, then remove the related admin notifications."
@@ -200,10 +200,10 @@ export function SystemHealthSubmittedProofCleanup({
     confirmMode === "all"
       ? isClearing
         ? "Clearing..."
-        : "Clear all proofs"
+        : "Delete all proofs"
       : isClearing
         ? "Clearing..."
-        : "Clear selected";
+        : "Delete selected proofs";
 
   return (
     <div className="rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
@@ -267,7 +267,7 @@ export function SystemHealthSubmittedProofCleanup({
             <span className="text-[13px] leading-6 text-slate-950 dark:text-slate-300">
               {selectedCount > 0
                 ? `${selectedCount} selected on this page`
-                : "Select pending proofs to remove them from the queue"}
+                : "Select pending proofs to delete them from the queue"}
             </span>
           </div>
 
@@ -290,7 +290,7 @@ export function SystemHealthSubmittedProofCleanup({
             className="border-border/60 bg-background/80 text-slate-950 dark:text-slate-100 hover:bg-white/10 hover:text-slate-950 dark:text-white text-white"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Clear selected
+            Delete selected
           </Button>
           <Button
             type="button"
@@ -300,7 +300,7 @@ export function SystemHealthSubmittedProofCleanup({
             disabled={cleanup.total === 0}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Clear all
+            Delete all
           </Button>
         </div>
       </div>
@@ -575,7 +575,9 @@ export function SystemHealthSubmittedProofCleanup({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearing}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isClearing}>
+              Keep proofs
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();

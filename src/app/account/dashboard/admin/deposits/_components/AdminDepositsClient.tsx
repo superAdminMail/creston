@@ -102,7 +102,8 @@ export default function AdminDepositsClient({
       const matchesStatus =
         statusFilter === "all" || deposit.status === statusFilter;
       const matchesSubmittedDate =
-        !submittedDateFilter || deposit.submittedAt.slice(0, 10) === submittedDateFilter;
+        !submittedDateFilter ||
+        deposit.submittedAt.slice(0, 10) === submittedDateFilter;
 
       return matchesSource && matchesStatus && matchesSubmittedDate;
     });
@@ -116,12 +117,18 @@ export default function AdminDepositsClient({
   const counts = useMemo(() => {
     return {
       all: deposits.length,
-      savings: deposits.filter((deposit) => deposit.source === "SAVINGS").length,
-      investment: deposits.filter((deposit) => deposit.source === "INVESTMENT").length,
-      pending: deposits.filter((deposit) => deposit.status === "PENDING_REVIEW").length,
-      approved: deposits.filter((deposit) => deposit.status === "APPROVED").length,
-      rejected: deposits.filter((deposit) => deposit.status === "REJECTED").length,
-      canceled: deposits.filter((deposit) => deposit.status === "CANCELED").length,
+      savings: deposits.filter((deposit) => deposit.source === "SAVINGS")
+        .length,
+      investment: deposits.filter((deposit) => deposit.source === "INVESTMENT")
+        .length,
+      pending: deposits.filter((deposit) => deposit.status === "PENDING_REVIEW")
+        .length,
+      approved: deposits.filter((deposit) => deposit.status === "APPROVED")
+        .length,
+      rejected: deposits.filter((deposit) => deposit.status === "REJECTED")
+        .length,
+      canceled: deposits.filter((deposit) => deposit.status === "CANCELED")
+        .length,
     };
   }, [deposits]);
 
@@ -132,7 +139,7 @@ export default function AdminDepositsClient({
   }
 
   return (
-    <div className="space-y-6 px-4 py-6 md:px-6">
+    <div className="space-y-6">
       <Card className="border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
         <CardContent className="space-y-6 p-6">
           <div className="space-y-2">
@@ -193,7 +200,9 @@ export default function AdminDepositsClient({
               </p>
               <Select
                 value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                onValueChange={(value) =>
+                  setStatusFilter(value as StatusFilter)
+                }
               >
                 <SelectTrigger className="h-10 w-full rounded-2xl border-white/10 bg-white/[0.03] px-3 text-slate-200">
                   <SelectValue placeholder="All statuses" />
@@ -216,7 +225,9 @@ export default function AdminDepositsClient({
                 <Input
                   type="date"
                   value={submittedDateFilter}
-                  onChange={(event) => setSubmittedDateFilter(event.target.value)}
+                  onChange={(event) =>
+                    setSubmittedDateFilter(event.target.value)
+                  }
                   className="h-10 rounded-2xl border-white/10 bg-white/[0.03] text-slate-200"
                 />
                 {submittedDateFilter ? (
@@ -238,16 +249,28 @@ export default function AdminDepositsClient({
                 Status counts
               </p>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="bg-white/10 text-slate-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/10 text-slate-200"
+                >
                   Pending {counts.pending}
                 </Badge>
-                <Badge variant="secondary" className="bg-white/10 text-slate-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/10 text-slate-200"
+                >
                   Approved {counts.approved}
                 </Badge>
-                <Badge variant="secondary" className="bg-white/10 text-slate-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/10 text-slate-200"
+                >
                   Rejected {counts.rejected}
                 </Badge>
-                <Badge variant="secondary" className="bg-white/10 text-slate-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-white/10 text-slate-200"
+                >
                   Cancelled {counts.canceled}
                 </Badge>
               </div>
@@ -297,7 +320,10 @@ export default function AdminDepositsClient({
                         <div className="space-y-1">
                           <Badge
                             variant="secondary"
-                            className={cn("border", getSourceTone(deposit.source))}
+                            className={cn(
+                              "border",
+                              getSourceTone(deposit.source),
+                            )}
                           >
                             {getSourceLabel(deposit.source)}
                           </Badge>
@@ -309,16 +335,20 @@ export default function AdminDepositsClient({
                       <td className="px-6 py-5">
                         <div className="space-y-1">
                           <div className="font-medium text-white">
-                            {deposit.depositorName ?? deposit.requesterName ?? "Unknown depositor"}
+                            {deposit.depositorName ??
+                              deposit.requesterName ??
+                              "Unknown depositor"}
                           </div>
                           <div className="text-sm text-slate-400">
-                            {deposit.depositorAccountName ?? deposit.requesterEmail ?? "No account name"}
+                            {deposit.depositorAccountName ??
+                              deposit.requesterEmail ??
+                              "No account name"}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-5 text-sm text-slate-300">
-                          <div className="space-y-1">
-                            <p>{deposit.reference}</p>
+                        <div className="space-y-1">
+                          <p>{deposit.reference}</p>
                           {deposit.paymentMethodLabel ? (
                             <p className="text-xs text-slate-500">
                               {deposit.paymentMethodLabel}
@@ -332,7 +362,10 @@ export default function AdminDepositsClient({
                       <td className="px-6 py-5">
                         <Badge
                           variant="secondary"
-                          className={cn("border", getStatusTone(deposit.status))}
+                          className={cn(
+                            "border",
+                            getStatusTone(deposit.status),
+                          )}
                         >
                           {formatEnumLabel(deposit.status)}
                         </Badge>

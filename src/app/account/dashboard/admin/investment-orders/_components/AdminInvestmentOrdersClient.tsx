@@ -288,7 +288,7 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
         <DropdownMenuItem asChild>
           <Link href={`/account/dashboard/admin/investment-orders/${order.id}`}>
             <ArrowRight className="h-4 w-4" />
-            Open order
+            View order
           </Link>
         </DropdownMenuItem>
 
@@ -312,13 +312,13 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
             orderId={order.id}
             title="Pause investment order"
             description="Pause this confirmed investment order to stop accrual until it is resumed."
-            submitLabel="Pause"
-            pendingLabel="Pausing..."
+            submitLabel="Pause order"
+            pendingLabel="Pausing order..."
             action={pauseAdminInvestmentOrder}
             trigger={
               <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
                 <PauseCircle className="h-4 w-4" />
-                Pause
+                Pause order
               </DropdownMenuItem>
             }
             icon={<PauseCircle className="h-4 w-4" />}
@@ -332,13 +332,13 @@ function OrderActions({ order }: { order: AdminInvestmentOrderListItem }) {
             orderId={order.id}
             title="Resume investment order"
             description="Resume this paused investment order so accrual can continue."
-            submitLabel="Resume"
-            pendingLabel="Resuming..."
+            submitLabel="Resume order"
+            pendingLabel="Resuming order..."
             action={resumeAdminInvestmentOrder}
             trigger={
               <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
                 <PlayCircle className="h-4 w-4" />
-                Resume
+                Resume order
               </DropdownMenuItem>
             }
             icon={<PlayCircle className="h-4 w-4" />}
@@ -407,7 +407,9 @@ export function AdminInvestmentOrdersClient({
     >
       <Alert className="rounded-2xl border border-sky-200/70 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300">
         <Wallet className="h-4 w-4" />
-        <AlertTitle>Use action buttons to manage orders.</AlertTitle>
+        <AlertTitle>
+          Use the action menu to manage each order lifecycle.
+        </AlertTitle>
       </Alert>
 
       <AdminResponsiveCollectionShell

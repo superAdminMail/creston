@@ -1,14 +1,16 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "../_components/dashboardSurfaces";
 import { ResponsiveCollectionLoading } from "../_components/ResponsiveCollectionLoading";
+
+const FLAT_PANEL_CLASS =
+  "rounded-[1.75rem] border border-border/60 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-white";
+
+const FLAT_SURFACE_CLASS =
+  "rounded-[1.5rem] border border-border/60 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-white";
 
 function StatSkeleton() {
   return (
-    <div className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-4`}>
+    <div className={`${FLAT_SURFACE_CLASS} p-4`}>
       <Skeleton className="h-3 w-24 rounded-full bg-white/10" />
       <Skeleton className="mt-3 h-7 w-28 rounded-2xl bg-white/10" />
       <Skeleton className="mt-3 h-4 w-full rounded-full bg-white/10" />
@@ -18,9 +20,7 @@ function StatSkeleton() {
 
 function UserHeroSkeleton() {
   return (
-    <section
-      className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-6 md:p-8`}
-    >
+    <section className={`${FLAT_PANEL_CLASS} overflow-hidden p-6 md:p-8`}>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl space-y-4">
           <Skeleton className="h-4 w-28 rounded-full bg-white/10" />
@@ -42,7 +42,7 @@ function UserBodySkeleton() {
   return (
     <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] ">
       <div className="space-y-6">
-        <section className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-5 sm:p-6`}>
+        <section className={`${FLAT_SURFACE_CLASS} p-5 sm:p-6`}>
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-3">
               <Skeleton className="h-4 w-32 rounded-full bg-white/10" />
@@ -64,7 +64,7 @@ function UserBodySkeleton() {
       </div>
 
       <div className="space-y-6">
-        <section className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-5 sm:p-6`}>
+        <section className={`${FLAT_SURFACE_CLASS} p-5 sm:p-6`}>
           <Skeleton className="h-4 w-32 rounded-full bg-white/10" />
           <div className="mt-5 space-y-3">
             <Skeleton className="h-12 rounded-2xl bg-white/10" />
@@ -73,7 +73,7 @@ function UserBodySkeleton() {
           </div>
         </section>
 
-        <section className={`${DASHBOARD_PAGE_SURFACE_CLASS} p-5 sm:p-6`}>
+        <section className={`${FLAT_SURFACE_CLASS} p-5 sm:p-6`}>
           <Skeleton className="h-4 w-40 rounded-full bg-white/10" />
           <Skeleton className="mt-5 h-64 rounded-[1.5rem] bg-white/10" />
         </section>

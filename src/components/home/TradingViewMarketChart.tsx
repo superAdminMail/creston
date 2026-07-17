@@ -120,9 +120,9 @@ export function TradingViewMarketChart({
   }, [active.symbol]);
 
   const sectionClassName = [
-    "relative overflow-hidden rounded-3xl shadow-sm",
+    "relative overflow-hidden rounded-3xl",
     isSurfaceTone
-      ? "border border-border/60 bg-white/75 text-slate-950 dark:bg-white/[0.04] dark:text-white"
+      ? "border border-border/60 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-white"
       : "border border-white/10 bg-[var(--card)] text-[var(--foreground)]",
   ].join(" ");
 
@@ -134,14 +134,14 @@ export function TradingViewMarketChart({
   const pillClassName = [
     "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]",
     isSurfaceTone
-      ? "border border-border/60 bg-white/75 text-slate-600 dark:bg-white/[0.04] dark:text-slate-300"
+      ? "border border-border/60 bg-white text-slate-600 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300"
       : "border border-white/10 bg-white/5 text-muted-foreground",
   ].join(" ");
 
   const iconWrapClassName = [
     "flex h-11 w-11 items-center justify-center rounded-2xl",
     isSurfaceTone
-      ? "border border-border/60 bg-white/75 dark:bg-white/[0.04]"
+      ? "border border-border/60 bg-white dark:border-white/10 dark:bg-slate-900"
       : "border border-white/10 bg-white/5",
   ].join(" ");
 
@@ -160,14 +160,14 @@ export function TradingViewMarketChart({
   const tabsClassName = [
     "flex gap-2 overflow-x-auto rounded-2xl p-1",
     isSurfaceTone
-      ? "border border-border/60 bg-white/75 dark:bg-white/[0.04]"
+      ? "border border-border/60 bg-white dark:border-white/10 dark:bg-slate-900"
       : "border border-white/10 bg-black/10",
   ].join(" ");
 
   const widgetFrameClassName = [
     "overflow-hidden rounded-2xl",
     isSurfaceTone
-      ? "border border-border/60 bg-white/75 dark:bg-white/[0.04]"
+      ? "border border-border/60 bg-white dark:border-white/10 dark:bg-slate-900"
       : "border border-white/10 bg-black/20",
   ].join(" ");
 

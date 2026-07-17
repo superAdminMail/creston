@@ -438,46 +438,42 @@ export default function SupportInboxWorkspace({
 
   return (
     <div className="space-y-6">
-      <section className={SUPPORT_HERO_CLASS}>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <p className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-sky-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-sky-300">
-              <Sparkles className="h-3.5 w-3.5" />
-              Support inbox
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="space-y-3">
+          <p className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/75 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-sky-900 shadow-sm dark:border-white/10 dark:bg-white/[0.04] dark:text-sky-300">
+            <Sparkles className="h-3.5 w-3.5" />
+            Support inbox
+          </p>
+          <div>
+            <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white sm:text-4xl">
+              {isStaffView
+                ? viewerRole === UserRole.SUPER_ADMIN
+                  ? "Executive support tickets"
+                  : "Customer support tickets"
+                : "My support tickets"}
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-400 sm:text-base">
+              {isStaffView
+                ? viewerRole === UserRole.SUPER_ADMIN
+                  ? "Track every open request, ownership, and unread reply from the platform control seat."
+                  : "Track pending requests, assignment, and unread customer replies in one place."
+                : "Review replies from the support team and keep every conversation in one secure thread."}
             </p>
-            <div>
-              <h1 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white sm:text-4xl">
-                {isStaffView
-                  ? viewerRole === UserRole.SUPER_ADMIN
-                    ? "Executive support tickets"
-                    : "Customer support tickets"
-                  : "My support tickets"}
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-400 sm:text-base">
-                {isStaffView
-                  ? viewerRole === UserRole.SUPER_ADMIN
-                    ? "Track every open request, ownership, and unread reply from the platform control seat."
-                    : "Track pending requests, assignment, and unread customer replies in one place."
-                  : "Review replies from the support team and keep every conversation in one secure thread."}
-              </p>
-            </div>
           </div>
-
-          {!isStaffView ? (
-            <Button
-              onClick={() => setCreateOpen(true)}
-              className="rounded-full bg-[#3c9ee0] px-5 text-white shadow-[0_18px_40px_-22px_rgba(60,158,224,0.9)] hover:bg-[#2f8bd0]"
-            >
-              New support ticket
-            </Button>
-          ) : null}
         </div>
-      </section>
+
+        {!isStaffView ? (
+          <Button
+            onClick={() => setCreateOpen(true)}
+            className="rounded-full bg-[#3c9ee0] px-5 text-white shadow-[0_18px_40px_-22px_rgba(60,158,224,0.9)] hover:bg-[#2f8bd0]"
+          >
+            New support ticket
+          </Button>
+        ) : null}
+      </div>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <Card
-          className={cn(SUPPORT_LIST_CLASS, "text-slate-950 dark:text-white")}
-        >
+        <Card className="text-slate-950 dark:text-white">
           <CardContent className="space-y-4 p-5">
             <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
               <Inbox className="h-4 w-4 text-sky-700 dark:text-sky-300" />

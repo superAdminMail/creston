@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function VerificationCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-sm">
+    <div className="rounded-2xl border border-white/10 bg-white/5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-4">
           <Skeleton className="h-3.5 w-28 rounded-full bg-white/10" />

@@ -225,7 +225,7 @@ export function InvestmentOrderRuntimeStatusDialog({
               onClick={() => setOpen(false)}
               className="rounded-2xl border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08]"
             >
-              Close
+              Dismiss
             </Button>
               <Button
               type="submit"

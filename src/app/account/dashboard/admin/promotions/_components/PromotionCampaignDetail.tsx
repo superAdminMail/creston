@@ -8,6 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
 
 import type { PromotionCampaignDetails } from "../_lib/getPromotionCampaignDetails";
+import {
+  getPromotionCampaignMetaBadgeClass,
+  getPromotionCampaignStatusBadgeClass,
+  getPromotionCampaignTypeBadgeClass,
+} from "../_lib/promotionCampaignChips";
+import { PromotionCampaignDeleteButton } from "./PromotionCampaignDeleteButton";
 
 function formatDate(value: string | null) {
   if (!value) return "-";
@@ -34,6 +40,24 @@ function buildSignupLink(siteOrigin: string, promoCode: string | null) {
   const path = `/auth/get-started?promo=${encodeURIComponent(promoCode)}`;
 
   return base ? `${base}${path}` : path;
+}
+
+function getDeliveryStatusBadgeClass(status: string) {
+  switch (status) {
+    case "READ":
+      return "rounded-full border border-emerald-200/80 bg-emerald-50 text-[11px] font-medium uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200";
+    case "DELIVERED":
+      return "rounded-full border border-sky-200/80 bg-sky-50 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200";
+    case "SENT":
+      return "rounded-full border border-indigo-200/80 bg-indigo-50 text-[11px] font-medium uppercase tracking-[0.16em] text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-200";
+    case "FAILED":
+      return "rounded-full border border-rose-200/80 bg-rose-50 text-[11px] font-medium uppercase tracking-[0.16em] text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200";
+    case "CANCELLED":
+      return "rounded-full border border-slate-200/80 bg-slate-100 text-[11px] font-medium uppercase tracking-[0.16em] text-slate-700 dark:border-slate-500/20 dark:bg-slate-500/10 dark:text-slate-200";
+    case "PENDING":
+    default:
+      return "rounded-full border border-amber-200/80 bg-amber-50 text-[11px] font-medium uppercase tracking-[0.16em] text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200";
+  }
 }
 
 export default function PromotionCampaignDetail({
@@ -102,22 +126,42 @@ export default function PromotionCampaignDetail({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Badge className="border-white/10 bg-white/[0.06] text-white">
+              <Badge
+                className={getPromotionCampaignTypeBadgeClass(
+                  campaign.rewardEnabled,
+                )}
+              >
                 {campaign.campaignTypeLabel}
               </Badge>
               <Badge
                 variant="outline"
-                className="border-blue-400/20 bg-blue-400/10 text-blue-200"
+                className={getPromotionCampaignStatusBadgeClass({
+                  status: campaign.status,
+                  rewardEnabled: campaign.rewardEnabled,
+                  expiresAt: campaign.expiresAt,
+                  completedAt: campaign.completedAt,
+                  cancelledAt: campaign.cancelledAt,
+                  failedAt: campaign.failedAt,
+                })}
               >
                 {campaign.campaignStatusLabel}
               </Badge>
-              <Badge variant="secondary">
+              <Badge className={getPromotionCampaignMetaBadgeClass()}>
                 {formatEnumLabel(campaign.channel)}
               </Badge>
-              <Badge variant="outline">
+              <Badge className={getPromotionCampaignMetaBadgeClass()}>
                 {formatEnumLabel(campaign.audienceType)}
               </Badge>
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <PromotionCampaignDeleteButton
+              campaignId={campaign.id}
+              campaignTitle={campaign.title}
+              redirectTo="/account/dashboard/admin/promotions"
+              buttonLabel="Delete campaign"
+            />
           </div>
         </CardHeader>
 
@@ -282,10 +326,12 @@ export default function PromotionCampaignDetail({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">
+                      <Badge className={getPromotionCampaignMetaBadgeClass()}>
                         {formatEnumLabel(delivery.channel)}
                       </Badge>
-                      <Badge>{formatEnumLabel(delivery.status)}</Badge>
+                      <Badge className={getDeliveryStatusBadgeClass(delivery.status)}>
+                        {formatEnumLabel(delivery.status)}
+                      </Badge>
                     </div>
                   </div>
 

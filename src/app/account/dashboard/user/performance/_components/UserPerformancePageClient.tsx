@@ -131,7 +131,9 @@ function ActivityRow({
       <span
         className={cn(
           "text-sm font-medium",
-          isCredit ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300",
+          isCredit
+            ? "text-emerald-700 dark:text-emerald-300"
+            : "text-rose-700 dark:text-rose-300",
         )}
       >
         {isCredit ? "+" : "-"}
@@ -171,7 +173,7 @@ export function UserPerformancePageClient({ data }: Props) {
   const hasAssets = data.assets.length > 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <Tabs defaultValue="performance" className="space-y-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
@@ -463,11 +465,15 @@ export function UserPerformancePageClient({ data }: Props) {
 
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <span>{asset.periodLabel}</span>
-                      <span className="text-slate-300 dark:text-slate-600">|</span>
+                      <span className="text-slate-300 dark:text-slate-600">
+                        |
+                      </span>
                       <span>{asset.isMatured ? "Matured" : "Active"}</span>
                       {asset.symbol ? (
                         <>
-                          <span className="text-slate-300 dark:text-slate-600">|</span>
+                          <span className="text-slate-300 dark:text-slate-600">
+                            |
+                          </span>
                           <span>{asset.symbol}</span>
                         </>
                       ) : null}

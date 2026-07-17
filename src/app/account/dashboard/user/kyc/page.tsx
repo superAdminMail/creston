@@ -136,7 +136,7 @@ export default async function Page({
     : (refreshedProfile?.kycStatus ?? profile?.kycStatus ?? "NOT_STARTED");
 
   return (
-    <div className="max-w-3xl mx-auto px-4 md:px-6 py-8 space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <DiditCallbackToast callback={diditCallback} />
 
       <header className="space-y-2">

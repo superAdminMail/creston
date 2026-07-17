@@ -141,8 +141,8 @@ export function SystemHealthNotificationCleanup({
 
         toast.success(
           mode === "all"
-            ? `Cleared ${response.deletedCount} notification(s) across the app.`
-            : `Cleared ${response.deletedCount} selected notification(s).`,
+            ? `Deleted ${response.deletedCount} notification(s) across the app.`
+            : `Deleted ${response.deletedCount} selected notification(s).`,
         );
 
         setSelectedIds([]);
@@ -159,8 +159,8 @@ export function SystemHealthNotificationCleanup({
 
   const confirmationTitle =
     confirmMode === "all"
-      ? "Clear all notifications?"
-      : "Clear selected notifications?";
+      ? "Delete all notifications?"
+      : "Delete selected notifications?";
   const confirmationDescription =
     confirmMode === "all"
       ? "This will permanently remove every notification from the app-wide notification menu and the database."
@@ -169,10 +169,10 @@ export function SystemHealthNotificationCleanup({
     confirmMode === "all"
       ? isClearing
         ? "Clearing..."
-        : "Clear all notifications"
+        : "Delete all notifications"
       : isClearing
         ? "Clearing..."
-        : "Clear selected";
+        : "Delete selected notifications";
 
   return (
     <div className="rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
@@ -229,7 +229,7 @@ export function SystemHealthNotificationCleanup({
             <span className="text-[13px] leading-6 text-slate-950 dark:text-slate-300">
               {selectedCount > 0
                 ? `${selectedCount} selected on this page`
-                : "Select rows to remove them from the menu"}
+                : "Select rows to delete them from the menu"}
             </span>
           </div>
 
@@ -252,7 +252,7 @@ export function SystemHealthNotificationCleanup({
             className="border-border/60 bg-background/80 text-slate-950 dark:text-slate-100 hover:bg-white/10 hover:text-slate-950 dark:text-white text-white"
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Clear selected
+            Delete selected
           </Button>
           <Button
             type="button"
@@ -262,7 +262,7 @@ export function SystemHealthNotificationCleanup({
             disabled={cleanup.total === 0}
           >
             <Trash2 className="h-3.5 w-3.5" />
-            Clear all
+            Delete all
           </Button>
         </div>
       </div>
@@ -522,7 +522,9 @@ export function SystemHealthNotificationCleanup({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isClearing}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isClearing}>
+              Keep notifications
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
                 event.preventDefault();

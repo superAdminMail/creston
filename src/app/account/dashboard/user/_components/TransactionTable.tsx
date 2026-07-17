@@ -23,7 +23,7 @@ export function TransactionTable({
   transactions: TransactionItem[];
 }) {
   return (
-    <div className="rounded-[1.8rem] border border-border/70 bg-white/80 p-5 shadow-sm dark:bg-white/[0.04] sm:p-6">
+    <div className="rounded-[1.5rem] border border-border/60 bg-white p-4 dark:border-white/10 dark:bg-slate-900 sm:p-5">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
           Transaction History
@@ -34,12 +34,12 @@ export function TransactionTable({
         {transactions.map((tx) => (
           <div
             key={tx.id}
-            className="rounded-[1.35rem] border border-border/70 bg-white/75 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]"
+            className="w-full overflow-hidden rounded-[1.25rem] border border-border/60 bg-white p-4 dark:border-white/10 dark:bg-slate-900"
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1">
                 <TypeBadge type={tx.type} />
-                <p className="break-words text-sm font-medium text-slate-950 dark:text-white">
+                <p className="break-all text-sm font-medium leading-6 text-slate-950 dark:text-white">
                   {tx.reference}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -48,7 +48,7 @@ export function TransactionTable({
               </div>
               <div
                 className={cn(
-                  "text-sm font-semibold",
+                  "shrink-0 text-right text-sm font-semibold",
                   tx.direction === "CREDIT"
                     ? "text-emerald-600 dark:text-emerald-300"
                     : "text-red-600 dark:text-red-300",
@@ -60,21 +60,21 @@ export function TransactionTable({
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Plan
                 </p>
-                <div className="text-sm text-slate-700 dark:text-slate-300">
-                  <div>{tx.planName ?? "-"}</div>
+                <div className="min-w-0 text-sm text-slate-700 dark:text-slate-300">
+                  <div className="break-words">{tx.planName ?? "-"}</div>
                   {tx.description ? (
-                    <div className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-500">
+                    <div className="mt-1 break-words text-xs leading-5 text-slate-500 dark:text-slate-500">
                       {tx.description}
                     </div>
                   ) : null}
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   Status
                 </p>

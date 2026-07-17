@@ -29,6 +29,12 @@ import {
   CreatePromotionCampaignActionState,
   createPromotionCampaignAction,
 } from "@/actions/admin/promotions/createPromotionCampaignAction";
+import { PromotionCampaignDeleteButton } from "./PromotionCampaignDeleteButton";
+import {
+  getPromotionCampaignMetaBadgeClass,
+  getPromotionCampaignStatusBadgeClass,
+  getPromotionCampaignTypeBadgeClass,
+} from "../_lib/promotionCampaignChips";
 import { DashboardActionSubmitButton } from "../../../_components/DashboardActionSubmitButton";
 
 type PromotionUserOption = {
@@ -273,7 +279,10 @@ export default function PromotionCampaignForm({
                 </div>
 
                 <div className="grid gap-2">
-                  <label htmlFor="maxRedemptions" className="text-sm font-medium">
+                  <label
+                    htmlFor="maxRedemptions"
+                    className="text-sm font-medium"
+                  >
                     Max redemptions
                   </label>
                   <Input
@@ -315,71 +324,81 @@ export default function PromotionCampaignForm({
 
             {!inviteMode ? (
               <div className="grid gap-2">
-              <label htmlFor="promotionType" className="text-sm font-medium">
-                Promotion type
-              </label>
-              <Select name="promotionType" defaultValue="ANNOUNCEMENT">
-                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose promotion type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {promotionTypeSchema.options.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {formatEnumLabel(type)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                This type is stored with the campaign metadata and used for
-                notification presentation.
-              </p>
-            </div>
+                <label htmlFor="promotionType" className="text-sm font-medium">
+                  Promotion type
+                </label>
+                <Select name="promotionType" defaultValue="ANNOUNCEMENT">
+                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                    <SelectValue placeholder="Choose promotion type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {promotionTypeSchema.options.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {formatEnumLabel(type)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  This type is stored with the campaign metadata and used for
+                  notification presentation.
+                </p>
+              </div>
             ) : (
               <input type="hidden" name="promotionType" value="SYSTEM" />
             )}
 
             {!inviteMode ? (
               <div className="grid gap-2">
-              <label htmlFor="channel" className="text-sm font-medium">
-                Channel
-              </label>
-              <Select name="channel" defaultValue={PromotionChannel.IN_APP}>
-                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose channel" />
-                </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={PromotionChannel.IN_APP}>In-app</SelectItem>
-                <SelectItem value={PromotionChannel.EMAIL}>Email</SelectItem>
-              </SelectContent>
-            </Select>
-            </div>
+                <label htmlFor="channel" className="text-sm font-medium">
+                  Channel
+                </label>
+                <Select name="channel" defaultValue={PromotionChannel.IN_APP}>
+                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                    <SelectValue placeholder="Choose channel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={PromotionChannel.IN_APP}>
+                      In-app
+                    </SelectItem>
+                    <SelectItem value={PromotionChannel.EMAIL}>
+                      Email
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             ) : (
-              <input type="hidden" name="channel" value={PromotionChannel.IN_APP} />
+              <input
+                type="hidden"
+                name="channel"
+                value={PromotionChannel.IN_APP}
+              />
             )}
 
             {!inviteMode ? (
               <div className="grid gap-2">
-              <label htmlFor="audienceType" className="text-sm font-medium">
-                Audience
-              </label>
-              <Select
-                name="audienceType"
-                defaultValue={PromotionAudienceType.SINGLE_USER}
-              >
-                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose audience" />
-                </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={PromotionAudienceType.SINGLE_USER}>
-                  Single user
-                </SelectItem>
-                <SelectItem value={PromotionAudienceType.BROADCAST_ALL_USERS}>
-                  Broadcast to all users
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            </div>
+                <label htmlFor="audienceType" className="text-sm font-medium">
+                  Audience
+                </label>
+                <Select
+                  name="audienceType"
+                  defaultValue={PromotionAudienceType.SINGLE_USER}
+                >
+                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                    <SelectValue placeholder="Choose audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={PromotionAudienceType.SINGLE_USER}>
+                      Single user
+                    </SelectItem>
+                    <SelectItem
+                      value={PromotionAudienceType.BROADCAST_ALL_USERS}
+                    >
+                      Broadcast to all users
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             ) : (
               <input
                 type="hidden"
@@ -390,26 +409,26 @@ export default function PromotionCampaignForm({
 
             {!inviteMode ? (
               <div className="grid gap-2">
-              <label htmlFor="userId" className="text-sm font-medium">
-                Select user
-              </label>
-              <Select name="userId">
-                <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
-                  <SelectValue placeholder="Choose a user for single-user sends" />
-                </SelectTrigger>
-                <SelectContent>
-                  {userOptions.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                This field is required only when the audience is set to single
-                user.
-              </p>
-            </div>
+                <label htmlFor="userId" className="text-sm font-medium">
+                  Select user
+                </label>
+                <Select name="userId">
+                  <SelectTrigger className="h-11 rounded-2xl border-white/10 bg-white/[0.04] text-left text-white">
+                    <SelectValue placeholder="Choose a user for single-user sends" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userOptions.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  This field is required only when the audience is set to single
+                  user.
+                </p>
+              </div>
             ) : null}
 
             <div className="grid gap-2">
@@ -447,8 +466,8 @@ export default function PromotionCampaignForm({
                       Add claim CTA
                     </p>
                     <p className="text-xs text-slate-400">
-                      Adds a CLAIM button to the notification and sends users
-                      to the new investment order flow on the current domain.
+                      Adds a CLAIM button to the notification and sends users to
+                      the new investment order flow on the current domain.
                     </p>
                   </div>
 
@@ -488,15 +507,13 @@ export default function PromotionCampaignForm({
               </div>
             ) : null}
 
-              <div className="flex items-center justify-end">
-                <DashboardActionSubmitButton
-                  idleLabel={
-                    inviteMode ? "Create promotion" : "Send promotion"
-                  }
-                  pendingLabel={inviteMode ? "Creating..." : "Sending..."}
-                />
-              </div>
-            </form>
+            <div className="flex items-center justify-end">
+              <DashboardActionSubmitButton
+                idleLabel={inviteMode ? "Create promotion" : "Send promotion"}
+                pendingLabel={inviteMode ? "Creating..." : "Sending..."}
+              />
+            </div>
+          </form>
         </CardContent>
       </Card>
 
@@ -522,7 +539,9 @@ export default function PromotionCampaignForm({
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-1">
-                      <p className="font-semibold text-white">{campaign.title}</p>
+                      <p className="font-semibold text-white">
+                        {campaign.title}
+                      </p>
                       {campaign.subject ? (
                         <p className="text-sm text-slate-400">
                           {campaign.subject}
@@ -535,19 +554,30 @@ export default function PromotionCampaignForm({
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Badge className="border-white/10 bg-white/[0.06] text-white">
+                      <Badge
+                        className={getPromotionCampaignTypeBadgeClass(
+                          campaign.rewardEnabled,
+                        )}
+                      >
                         {campaign.campaignTypeLabel}
                       </Badge>
                       <Badge
                         variant="outline"
-                        className="border-blue-400/20 bg-blue-400/10 text-blue-200"
+                        className={getPromotionCampaignStatusBadgeClass({
+                          status: campaign.status,
+                          rewardEnabled: campaign.rewardEnabled,
+                          expiresAt: campaign.expiresAt,
+                          completedAt: campaign.completedAt,
+                          cancelledAt: campaign.cancelledAt,
+                          failedAt: campaign.failedAt,
+                        })}
                       >
                         {campaign.campaignStatusLabel}
                       </Badge>
-                      <Badge variant="secondary">
+                      <Badge className={getPromotionCampaignMetaBadgeClass()}>
                         {formatEnumLabel(campaign.channel)}
                       </Badge>
-                      <Badge variant="outline">
+                      <Badge className={getPromotionCampaignMetaBadgeClass()}>
                         {formatEnumLabel(campaign.audienceType)}
                       </Badge>
                     </div>
@@ -601,7 +631,7 @@ export default function PromotionCampaignForm({
                                 className="w-full rounded-2xl bg-blue-600 text-white hover:bg-blue-500 sm:w-auto"
                                 onClick={() => shareInviteLink(campaign)}
                               >
-                                <Share2 className="h-4 w-4" />
+                                <Share2 className="h-4 w-4 text-white" />
                                 Share link
                               </Button>
                             </>
@@ -619,6 +649,14 @@ export default function PromotionCampaignForm({
                         ) : null}
                       </>
                     ) : null}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                    <PromotionCampaignDeleteButton
+                      campaignId={campaign.id}
+                      campaignTitle={campaign.title}
+                      buttonLabel="Delete"
+                    />
                   </div>
                 </div>
               ))}

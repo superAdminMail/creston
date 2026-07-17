@@ -483,7 +483,7 @@ export default function WithdrawalsClient({
           : "No eligible balance available";
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-4 sm:px-6 sm:py-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
           Withdraw Funds
@@ -587,7 +587,12 @@ export default function WithdrawalsClient({
           })}
 
           {paymentMethods.length === 0 ? (
-            <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-2xl border-dashed p-4")}>
+            <div
+              className={cn(
+                DASHBOARD_PAGE_SURFACE_CLASS,
+                "rounded-2xl border-dashed p-4",
+              )}
+            >
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 No payment method has been added yet.
               </p>

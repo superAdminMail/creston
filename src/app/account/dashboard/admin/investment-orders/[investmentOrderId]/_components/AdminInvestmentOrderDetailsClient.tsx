@@ -11,7 +11,6 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 import { confirmInvestmentOrder } from "@/actions/admin/investment-order/confirmInvestmentOrder";
 import { pauseAdminInvestmentOrder } from "@/actions/admin/investment-order/pauseAdminInvestmentOrder";
@@ -84,7 +83,7 @@ export function AdminInvestmentOrderDetailsClient({
                   className="rounded-2xl bg-blue-500 hover:bg-blue-600"
                 >
                   <BadgeCheck className="mr-2 h-4 w-4" />
-                  {pending ? "Confirming..." : "Confirm order"}
+                  {pending ? "Confirming order..." : "Confirm investment order"}
                 </Button>
               </form>
             ) : null}
@@ -94,18 +93,18 @@ export function AdminInvestmentOrderDetailsClient({
                 orderId={order.id}
                 action={pauseAdminInvestmentOrder}
                 trigger={
-                  <Button
-                    type="button"
-                    className="rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15"
-                  >
-                    <PauseCircle className="h-4 w-4" />
-                    Pause
-                  </Button>
-                }
+                <Button
+                  type="button"
+                  className="rounded-2xl border border-amber-400/20 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15"
+                >
+                  <PauseCircle className="h-4 w-4" />
+                  Pause order
+                </Button>
+              }
                 buttonClassName="bg-amber-600 hover:bg-amber-500"
                 title="Pause investment order"
                 description="Pause this confirmed investment order to stop accrual until it is resumed."
-                submitLabel="Pause"
+                submitLabel="Pause order"
                 showUpgradeFields
               />
             ) : null}
@@ -115,18 +114,18 @@ export function AdminInvestmentOrderDetailsClient({
                 orderId={order.id}
                 action={resumeAdminInvestmentOrder}
                 trigger={
-                  <Button
-                    type="button"
-                    className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/15"
-                  >
-                    <PlayCircle className="h-4 w-4" />
-                    Resume
-                  </Button>
-                }
+                <Button
+                  type="button"
+                  className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/15"
+                >
+                  <PlayCircle className="h-4 w-4" />
+                  Resume order
+                </Button>
+              }
                 buttonClassName="bg-emerald-600 hover:bg-emerald-500"
                 title="Resume investment order"
                 description="Resume this paused investment order so accrual can continue."
-                submitLabel="Resume"
+                submitLabel="Resume order"
               />
             ) : null}
           </div>
@@ -134,15 +133,15 @@ export function AdminInvestmentOrderDetailsClient({
       </div>
 
       {state.status !== "idle" && state.message ? (
-        <Alert
-          className={
-            state.status === "success"
-              ? "rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-              : "rounded-2xl border border-red-400/20 bg-red-400/10 text-red-100"
-          }
-        >
-          <AlertTitle>{state.message}</AlertTitle>
-        </Alert>
+      <Alert
+        className={
+          state.status === "success"
+            ? "rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
+            : "rounded-2xl border border-red-400/20 bg-red-400/10 text-red-100"
+        }
+      >
+        <AlertTitle>{state.message}</AlertTitle>
+      </Alert>
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
