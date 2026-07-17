@@ -14,7 +14,7 @@ import { formatUsd } from "@/lib/formatters/formatters";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 
 const DASHBOARD_FLAT_SURFACE_CLASS =
-  "rounded-[1.5rem] border border-border/60 bg-card text-card-foreground dark:border-white/10 dark:bg-slate-900 dark:text-white";
+  "rounded-[1.5rem] border border-border/60 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-white";
 
 type UserDashboardPageProps = {
   userName: string;
@@ -49,7 +49,7 @@ function DashboardStatCard({
 }) {
   return (
     <div
-      className={`${DASHBOARD_FLAT_SURFACE_CLASS} p-4 shadow-none sm:p-5`}
+      className={`${DASHBOARD_FLAT_SURFACE_CLASS} group p-4 sm:p-5`}
     >
       <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div className="min-w-0 space-y-2.5 sm:space-y-3">
@@ -68,7 +68,7 @@ function DashboardStatCard({
           </div>
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sky-700 sm:h-11 sm:w-11 dark:text-sky-200">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-400/20 bg-sky-50 text-sky-700 sm:h-11 sm:w-11 dark:bg-slate-800 dark:text-sky-200">
           <Icon className="h-5 w-5" />
         </div>
       </div>
@@ -83,10 +83,10 @@ export default function UserDashboardPage({
 }: UserDashboardPageProps) {
   return (
     <div className="space-y-5 sm:space-y-6">
-      <section className={`${DASHBOARD_FLAT_SURFACE_CLASS} space-y-5 p-5 sm:space-y-6 sm:p-6`}>
+      <section className="space-y-5 sm:space-y-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.32em] text-sky-700 dark:text-sky-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.32em] text-sky-700 dark:border-sky-400/20 dark:bg-slate-900 dark:text-sky-200">
               <span className="h-2 w-2 rounded-full bg-[#3c9ee0]" />
               Investment Dashboard
             </div>
@@ -102,87 +102,87 @@ export default function UserDashboardPage({
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+          <div className="flex w-full items-center gap-2 rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-slate-700 sm:w-fit dark:border-sky-400/20 dark:bg-slate-900 dark:text-slate-200">
             <ArrowUpRight className="h-4 w-4 text-sky-700 dark:text-sky-300" />
             Secure portfolio overview
           </div>
         </div>
+      </section>
 
-        {!investmentProfileComplete ? (
-          <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
-            <AlertTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm font-semibold">
-                Your investment profile is not set up yet
-              </span>
-              <Link
-                href="/account/dashboard/user/investment-profile/edit"
-                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
-              >
-                Complete profile
-              </Link>
-            </AlertTitle>
-          </Alert>
-        ) : null}
+      {!investmentProfileComplete ? (
+        <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
+          <AlertTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold">
+              Your investment profile is not set up yet
+            </span>
+            <Link
+              href="/account/dashboard/user/investment-profile/edit"
+              className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+            >
+              Complete profile
+            </Link>
+          </AlertTitle>
+        </Alert>
+      ) : null}
 
-        {stats.inactiveInvestmentOrder ? (
-          <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
-            <AlertTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-sm font-semibold">
-                One of your investment orders is now inactive
-                {stats.inactiveInvestmentOrder.planName
-                  ? `: ${stats.inactiveInvestmentOrder.planName}`
-                  : "."}
-              </span>
-              <Link
-                href={stats.inactiveInvestmentOrder.href}
-                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
-              >
-                View order
-              </Link>
-            </AlertTitle>
-          </Alert>
-        ) : null}
+      {stats.inactiveInvestmentOrder ? (
+        <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-200" />
+          <AlertTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold">
+              One of your investment orders is now inactive
+              {stats.inactiveInvestmentOrder.planName
+                ? `: ${stats.inactiveInvestmentOrder.planName}`
+                : "."}
+            </span>
+            <Link
+              href={stats.inactiveInvestmentOrder.href}
+              className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+            >
+              View order
+            </Link>
+          </AlertTitle>
+        </Alert>
+      ) : null}
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-          <DashboardStatCard
-            title="Account Balance"
-            value={formatUsd(stats.accountBalance)}
-            subtitle="Available balance for withdrawal"
-            icon={Wallet}
-          />
-          <DashboardStatCard
-            title="Earned profits"
-            value={formatUsd(stats.totalEarnedProfits)}
-            subtitle="Total earnings across investments"
-            icon={ArrowUpRight}
-          />
-          <DashboardStatCard
-            title="Current Investment"
-            value={formatUsd(stats.currentInvestment)}
-            subtitle="Current active investment capital"
-            icon={Layers3}
-          />
-          <DashboardStatCard
-            title="Total Investment"
-            value={formatUsd(stats.totalInvestment)}
-            subtitle="Combined capital invested"
-            icon={Landmark}
-          />
-          <DashboardStatCard
-            title="Active Orders"
-            value={String(stats.investmentsCount)}
-            subtitle="Total active and historical entries"
-            icon={ShoppingBagIcon}
-          />
-          <DashboardStatCard
-            title="Investment Plan"
-            value={stats.investmentPlan || "-"}
-            subtitle="Most recent or active investment plan"
-            icon={BriefcaseBusiness}
-          />
-        </section>
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <DashboardStatCard
+          title="Account Balance"
+          value={formatUsd(stats.accountBalance)}
+          subtitle="Available balance for withdrawal"
+          icon={Wallet}
+        />
+        <DashboardStatCard
+          title="Earned profits"
+          value={formatUsd(stats.totalEarnedProfits)}
+          subtitle="Total earnings across investments"
+          icon={ArrowUpRight}
+        />
+        <DashboardStatCard
+          title="Current Investment"
+          value={formatUsd(stats.currentInvestment)}
+          subtitle="Current active investment capital"
+          icon={Layers3}
+        />
+        <DashboardStatCard
+          title="Total Investment"
+          value={formatUsd(stats.totalInvestment)}
+          subtitle="Combined capital invested"
+          icon={Landmark}
+        />
+        <DashboardStatCard
+          title="Active Orders"
+          value={String(stats.investmentsCount)}
+          subtitle="Total active and historical entries"
+          icon={ShoppingBagIcon}
+        />
+        <DashboardStatCard
+          title="Investment Plan"
+          value={stats.investmentPlan || "-"}
+          subtitle="Most recent or active investment plan"
+          icon={BriefcaseBusiness}
+        />
       </section>
     </div>
   );
