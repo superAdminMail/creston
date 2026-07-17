@@ -1,21 +1,28 @@
-import { cache } from "react";
-
 import { InvestmentOrderStatus, SavingsStatus } from "@/generated/prisma";
 
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { prisma } from "@/lib/prisma";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
+import { SITE_CONFIGURATION_ID } from "@/lib/site/siteConfiguration";
 import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
 
 type HeroSnapshot = {
   statusLabel: string;
   totalValueLabel: string;
+  totalCapitalInflowValue: number;
   topLabel: string;
   planLabel: string;
   durationLabel: string;
   userCountLabel: string;
+  investorCountValue: number;
 };
+
+const HERO_CAPITAL_INFLOW_DAILY_INCREMENT = 860_000;
+const HERO_INVESTOR_COUNT_DAILY_INCREMENT = 600;
+const HERO_ACCRUAL_WINDOW_MS = 24 * 60 * 60 * 1000;
+const HERO_CAPITAL_INFLOW_DEFAULT = toDecimal(796_000_000);
+const HERO_INVESTOR_COUNT_DEFAULT = 65_000;
 
 function abbreviateNumber(value: number) {
   if (value >= 1_000_000) {
@@ -68,8 +75,128 @@ function resolveDurationLabel(durationDays: number | null) {
   return `${durationDays} Days`;
 }
 
-export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
+async function ensureHeroMetricsOffsets() {
+  const now = new Date();
+
+  const siteConfiguration = await prisma.siteConfiguration.findUnique({
+    where: {
+      id: SITE_CONFIGURATION_ID,
+    },
+    select: {
+      id: true,
+      siteName: true,
+      heroCapitalInflowOffset: true,
+      heroInvestorCountOffset: true,
+      heroMetricsLastAccruedAt: true,
+    },
+  });
+
+  if (!siteConfiguration) {
+    return prisma.siteConfiguration.upsert({
+      where: {
+        id: SITE_CONFIGURATION_ID,
+      },
+      create: {
+        id: SITE_CONFIGURATION_ID,
+        siteName: "Company",
+        heroCapitalInflowOffset: HERO_CAPITAL_INFLOW_DEFAULT,
+        heroInvestorCountOffset: HERO_INVESTOR_COUNT_DEFAULT,
+        heroMetricsLastAccruedAt: now,
+      },
+      update: {
+        heroCapitalInflowOffset: HERO_CAPITAL_INFLOW_DEFAULT,
+        heroInvestorCountOffset: HERO_INVESTOR_COUNT_DEFAULT,
+        heroMetricsLastAccruedAt: now,
+      },
+      select: {
+        id: true,
+        siteName: true,
+        heroCapitalInflowOffset: true,
+        heroInvestorCountOffset: true,
+        heroMetricsLastAccruedAt: true,
+      },
+    });
+  }
+
+  if (!siteConfiguration.heroMetricsLastAccruedAt) {
+    await prisma.siteConfiguration.updateMany({
+      where: {
+        id: SITE_CONFIGURATION_ID,
+        heroMetricsLastAccruedAt: null,
+      },
+      data: {
+        heroMetricsLastAccruedAt: now,
+      },
+    });
+
+    return {
+      ...siteConfiguration,
+      heroMetricsLastAccruedAt: now,
+    };
+  }
+
+  const elapsedMs = now.getTime() - siteConfiguration.heroMetricsLastAccruedAt.getTime();
+  const elapsedPeriods = Math.floor(elapsedMs / HERO_ACCRUAL_WINDOW_MS);
+
+  if (elapsedPeriods <= 0) {
+    return siteConfiguration;
+  }
+
+  const nextAccruedAt = new Date(
+    siteConfiguration.heroMetricsLastAccruedAt.getTime() +
+      elapsedPeriods * HERO_ACCRUAL_WINDOW_MS,
+  );
+
+  const updateResult = await prisma.siteConfiguration.updateMany({
+    where: {
+      id: SITE_CONFIGURATION_ID,
+      heroMetricsLastAccruedAt: siteConfiguration.heroMetricsLastAccruedAt,
+    },
+    data: {
+      heroCapitalInflowOffset: {
+        increment: toDecimal(
+          HERO_CAPITAL_INFLOW_DAILY_INCREMENT * elapsedPeriods,
+        ),
+      },
+      heroInvestorCountOffset: {
+        increment: HERO_INVESTOR_COUNT_DAILY_INCREMENT * elapsedPeriods,
+      },
+      heroMetricsLastAccruedAt: nextAccruedAt,
+    },
+  });
+
+  if (updateResult.count > 0) {
+    return prisma.siteConfiguration.findUnique({
+      where: {
+        id: SITE_CONFIGURATION_ID,
+      },
+      select: {
+        id: true,
+        siteName: true,
+        heroCapitalInflowOffset: true,
+        heroInvestorCountOffset: true,
+        heroMetricsLastAccruedAt: true,
+      },
+    });
+  }
+
+  return prisma.siteConfiguration.findUnique({
+    where: {
+      id: SITE_CONFIGURATION_ID,
+    },
+    select: {
+      id: true,
+      siteName: true,
+      heroCapitalInflowOffset: true,
+      heroInvestorCountOffset: true,
+      heroMetricsLastAccruedAt: true,
+    },
+  });
+}
+
+export async function getHeroSnapshot(): Promise<HeroSnapshot> {
   const site = await getSiteSeoConfig();
+  const heroMetrics = await ensureHeroMetricsOffsets();
 
   const [investmentOrders, savingsSummary, investorProfileCount] =
     await Promise.all([
@@ -126,8 +253,12 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
 
   const totalSavings = toDecimal(savingsSummary._sum.balance);
   const totalValue = totalInvestments.add(totalSavings);
-  const headlineTotalValue = toDecimal(796_000_000).add(totalValue);
-  const headlineUserCount = investorProfileCount + 65_000;
+  const headlineTotalValue = totalValue.add(
+    toDecimal(heroMetrics?.heroCapitalInflowOffset ?? HERO_CAPITAL_INFLOW_DEFAULT),
+  );
+  const headlineUserCount =
+    investorProfileCount +
+    (heroMetrics?.heroInvestorCountOffset ?? HERO_INVESTOR_COUNT_DEFAULT);
 
   const typeTotals = new Map<string, { total: number; label: string }>();
   const planTotals = new Map<
@@ -169,9 +300,11 @@ export const getHeroSnapshot = cache(async (): Promise<HeroSnapshot> => {
   return {
     statusLabel: "Active",
     totalValueLabel: formatCompactDollar(decimalToNumber(headlineTotalValue)),
+    totalCapitalInflowValue: decimalToNumber(headlineTotalValue),
     topLabel: topType?.label ?? "Savings",
     planLabel: topPlan?.label ?? site.siteName,
     durationLabel: resolveDurationLabel(topPlan?.durationDays ?? null),
     userCountLabel: `${abbreviateNumber(headlineUserCount)}+ Investors`,
+    investorCountValue: headlineUserCount,
   };
-});
+}

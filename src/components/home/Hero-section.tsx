@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Landmark, ShieldCheck, TrendingUp } from "lucide-react";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { getHeroSnapshot } from "@/lib/service/getHeroSnapshot";
+import { HeroSnapshotCountUp } from "./HeroSnapshotCountUp";
 
 const trustPoints = [
   {
@@ -51,7 +52,7 @@ export async function HeroSection() {
       </div>
 
       {/* CONTENT */}
-      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-18 sm:px-6 md:py-22 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-22">
+      <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-10 sm:px-6  lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 ">
         {/* LEFT */}
         <div className="max-w-2xl space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase text-blue-100">
@@ -113,9 +114,7 @@ export async function HeroSection() {
             <div className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3">
               <div>
                 <p className="text-xs text-slate-400">Snapshot</p>
-                <p className="text-sm text-white/80">
-                  {snapshot.statusLabel} overview
-                </p>
+                <p className="text-sm text-white/80">Overview</p>
               </div>
               <span className="text-xs text-blue-300">
                 {snapshot.statusLabel}
@@ -124,8 +123,13 @@ export async function HeroSection() {
 
             <div className="mt-5">
               <p className="text-sm text-slate-400">Total Capital Inflow</p>
-              <p className="text-3xl font-semibold text-white/80">
-                {snapshot.totalValueLabel}
+              <p className="text-3xl font-semibold text-white/80 tabular-nums">
+                <HeroSnapshotCountUp
+                  value={snapshot.totalCapitalInflowValue}
+                  step={10_000_000}
+                  durationMs={1200}
+                  variant="currency"
+                />
               </p>
             </div>
 
@@ -140,7 +144,13 @@ export async function HeroSection() {
                 Duration: {snapshot.durationLabel}
               </div>
               <div className="rounded-xl bg-white/5 p-3 text-xs text-white/80">
-                {snapshot.userCountLabel}
+                <HeroSnapshotCountUp
+                  value={snapshot.investorCountValue}
+                  step={1_000}
+                  durationMs={1100}
+                  delayMs={180}
+                  variant="investors"
+                />
               </div>
             </div>
           </div>

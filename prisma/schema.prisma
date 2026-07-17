@@ -1366,6 +1366,10 @@ model SiteConfiguration {
   siteLogoFileAssetId String?    @unique
   siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)
 
+  heroCapitalInflowOffset  Decimal   @default(796000000) @db.Decimal(18, 2)
+  heroInvestorCountOffset  Int       @default(65000)
+  heroMetricsLastAccruedAt DateTime?
+
   seoTitle       String?
   seoDescription String?
 

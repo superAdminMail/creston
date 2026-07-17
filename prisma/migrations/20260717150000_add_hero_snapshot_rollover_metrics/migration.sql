@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "site_configuration"
+ADD COLUMN IF NOT EXISTS "heroCapitalInflowOffset" DECIMAL(18,2) NOT NULL DEFAULT 796000000,
+ADD COLUMN IF NOT EXISTS "heroInvestorCountOffset" INTEGER NOT NULL DEFAULT 65000,
+ADD COLUMN IF NOT EXISTS "heroMetricsLastAccruedAt" TIMESTAMP(3);
