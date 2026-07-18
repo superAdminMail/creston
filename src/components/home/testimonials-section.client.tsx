@@ -34,7 +34,7 @@ function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
 
   return (
     <div className="group/item relative h-full px-2">
-      <div className="flex h-full min-h-[320px] flex-col rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-7 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition group-hover/item:-translate-y-1">
+      <div className="flex h-full min-h-[280px] flex-col rounded-[2rem] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(8,17,37,0.98))] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition group-hover/item:-translate-y-1">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-blue-500/10">
             {testimony.avatarUrl ? (
@@ -56,13 +56,13 @@ function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-1 flex-col">
+        <div className="mt-4 flex flex-1 flex-col">
           <p className="text-sm leading-7 text-slate-300">
             {expanded ? quote : previewQuote}
           </p>
 
           {testimony.videoUrl ? (
-            <div className="mt-5 aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+            <div className="mt-4 aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
               <TestimonyVideoPlayer
                 src={testimony.videoUrl}
                 title={`${testimony.name} testimonial video`}
@@ -75,14 +75,14 @@ function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
             <button
               type="button"
               onClick={() => setExpanded((prev) => !prev)}
-              className="mt-4 inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-blue-200 transition hover:bg-white/[0.07] hover:text-white"
+              className="mt-3 inline-flex w-fit items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-blue-200 transition hover:bg-white/[0.07] hover:text-white"
             >
               {expanded ? "See less" : "See more"}
             </button>
           ) : null}
         </div>
 
-        <div className="mt-8 border-t border-white/8 pt-5">
+        <div className="mt-6 border-t border-white/8 pt-4">
           <p className="text-xs text-slate-500">{testimony.organization}</p>
         </div>
       </div>
