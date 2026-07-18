@@ -1,12 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import {
   createErrorFormState,
-  createSuccessFormState,
   createValidationErrorState,
   getFriendlyServerError,
 } from "@/lib/forms/actionState";
@@ -51,7 +51,7 @@ export async function createTestimony(
     revalidatePath("/account/dashboard/admin/testimonies");
     revalidatePath("/");
 
-    return createSuccessFormState("Testimony created");
+    redirect("/account/dashboard/admin/testimonies");
   } catch (error) {
     return createErrorFormState(
       getFriendlyServerError(error, "Unable to create the testimony right now."),

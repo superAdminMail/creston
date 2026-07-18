@@ -4,6 +4,7 @@ import { getTestimonies } from "@/actions/admin/testimonies/getTestimonies";
 import { deleteTestimony } from "@/actions/admin/testimonies/deleteTestimony";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AdminTestimoniesPage() {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
@@ -36,7 +37,17 @@ export default async function AdminTestimoniesPage() {
                   <p className="text-sm font-semibold text-white">{testimony.fullName}</p>
                   <p className="text-xs text-slate-400">{testimony.roleOrTitle ?? "CLIENT"}</p>
                 </div>
-                <span className="text-xs text-slate-500">{testimony.status}</span>
+                <div className="flex items-center gap-2">
+                  {testimony.videoFileId ? (
+                    <Badge
+                      variant="outline"
+                      className="border-sky-400/20 bg-sky-400/10 text-[10px] font-medium uppercase tracking-[0.18em] text-sky-200"
+                    >
+                      Video
+                    </Badge>
+                  ) : null}
+                  <span className="text-xs text-slate-500">{testimony.status}</span>
+                </div>
               </div>
               <p className="text-sm leading-6 text-slate-300">{testimony.message}</p>
               <div className="flex items-center justify-between text-xs text-slate-400">
