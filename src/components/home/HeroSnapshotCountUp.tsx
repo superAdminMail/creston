@@ -82,7 +82,10 @@ export function HeroSnapshotCountUp({
         }, intervalMs);
 
         if (cancelled) {
-          window.clearTimeout(timeoutId);
+          if (timeoutId !== null) {
+            window.clearTimeout(timeoutId);
+          }
+
           if (intervalId !== null) {
             window.clearInterval(intervalId);
             intervalId = null;
