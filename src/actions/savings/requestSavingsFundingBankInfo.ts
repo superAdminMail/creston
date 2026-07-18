@@ -5,13 +5,12 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
+import { resolveSavingsAccountBankInfoState } from "@/lib/payments/bank/savingsAccountBankInfo";
 import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import {
   SAVINGS_FUNDING_BANK_INFO_REQUEST_ACK_KIND,
   SAVINGS_FUNDING_BANK_INFO_REQUEST_KIND,
 } from "@/lib/notifications/savingsFundingBankInfo";
-import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 
 export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
   const user = await getCurrentSessionUser();
@@ -30,6 +29,9 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
     select: {
       id: true,
       currency: true,
+      platformPaymentMethodId: true,
+      bankInfoRequestedAt: true,
+      bankInfoRespondedAt: true,
       savingsProduct: {
         select: {
           name: true,
@@ -42,14 +44,18 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
     return { ok: false, message: "Savings account not found." };
   }
 
-  const existingPrivateBankMethod = await getUserPrivateBankInfo(
+  const bankInfoState = await resolveSavingsAccountBankInfoState(
+    {
+      id: account.id,
+      currency: account.currency,
+      platformPaymentMethodId: account.platformPaymentMethodId,
+      bankInfoRequestedAt: account.bankInfoRequestedAt,
+      bankInfoRespondedAt: account.bankInfoRespondedAt,
+    },
     user.id,
-    account.currency,
   );
 
-  const hasAnyBankInfoRequest = await hasUserBankInfoRequest(user.id);
-
-  if (existingPrivateBankMethod || hasAnyBankInfoRequest) {
+  if (bankInfoState.status !== "NONE") {
     return {
       ok: true,
       message: "Bank details are already available or already requested.",
@@ -81,6 +87,16 @@ export async function requestSavingsFundingBankInfo(savingsAccountId: string) {
   const adminRequestUrl = `/account/dashboard/admin/payment-methods?requestKind=SAVINGS_FUNDING_BANK_INFO&savingsAccountId=${encodeURIComponent(account.id)}&requesterId=${encodeURIComponent(user.id)}&requesterName=${encodeURIComponent(user.name ?? "")}&requesterEmail=${encodeURIComponent(user.email ?? "")}&savingsProductName=${encodeURIComponent(account.savingsProduct.name)}&currency=${encodeURIComponent(account.currency)}`;
 
   await prisma.$transaction(async (tx) => {
+    await tx.savingsAccount.update({
+      where: {
+        id: account.id,
+      },
+      data: {
+        bankInfoRequestedAt: new Date(),
+        bankInfoRespondedAt: null,
+      },
+    });
+
     await upsertSystemNotifications(tx, [
       {
         key: `savings-funding-bank-info-request-ack:${account.id}:${user.id}`,

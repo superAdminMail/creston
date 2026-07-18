@@ -7,9 +7,8 @@ import {
   formatInvestmentTierReturnLabel,
   resolveInvestmentTierRoiPercentValue,
 } from "@/lib/investment/formatInvestmentTierReturnLabel";
-import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
-import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
 import { asJsonObject } from "@/lib/payments/paymentJson";
+import { resolveInvestmentOrderBankInfoState } from "@/lib/payments/bank/investmentOrderBankInfo";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
@@ -55,6 +54,8 @@ export async function getInvestmentOrderPaymentDetails(
       paidAt: true,
       confirmedAt: true,
       platformPaymentMethodId: true,
+      bankInfoRequestedAt: true,
+      bankInfoRespondedAt: true,
       investmentPlan: {
         select: {
           id: true,
@@ -72,37 +73,6 @@ export async function getInvestmentOrderPaymentDetails(
           fixedRoiPercent: true,
           projectedRoiMin: true,
           projectedRoiMax: true,
-        },
-      },
-      platformPaymentMethod: {
-        select: {
-          id: true,
-          label: true,
-          type: true,
-          providerName: true,
-          bankName: true,
-          bankCode: true,
-          accountName: true,
-          reference: true,
-          bankAddress: true,
-          accountNumber: true,
-          iban: true,
-          swiftCode: true,
-          routingNumber: true,
-          branchName: true,
-          country: true,
-          instructions: true,
-          notes: true,
-          isPrivate: true,
-          isDefault: true,
-          sortOrder: true,
-          verificationStatus: true,
-          cryptoAsset: true,
-          cryptoNetwork: true,
-          walletAddress: true,
-          walletTag: true,
-          currency: true,
-          isActive: true,
         },
       },
       payments: {
@@ -140,35 +110,30 @@ export async function getInvestmentOrderPaymentDetails(
     notFound();
   }
 
-  const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
+  const bankInfoState = await resolveInvestmentOrderBankInfoState(
+    {
+      id: order.id,
+      currency: order.currency,
+      platformPaymentMethodId: order.platformPaymentMethodId,
+      bankInfoRequestedAt: order.bankInfoRequestedAt,
+      bankInfoRespondedAt: order.bankInfoRespondedAt,
+    },
+    user.id,
+  );
 
   const selectedFundingMethodType =
     fundingMethodType ?? order.paymentMethodType ?? "BANK_TRANSFER";
-  const preferredPlatformPaymentMethodType =
-    selectedFundingMethodType === "CRYPTO_PROVIDER"
-      ? "WALLET_ADDRESS"
-      : "BANK_INFO";
-  const orderPaymentMethodMatchesSelectedFundingMethod =
-    order.platformPaymentMethod?.type === preferredPlatformPaymentMethodType;
-
-  const privateBankMethod =
-    orderPaymentMethodMatchesSelectedFundingMethod ||
-    selectedFundingMethodType === "CRYPTO_PROVIDER"
-      ? null
-      : await getUserPrivateBankInfo(user.id, order.currency);
-
-  const fallbackBankMethod =
-    orderPaymentMethodMatchesSelectedFundingMethod ? null : privateBankMethod;
-
   const resolvedBankMethod =
-    (orderPaymentMethodMatchesSelectedFundingMethod
-      ? order.platformPaymentMethod
-      : null) ??
-    fallbackBankMethod ??
-    (await getPublicPlatformPaymentMethodForCheckout({
-      currency: order.currency,
-      preferredType: preferredPlatformPaymentMethodType,
-    }));
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? await getPublicPlatformPaymentMethodForCheckout({
+          currency: order.currency,
+          preferredType: "WALLET_ADDRESS",
+        })
+      : bankInfoState.bankMethod ??
+        (await getPublicPlatformPaymentMethodForCheckout({
+          currency: order.currency,
+          preferredType: "BANK_INFO",
+        }));
 
   const amount = toNumber(order.amount);
   const amountPaid = toNumber(order.amountPaid);
@@ -274,7 +239,9 @@ export async function getInvestmentOrderPaymentDetails(
         }
       : null,
     hasBankMethod: Boolean(resolvedBankMethod),
-    hasExistingBankInfoRequest,
+    hasExistingBankInfoRequest:
+      selectedFundingMethodType !== "CRYPTO_PROVIDER" &&
+      bankInfoState.status === "REQUESTED",
     bankInfoRequest: null,
     recentPayments: order.payments.map((payment) => ({
       id: payment.id,

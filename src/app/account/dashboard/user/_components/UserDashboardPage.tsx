@@ -48,9 +48,7 @@ function DashboardStatCard({
   icon: LucideIcon;
 }) {
   return (
-    <div
-      className={`${DASHBOARD_FLAT_SURFACE_CLASS} group p-4 sm:p-5`}
-    >
+    <div className={`${DASHBOARD_FLAT_SURFACE_CLASS} group p-4 sm:p-5`}>
       <div className="flex items-start justify-between gap-3 sm:gap-4">
         <div className="min-w-0 space-y-2.5 sm:space-y-3">
           <p className="text-sm font-medium text-sky-700/90 dark:text-sky-300/80">
@@ -116,12 +114,15 @@ export default function UserDashboardPage({
             <span className="text-sm font-semibold">
               Your investment profile is not set up yet
             </span>
-            <Link
-              href="/account/dashboard/user/investment-profile/edit"
-              className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
-            >
-              Complete profile
-            </Link>
+
+            <div>
+              <Link
+                href="/account/dashboard/user/investment-profile/edit"
+                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+              >
+                Complete profile
+              </Link>
+            </div>
           </AlertTitle>
         </Alert>
       ) : null}
@@ -136,12 +137,14 @@ export default function UserDashboardPage({
                 ? `: ${stats.inactiveInvestmentOrder.planName}`
                 : "."}
             </span>
-            <Link
-              href={stats.inactiveInvestmentOrder.href}
-              className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
-            >
-              View order
-            </Link>
+            <div>
+              <Link
+                href={stats.inactiveInvestmentOrder.href}
+                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+              >
+                View order
+              </Link>
+            </div>
           </AlertTitle>
         </Alert>
       ) : null}

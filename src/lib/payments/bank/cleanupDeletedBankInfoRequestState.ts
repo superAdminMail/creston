@@ -52,6 +52,24 @@ export async function cleanupDeletedBankInfoRequestState(
       },
     });
 
+    const savingsAccounts = await tx.savingsAccount.findMany({
+      where: {
+        platformPaymentMethodId,
+      },
+      select: {
+        id: true,
+        investorProfile: {
+          select: {
+            user: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
     const savingsRequests = await tx.notification.findMany({
       where: {
         key: {
@@ -95,7 +113,10 @@ export async function cleanupDeletedBankInfoRequestState(
     investmentOrderIds = investmentOrders.map((order) => order.id);
     savingsAccountIds = Array.from(
       new Set(
-        savingsRequestsToDelete.map((request) => request.savingsAccountId),
+        [
+          ...savingsAccounts.map((account) => account.id),
+          ...savingsRequestsToDelete.map((request) => request.savingsAccountId),
+        ],
       ),
     );
 
@@ -118,6 +139,27 @@ export async function cleanupDeletedBankInfoRequestState(
             },
             {
               key: `investment-order-bank-info-ready:${orderId}`,
+            },
+          ],
+        },
+      });
+    }
+
+    for (const account of savingsAccounts) {
+      const requesterId = account.investorProfile.user.id;
+
+      await tx.notification.deleteMany({
+        where: {
+          OR: [
+            {
+              key: {
+                startsWith: `savings-funding-bank-info-request:${account.id}:`,
+              },
+            },
+            {
+              key: {
+                startsWith: `savings-funding-bank-info-request-ack:${account.id}:${requesterId}`,
+              },
             },
           ],
         },

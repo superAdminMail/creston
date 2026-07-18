@@ -5,9 +5,7 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 export async function AppSplashScreen() {
   const config = await getSiteConfigurationCached();
   const siteName = config?.siteName?.trim() || "Company";
-  const logoUrl =
-    config?.siteLogoFileAsset?.url ??
-    "https://h1y5zd586t.ufs.sh/f/8DoDEiOd0OjuBkxrbXSXITnudeaK9QOqNCE546A1JZpjbHSU";
+  const logoUrl = config?.siteLogoFileAsset?.url;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050B1F]">

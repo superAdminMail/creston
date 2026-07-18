@@ -3,8 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/formatters/formatters";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
-import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { resolveSavingsAccountBankInfoState } from "@/lib/payments/bank/savingsAccountBankInfo";
 import { getPublicPlatformPaymentMethodForCheckout } from "@/lib/services/platform-wallets/getPlatformWallets";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
@@ -42,6 +41,9 @@ export async function getSavingsFundingDetails(
       isLocked: true,
       lockedUntil: true,
       createdAt: true,
+      platformPaymentMethodId: true,
+      bankInfoRequestedAt: true,
+      bankInfoRespondedAt: true,
       savingsProduct: {
         select: {
           id: true,
@@ -128,35 +130,33 @@ export async function getSavingsFundingDetails(
 
   const latestIntent = account.savingsFundingIntents[0] ?? null;
 
-  const hasExistingBankInfoRequest = await hasUserBankInfoRequest(user.id);
-
   const selectedFundingMethodType =
     fundingMethodType ??
     latestIntent?.fundingMethodType ??
     "BANK_TRANSFER";
-  const preferredPlatformPaymentMethodType =
-    selectedFundingMethodType === "CRYPTO_PROVIDER"
-      ? "WALLET_ADDRESS"
-      : "BANK_INFO";
-  const latestIntentPaymentMethodMatchesSelectedFundingMethod =
-    latestIntent?.platformPaymentMethod?.type ===
-    preferredPlatformPaymentMethodType;
-
-  const privateBankMethod =
-    latestIntentPaymentMethodMatchesSelectedFundingMethod ||
-    selectedFundingMethodType === "CRYPTO_PROVIDER"
-      ? null
-      : await getUserPrivateBankInfo(user.id, account.currency);
+  const bankInfoState = await resolveSavingsAccountBankInfoState(
+    {
+      id: account.id,
+      currency: account.currency,
+      platformPaymentMethodId: account.platformPaymentMethodId,
+      bankInfoRequestedAt: account.bankInfoRequestedAt,
+      bankInfoRespondedAt: account.bankInfoRespondedAt,
+    },
+    user.id,
+  );
 
   const bankMethod =
-    (latestIntentPaymentMethodMatchesSelectedFundingMethod
-      ? latestIntent.platformPaymentMethod
-      : null) ??
-    privateBankMethod ??
-    (await getPublicPlatformPaymentMethodForCheckout({
-      currency: account.currency,
-      preferredType: preferredPlatformPaymentMethodType,
-    }));
+    selectedFundingMethodType === "CRYPTO_PROVIDER"
+      ? await getPublicPlatformPaymentMethodForCheckout({
+          currency: account.currency,
+          preferredType: "WALLET_ADDRESS",
+        })
+      : bankInfoState.bankMethod ??
+        latestIntent?.platformPaymentMethod ??
+        (await getPublicPlatformPaymentMethodForCheckout({
+          currency: account.currency,
+          preferredType: "BANK_INFO",
+        }));
   const balance = toNumber(account.balance);
   const targetAmount = account.targetAmount
     ? toNumber(account.targetAmount)
@@ -266,7 +266,9 @@ export async function getSavingsFundingDetails(
         }
       : null,
     hasPendingSubmission,
-    hasExistingBankInfoRequest,
+    hasExistingBankInfoRequest:
+      selectedFundingMethodType !== "CRYPTO_PROVIDER" &&
+      bankInfoState.status === "REQUESTED",
     canSubmitFundingProof: Boolean(bankMethod) && !hasPendingSubmission,
     fundingAmountSuggestion:
       remainingToTargetAmount && remainingToTargetAmount > 0

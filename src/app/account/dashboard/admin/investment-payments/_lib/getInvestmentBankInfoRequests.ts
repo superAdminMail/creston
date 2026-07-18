@@ -37,6 +37,47 @@ export async function getInvestmentBankInfoRequests(): Promise<
     "SUPER_ADMIN",
   ]);
 
+  const canonicalOrders = await prisma.investmentOrder.findMany({
+    where: {
+      bankInfoRequestedAt: {
+        not: null,
+      },
+      bankInfoRespondedAt: null,
+      platformPaymentMethodId: null,
+      status: {
+        notIn: ["CANCELLED", "REJECTED"],
+      },
+    },
+    orderBy: {
+      bankInfoRequestedAt: "desc",
+    },
+    select: {
+      id: true,
+      bankInfoRequestedAt: true,
+      status: true,
+      amount: true,
+      amountPaid: true,
+      currency: true,
+      investorProfile: {
+        select: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      },
+      investmentPlan: {
+        select: {
+          name: true,
+          period: true,
+        },
+      },
+    },
+  });
+
   const notifications = await prisma.notification.findMany({
     where: {
       userId,
@@ -78,65 +119,13 @@ export async function getInvestmentBankInfoRequests(): Promise<
       ];
     });
 
-  const uniqueOrderIds = Array.from(
-    new Set(requestNotifications.map((notification) => notification.metadata.orderId)),
-  );
-
-  if (uniqueOrderIds.length === 0) {
-    return [];
-  }
-
-  const orders = await prisma.investmentOrder.findMany({
-    where: {
-      id: {
-        in: uniqueOrderIds,
-      },
-      platformPaymentMethodId: null,
-    },
-    select: {
-      id: true,
-      status: true,
-      amount: true,
-      amountPaid: true,
-      currency: true,
-      investorProfile: {
-        select: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-        },
-      },
-      investmentPlan: {
-        select: {
-          name: true,
-          period: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const orderById = new Map(orders.map((order) => [order.id, order]));
-
-  return requestNotifications.flatMap((notification) => {
-    const order = orderById.get(notification.metadata.orderId);
-
-    if (!order) {
-      return [];
-    }
-
+  const canonicalOrderItems = canonicalOrders.map((order) => {
     const amount = decimalToNumber(order.amount);
     const amountPaid = decimalToNumber(order.amountPaid);
 
-    const item = {
-      requestNotificationId: notification.id,
-      requestedAt: notification.createdAt.toISOString(),
+    return {
+      requestNotificationId: order.id,
+      requestedAt: order.bankInfoRequestedAt?.toISOString() ?? new Date().toISOString(),
       orderId: order.id,
       requester: {
         id: order.investorProfile.user.id,
@@ -156,7 +145,102 @@ export async function getInvestmentBankInfoRequests(): Promise<
         },
       },
     } satisfies InvestmentBankInfoRequestItem;
-
-    return [item];
   });
+
+  const canonicalOrderIds = new Set(canonicalOrders.map((order) => order.id));
+
+  const legacyOrderIds = Array.from(
+    new Set(
+      requestNotifications
+        .map((notification) => notification.metadata.orderId)
+        .filter((orderId) => !canonicalOrderIds.has(orderId)),
+    ),
+  );
+
+  const legacyOrders =
+    legacyOrderIds.length > 0
+      ? await prisma.investmentOrder.findMany({
+          where: {
+            id: {
+              in: legacyOrderIds,
+            },
+            platformPaymentMethodId: null,
+          },
+          select: {
+            id: true,
+            status: true,
+            amount: true,
+            amountPaid: true,
+            currency: true,
+            investorProfile: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+            investmentPlan: {
+              select: {
+                name: true,
+                period: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        })
+      : [];
+
+  const legacyOrderById = new Map(legacyOrders.map((order) => [order.id, order]));
+
+  const legacyItems = requestNotifications.flatMap((notification) => {
+    if (!legacyOrderById.has(notification.metadata.orderId)) {
+      return [];
+    }
+
+    const order = legacyOrderById.get(notification.metadata.orderId);
+
+    if (!order) {
+      return [];
+    }
+
+    const amount = decimalToNumber(order.amount);
+    const amountPaid = decimalToNumber(order.amountPaid);
+
+    return [
+      {
+        requestNotificationId: notification.id,
+        requestedAt: notification.createdAt.toISOString(),
+        orderId: order.id,
+        requester: {
+          id: order.investorProfile.user.id,
+          name: order.investorProfile.user.name,
+          email: order.investorProfile.user.email,
+        },
+        order: {
+          id: order.id,
+          status: order.status,
+          amount,
+          amountPaid,
+          remainingAmount: Math.max(amount - amountPaid, 0),
+          currency: order.currency,
+          plan: {
+            name: order.investmentPlan.name,
+            period: order.investmentPlan.period,
+          },
+        },
+      } satisfies InvestmentBankInfoRequestItem,
+    ];
+  });
+
+  return [...canonicalOrderItems, ...legacyItems].sort(
+    (left, right) =>
+      new Date(right.requestedAt).getTime() -
+      new Date(left.requestedAt).getTime(),
+  );
 }

@@ -436,6 +436,8 @@ model InvestmentOrder {
 
   paymentMethodType       InvestmentPaymentMethodType?
   platformPaymentMethodId String?
+  bankInfoRequestedAt     DateTime?
+  bankInfoRespondedAt     DateTime?
 
   upgradeStatus      InvestmentOrderUpgradeStatus @default(DISABLED)
   upgradeAmount      Decimal?                     @db.Decimal(18, 2)
@@ -478,6 +480,7 @@ model InvestmentOrder {
 
   @@index([paymentMethodType])
   @@index([platformPaymentMethodId])
+  @@index([bankInfoRequestedAt])
   @@index([investorProfileId])
   @@index([investmentPlanId])
   @@index([investmentAccountId])
@@ -600,6 +603,12 @@ model SavingsAccount {
 
   status SavingsStatus @default(ACTIVE)
 
+  platformPaymentMethodId String?
+  platformPaymentMethod   PlatformPaymentMethod? @relation("SavingsAccountBankInfoMethod", fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
+
+  bankInfoRequestedAt DateTime?
+  bankInfoRespondedAt DateTime?
+
   metadata Json?
 
   createdAt DateTime @default(now())
@@ -611,6 +620,8 @@ model SavingsAccount {
 
   @@index([investorProfileId])
   @@index([savingsProductId])
+  @@index([platformPaymentMethodId])
+  @@index([bankInfoRequestedAt])
   @@index([status])
   @@map("savings_account")
 }
@@ -972,6 +983,7 @@ model PlatformPaymentMethod {
   investmentOrders           InvestmentOrder[]
   investmentOrderPayments    InvestmentOrderPayment[]
   savingsFundingIntents      SavingsFundingIntent[]
+  savingsAccountsForBankInfo SavingsAccount[]            @relation("SavingsAccountBankInfoMethod")
   savingsTransactionPayments SavingsTransactionPayment[]
 
   @@index([type, isActive])

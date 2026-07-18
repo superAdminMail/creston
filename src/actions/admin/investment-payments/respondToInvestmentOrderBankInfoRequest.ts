@@ -177,6 +177,7 @@ export async function respondToInvestmentOrderBankInfoRequest(
         data: {
           paymentMethodType: "BANK_TRANSFER",
           platformPaymentMethodId: platformPaymentMethod.id,
+          bankInfoRespondedAt: new Date(),
         },
       });
 

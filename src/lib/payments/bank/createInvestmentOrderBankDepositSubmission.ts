@@ -8,7 +8,7 @@ import {
 } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { upsertBankDepositSubmissionNotifications } from "@/lib/payments/bank/bankDepositSubmissionNotifications";
-import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { resolveInvestmentOrderBankInfoState } from "@/lib/payments/bank/investmentOrderBankInfo";
 import { asJsonObject, toJsonValue } from "@/lib/payments/paymentJson";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
@@ -69,6 +69,8 @@ export async function createInvestmentOrderBankDepositSubmission({
       amountPaid: true,
       currency: true,
       investmentPlanId: true,
+      bankInfoRequestedAt: true,
+      bankInfoRespondedAt: true,
       upgradeStatus: true,
       upgradeAmount: true,
       platformPaymentMethodId: true,
@@ -113,14 +115,23 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("This investment order can no longer be paid");
   }
 
-  const privateBankMethod =
+  const bankInfoState =
     proofMode === "CRYPTO_PROVIDER"
-      ? null
-      : await getUserPrivateBankInfo(userId, order.currency);
+      ? { status: "NONE" as const, bankMethod: null }
+      : await resolveInvestmentOrderBankInfoState(
+          {
+            id: order.id,
+            currency: order.currency,
+            platformPaymentMethodId: order.platformPaymentMethodId,
+            bankInfoRequestedAt: order.bankInfoRequestedAt,
+            bankInfoRespondedAt: order.bankInfoRespondedAt,
+          },
+          userId,
+        );
   const selectedPlatformPaymentMethodId =
     platformPaymentMethodId?.trim() ||
-    order.platformPaymentMethodId ||
-    privateBankMethod?.id ||
+    order.platformPaymentMethod?.id ||
+    bankInfoState.bankMethod?.id ||
     null;
 
   if (!selectedPlatformPaymentMethodId) {
@@ -135,8 +146,8 @@ export async function createInvestmentOrderBankDepositSubmission({
 
   const allowPrivateMethod =
     proofMode !== "CRYPTO_PROVIDER" &&
-    (selectedPlatformPaymentMethodId === order.platformPaymentMethodId ||
-      selectedPlatformPaymentMethodId === privateBankMethod?.id);
+    (selectedPlatformPaymentMethodId === order.platformPaymentMethod?.id ||
+      selectedPlatformPaymentMethodId === bankInfoState.bankMethod?.id);
 
   const platformPaymentMethod = await prisma.platformPaymentMethod.findFirst({
     where: {

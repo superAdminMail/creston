@@ -5,8 +5,7 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
-import { hasUserBankInfoRequest } from "@/lib/payments/bank/hasUserBankInfoRequest";
-import { getUserPrivateBankInfo } from "@/lib/payments/bank/getUserPrivateBankInfo";
+import { resolveInvestmentOrderBankInfoState } from "@/lib/payments/bank/investmentOrderBankInfo";
 import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import {
   INVESTMENT_ORDER_BANK_INFO_REQUEST_ACK_KIND,
@@ -31,6 +30,8 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
       id: true,
       currency: true,
       platformPaymentMethodId: true,
+      bankInfoRequestedAt: true,
+      bankInfoRespondedAt: true,
       investmentPlan: {
         select: {
           name: true,
@@ -43,18 +44,18 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
     return { ok: false, message: "Investment order not found." };
   }
 
-  const existingPrivateBankMethod = await getUserPrivateBankInfo(
+  const bankInfoState = await resolveInvestmentOrderBankInfoState(
+    {
+      id: order.id,
+      currency: order.currency,
+      platformPaymentMethodId: order.platformPaymentMethodId,
+      bankInfoRequestedAt: order.bankInfoRequestedAt,
+      bankInfoRespondedAt: order.bankInfoRespondedAt,
+    },
     user.id,
-    order.currency,
   );
 
-  const hasAnyBankInfoRequest = await hasUserBankInfoRequest(user.id);
-
-  if (
-    order.platformPaymentMethodId ||
-    existingPrivateBankMethod ||
-    hasAnyBankInfoRequest
-  ) {
+  if (bankInfoState.status !== "NONE") {
     return {
       ok: true,
       message: "Bank details are already available or already requested.",
@@ -85,6 +86,16 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
   const requestMessage = `Bank transfer details requested for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`;
 
   await prisma.$transaction(async (tx) => {
+    await tx.investmentOrder.update({
+      where: {
+        id: order.id,
+      },
+      data: {
+        bankInfoRequestedAt: new Date(),
+        bankInfoRespondedAt: null,
+      },
+    });
+
     await upsertSystemNotifications(tx, [
       {
         key: `investment-order-bank-info-request-ack:${order.id}:${user.id}`,

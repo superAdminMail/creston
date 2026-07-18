@@ -185,6 +185,16 @@ export async function respondToSavingsFundingBankInfoRequest(
           },
         },
       ]);
+
+      await tx.savingsAccount.update({
+        where: {
+          id: account.id,
+        },
+        data: {
+          platformPaymentMethodId: platformPaymentMethod.id,
+          bankInfoRespondedAt: new Date(),
+        },
+      });
     });
 
     revalidatePath("/account/dashboard/checkout");
