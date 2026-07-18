@@ -29,7 +29,7 @@ export default async function SupportPage({
   });
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl">
       <SupportInboxWorkspace
         mode="user"
         viewerId={userId}

@@ -14,11 +14,11 @@ export function UserInvestmentsHeader({
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <Link
-          href="/account/dashboard/user"
+          href="/account/dashboard/user/investment-orders"
           className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to dashboard
+          Back to orders
         </Link>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
