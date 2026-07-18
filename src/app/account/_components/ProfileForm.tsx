@@ -194,6 +194,7 @@ export default function ProfileForm({ userData }: Props) {
               <div className="flex flex-col items-center gap-2">
                 <UploadButton
                   endpoint="profileAvatar"
+                  className="ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-60 dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
                   onClientUploadComplete={async (res) => {
                     const file = res[0];
                     if (!file) {
@@ -238,34 +239,6 @@ export default function ProfileForm({ userData }: Props) {
                     toast.success("Profile image updated");
                     router.refresh();
                   }}
-                  className="
-                    ut-button:!inline-flex
-                    ut-button:!items-center
-                    ut-button:!gap-2
-                    ut-button:!rounded-full
-                    ut-button:!border
-                    ut-button:!border-border/60
-                    ut-button:!bg-white/95
-                    ut-button:!px-5
-                    ut-button:!py-2.5
-                    ut-button:!text-sm
-                    ut-button:!font-semibold
-                    ut-button:!text-slate-950
-                    ut-button:!shadow-[0_12px_28px_rgba(15,23,42,0.12)]
-                    ut-button:!ring-1
-                    ut-button:!ring-inset
-                    ut-button:!ring-slate-900/5
-                    ut-button:transition
-                    ut-button:duration-200
-                    hover:ut-button:!-translate-y-0.5
-                    hover:ut-button:!bg-white
-                    hover:ut-button:!shadow-[0_16px_36px_rgba(15,23,42,0.16)]
-                    dark:ut-button:!border-white/10
-                    dark:ut-button:!bg-white/[0.04]
-                    dark:ut-button:!text-white
-                    dark:ut-button:!shadow-[0_12px_28px_rgba(0,0,0,0.18)]
-                    dark:hover:ut-button:!bg-white/[0.06]
-                  "
                 />
 
                 {avatar ? (

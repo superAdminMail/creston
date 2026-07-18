@@ -34,7 +34,6 @@ type TestimonyFormProps = {
   };
   initialAvatarUrl?: string | null;
   initialVideoUrl?: string | null;
-  initialVideoFileId?: string | null;
   formAction: (
     state: TestimonyFormActionState,
     formData: FormData,
@@ -47,7 +46,6 @@ export function TestimonyForm({
   defaultValues,
   initialAvatarUrl = null,
   initialVideoUrl = null,
-  initialVideoFileId = null,
   formAction,
 }: TestimonyFormProps) {
   const [state, action] = useActionState(formAction, initialTestimonyFormState);
@@ -57,6 +55,10 @@ export function TestimonyForm({
   const [videoPreview, setVideoPreview] = useState<string | null>(initialVideoUrl);
   const [isFeatured, setIsFeatured] = useState(defaultValues?.isFeatured ?? false);
   const [status, setStatus] = useState(defaultValues?.status ?? "DRAFT");
+  const fieldInputClassName =
+    "!border-slate-200 !bg-white/95 !text-slate-900 !shadow-sm placeholder:!text-slate-500 focus:!border-sky-400 focus:!ring-sky-400/15 dark:!border-white/10 dark:!bg-slate-950/80 dark:!text-white dark:placeholder:!text-slate-400";
+  const fieldSelectClassName =
+    "h-11 w-full rounded-xl border border-slate-200 bg-white/95 px-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-500 focus:border-sky-400 focus:outline-none focus:ring-3 focus:ring-sky-400/15 dark:border-white/10 dark:bg-slate-950/80 dark:text-white dark:placeholder:text-slate-400";
 
   useEffect(() => {
     if (state.status === "success" && state.message) {
@@ -69,9 +71,9 @@ export function TestimonyForm({
   }, [state]);
 
   return (
-    <Card className="rounded-[2rem] border border-white/10 bg-[#08101d]/96 shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
+    <Card className="rounded-[2rem] border border-slate-200/80 bg-white/90 text-slate-950 shadow-sm dark:border-white/10 dark:bg-[#08101d]/96 dark:text-slate-100 dark:shadow-[0_24px_70px_rgba(2,6,23,0.32)]">
       <CardHeader>
-        <CardTitle className="text-white">
+        <CardTitle className="text-slate-950 dark:text-white">
           {mode === "edit" ? "Edit testimony" : "Create testimony"}
         </CardTitle>
       </CardHeader>
@@ -85,29 +87,37 @@ export function TestimonyForm({
 
           <FieldGroup className="gap-5">
             <Field>
-              <FieldLabel className="text-slate-100">Full name</FieldLabel>
+              <FieldLabel className="text-slate-700 dark:text-slate-100">Full name</FieldLabel>
               <FieldContent>
-                <Input name="fullName" defaultValue={defaultValues?.fullName} className="input-premium h-11 rounded-xl" />
+                <Input
+                  name="fullName"
+                  defaultValue={defaultValues?.fullName}
+                  className={fieldInputClassName}
+                />
                 <FieldError>{state.fieldErrors?.fullName?.[0]}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel className="text-slate-100">Role or title</FieldLabel>
+              <FieldLabel className="text-slate-700 dark:text-slate-100">Role or title</FieldLabel>
               <FieldContent>
-                <Input name="roleOrTitle" defaultValue={defaultValues?.roleOrTitle} className="input-premium h-11 rounded-xl" />
+                <Input
+                  name="roleOrTitle"
+                  defaultValue={defaultValues?.roleOrTitle}
+                  className={fieldInputClassName}
+                />
                 <FieldError>{state.fieldErrors?.roleOrTitle?.[0]}</FieldError>
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel className="text-slate-100">Message</FieldLabel>
+              <FieldLabel className="text-slate-700 dark:text-slate-100">Message</FieldLabel>
               <FieldContent>
                 <textarea
                   name="message"
                   defaultValue={defaultValues?.message}
                   rows={5}
-                  className="input-premium min-h-32 w-full rounded-xl px-3 py-3"
+                  className={`min-h-32 w-full rounded-xl border px-3 py-3 ${fieldInputClassName}`}
                 />
                 <FieldError>{state.fieldErrors?.message?.[0]}</FieldError>
               </FieldContent>
@@ -115,29 +125,39 @@ export function TestimonyForm({
 
             <div className="grid gap-5 lg:grid-cols-2">
               <Field>
-                <FieldLabel className="text-slate-100">Rating</FieldLabel>
+                <FieldLabel className="text-slate-700 dark:text-slate-100">Rating</FieldLabel>
                 <FieldContent>
-                  <Input name="rating" defaultValue={defaultValues?.rating} placeholder="5" className="input-premium h-11 rounded-xl" />
-                  <FieldError>{state.fieldErrors?.rating?.[0]}</FieldError>
-                </FieldContent>
-              </Field>
+                <Input
+                  name="rating"
+                  defaultValue={defaultValues?.rating}
+                  placeholder="5"
+                  className={fieldInputClassName}
+                />
+                <FieldError>{state.fieldErrors?.rating?.[0]}</FieldError>
+              </FieldContent>
+            </Field>
               <Field>
-                <FieldLabel className="text-slate-100">Sort order</FieldLabel>
+                <FieldLabel className="text-slate-700 dark:text-slate-100">Sort order</FieldLabel>
                 <FieldContent>
-                  <Input name="sortOrder" defaultValue={defaultValues?.sortOrder} placeholder="0" className="input-premium h-11 rounded-xl" />
-                  <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
-                </FieldContent>
-              </Field>
+                <Input
+                  name="sortOrder"
+                  defaultValue={defaultValues?.sortOrder}
+                  placeholder="0"
+                  className={fieldInputClassName}
+                />
+                <FieldError>{state.fieldErrors?.sortOrder?.[0]}</FieldError>
+              </FieldContent>
+            </Field>
             </div>
 
             <div className="grid gap-5 lg:grid-cols-2">
               <Field>
-                <FieldLabel className="text-slate-100">Featured</FieldLabel>
+                <FieldLabel className="text-slate-700 dark:text-slate-100">Featured</FieldLabel>
                 <FieldContent>
-                  <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+                  <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white/75 px-4 py-3 text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100">
                     <div>
-                      <p className="text-sm font-medium text-white">Show as featured</p>
-                      <p className="text-xs text-slate-400">Promote this testimony on the public site.</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">Show as featured</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">Promote this testimony on the public site.</p>
                     </div>
                     <Switch checked={isFeatured} onCheckedChange={(checked) => setIsFeatured(checked === true)} />
                   </div>
@@ -145,12 +165,12 @@ export function TestimonyForm({
               </Field>
 
               <Field>
-                <FieldLabel className="text-slate-100">Status</FieldLabel>
+                <FieldLabel className="text-slate-700 dark:text-slate-100">Status</FieldLabel>
                 <FieldContent>
                   <select
                     value={status}
                     onChange={(event) => setStatus(event.target.value)}
-                    className="input-premium h-11 w-full rounded-xl px-3 text-sm"
+                    className={fieldSelectClassName}
                   >
                     <option value="DRAFT">Draft</option>
                     <option value="PUBLISHED">Published</option>
@@ -162,10 +182,11 @@ export function TestimonyForm({
             </div>
 
             <Field>
-              <FieldLabel className="text-slate-100">Avatar</FieldLabel>
+              <FieldLabel className="text-slate-700 dark:text-slate-100">Avatar</FieldLabel>
               <FieldContent>
                 <UploadButton
                   endpoint="photoManager"
+                  className="ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-60 dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
                   onClientUploadComplete={async (res) => {
                     try {
                       const file = res?.[0];
@@ -196,7 +217,6 @@ export function TestimonyForm({
                       toast.error("Unable to attach the uploaded avatar.");
                     }
                   }}
-                  className="ut-button:bg-blue-600 ut-button:text-white ut-button:rounded-full ut-button:px-5 ut-button:py-2"
                 />
 
                 {avatarPreview ? (
@@ -229,36 +249,26 @@ export function TestimonyForm({
             </Field>
 
             <Field>
-              <FieldLabel className="text-slate-100">Video</FieldLabel>
+              <FieldLabel className="text-slate-700 dark:text-slate-100">Video</FieldLabel>
               <FieldContent>
-                <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-white/75 p-4 text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-100">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-white">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
                         Optional testimonial video
                       </p>
-                      <p className="text-xs leading-5 text-slate-400">
+                      <p className="text-xs leading-5 text-slate-600 dark:text-slate-400">
                         Upload one video only. You can replace or remove it at any time.
                       </p>
                     </div>
 
                     <UploadButton
                       endpoint="testimonialVideo"
+                      className="ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-60 dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
                       onClientUploadComplete={async (res) => {
                         try {
                           const file = res?.[0];
                           if (!file) return;
-
-                          if (videoFileId && videoFileId !== initialVideoFileId) {
-                            const previousVideoDeletion = await deleteFileAssetAction(
-                              videoFileId,
-                            );
-
-                            if (previousVideoDeletion.error) {
-                              toast.error(previousVideoDeletion.error);
-                              return;
-                            }
-                          }
 
                           const asset = await createFileAssetFromUpload({
                             url: file.url,
@@ -267,6 +277,18 @@ export function TestimonyForm({
                             size: file.size,
                             type: file.type,
                           });
+
+                          if (videoFileId) {
+                            const previousVideoDeletion = await deleteFileAssetAction(
+                              videoFileId,
+                            );
+
+                            if (previousVideoDeletion.error) {
+                              await deleteFileAssetAction(asset.id);
+                              toast.error(previousVideoDeletion.error);
+                              return;
+                            }
+                          }
 
                           setVideoFileId(asset.id);
                           setVideoPreview(file.url);
@@ -277,12 +299,11 @@ export function TestimonyForm({
                       onUploadError={() => {
                         toast.error("Video upload failed.");
                       }}
-                      className="ut-button:bg-blue-600 ut-button:text-white ut-button:rounded-full ut-button:px-5 ut-button:py-2"
                     />
                   </div>
 
                   {videoPreview ? (
-                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950/90 dark:border-white/10 dark:bg-black/30">
                       <video
                         src={videoPreview}
                         controls
@@ -300,7 +321,7 @@ export function TestimonyForm({
                         type="button"
                         className="btn-ghost-premium"
                         onClick={async () => {
-                          if (videoFileId && videoFileId !== initialVideoFileId) {
+                          if (videoFileId) {
                             const deletion = await deleteFileAssetAction(videoFileId);
 
                             if (deletion.error) {

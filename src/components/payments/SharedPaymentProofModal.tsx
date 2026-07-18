@@ -334,7 +334,7 @@ export default function SharedPaymentProofModal({
 
                 <UploadButton
                   endpoint="photoManager"
-                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:!border ut-button:!border-white/10 ut-button:!bg-slate-950 ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:!text-white ut-button:shadow-[0_14px_34px_rgba(2,6,23,0.36)] ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:!bg-slate-900 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:!border-white/10 dark:ut-button:!bg-slate-950 dark:ut-button:!text-white dark:ut-button:hover:!bg-slate-900"
+                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
                   onClientUploadComplete={async (res) => {
                     try {
                       const file = res?.[0];

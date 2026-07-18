@@ -240,17 +240,7 @@ export function ManagementForm({
                   toast.success("Photo uploaded");
                 }}
                 //onUploadError={(e) => toast.error(e.message)}
-                className="
-    ut-button:bg-blue-500/8
-    ut-button:text-blue-600
-    ut-button:border
-    ut-button:border-blue-500/30
-    ut-button:rounded-full
-    ut-button:px-5
-    ut-button:py-2
-    ut-button:text-sm
-    hover:ut-button:bg-blue-500/10
-  "
+                className="ut-button:inline-flex ut-button:h-11 ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-60 dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
               />
 
               {preview && (

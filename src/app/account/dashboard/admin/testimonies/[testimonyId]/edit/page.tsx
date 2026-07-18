@@ -64,7 +64,6 @@ export default async function EditTestimonyPage({ params }: PageProps) {
       }}
       initialAvatarUrl={testimony.avatarFile?.url ?? null}
       initialVideoUrl={testimony.videoFile?.url ?? null}
-      initialVideoFileId={testimony.videoFileId ?? null}
     />
   );
 }

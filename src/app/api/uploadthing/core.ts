@@ -29,44 +29,52 @@ export const ourFileRouter = {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-    })
+  })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
+    .onUploadComplete(async ({ metadata }) => ({
+      uploadedBy: metadata.user.id,
+    })),
 
   siteLogo: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-    })
+  })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
+    .onUploadComplete(async ({ metadata }) => ({
+      uploadedBy: metadata.user.id,
+    })),
 
   photoManager: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-    })
+  })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
+    .onUploadComplete(async ({ metadata }) => ({
+      uploadedBy: metadata.user.id,
+    })),
 
   conversationImage: f({
     image: {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-    })
+  })
     .middleware(() => handleAuth())
 
-    .onUploadComplete(async ({ metadata }) => ({ uploadedBy: metadata.user.id })),
+    .onUploadComplete(async ({ metadata }) => ({
+      uploadedBy: metadata.user.id,
+    })),
 
   testimonialVideo: f({
     video: {
-      maxFileSize: "256MB",
+      maxFileSize: "4MB",
       maxFileCount: 1,
     },
   })
