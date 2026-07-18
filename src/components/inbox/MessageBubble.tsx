@@ -5,6 +5,7 @@ import { SenderType } from "@/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { MessageStatus } from "./MessageStatus";
 import ConversationImagePreview from "./ConversationImagePreview";
+import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
 import {
   getChatMessagePreviewText,
   parseChatMessageContent,
@@ -14,21 +15,6 @@ type Props = {
   message: ChatMessage;
   viewerSenderType?: SenderType;
 };
-
-function formatMessageTime(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "UTC",
-  }).format(date);
-}
 
 function isOwnMessage(message: ChatMessage, viewerSenderType?: SenderType) {
   return message.senderType === (viewerSenderType ?? "USER");
@@ -77,7 +63,7 @@ export default function MessageBubble({ message, viewerSenderType }: Props) {
               : "text-slate-500 dark:text-muted-foreground",
           )}
         >
-          <span>{formatMessageTime(message.createdAt)}</span>
+          <BrowserLocalTimestamp value={message.createdAt} variant="time" />
 
           {isUser ? (
             <MessageStatus

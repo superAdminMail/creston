@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Inbox,
@@ -51,10 +51,8 @@ import { isWithdrawalPrivateSupportConversationSource } from "@/lib/support/with
 import { assignSupportConversationToMeAction } from "@/actions/inbox/admin/assignSupportConversationToMeAction";
 import { deleteSupportConversationsAction } from "@/actions/inbox/admin/deleteSupportConversationsAction";
 import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "@/app/account/dashboard/_components/dashboardSurfaces";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
+import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
 
 type Props = {
   mode: SupportInboxMode;
@@ -87,54 +85,7 @@ const USER_FILTERS: FilterOption[] = [
   { key: "resolved", label: "Resolved" },
 ];
 
-const SUPPORT_HERO_CLASS = cn(
-  DASHBOARD_PAGE_PANEL_CLASS,
-  "rounded-[2rem] p-6 sm:p-8",
-);
-
-const SUPPORT_LIST_CLASS = cn(
-  DASHBOARD_PAGE_SURFACE_CLASS,
-  "overflow-hidden rounded-[1.9rem]",
-);
-
 const SUPPORT_SIDE_CLASS = cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-[1.9rem]");
-
-function formatAbsoluteDate(value?: string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
-
-function formatRelativeTime(value?: string | null, hydrated = false) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  if (!hydrated) {
-    return formatAbsoluteDate(value);
-  }
-
-  const diffMs = Date.now() - date.getTime();
-  const diffMinutes = Math.round(diffMs / 60_000);
-
-  if (Math.abs(diffMinutes) < 1) return "Just now";
-  if (Math.abs(diffMinutes) < 60) return `${diffMinutes}m ago`;
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) return `${diffHours}h ago`;
-
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 7) return `${diffDays}d ago`;
-
-  return formatAbsoluteDate(value);
-}
 
 function getPreviewSubtitle(ticket: SupportConversationPreview) {
   if (ticket.assignedTo) {
@@ -220,11 +171,6 @@ export default function SupportInboxWorkspace({
   const [selectedConversationIds, setSelectedConversationIds] = useState<
     string[]
   >([]);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   const isStaffView = mode === "staff";
   const filters = isStaffView ? ADMIN_FILTERS : USER_FILTERS;
@@ -689,12 +635,10 @@ export default function SupportInboxWorkspace({
                     <div className="mt-4 grid gap-2 text-xs text-slate-600 dark:text-slate-400">
                       <div className="flex items-center justify-between gap-3">
                         <span>{getSupportStatusLabel(ticket.status)}</span>
-                        <span>
-                          {formatRelativeTime(
-                            ticket.lastMessageAt ?? ticket.updatedAt,
-                            isHydrated,
-                          )}
-                        </span>
+                        <BrowserLocalTimestamp
+                          value={ticket.lastMessageAt ?? ticket.updatedAt}
+                          variant="datetime"
+                        />
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <span>

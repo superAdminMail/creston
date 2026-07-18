@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { CopyableDetailRow } from "@/app/account/dashboard/checkout/_components/CopyableDetailRow";
+
 type Props = {
   bankMethod: {
     id: string;
@@ -88,17 +90,11 @@ export default function BankTransferInstructionsCard({
           </div>
 
           {rows.map((row) => (
-            <div
+            <CopyableDetailRow
               key={row.label}
-              className="rounded-2xl border border-border/60 p-4"
-            >
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                {row.label}
-              </p>
-              <p className="mt-2 font-semibold text-slate-950 dark:text-white">
-                {row.value}
-              </p>
-            </div>
+              label={row.label}
+              value={row.value}
+            />
           ))}
         </div>
 

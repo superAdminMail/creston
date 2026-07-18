@@ -1,10 +1,9 @@
 "use client";
 
-"use client";
-
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
 
 type Props = {
   title: string;
@@ -23,44 +22,6 @@ export default function ChatHeader({
   showMenuButton,
   onMenuToggle,
 }: Props) {
-  const lastSeenText = (() => {
-    if (!lastSeenAt) return "offline";
-    const date =
-      typeof lastSeenAt === "string" ? new Date(lastSeenAt) : lastSeenAt;
-    if (Number.isNaN(date.getTime())) return "offline";
-
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    if (diffMs >= 0 && diffMs < 60_000) return "last seen just now";
-    if (diffMs >= 60_000 && diffMs < 3_600_000) {
-      const mins = Math.floor(diffMs / 60_000);
-      return `last seen ${mins}m ago`;
-    }
-
-    const toUtcYmd = (d: Date) =>
-      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(
-        d.getUTCDate(),
-      ).padStart(2, "0")}`;
-
-    const formatTimeUtc = (d: Date) => {
-      const hours = String(d.getUTCHours()).padStart(2, "0");
-      const minutes = String(d.getUTCMinutes()).padStart(2, "0");
-      return `${hours}:${minutes}`;
-    };
-
-    const todayUtc = toUtcYmd(now);
-    const dateUtc = toUtcYmd(date);
-    const yesterdayUtc = toUtcYmd(new Date(now.getTime() - 86_400_000));
-
-    if (dateUtc === todayUtc) {
-      return `last seen today at ${formatTimeUtc(date)}`;
-    }
-    if (dateUtc === yesterdayUtc) {
-      return `last seen yesterday at ${formatTimeUtc(date)}`;
-    }
-    return `last seen ${dateUtc} at ${formatTimeUtc(date)}`;
-  })();
-
   const clickable = Boolean(onMenuToggle);
   const Root = clickable ? "button" : "div";
 
@@ -99,7 +60,17 @@ export default function ChatHeader({
                 : "text-slate-500 dark:text-muted-foreground",
             )}
           >
-            {online ? "online" : lastSeenText}
+            {online ? (
+              "online"
+            ) : lastSeenAt ? (
+              <BrowserLocalTimestamp
+                value={lastSeenAt}
+                variant="lastSeen"
+                fallback="offline"
+              />
+            ) : (
+              "offline"
+            )}
           </p>
         </div>
 

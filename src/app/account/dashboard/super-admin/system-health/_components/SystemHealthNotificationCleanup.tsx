@@ -20,45 +20,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { NotificationTimestamp } from "@/components/notifications/NotificationTimestamp";
 import { getNotificationDisplayType } from "@/lib/notifications/notificationPresentation";
 import { cn } from "@/lib/utils";
 
 type SystemHealthNotificationCleanupProps = {
   cleanup: SystemHealthNotificationCleanupState;
 };
-
-function formatNotificationTime(value: string) {
-  const date = new Date(value);
-  const now = Date.now();
-  const diffMs = date.getTime() - now;
-  const diffMinutes = Math.round(diffMs / (1000 * 60));
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-  if (Math.abs(diffMinutes) < 1) {
-    return "Just now";
-  }
-
-  if (Math.abs(diffMinutes) < 60) {
-    return rtf.format(diffMinutes, "minute");
-  }
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) {
-    return rtf.format(diffHours, "hour");
-  }
-
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 7) {
-    return rtf.format(diffDays, "day");
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 export function SystemHealthNotificationCleanup({
   cleanup,
@@ -350,12 +318,10 @@ export function SystemHealthNotificationCleanup({
                         )}
                       </div>
 
-                      <p
+                      <NotificationTimestamp
+                        value={notification.createdAt}
                         className="text-[13px] leading-6 text-slate-500"
-                        suppressHydrationWarning
-                      >
-                        {formatNotificationTime(notification.createdAt)}
-                      </p>
+                      />
                     </div>
                   </div>
                 </div>
@@ -447,21 +413,10 @@ export function SystemHealthNotificationCleanup({
                           </span>
                         </td>
                         <td className="px-4 py-4 align-top">
-                          <span
+                          <NotificationTimestamp
+                            value={notification.createdAt}
                             className="text-[13px] leading-6 text-slate-950 dark:text-slate-300"
-                            suppressHydrationWarning
-                            title={new Intl.DateTimeFormat("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                              timeZone: "UTC",
-                            }).format(new Date(notification.createdAt))}
-                          >
-                            {formatNotificationTime(notification.createdAt)}
-                          </span>
+                          />
                         </td>
                       </tr>
                     );

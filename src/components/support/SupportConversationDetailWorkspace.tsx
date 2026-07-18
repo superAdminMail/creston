@@ -23,6 +23,7 @@ import { sendSupportMessageAction } from "@/actions/inbox/admin/sendSupportMessa
 import { sendMessageAction } from "@/actions/inbox/sendMessageAction";
 import { deleteConversationAction } from "@/actions/inbox/deleteConversationAction";
 import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
+import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
 import {
   getSupportPriorityLabel,
   getSupportRoleLabel,
@@ -37,20 +38,6 @@ type Props = {
   conversation: SupportConversationThread;
   backPath?: string;
 };
-
-function formatDateTime(value?: string | null) {
-  if (!value) return "Unknown";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "UTC",
-  }).format(date);
-}
 
 function formatSupportLabel(value?: string | null) {
   if (!value) return "Unknown";
@@ -138,15 +125,19 @@ function SupportTicketInfoBlock({
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-slate-600 dark:text-slate-400">Created</span>
-            <span className="font-medium text-slate-950 dark:text-white">
-              {formatDateTime(conversation.createdAt)}
-            </span>
+            <BrowserLocalTimestamp
+              value={conversation.createdAt}
+              variant="datetime"
+              className="font-medium text-slate-950 dark:text-white"
+            />
           </div>
           <div className="flex items-start justify-between gap-3">
             <span className="text-slate-600 dark:text-slate-400">Updated</span>
-            <span className="font-medium text-slate-950 dark:text-white">
-              {formatDateTime(conversation.updatedAt)}
-            </span>
+            <BrowserLocalTimestamp
+              value={conversation.updatedAt}
+              variant="datetime"
+              className="font-medium text-slate-950 dark:text-white"
+            />
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ import type { NotificationDTO } from "@/lib/types/notification";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { NotificationTimestamp } from "@/components/notifications/NotificationTimestamp";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,38 +33,6 @@ type NotificationsPageClientProps = {
   initialNotifications: NotificationDTO[];
   initialUnreadCount: number;
 };
-
-function formatNotificationTime(value: string) {
-  const date = new Date(value);
-  const now = Date.now();
-  const diffMs = date.getTime() - now;
-  const diffMinutes = Math.round(diffMs / (1000 * 60));
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-  if (Math.abs(diffMinutes) < 1) {
-    return "Just now";
-  }
-
-  if (Math.abs(diffMinutes) < 60) {
-    return rtf.format(diffMinutes, "minute");
-  }
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) {
-    return rtf.format(diffHours, "hour");
-  }
-
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 7) {
-    return rtf.format(diffDays, "day");
-  }
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 export default function NotificationsPageClient({
   initialNotifications,
@@ -362,9 +331,10 @@ export default function NotificationsPageClient({
                     {!notification.read && (
                       <span className="h-2 w-2 rounded-full bg-sky-500" />
                     )}
-                    <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                      {formatNotificationTime(notification.createdAt)}
-                    </span>
+                    <NotificationTimestamp
+                      value={notification.createdAt}
+                      className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400"
+                    />
                   </div>
                 </div>
 

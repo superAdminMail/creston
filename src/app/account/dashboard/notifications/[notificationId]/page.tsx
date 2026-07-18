@@ -12,17 +12,8 @@ import {
 import { toNotificationDto } from "@/lib/notifications/toNotificationDto";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
+import { NotificationTimestamp } from "@/components/notifications/NotificationTimestamp";
 import { UserRole } from "@/generated/prisma/client";
-
-function formatNotificationTime(value: string) {
-  return new Date(value).toLocaleString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default async function NotificationDetailsPage({
   params,
@@ -120,7 +111,7 @@ export default async function NotificationDetailsPage({
                 {dto.title}
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-400 sm:text-[15px]">
-                {formatNotificationTime(dto.createdAt)}
+                <NotificationTimestamp value={dto.createdAt} />
               </p>
             </div>
 

@@ -21,6 +21,7 @@ import {
 
 import CheckoutFundingMethodSelector from "./CheckoutFundingMethodSelector";
 import CheckoutPaymentModeSelector from "./CheckoutPaymentModeSelector";
+import { CopyableDetailRow } from "./CopyableDetailRow";
 import SavingsFundingProofModal from "./SavingsFundingProofModal";
 import {
   DASHBOARD_PAGE_PANEL_CLASS,
@@ -54,27 +55,6 @@ function SummaryChip({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  if (!value) {
-    return null;
-  }
-
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 py-3 last:border-b-0 dark:border-white/10">
-      <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="text-right text-sm font-medium text-slate-950 dark:text-white">
         {value}
       </p>
     </div>
@@ -370,31 +350,28 @@ export default function SavingsFundingClient({
                 </div>
               ) : bankMethod ? (
                 <div className="grid gap-3">
-                  <DetailRow
+                  <CopyableDetailRow
                     label="Bank name"
                     value={bankMethod.bankName}
                   />
-                  <DetailRow
+                  <CopyableDetailRow
                     label="Account name"
                     value={bankMethod.accountName}
                   />
-                  <DetailRow
+                  <CopyableDetailRow
                     label="Reference"
                     value={bankMethod.reference}
                   />
-                  <DetailRow
+                  <CopyableDetailRow
                     label="Bank address"
                     value={bankMethod.bankAddress}
                   />
-                  <DetailRow
+                  <CopyableDetailRow
                     label="Account number"
                     value={bankMethod.accountNumber}
                   />
-                  <DetailRow
-                    label="Bank code"
-                    value={bankMethod.bankCode}
-                  />
-                  <DetailRow
+                  <CopyableDetailRow label="Bank code" value={bankMethod.bankCode} />
+                  <CopyableDetailRow
                     label="Wire routing number"
                     value={bankMethod.routingNumber}
                   />

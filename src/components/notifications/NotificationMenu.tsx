@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { markNotificationRead } from "@/actions/notifications/markNotificationRead";
 import { IconCountBadge } from "@/components/ui/icon-count-badge";
+import { NotificationTimestamp } from "@/components/notifications/NotificationTimestamp";
 import {
   Sheet,
   SheetContent,
@@ -24,37 +25,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-function formatNotificationTime(value: string) {
-  const date = new Date(value);
-  const now = Date.now();
-  const diffMs = date.getTime() - now;
-  const diffMinutes = Math.round(diffMs / (1000 * 60));
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-
-  if (Math.abs(diffMinutes) < 1) {
-    return "Just now";
-  }
-
-  if (Math.abs(diffMinutes) < 60) {
-    return rtf.format(diffMinutes, "minute");
-  }
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (Math.abs(diffHours) < 24) {
-    return rtf.format(diffHours, "hour");
-  }
-
-  const diffDays = Math.round(diffHours / 24);
-  if (Math.abs(diffDays) < 7) {
-    return rtf.format(diffDays, "day");
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default function NotificationMenu() {
   const { data, isLoading } = useNotifications();
@@ -192,9 +162,10 @@ export default function NotificationMenu() {
                           {!notification.read && (
                             <span className="h-2 w-2 rounded-full bg-sky-500" />
                           )}
-                          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-400">
-                            {formatNotificationTime(notification.createdAt)}
-                          </span>
+                          <NotificationTimestamp
+                            value={notification.createdAt}
+                            className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-zinc-400"
+                          />
                         </div>
                       </div>
 

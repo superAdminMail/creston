@@ -38,7 +38,6 @@ function formatDateLabel(value: string) {
     month: "short",
     day: "numeric",
     year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
-    timeZone: "UTC",
   });
 }
 
@@ -181,15 +180,15 @@ export default function MessageList({
 
       {newCount > 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 px-4">
-        <div className="mx-auto flex w-full max-w-4xl justify-center">
-          <button
-            type="button"
-            onClick={() => scrollToBottom("smooth")}
-            className="pointer-events-auto rounded-full border border-slate-700/60 bg-slate-950/95 px-4 py-2 text-xs font-medium text-white shadow-[0_16px_40px_rgba(15,23,42,0.38)] backdrop-blur-sm"
-          >
-            {newCount} new message{newCount > 1 ? "s" : ""}
-          </button>
-        </div>
+          <div className="mx-auto flex w-full max-w-4xl justify-center">
+            <button
+              type="button"
+              onClick={() => scrollToBottom("smooth")}
+              className="pointer-events-auto rounded-full border border-slate-700/60 bg-slate-950/95 px-4 py-2 text-xs font-medium text-white shadow-[0_16px_40px_rgba(15,23,42,0.38)] backdrop-blur-sm"
+            >
+              {newCount} new message{newCount > 1 ? "s" : ""}
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
