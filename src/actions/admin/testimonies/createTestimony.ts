@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
@@ -53,6 +54,10 @@ export async function createTestimony(
 
     redirect("/account/dashboard/admin/testimonies");
   } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
     return createErrorFormState(
       getFriendlyServerError(error, "Unable to create the testimony right now."),
     );
