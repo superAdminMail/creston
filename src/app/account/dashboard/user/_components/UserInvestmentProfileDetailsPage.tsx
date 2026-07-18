@@ -36,7 +36,7 @@ function DetailCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-white px-4 py-4 shadow-none dark:bg-slate-950/60">
+    <div className="rounded-2xl border border-border/60 bg-white/75 px-4 py-4 shadow-sm dark:bg-white/[0.04]">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-sky-700 dark:text-sky-300" />
         <p className="text-xs uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
@@ -128,12 +128,7 @@ export function UserInvestmentProfileDetailsPage({
         </Link>
       </div>
 
-      <section
-        className={cn(
-          DASHBOARD_PAGE_PANEL_CLASS,
-          "overflow-hidden border-border/60 bg-white p-6 shadow-none dark:bg-slate-950/60 sm:p-8",
-        )}
-      >
+      <section className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-6 sm:p-8`}>
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -170,7 +165,7 @@ export function UserInvestmentProfileDetailsPage({
             </div>
           </div>
 
-          <div className="w-full max-w-sm rounded-[1.75rem] border border-border/60 bg-white p-5 shadow-none dark:bg-slate-950/60">
+          <div className="w-full max-w-sm rounded-[1.75rem] border border-border/60 bg-white/75 p-5 shadow-sm dark:bg-white/[0.04]">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.14em] text-sky-700/90 dark:text-sky-300/80">
@@ -210,7 +205,7 @@ export function UserInvestmentProfileDetailsPage({
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <DashboardSectionCard className="border-border/60 bg-white p-6 shadow-none dark:bg-slate-950/60 sm:p-8">
+        <DashboardSectionCard className="p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
             <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
