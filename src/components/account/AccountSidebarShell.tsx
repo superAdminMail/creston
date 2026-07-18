@@ -45,7 +45,7 @@ type SidebarBodyProps = {
 };
 
 const sidebarShellClasses =
-  "h-full overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] dark:text-slate-100 dark:shadow-[0_28px_60px_rgba(0,0,0,0.34)]";
+  "dashboard-sidebar-shell h-full overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white/88 text-slate-950 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[linear-gradient(180deg,rgba(8,18,36,0.94),rgba(5,11,31,0.98))] dark:text-slate-100 dark:shadow-[0_28px_60px_rgba(0,0,0,0.34)]";
 
 function getActiveSectionTitle(
   pathname: string,

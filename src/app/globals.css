@@ -707,6 +707,85 @@
     -webkit-backdrop-filter: none !important;
   }
 
+  html[data-render-mode="android-safe"] :is(
+      .dashboard-shell,
+      .dashboard-route-shell,
+      .super-admin-shell
+    ) {
+    background: rgba(255, 255, 255, 0.96) !important;
+    color: #0f172a !important;
+  }
+
+  html[data-render-mode="android-safe"] :is(
+      .dashboard-shell,
+      .dashboard-route-shell,
+      .super-admin-shell
+    ) :where(
+      [class*="bg-card"],
+      [class*="bg-white/"],
+      [class*="bg-[rgba("],
+      [class*="bg-[linear-gradient("],
+      [class*="bg-[radial-gradient("],
+      .glass,
+      .glass-strong,
+      .card-premium,
+      .card-premium-hover,
+      .super-admin-shell-panel,
+      .super-admin-surface,
+      .super-admin-surface-lg,
+      .super-admin-table-shell,
+      [data-slot="sidebar-inner"],
+      [data-slot="sidebar-container"],
+      [data-slot="sheet-content"],
+      [data-slot="dialog-content"],
+      [data-slot="popover-content"],
+      [data-slot="tooltip-content"],
+      [data-slot="drawer-content"],
+      [data-slot="menubar-content"],
+      [data-slot="menubar-sub-content"]
+    ) {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: rgba(226, 232, 240, 0.82) !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    color: #0f172a !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-render-mode="android-safe"] :is(
+      .dashboard-shell,
+      .dashboard-route-shell,
+      .super-admin-shell
+    ) :where(
+      [data-slot="sheet-overlay"],
+      [data-slot="drawer-overlay"],
+      [data-slot="dialog-overlay"]
+    ) {
+    background: rgba(15, 23, 42, 0.24) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-render-mode="android-safe"] :is(
+      .dashboard-shell,
+      .dashboard-route-shell,
+      .super-admin-shell
+    ) :where(
+      [class*="backdrop-blur"],
+      [class*="shadow-xl"],
+      [class*="shadow-2xl"],
+      [class*="shadow-[0_18px"],
+      [class*="shadow-[0_24px"],
+      [class*="hover:-translate"],
+      [class*="hover:scale"],
+      [class*="active:scale"]
+    ) {
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06) !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .bg-havenstone {
     background:
       radial-gradient(

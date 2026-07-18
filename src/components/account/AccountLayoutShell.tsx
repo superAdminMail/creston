@@ -55,7 +55,7 @@ export function AccountLayoutShell({
   };
 
   return (
-    <SidebarProvider className="min-h-screen bg-card text-slate-950 dark:text-slate-100">
+    <SidebarProvider className="dashboard-shell min-h-screen bg-card text-slate-950 dark:text-slate-100">
       <div className="w-full">
         <AppNoticeBanner
           key={disclaimerBannerDismissalKey}
@@ -74,7 +74,7 @@ export function AccountLayoutShell({
         />
 
         <div className="md:pl-72">
-          <aside className="fixed left-0 top-16 z-30 hidden h-[calc(100dvh-4rem)] w-72 md:block">
+          <aside className="dashboard-sidebar-shell fixed left-0 top-16 z-30 hidden h-[calc(100dvh-4rem)] w-72 md:block">
             <div className="h-full px-4 py-4">
               <AccountSidebarShell
                 initialUser={user}
@@ -85,7 +85,7 @@ export function AccountLayoutShell({
             </div>
           </aside>
 
-          <main className="min-h-[calc(100dvh-4rem)] bg-card px-4 py-4 sm:px-6 sm:py-6">
+          <main className="dashboard-shell-main min-h-[calc(100dvh-4rem)] bg-card px-4 py-4 sm:px-6 sm:py-6">
             {children}
           </main>
         </div>
@@ -98,7 +98,7 @@ export function AccountLayoutShell({
         >
           <DrawerSurface
             tone="ghost"
-            className="h-dvh max-w-[86vw] rounded-none border-r border-slate-200 bg-transparent p-0 shadow-none dark:border-white/10"
+            className="dashboard-mobile-drawer h-dvh max-w-[86vw] rounded-none border-r border-slate-200 bg-transparent p-0 shadow-none dark:border-white/10"
           >
             <DrawerHeader className="sr-only">
               <DrawerTitle>Account navigation</DrawerTitle>

@@ -95,7 +95,7 @@ export function DashboardNavbarClient({
   const avatarUrl = user.profileAvatar?.url || user.image || null;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl dark:border-white/10 dark:bg-[#08111d]/76">
+    <nav className="dashboard-navbar-shell sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl dark:border-white/10 dark:bg-[#08111d]/76">
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Button
@@ -103,7 +103,7 @@ export function DashboardNavbarClient({
             variant="ghost"
             size="icon"
             onClick={onMenuClick}
-            className="rounded-2xl border border-slate-200 bg-white/80 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+            className="dashboard-navbar-trigger rounded-2xl border border-slate-200 bg-white/80 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
             aria-label="Open account navigation"
           >
             <Menu className="h-5 w-5" />
@@ -111,7 +111,7 @@ export function DashboardNavbarClient({
 
           <Link
             href={dashboardHome}
-            className="flex min-w-0 flex-none items-center gap-3 rounded-[1.35rem] px-1.5 py-1 hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
+            className="dashboard-navbar-brand flex min-w-0 flex-none items-center gap-3 rounded-[1.35rem] px-1.5 py-1 hover:bg-slate-100/80 dark:hover:bg-white/[0.04]"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(145deg,rgba(37,99,235,0.2),rgba(59,130,246,0.06))] shadow-[0_14px_40px_rgba(37,99,235,0.18)]">
               {siteLogoUrl ? (
@@ -173,7 +173,7 @@ export function DashboardNavbarClient({
               <MenubarContent
                 align="end"
                 sideOffset={14}
-                className="w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 bg-white/96 p-2 text-slate-950 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1728]/96 dark:text-white dark:shadow-[0_22px_54px_rgba(0,0,0,0.32)] sm:w-[18rem]"
+                className="dashboard-navbar-menu w-[min(20rem,calc(100vw-1.5rem))] min-w-[15.5rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 bg-white/96 p-2 text-slate-950 shadow-[0_22px_54px_rgba(15,23,42,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1728]/96 dark:text-white dark:shadow-[0_22px_54px_rgba(0,0,0,0.32)] sm:w-[18rem]"
               >
                 <div>
                   <MenubarLabel className="px-3 py-3 font-normal">
