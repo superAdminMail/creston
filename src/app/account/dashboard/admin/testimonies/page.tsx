@@ -41,7 +41,7 @@ export default async function AdminTestimoniesPage() {
                   {testimony.videoFileId ? (
                     <Badge
                       variant="outline"
-                      className="border-sky-400/20 bg-sky-400/10 text-[10px] font-medium uppercase tracking-[0.18em] text-sky-200"
+                      className="h-auto rounded-full border-sky-300/80 bg-sky-100/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] leading-none text-sky-900 shadow-sm sm:px-3 sm:py-1.5 sm:text-[11px] dark:border-sky-400/20 dark:bg-sky-400/12 dark:text-sky-100"
                     >
                       Video
                     </Badge>
