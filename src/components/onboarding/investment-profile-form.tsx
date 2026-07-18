@@ -105,8 +105,8 @@ export function InvestmentProfileForm({
   const hasPrefilledAddressDetails = Boolean(
     initialValues?.addressLine1?.trim() ||
     initialValues?.country?.trim() ||
-      initialValues?.state?.trim() ||
-      initialValues?.city?.trim(),
+    initialValues?.state?.trim() ||
+    initialValues?.city?.trim(),
   );
   const [showAddressDetails, setShowAddressDetails] = useState(
     hasPrefilledAddressDetails,
@@ -181,7 +181,6 @@ export function InvestmentProfileForm({
         shouldValidate: true,
       });
     }
-
   };
 
   const selectAddressSuggestion = async (
@@ -564,7 +563,9 @@ export function InvestmentProfileForm({
                         ? `Yes, I confirm I am ${derivedAge} years old.`
                         : "Select your date of birth to confirm your age."}
                     </span>
-                    <FieldDescription className={confirmationDescriptionClassName}>
+                    <FieldDescription
+                      className={confirmationDescriptionClassName}
+                    >
                       {derivedAge && !isAdult
                         ? siteName?.trim()
                           ? `${siteName.trim()} onboarding is only available to adults age 18 and above.`
@@ -586,7 +587,9 @@ export function InvestmentProfileForm({
           name="addressLine1"
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className={labelClassName}>Residential address</FieldLabel>
+              <FieldLabel className={labelClassName}>
+                Residential address
+              </FieldLabel>
               <FieldContent className="relative overflow-visible">
                 {MAPBOX_PUBLIC_TOKEN ? (
                   <div className="relative z-50 overflow-visible">
@@ -608,46 +611,49 @@ export function InvestmentProfileForm({
                       {hasAddressAutocomplete &&
                         addressQuery.length >= 3 &&
                         addressQuery !== selectedAddressLineRef.current &&
-                        (addressSuggestions.length > 0 || isSearchingAddress) && (
-                        <div className={suggestionPanelClassName}>
-                          <div className="max-h-72 overflow-auto py-1">
-                            {isSearchingAddress &&
-                            addressSuggestions.length === 0 ? (
-                              <div
-                                className={cn(
-                                  "px-4 py-3 text-sm",
-                                  isDashboardTone
-                                    ? "text-slate-500"
-                                    : "text-slate-400",
-                                )}
-                              >
-                                Searching addresses...
-                              </div>
-                            ) : null}
-
-                            {addressSuggestions.map((suggestion, index) => (
-                              <button
-                                key={`${suggestion.mapbox_id}-${index}`}
-                                type="button"
-                                className={suggestionItemClassName}
-                                onMouseDown={(event) => {
-                                  event.preventDefault();
-                                  void selectAddressSuggestion(suggestion);
-                                }}
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <p className={suggestionTitleClassName}>
-                                    {suggestion.feature_name}
-                                  </p>
-                                  <p className={suggestionDescriptionClassName}>
-                                    {suggestion.description}
-                                  </p>
+                        (addressSuggestions.length > 0 ||
+                          isSearchingAddress) && (
+                          <div className={suggestionPanelClassName}>
+                            <div className="max-h-72 overflow-auto py-1">
+                              {isSearchingAddress &&
+                              addressSuggestions.length === 0 ? (
+                                <div
+                                  className={cn(
+                                    "px-4 py-3 text-sm",
+                                    isDashboardTone
+                                      ? "text-slate-500"
+                                      : "text-slate-400",
+                                  )}
+                                >
+                                  Searching addresses...
                                 </div>
-                              </button>
-                            ))}
+                              ) : null}
+
+                              {addressSuggestions.map((suggestion, index) => (
+                                <button
+                                  key={`${suggestion.mapbox_id}-${index}`}
+                                  type="button"
+                                  className={suggestionItemClassName}
+                                  onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    void selectAddressSuggestion(suggestion);
+                                  }}
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    <p className={suggestionTitleClassName}>
+                                      {suggestion.feature_name}
+                                    </p>
+                                    <p
+                                      className={suggestionDescriptionClassName}
+                                    >
+                                      {suggestion.description}
+                                    </p>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   </div>
                 ) : (
@@ -686,7 +692,7 @@ export function InvestmentProfileForm({
                       <Input
                         {...field}
                         disabled={isPending}
-                        placeholder="United States"
+                        placeholder="Country"
                         className={inputClassName}
                       />
                       {fieldState.error ? (
@@ -709,7 +715,7 @@ export function InvestmentProfileForm({
                       <Input
                         {...field}
                         disabled={isPending}
-                        placeholder="California"
+                        placeholder="State"
                         className={inputClassName}
                       />
                       {fieldState.error ? (
@@ -725,12 +731,14 @@ export function InvestmentProfileForm({
                 name="city"
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className={labelClassName}>City / locality</FieldLabel>
+                    <FieldLabel className={labelClassName}>
+                      City / locality
+                    </FieldLabel>
                     <FieldContent>
                       <Input
                         {...field}
                         disabled={isPending}
-                        placeholder="Los Angeles"
+                        placeholder="City"
                         className={inputClassName}
                       />
                       {fieldState.error ? (
@@ -741,7 +749,6 @@ export function InvestmentProfileForm({
                 )}
               />
             </div>
-
           </>
         ) : null}
       </FieldGroup>
