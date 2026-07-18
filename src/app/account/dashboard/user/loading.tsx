@@ -40,8 +40,8 @@ function UserHeroSkeleton() {
 
 function UserBodySkeleton() {
   return (
-    <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] ">
-      <div className="space-y-6">
+    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+      <div className="min-w-0 space-y-6">
         <section className={`${FLAT_SURFACE_CLASS} p-5 sm:p-6`}>
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-3">
@@ -57,13 +57,13 @@ function UserBodySkeleton() {
               desktopColumns={6}
               desktopRows={8}
               mobileCardFields={4}
-              tableMinWidthClassName="min-w-[980px]"
+              tableMinWidthClassName="min-w-full"
             />
           </div>
         </section>
       </div>
 
-      <div className="space-y-6">
+      <div className="min-w-0 space-y-6">
         <section className={`${FLAT_SURFACE_CLASS} p-5 sm:p-6`}>
           <Skeleton className="h-4 w-32 rounded-full bg-white/10" />
           <div className="mt-5 space-y-3">

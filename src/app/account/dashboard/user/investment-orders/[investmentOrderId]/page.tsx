@@ -127,10 +127,7 @@ export default async function Page({ params }: PageProps) {
     order.runtimeStatus,
     order,
   );
-  const isUpgraded = isInvestmentOrderUpgraded(
-    order.runtimeStatus,
-    order,
-  );
+  const isUpgraded = isInvestmentOrderUpgraded(order.runtimeStatus, order);
   const resolvedLifecycle = resolveInvestmentOrderSchedule(
     order.startDate,
     order.maturityDate,
@@ -143,7 +140,7 @@ export default async function Page({ params }: PageProps) {
   const canUpgrade = hasUpgradeOffer && !canMakePayment;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-white/90 dark:text-gray-300 md:px-6">
+    <div className="mx-auto max-w-3xl space-y-6  text-white/90 dark:text-gray-300">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">

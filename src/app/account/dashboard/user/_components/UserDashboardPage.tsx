@@ -118,7 +118,7 @@ export default function UserDashboardPage({
             <div>
               <Link
                 href="/account/dashboard/user/investment-profile/edit"
-                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white hover:text-amber-600 dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
               >
                 Complete profile
               </Link>
@@ -140,7 +140,7 @@ export default function UserDashboardPage({
             <div>
               <Link
                 href={stats.inactiveInvestmentOrder.href}
-                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
+                className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 hover:text-amber-600! transition dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
               >
                 View order
               </Link>
