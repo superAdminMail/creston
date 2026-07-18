@@ -9,6 +9,7 @@ export type TestimonyFieldName =
   | "isFeatured"
   | "status"
   | "avatarFileId"
+  | "videoFileId"
   | "sortOrder";
 
 export type TestimonyFormActionState = FormActionState<TestimonyFieldName>;

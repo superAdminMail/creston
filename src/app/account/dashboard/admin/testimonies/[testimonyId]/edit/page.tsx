@@ -27,6 +27,12 @@ export default async function EditTestimonyPage({ params }: PageProps) {
       isFeatured: true,
       status: true,
       avatarFileId: true,
+      videoFileId: true,
+      videoFile: {
+        select: {
+          url: true,
+        },
+      },
       sortOrder: true,
       avatarFile: {
         select: {
@@ -52,10 +58,13 @@ export default async function EditTestimonyPage({ params }: PageProps) {
         rating: testimony.rating?.toString() ?? "",
         status: testimony.status,
         avatarFileId: testimony.avatarFileId ?? "",
+        videoFileId: testimony.videoFileId ?? "",
         sortOrder: testimony.sortOrder.toString(),
         isFeatured: testimony.isFeatured,
       }}
       initialAvatarUrl={testimony.avatarFile?.url ?? null}
+      initialVideoUrl={testimony.videoFile?.url ?? null}
+      initialVideoFileId={testimony.videoFileId ?? null}
     />
   );
 }

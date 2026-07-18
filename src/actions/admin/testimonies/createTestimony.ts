@@ -31,6 +31,7 @@ export async function createTestimony(
       isFeatured: formData.get("isFeatured") === "true",
       status: formData.get("status"),
       avatarFileId: formData.get("avatarFileId"),
+      videoFileId: formData.get("videoFileId"),
       sortOrder: formData.get("sortOrder"),
     });
 

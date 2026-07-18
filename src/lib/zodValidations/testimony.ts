@@ -35,6 +35,7 @@ export const testimonySchema = z.object({
   isFeatured: z.boolean().default(false),
   status: testimonyStatusSchema.default("DRAFT"),
   avatarFileId: optionalTrimmedString,
+  videoFileId: optionalTrimmedString,
   sortOrder: z.coerce.number().int().default(0),
 });
 
@@ -55,6 +56,7 @@ export function normalizeTestimonyValues(values: TestimonyFormInput) {
     isFeatured: values.isFeatured ?? false,
     status: values.status,
     avatarFileId: values.avatarFileId,
+    videoFileId: values.videoFileId,
     sortOrder: values.sortOrder ?? 0,
     publishedAt: values.status === "PUBLISHED" ? new Date() : null,
   };

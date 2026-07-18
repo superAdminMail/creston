@@ -17,6 +17,12 @@ export async function getTestimonies() {
       isFeatured: true,
       status: true,
       avatarFileId: true,
+      videoFileId: true,
+      videoFile: {
+        select: {
+          url: true,
+        },
+      },
       sortOrder: true,
       publishedAt: true,
       avatarFile: {

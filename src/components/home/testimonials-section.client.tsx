@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { SectionHeading } from "@/components/home/section-heading";
 import { SectionShell } from "@/components/home/section-shell";
+import { TestimonyVideoPlayer } from "@/components/home/testimony-video-player";
 import type { PublicTestimonyViewModel } from "@/lib/service/getPublicTestimonials";
 
 type TestimonialsSectionClientProps = {
@@ -59,6 +60,16 @@ function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
           <p className="text-sm leading-7 text-slate-300">
             {expanded ? quote : previewQuote}
           </p>
+
+          {testimony.videoUrl ? (
+            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+              <TestimonyVideoPlayer
+                src={testimony.videoUrl}
+                title={`${testimony.name} testimonial video`}
+                className="aspect-video w-full"
+              />
+            </div>
+          ) : null}
 
           {shouldShowToggle ? (
             <button

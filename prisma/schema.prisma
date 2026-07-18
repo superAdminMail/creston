@@ -197,7 +197,8 @@ model FileAsset {
   siteLogo                         SiteConfiguration?  @relation("SiteConfigurationLogo")
   investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
 
-  testimonies                Testimony[]
+  testimonyAvatarFiles       Testimony[]                 @relation("TestimonyAvatarFile")
+  testimonyVideoFiles        Testimony[]                 @relation("TestimonyVideoFile")
   management                 Management[]
   investmentOrderPayments    InvestmentOrderPayment[]
   savingsTransactionPayments SavingsTransactionPayment[]
@@ -892,7 +893,10 @@ model Testimony {
   status      TestimonyStatus @default(DRAFT)
 
   avatarFileId String?
-  avatarFile   FileAsset? @relation(fields: [avatarFileId], references: [id], onDelete: SetNull)
+  avatarFile   FileAsset? @relation("TestimonyAvatarFile", fields: [avatarFileId], references: [id], onDelete: SetNull)
+
+  videoFileId String?
+  videoFile   FileAsset? @relation("TestimonyVideoFile", fields: [videoFileId], references: [id], onDelete: SetNull)
 
   sortOrder   Int       @default(0)
   publishedAt DateTime?
@@ -903,6 +907,7 @@ model Testimony {
   @@index([isFeatured])
   @@index([sortOrder])
   @@index([avatarFileId])
+  @@index([videoFileId])
   @@map("testimony")
 }
 

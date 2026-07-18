@@ -5,7 +5,7 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { createFileAssetFromUpload } from "@/actions/files/createFileAssetFromUpload";
-import { deleteFileAction } from "@/actions/files/file";
+import { deleteFileAssetAction } from "@/actions/files/file";
 import type { TestimonyFormActionState } from "@/actions/admin/testimonies/testimonyForm.state";
 import { initialTestimonyFormState } from "@/actions/admin/testimonies/testimonyForm.state";
 import { Button } from "@/components/ui/button";
@@ -28,10 +28,13 @@ type TestimonyFormProps = {
     rating?: string;
     status?: string;
     avatarFileId?: string;
+    videoFileId?: string;
     sortOrder?: string;
     isFeatured?: boolean;
   };
   initialAvatarUrl?: string | null;
+  initialVideoUrl?: string | null;
+  initialVideoFileId?: string | null;
   formAction: (
     state: TestimonyFormActionState,
     formData: FormData,
@@ -43,12 +46,15 @@ export function TestimonyForm({
   testimonyId,
   defaultValues,
   initialAvatarUrl = null,
+  initialVideoUrl = null,
+  initialVideoFileId = null,
   formAction,
 }: TestimonyFormProps) {
   const [state, action] = useActionState(formAction, initialTestimonyFormState);
   const [avatarFileId, setAvatarFileId] = useState(defaultValues?.avatarFileId ?? "");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initialAvatarUrl);
-  const [avatarStorageKey, setAvatarStorageKey] = useState<string | null>(null);
+  const [videoFileId, setVideoFileId] = useState(defaultValues?.videoFileId ?? "");
+  const [videoPreview, setVideoPreview] = useState<string | null>(initialVideoUrl);
   const [isFeatured, setIsFeatured] = useState(defaultValues?.isFeatured ?? false);
   const [status, setStatus] = useState(defaultValues?.status ?? "DRAFT");
 
@@ -73,6 +79,7 @@ export function TestimonyForm({
         <form action={action} className="space-y-6">
           {testimonyId ? <input type="hidden" name="testimonyId" value={testimonyId} /> : null}
           <input type="hidden" name="avatarFileId" value={avatarFileId} />
+          <input type="hidden" name="videoFileId" value={videoFileId} />
           <input type="hidden" name="isFeatured" value={String(isFeatured)} />
           <input type="hidden" name="status" value={status} />
 
@@ -160,20 +167,34 @@ export function TestimonyForm({
                 <UploadButton
                   endpoint="photoManager"
                   onClientUploadComplete={async (res) => {
-                    const file = res?.[0];
-                    if (!file) return;
+                    try {
+                      const file = res?.[0];
+                      if (!file) return;
 
-                    const asset = await createFileAssetFromUpload({
-                      url: file.url,
-                      key: file.key,
-                      name: file.name,
-                      size: file.size,
-                      type: file.type,
-                    });
+                      const asset = await createFileAssetFromUpload({
+                        url: file.url,
+                        key: file.key,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                      });
 
-                    setAvatarFileId(asset.id);
-                    setAvatarPreview(file.url);
-                    setAvatarStorageKey(file.key);
+                      if (avatarFileId && avatarFileId !== asset.id) {
+                        const previousAssetDeletion = await deleteFileAssetAction(
+                          avatarFileId,
+                        );
+
+                        if (previousAssetDeletion.error) {
+                          toast.error(previousAssetDeletion.error);
+                          return;
+                        }
+                      }
+
+                      setAvatarFileId(asset.id);
+                      setAvatarPreview(file.url);
+                    } catch {
+                      toast.error("Unable to attach the uploaded avatar.");
+                    }
                   }}
                   className="ut-button:bg-blue-600 ut-button:text-white ut-button:rounded-full ut-button:px-5 ut-button:py-2"
                 />
@@ -185,11 +206,17 @@ export function TestimonyForm({
                       type="button"
                       className="btn-ghost-premium"
                       onClick={async () => {
-                        if (!avatarStorageKey) return;
-                        await deleteFileAction(avatarStorageKey);
+                        if (avatarFileId) {
+                          const deletion = await deleteFileAssetAction(avatarFileId);
+
+                          if (deletion.error) {
+                            toast.error(deletion.error);
+                            return;
+                          }
+                        }
+
                         setAvatarPreview(null);
                         setAvatarFileId("");
-                        setAvatarStorageKey(null);
                       }}
                     >
                       Remove
@@ -198,6 +225,99 @@ export function TestimonyForm({
                 ) : null}
 
                 <FieldError>{state.fieldErrors?.avatarFileId?.[0]}</FieldError>
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel className="text-slate-100">Video</FieldLabel>
+              <FieldContent>
+                <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-white">
+                        Optional testimonial video
+                      </p>
+                      <p className="text-xs leading-5 text-slate-400">
+                        Upload one video only. You can replace or remove it at any time.
+                      </p>
+                    </div>
+
+                    <UploadButton
+                      endpoint="testimonialVideo"
+                      onClientUploadComplete={async (res) => {
+                        try {
+                          const file = res?.[0];
+                          if (!file) return;
+
+                          if (videoFileId && videoFileId !== initialVideoFileId) {
+                            const previousVideoDeletion = await deleteFileAssetAction(
+                              videoFileId,
+                            );
+
+                            if (previousVideoDeletion.error) {
+                              toast.error(previousVideoDeletion.error);
+                              return;
+                            }
+                          }
+
+                          const asset = await createFileAssetFromUpload({
+                            url: file.url,
+                            key: file.key,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                          });
+
+                          setVideoFileId(asset.id);
+                          setVideoPreview(file.url);
+                        } catch {
+                          toast.error("Unable to attach the uploaded video.");
+                        }
+                      }}
+                      onUploadError={() => {
+                        toast.error("Video upload failed.");
+                      }}
+                      className="ut-button:bg-blue-600 ut-button:text-white ut-button:rounded-full ut-button:px-5 ut-button:py-2"
+                    />
+                  </div>
+
+                  {videoPreview ? (
+                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                      <video
+                        src={videoPreview}
+                        controls
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="aspect-video w-full"
+                      />
+                    </div>
+                  ) : null}
+
+                  {videoPreview ? (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        className="btn-ghost-premium"
+                        onClick={async () => {
+                          if (videoFileId && videoFileId !== initialVideoFileId) {
+                            const deletion = await deleteFileAssetAction(videoFileId);
+
+                            if (deletion.error) {
+                              toast.error(deletion.error);
+                              return;
+                            }
+                          }
+
+                          setVideoPreview(null);
+                          setVideoFileId("");
+                        }}
+                      >
+                        Remove video
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
               </FieldContent>
             </Field>
           </FieldGroup>

@@ -16,6 +16,7 @@ export default async function NewTestimonyPage() {
         rating: "",
         status: "DRAFT",
         avatarFileId: "",
+        videoFileId: "",
         sortOrder: "0",
         isFeatured: false,
       }}

@@ -38,7 +38,8 @@ export type FileAssetReferenceSummary = {
   siteLogo: number;
   siteConfigurationDefaultOgImages: number;
   investmentPlanSeoImages: number;
-  testimonies: number;
+  testimonyAvatarFiles: number;
+  testimonyVideoFiles: number;
   management: number;
   investmentOrderPayments: number;
   savingsTransactionPayments: number;
@@ -217,7 +218,10 @@ function buildImageOrphanWhere(
     investmentPlanSeoImages: {
       none: {},
     },
-    testimonies: {
+    testimonyAvatarFiles: {
+      none: {},
+    },
+    testimonyVideoFiles: {
       none: {},
     },
     management: {
@@ -254,7 +258,8 @@ async function countFileAssetReferences(fileAssetId: string) {
     siteLogo,
     siteConfigurationDefaultOgImages,
     investmentPlanSeoImages,
-    testimonies,
+    testimonyAvatarFiles,
+    testimonyVideoFiles,
     management,
     investmentOrderPayments,
     savingsTransactionPayments,
@@ -280,6 +285,9 @@ async function countFileAssetReferences(fileAssetId: string) {
     prisma.testimony.count({
       where: { avatarFileId: fileAssetId },
     }),
+    prisma.testimony.count({
+      where: { videoFileId: fileAssetId },
+    }),
     prisma.management.count({
       where: { photoFileId: fileAssetId },
     }),
@@ -298,7 +306,8 @@ async function countFileAssetReferences(fileAssetId: string) {
     siteLogo +
     siteConfigurationDefaultOgImages +
     investmentPlanSeoImages +
-    testimonies +
+    testimonyAvatarFiles +
+    testimonyVideoFiles +
     management +
     investmentOrderPayments +
     savingsTransactionPayments;
@@ -310,7 +319,8 @@ async function countFileAssetReferences(fileAssetId: string) {
     siteLogo,
     siteConfigurationDefaultOgImages,
     investmentPlanSeoImages,
-    testimonies,
+    testimonyAvatarFiles,
+    testimonyVideoFiles,
     management,
     investmentOrderPayments,
     savingsTransactionPayments,

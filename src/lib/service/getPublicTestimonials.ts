@@ -9,6 +9,7 @@ export type PublicTestimonyViewModel = {
   role: string;
   organization: string;
   avatarUrl: string | null;
+  videoUrl: string | null;
 };
 
 export const getPublicTestimonials = cache(
@@ -27,6 +28,11 @@ export const getPublicTestimonials = cache(
         fullName: true,
         roleOrTitle: true,
         message: true,
+        videoFile: {
+          select: {
+            url: true,
+          },
+        },
         avatarFile: {
           select: {
             url: true,
@@ -42,6 +48,7 @@ export const getPublicTestimonials = cache(
       role: testimony.roleOrTitle ?? "Client",
       organization: "Verified Client",
       avatarUrl: testimony.avatarFile?.url ?? null,
+      videoUrl: testimony.videoFile?.url ?? null,
     }));
   },
 );

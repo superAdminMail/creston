@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getTestimonies } from "@/actions/admin/testimonies/getTestimonies";
+import { deleteTestimony } from "@/actions/admin/testimonies/deleteTestimony";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -42,12 +43,24 @@ export default async function AdminTestimoniesPage() {
                 <span>{testimony.rating ? `${testimony.rating}/5` : "No rating"}</span>
                 <span>{testimony.isFeatured ? "Featured" : "Standard"}</span>
               </div>
-              <Link
-                href={`/account/dashboard/admin/testimonies/${testimony.id}/edit`}
-                className="text-sm text-blue-400 hover:underline"
-              >
-                Edit
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={`/account/dashboard/admin/testimonies/${testimony.id}/edit`}
+                  className="text-sm text-blue-400 hover:underline"
+                >
+                  Edit
+                </Link>
+
+                <form action={deleteTestimony}>
+                  <input type="hidden" name="testimonyId" value={testimony.id} />
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-rose-300 transition hover:text-rose-200"
+                  >
+                    Delete
+                  </button>
+                </form>
+              </div>
             </CardContent>
           </Card>
         ))}

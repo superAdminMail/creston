@@ -15,6 +15,7 @@ import {
   updateTestimonySchema,
 } from "@/lib/zodValidations/testimony";
 import { TestimonyFormActionState } from "./testimonyForm.state";
+import { deleteFileAssetAction } from "@/actions/files/file";
 
 export async function updateTestimony(
   _: TestimonyFormActionState,
@@ -32,6 +33,7 @@ export async function updateTestimony(
       isFeatured: formData.get("isFeatured") === "true",
       status: formData.get("status"),
       avatarFileId: formData.get("avatarFileId"),
+      videoFileId: formData.get("videoFileId"),
       sortOrder: formData.get("sortOrder"),
     });
 
@@ -43,11 +45,40 @@ export async function updateTestimony(
     }
 
     const values = normalizeTestimonyValues(parsed.data);
+    const previousTestimony = await prisma.testimony.findUnique({
+      where: { id: parsed.data.testimonyId },
+      select: {
+        avatarFileId: true,
+        videoFileId: true,
+      },
+    });
+
+    if (!previousTestimony) {
+      return createErrorFormState("The requested testimony could not be found.");
+    }
 
     await prisma.testimony.update({
       where: { id: parsed.data.testimonyId },
       data: values,
     });
+
+    const cleanupTargets = [
+      previousTestimony.avatarFileId &&
+        previousTestimony.avatarFileId !== values.avatarFileId
+        ? previousTestimony.avatarFileId
+        : null,
+      previousTestimony.videoFileId &&
+        previousTestimony.videoFileId !== values.videoFileId
+        ? previousTestimony.videoFileId
+        : null,
+    ].filter((value): value is string => Boolean(value));
+
+    for (const fileAssetId of cleanupTargets) {
+      const deletion = await deleteFileAssetAction(fileAssetId);
+      if (deletion.error) {
+        console.error("testimony file cleanup failed:", deletion.error);
+      }
+    }
 
     revalidatePath("/account/dashboard/admin/testimonies");
     revalidatePath("/");
