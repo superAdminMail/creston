@@ -97,8 +97,8 @@ export function AccountLayoutShell({
           shouldScaleBackground={false}
         >
           <DrawerSurface
-            tone="ghost"
-            className="dashboard-mobile-drawer h-dvh max-w-[86vw] rounded-none border-r border-slate-200 bg-transparent p-0 shadow-none dark:border-white/10"
+            tone="light"
+            className="dashboard-mobile-drawer h-dvh max-w-[86vw] rounded-none border-r border-slate-200/80 p-0 shadow-[0_24px_60px_rgba(15,23,42,0.16)] dark:border-white/10 dark:shadow-[0_24px_60px_rgba(0,0,0,0.34)]"
           >
             <DrawerHeader className="sr-only">
               <DrawerTitle>Account navigation</DrawerTitle>

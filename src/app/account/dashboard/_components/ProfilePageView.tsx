@@ -40,6 +40,23 @@ type ProfilePageProps = {
     isEmailVerified?: boolean | null;
     referralCode?: string | null;
   };
+  referrals?: ReferralActivityItem[];
+};
+
+type ReferralActivityItem = {
+  id: string;
+  code: string;
+  status: "PENDING" | "ACTIVE" | "REWARDED" | "CANCELLED";
+  activatedBy?: "SAVINGS_ACCOUNT_CREATED" | "INVESTMENT_ORDER_CONFIRMED" | null;
+  activatedAt?: string | null;
+  rewardedAt?: string | null;
+  referredUser: {
+    id: string;
+    name: string;
+    email: string;
+    username?: string | null;
+    image?: string | null;
+  };
 };
 
 const PROFILE_PANEL_CLASS = cn(
@@ -52,7 +69,11 @@ const PROFILE_SURFACE_CLASS = cn(
   "rounded-[1.9rem] p-5 sm:p-6 lg:p-7",
 );
 
-export default function ProfilePageView({ siteName, user }: ProfilePageProps) {
+export default function ProfilePageView({
+  siteName,
+  user,
+  referrals = [],
+}: ProfilePageProps) {
   const resolvedSiteName = siteName?.trim() || "Company";
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
@@ -63,6 +84,27 @@ export default function ProfilePageView({ siteName, user }: ProfilePageProps) {
     username: user.username ?? undefined,
   });
   const canReviewInvestmentProfile = user.role === "USER";
+  const referralSummary = referrals.reduce(
+    (acc, referral) => {
+      acc.total += 1;
+
+      if (referral.status === "PENDING") {
+        acc.pending += 1;
+      } else if (referral.status === "ACTIVE") {
+        acc.active += 1;
+      } else if (referral.status === "REWARDED") {
+        acc.rewarded += 1;
+      }
+
+      return acc;
+    },
+    {
+      total: 0,
+      pending: 0,
+      active: 0,
+      rewarded: 0,
+    },
+  );
 
   async function handleCopyReferralCode() {
     if (!user.referralCode) return;
@@ -79,19 +121,18 @@ export default function ProfilePageView({ siteName, user }: ProfilePageProps) {
   async function handleShareReferralLink() {
     if (!user.referralCode) return;
 
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("ref", user.referralCode);
-    const referralUrl = currentUrl.toString();
+    const referralUrl = new URL("/auth/login", window.location.origin);
+    referralUrl.searchParams.set("ref", user.referralCode);
 
     try {
       if (navigator.share) {
         await navigator.share({
           title: `Join me on ${resolvedSiteName}`,
           text: "Use my referral link to sign up.",
-          url: referralUrl,
+          url: referralUrl.toString(),
         });
       } else {
-        await navigator.clipboard.writeText(referralUrl);
+        await navigator.clipboard.writeText(referralUrl.toString());
         setShared(true);
         window.setTimeout(() => setShared(false), 2000);
       }
@@ -281,6 +322,59 @@ export default function ProfilePageView({ siteName, user }: ProfilePageProps) {
               </div>
             </section>
           ) : null}
+
+          {canReviewInvestmentProfile ? (
+            <section className={PROFILE_SURFACE_CLASS}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
+                    Referral Activity
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    View your referral activity.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <ReferralSummaryCard
+                  label="Total"
+                  value={referralSummary.total}
+                />
+                <ReferralSummaryCard
+                  label="Pending"
+                  value={referralSummary.pending}
+                  tone="amber"
+                />
+                <ReferralSummaryCard
+                  label="Activated"
+                  value={referralSummary.active}
+                  tone="blue"
+                />
+                <ReferralSummaryCard
+                  label="Rewarded"
+                  value={referralSummary.rewarded}
+                  tone="emerald"
+                />
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {referrals.length > 0 ? (
+                  referrals.map((referral) => (
+                    <ReferralActivityRow
+                      key={referral.id}
+                      referral={referral}
+                    />
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                    No one has used your referral code yet. Once someone signs
+                    up with your link, their status will appear here.
+                  </div>
+                )}
+              </div>
+            </section>
+          ) : null}
         </div>
 
         <div className="grid gap-4 sm:gap-6">
@@ -351,6 +445,147 @@ export default function ProfilePageView({ siteName, user }: ProfilePageProps) {
       </Dialog>
     </div>
   );
+}
+
+function ReferralActivityRow({ referral }: { referral: ReferralActivityItem }) {
+  const avatarFallback = getUserInitials({
+    name: referral.referredUser.name ?? undefined,
+    email: referral.referredUser.email,
+    username: referral.referredUser.username ?? undefined,
+  });
+
+  const statusMeta = getReferralStatusMeta(referral.status);
+
+  return (
+    <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar className="h-11 w-11 shrink-0 border border-slate-200/80 bg-white dark:border-white/10 dark:bg-white/[0.04]">
+            <AvatarImage
+              src={referral.referredUser.image ?? undefined}
+              alt={referral.referredUser.name}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-transparent text-sm font-semibold text-slate-950 dark:text-white">
+              {avatarFallback}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-950 dark:text-white">
+              {referral.referredUser.name}
+            </p>
+            <p className="truncate text-xs text-slate-600 dark:text-slate-400">
+              {referral.referredUser.username
+                ? `@${referral.referredUser.username}`
+                : referral.referredUser.email}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em]",
+              statusMeta.className,
+            )}
+          >
+            {statusMeta.label}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 border-t border-slate-200/70 pt-3 text-sm text-slate-600 dark:border-white/10 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+        <span className="leading-6">{getReferralActivationNote(referral)}</span>
+        <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-500">
+          Referral code used
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ReferralSummaryCard({
+  label,
+  value,
+  tone = "slate",
+}: {
+  label: string;
+  value: number;
+  tone?: "slate" | "amber" | "blue" | "emerald";
+}) {
+  const toneClasses = {
+    slate:
+      "border-slate-200/80 bg-white/80 text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-white",
+    amber:
+      "border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100",
+    blue: "border-blue-200/80 bg-blue-50 text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-100",
+    emerald:
+      "border-emerald-200/80 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100",
+  } as const;
+
+  return (
+    <div className={cn("rounded-2xl border p-4 shadow-sm", toneClasses[tone])}>
+      <p className="text-[11px] uppercase tracking-[0.2em] text-current/70">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function getReferralStatusMeta(status: ReferralActivityItem["status"]) {
+  switch (status) {
+    case "PENDING":
+      return {
+        label: "Pending",
+        className:
+          "border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100",
+      };
+    case "ACTIVE":
+      return {
+        label: "Activated",
+        className:
+          "border-blue-200/80 bg-blue-50 text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-100",
+      };
+    case "REWARDED":
+      return {
+        label: "Rewarded",
+        className:
+          "border-emerald-200/80 bg-emerald-50 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100",
+      };
+    case "CANCELLED":
+    default:
+      return {
+        label: "Cancelled",
+        className:
+          "border-slate-200/80 bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300",
+      };
+  }
+}
+
+function getReferralActivationNote(referral: ReferralActivityItem) {
+  if (referral.status === "PENDING") {
+    return "This referral has not been activated yet.";
+  }
+
+  if (referral.status === "ACTIVE") {
+    if (referral.activatedBy === "INVESTMENT_ORDER_CONFIRMED") {
+      return "Activated after the referred user completed their first successful investment order.";
+    }
+
+    if (referral.activatedBy === "SAVINGS_ACCOUNT_CREATED") {
+      return "Activated after the referred user completed their first successful savings activity.";
+    }
+
+    return "Activated after the referred user completed their first successful qualifying activity.";
+  }
+
+  if (referral.status === "REWARDED") {
+    return "This referral has already been activated and fully rewarded.";
+  }
+
+  return "This referral has been cancelled and will not proceed further.";
 }
 
 function InfoCard({

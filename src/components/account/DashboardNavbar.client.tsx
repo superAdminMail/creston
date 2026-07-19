@@ -95,7 +95,7 @@ export function DashboardNavbarClient({
   const avatarUrl = user.profileAvatar?.url || user.image || null;
 
   return (
-    <nav className="dashboard-navbar-shell sticky top-0 z-50 border-b border-slate-200/80 bg-white/78 backdrop-blur-xl dark:border-white/10 dark:bg-[#08111d]/76">
+    <nav className="dashboard-navbar-shell sticky top-0 z-50 border-b border-slate-200/80 bg-white/86 shadow-[0_1px_0_rgba(255,255,255,0.7),0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-white/10 dark:bg-[#08111d]/76 dark:shadow-[0_1px_0_rgba(255,255,255,0.06),0_12px_28px_rgba(0,0,0,0.18)]">
       <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Button
@@ -103,7 +103,7 @@ export function DashboardNavbarClient({
             variant="ghost"
             size="icon"
             onClick={onMenuClick}
-            className="dashboard-navbar-trigger rounded-2xl border border-slate-200 bg-white/80 text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+            className="dashboard-navbar-trigger rounded-2xl border border-slate-200 bg-white/88 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.06)] hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 md:hidden dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:shadow-[0_10px_24px_rgba(0,0,0,0.16)] dark:hover:bg-white/[0.08] dark:hover:text-white"
             aria-label="Open account navigation"
           >
             <Menu className="h-5 w-5" />

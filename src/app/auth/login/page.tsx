@@ -6,13 +6,30 @@ import { getDashboardHomeByRole } from "@/lib/auth/dashboard-home";
 import { getCurrentUserAccessState } from "@/lib/auth/accountAccessState";
 import { redirect } from "next/navigation";
 
+type AuthSearchParams = {
+  account?: string | string[];
+  ref?: string | string[];
+  promo?: string | string[];
+};
+
+function firstValue(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value ?? null;
+}
+
 const page = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ account?: string }>;
+  searchParams: Promise<AuthSearchParams>;
 }) => {
   const accessState = await getCurrentUserAccessState();
-  const { account } = await searchParams;
+  const params = await searchParams;
+  const account = firstValue(params.account);
+  const referralCode = firstValue(params.ref);
+  const promoCode = firstValue(params.promo);
 
   if (accessState?.status === "SUSPENDED") {
     redirect("/account-suspended");
@@ -31,6 +48,18 @@ const page = async ({
     getSiteSeoConfig(),
     getSiteConfigurationCached(),
   ]);
+  const createAccountSearchParams = new URLSearchParams();
+  if (referralCode) {
+    createAccountSearchParams.set("ref", referralCode);
+  }
+
+  if (promoCode) {
+    createAccountSearchParams.set("promo", promoCode);
+  }
+
+  const createAccountHref = createAccountSearchParams.toString()
+    ? `/auth/get-started?${createAccountSearchParams.toString()}`
+    : "/auth/get-started";
 
   return (
     <div>
@@ -59,7 +88,7 @@ const page = async ({
             <p className="text-sm text-slate-400">
               New to {site.siteName}?
               <Link
-                href="/auth/get-started"
+                href={createAccountHref}
                 className="font-medium text-white underline-offset-4 hover:text-blue-200 hover:underline"
               >
                 {""} Create your account

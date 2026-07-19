@@ -67,7 +67,7 @@ export default async function NotificationDetailsPage({
   const actionLabel = getNotificationActionLabel(dto);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4sm:space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-4 py-6 sm:space-y-6 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           asChild

@@ -84,6 +84,29 @@ export default async function Page() {
           url: true,
         },
       },
+      referralsMade: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          code: true,
+          status: true,
+          activatedBy: true,
+          activatedAt: true,
+          rewardedAt: true,
+          createdAt: true,
+          referred: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              username: true,
+              image: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -106,6 +129,21 @@ export default async function Page() {
         isEmailVerified: dbUser.emailVerified,
         referralCode,
       }}
+      referrals={dbUser.referralsMade.map((referral) => ({
+        id: referral.id,
+        code: referral.code,
+        status: referral.status,
+        activatedBy: referral.activatedBy,
+        activatedAt: referral.activatedAt?.toISOString() ?? null,
+        rewardedAt: referral.rewardedAt?.toISOString() ?? null,
+        referredUser: {
+          id: referral.referred.id,
+          name: referral.referred.name,
+          email: referral.referred.email,
+          username: referral.referred.username,
+          image: referral.referred.image,
+        },
+      }))}
     />
   );
 }
