@@ -143,7 +143,7 @@ export default function ProfilePageView({
 
   return (
     <div className={PROFILE_PANEL_CLASS}>
-      <div className="flex flex-col gap-5 border-b border-slate-200/70 pb-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8 lg:pb-6 dark:border-white/10">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 border-b border-slate-200/70 pb-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-6 dark:border-white/10">
         <div className="min-w-0">
           <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -159,7 +159,7 @@ export default function ProfilePageView({
           </p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
+        <div className="flex w-full flex-col gap-3 lg:max-w-sm">
           <Button
             asChild
             className="inline-flex w-full items-center justify-center rounded-2xl bg-[#3c9ee0] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.22)] transition hover:bg-[#2f8bd0] sm:px-5"
@@ -174,15 +174,15 @@ export default function ProfilePageView({
               className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-950 sm:px-5 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
             >
               <Link href="/account/dashboard/user/investment-profile">
-                Review your investment profile
+                Review investment profile
               </Link>
             </Button>
           ) : null}
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:mt-8 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:gap-6">
-        <div className="space-y-4 sm:space-y-6">
+      <div className="mt-5 flex justify-center lg:mt-6">
+        <div className="w-full max-w-5xl space-y-4 sm:space-y-6">
           <section className={PROFILE_SURFACE_CLASS}>
             <div className="flex flex-col items-center text-center">
               <button
@@ -260,6 +260,51 @@ export default function ProfilePageView({
               />
             </div>
           </section>
+
+          {canReviewInvestmentProfile ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <section className={cn(PROFILE_SURFACE_CLASS, "p-4 sm:p-5")}>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
+                  Next step
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  Keep your investment profile up to date separately so your
+                  account records stay clean and easy to review.
+                </p>
+
+                <div className="mt-4">
+                  <Button
+                    asChild
+                    className="w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+                  >
+                    <Link href="/account/dashboard/user/investment-profile">
+                      Open investment profile
+                    </Link>
+                  </Button>
+                </div>
+              </section>
+
+              <section className={cn(PROFILE_SURFACE_CLASS, "p-4 sm:p-5")}>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
+                  Security Notice
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  Your account is protected by a password and you can change it
+                  at any time.
+                </p>
+              </section>
+            </div>
+          ) : (
+            <section className={PROFILE_SURFACE_CLASS}>
+              <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
+                Security Notice
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                Your account is protected by a password and you can change it at
+                any time.
+              </p>
+            </section>
+          )}
 
           {canReviewInvestmentProfile ? (
             <section className={PROFILE_SURFACE_CLASS}>
@@ -375,41 +420,6 @@ export default function ProfilePageView({
               </div>
             </section>
           ) : null}
-        </div>
-
-        <div className="grid gap-4 sm:gap-6">
-          {canReviewInvestmentProfile ? (
-            <section className={PROFILE_SURFACE_CLASS}>
-              <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                Next step
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                Keep your investment profile up to date separately so your
-                account records stay clean and easy to review.
-              </p>
-
-              <div className="mt-5">
-                <Button
-                  asChild
-                  className="w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0] sm:w-auto"
-                >
-                  <Link href="/account/dashboard/user/investment-profile">
-                    Open investment profile
-                  </Link>
-                </Button>
-              </div>
-            </section>
-          ) : null}
-
-          <section className={PROFILE_SURFACE_CLASS}>
-            <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Security Notice
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Your account is protected by a password and you can change it at
-              any time.
-            </p>
-          </section>
         </div>
       </div>
 
