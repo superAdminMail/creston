@@ -166,7 +166,7 @@ export default function NotificationsPageClient({
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
@@ -312,13 +312,13 @@ export default function NotificationsPageClient({
               </div>
 
               <div
-                  className={cn(
-                    "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm",
-                    !notification.read
+                className={cn(
+                  "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm",
+                  !notification.read
                     ? "border-sky-200 bg-white text-sky-700 dark:border-[var(--brand-blue)]/20 dark:bg-zinc-950 dark:text-sky-300"
                     : "border-slate-200/80 bg-white text-slate-500 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400",
-                  )}
-                >
+                )}
+              >
                 {renderNotificationIcon(notification, "h-4 w-4")}
               </div>
 
@@ -350,7 +350,7 @@ export default function NotificationsPageClient({
                   </span>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-sky-700 transition group-hover:translate-x-0.5 dark:text-sky-300">
                     {notification.link
-                      ? getNotificationActionLabel(notification) ?? "Open"
+                      ? (getNotificationActionLabel(notification) ?? "Open")
                       : "Viewed"}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </span>

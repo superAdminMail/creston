@@ -67,7 +67,7 @@ export default async function NotificationDetailsPage({
   const actionLabel = getNotificationActionLabel(dto);
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
+    <div className="mx-auto w-full max-w-4xl space-y-4sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           asChild
@@ -94,9 +94,7 @@ export default async function NotificationDetailsPage({
         ) : null}
       </div>
 
-      <article
-        className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-4 shadow-sm sm:p-6 lg:p-8 dark:border-white/10 dark:bg-white/[0.03]"
-      >
+      <article className="rounded-[1.8rem] border border-slate-200/70 bg-white/90 p-4 shadow-sm sm:p-6 lg:p-8 dark:border-white/10 dark:bg-white/[0.03]">
         <div className="flex flex-col gap-4 sm:gap-5 md:flex-row md:items-start">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-200/80 bg-sky-50 text-sky-700 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 sm:h-12 sm:w-12">
             {renderNotificationIcon(dto, "h-4 w-4 sm:h-5 sm:w-5")}
@@ -115,9 +113,7 @@ export default async function NotificationDetailsPage({
               </p>
             </div>
 
-            <div
-              className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-5"
-            >
+            <div className="rounded-2xl border border-slate-200/70 bg-slate-50/90 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:p-5">
               <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-200 sm:text-[15px] sm:leading-8">
                 {dto.message ??
                   "No additional notification details were provided."}
