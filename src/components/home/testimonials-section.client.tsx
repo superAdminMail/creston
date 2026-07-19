@@ -62,11 +62,11 @@ function TestimonyCard({ testimony }: { testimony: PublicTestimonyViewModel }) {
           </p>
 
           {testimony.videoUrl ? (
-            <div className="mt-4 aspect-[4/3] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+            <div className="mt-4 w-full aspect-[4/5] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
               <TestimonyVideoPlayer
                 src={testimony.videoUrl}
                 title={`${testimony.name} testimonial video`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </div>
           ) : null}
