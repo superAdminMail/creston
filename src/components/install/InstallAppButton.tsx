@@ -113,7 +113,7 @@ export function InstallAppButton({ siteName = "App" }: InstallAppButtonProps) {
         }
       >
         <Download className="h-4 w-4" />
-        Install {siteName}
+        Install App
       </Button>
 
       <Dialog open={showSafariDialog} onOpenChange={setShowSafariDialog}>
