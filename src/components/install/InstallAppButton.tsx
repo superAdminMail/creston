@@ -113,7 +113,7 @@ export function InstallAppButton({ siteName = "App" }: InstallAppButtonProps) {
         }
       >
         <Download className="h-4 w-4" />
-        Install App
+        Install {siteName} App
       </Button>
 
       <Dialog open={showSafariDialog} onOpenChange={setShowSafariDialog}>
@@ -121,8 +121,8 @@ export function InstallAppButton({ siteName = "App" }: InstallAppButtonProps) {
           <DialogHeader>
             <DialogTitle>Install {siteName}</DialogTitle>
             <DialogDescription>
-              Install {siteName} for a faster, app-like experience on your
-              iPhone or iPad.
+              Install {siteName} for a faster, better experience on your iPhone
+              or iPad.
             </DialogDescription>
           </DialogHeader>
 
