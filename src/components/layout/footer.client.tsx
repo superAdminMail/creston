@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Building2, Mail, MapPin, Phone, PhoneIcon } from "lucide-react";
 import { formatSitePhoneNumber } from "@/lib/formatters/sitePhone";
 import { getTelHrefPhoneNumber } from "@/lib/formatters/sitePhone";
+import InstallAppButton from "../install/InstallAppButton";
 
 type FooterGroup = {
   title: string;
@@ -110,15 +111,22 @@ export function FooterClient({
             <div className="mt-6 space-y-4 text-sm text-slate-400">
               <div className="space-y-4">
                 <div>
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-blue-300" />
-                    {safeSupportEmail}
-                  </p>
+                  <div>
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-blue-300" />
+                      {safeSupportEmail}
+                    </p>
+                  </div>
                   {phoneEntries.length > 0 ? (
                     <div className="mt-2 space-y-2">
                       {phoneEntries.map((entry) => (
                         <p key={entry.label} className="flex items-start gap-2">
-                          <Phone className="mt-0.5 h-4 w-4 text-blue-300" />
+                          <div>
+                            <span className="shrink-0">
+                              <Phone className="mt-0.5 h-5 w-5 text-blue-300" />
+                            </span>
+                          </div>
+
                           <span className="flex flex-wrap gap-2">
                             <span className="uppercase tracking-[0.12em] text-slate-500">
                               {entry.label}
@@ -133,16 +141,20 @@ export function FooterClient({
 
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <span className="shrink-0">
-                      <MapPin className="mt-0.5 h-4 w-4 text-blue-300 shrink-0" />
-                    </span>
+                    <div>
+                      <span className="shrink-0">
+                        <MapPin className="mt-0.5 h-5 w-5 text-blue-300 shrink-0" />
+                      </span>
+                    </div>
                     <span>{safeSiteAddress}</span>
                   </div>
 
                   <div className="flex items-start gap-2 leading-6">
-                    <span className="shrink-0">
-                      <Building2 className="h-4 w-4 text-blue-300 shrink-0" />
-                    </span>
+                    <div>
+                      <span className="shrink-0">
+                        <Building2 className="h-5 w-5 text-blue-300 shrink-0" />
+                      </span>
+                    </div>
                     <span>
                       {siteName} is authorised and regulated by the FCA (FRN:{" "}
                       {safeSiteFRN}). Registered in England & Wales (Company No.{" "}
@@ -194,7 +206,11 @@ export function FooterClient({
           ))}
         </div>
 
-        <div className="mt-14 rounded-2xl border border-white/8 bg-white/[0.03] p-6">
+        <div className="mt-10">
+          <InstallAppButton siteName={siteName} />
+        </div>
+
+        <div className="hidden mt-14 rounded-2xl border border-white/8 bg-white/[0.03] p-6">
           <p className="text-xs leading-6 text-slate-400">
             <span className="font-semibold text-slate-200">Disclaimer:</span>{" "}
             Returns and performance are based on historical data, actual results
