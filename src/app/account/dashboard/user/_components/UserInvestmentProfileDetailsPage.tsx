@@ -201,7 +201,7 @@ export function UserInvestmentProfileDetailsPage({
             <Progress
               value={profile.completionPercent}
               className="mt-5 h-2.5 rounded-full bg-slate-200/80 dark:bg-white/6"
-              indicatorClassName="bg-[linear-gradient(90deg,#2563eb_0%,#3b82f6_55%,#60a5fa_100%)] shadow-[0_0_18px_rgba(59,130,246,0.35)]"
+              indicatorClassName="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 shadow-[0_0_18px_rgba(59,130,246,0.35)]"
             />
 
             <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
