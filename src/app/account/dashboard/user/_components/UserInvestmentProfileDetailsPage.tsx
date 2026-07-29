@@ -20,6 +20,7 @@ import {
   DASHBOARD_PAGE_SURFACE_CLASS,
 } from "../../_components/dashboardSurfaces";
 import { DashboardSectionCard } from "../../_components/DashboardSectionCard";
+import { Progress } from "@/components/ui/progress";
 
 type UserInvestmentProfileDetailsPageProps = {
   profile: CurrentUserInvestmentProfileData;
@@ -128,7 +129,9 @@ export function UserInvestmentProfileDetailsPage({
         </Link>
       </div>
 
-      <section className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-6 sm:p-8`}>
+      <section
+        className={`${DASHBOARD_PAGE_PANEL_CLASS} overflow-hidden p-6 sm:p-8`}
+      >
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -186,14 +189,20 @@ export function UserInvestmentProfileDetailsPage({
               </div>
             </div>
 
-            <div className="mt-5 h-2.5 rounded-full bg-slate-200/80 dark:bg-white/6">
+            {/* <div className="mt-5 h-2.5 rounded-full bg-slate-200/80 dark:bg-white/6">
               <div
                 className="h-2.5 rounded-full bg-[linear-gradient(90deg,#2563eb_0%,#3b82f6_55%,#60a5fa_100%)] shadow-[0_0_18px_rgba(59,130,246,0.35)]"
                 style={{
                   width: `${Math.max(0, Math.min(profile.completionPercent, 100))}%`,
                 }}
               />
-            </div>
+            </div> */}
+
+            <Progress
+              value={profile.completionPercent}
+              className="mt-5 h-2.5 rounded-full bg-slate-200/80 dark:bg-white/6"
+              indicatorClassName="bg-[linear-gradient(90deg,#2563eb_0%,#3b82f6_55%,#60a5fa_100%)] shadow-[0_0_18px_rgba(59,130,246,0.35)]"
+            />
 
             <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
               {profile.profileComplete
@@ -208,7 +217,7 @@ export function UserInvestmentProfileDetailsPage({
         <DashboardSectionCard className="p-6 sm:p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-            <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
+              <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-white">
                 Investment details
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
