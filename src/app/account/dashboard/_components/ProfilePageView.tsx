@@ -121,7 +121,7 @@ export default function ProfilePageView({
   async function handleShareReferralLink() {
     if (!user.referralCode) return;
 
-    const referralUrl = new URL("/auth/login", window.location.origin);
+    const referralUrl = new URL("/auth/register", window.location.origin);
     referralUrl.searchParams.set("ref", user.referralCode);
 
     try {
