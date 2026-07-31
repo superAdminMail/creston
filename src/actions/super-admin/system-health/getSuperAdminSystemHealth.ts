@@ -64,7 +64,10 @@ export type SystemHealthService = {
   status: string;
   tone: HealthTone;
   detail: string;
-  icon: Exclude<SystemHealthIconKey, "activity" | "creditCard" | "wallet" | "bell" | "hardDrive">;
+  icon: Exclude<
+    SystemHealthIconKey,
+    "activity" | "creditCard" | "wallet" | "bell" | "hardDrive"
+  >;
 };
 
 export type SystemHealthCronCard = {
@@ -162,7 +165,7 @@ const SYSTEM_HEALTH_NOTIFICATION_PAGE_SIZE = 10;
 const SYSTEM_HEALTH_SUBMITTED_PROOF_PAGE_SIZE = 10;
 
 function toNumber(value: { toNumber(): number } | number | null | undefined) {
-  return typeof value === "number" ? value : value?.toNumber?.() ?? 0;
+  return typeof value === "number" ? value : (value?.toNumber?.() ?? 0);
 }
 
 function formatCount(value: number) {
@@ -197,7 +200,10 @@ function getToneFromCount(
   value: number,
   thresholds: { warningAt: number; criticalAt?: number },
 ): HealthTone {
-  if (typeof thresholds.criticalAt === "number" && value >= thresholds.criticalAt) {
+  if (
+    typeof thresholds.criticalAt === "number" &&
+    value >= thresholds.criticalAt
+  ) {
     return "critical";
   }
 
@@ -319,7 +325,9 @@ export async function getSuperAdminSystemHealth(options?: {
       ? Math.floor(options.proofPageSize)
       : SYSTEM_HEALTH_SUBMITTED_PROOF_PAGE_SIZE;
   const requestedProofPage =
-    options?.proofPage && options.proofPage > 0 ? Math.floor(options.proofPage) : 1;
+    options?.proofPage && options.proofPage > 0
+      ? Math.floor(options.proofPage)
+      : 1;
 
   const activeDiditStatuses = [
     DIDIT_STATUSES.NOT_STARTED,
@@ -335,40 +343,38 @@ export async function getSuperAdminSystemHealth(options?: {
     DIDIT_STATUSES.KYC_EXPIRED,
   ];
 
-  const [
-    sessions,
-    investmentOrders,
-    savingsFundingIntents,
-  ] = await Promise.all([
-    prisma.kycVerificationSession.findMany({
-      select: {
-        status: true,
-        lastSyncedAt: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.investmentOrder.findMany({
-      where: {
-        status: "PAID",
-      },
-      select: {
-        amountPaid: true,
-        amount: true,
-      },
-    }),
-    prisma.savingsFundingIntent.findMany({
-      where: {
-        status: "CREDITED",
-      },
-      select: {
-        transactions: {
-          select: {
-            id: true,
+  const [sessions, investmentOrders, savingsFundingIntents] = await Promise.all(
+    [
+      prisma.kycVerificationSession.findMany({
+        select: {
+          status: true,
+          lastSyncedAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.investmentOrder.findMany({
+        where: {
+          status: "PAID",
+        },
+        select: {
+          amountPaid: true,
+          amount: true,
+        },
+      }),
+      prisma.savingsFundingIntent.findMany({
+        where: {
+          status: "CREDITED",
+        },
+        select: {
+          transactions: {
+            select: {
+              id: true,
+            },
           },
         },
-      },
-    }),
-  ]);
+      }),
+    ],
+  );
 
   const [
     pendingInvestmentPayments,
@@ -834,7 +840,8 @@ export async function getSuperAdminSystemHealth(options?: {
 
   const latestFailedWebhookTime = latestFailedWebhookEvent?.receivedAt ?? null;
   const latestPendingKycTime = latestPendingKyc?.updatedAt ?? null;
-  const latestPendingSavingsPaymentTime = latestPendingSavingsPayment?.submittedAt ?? null;
+  const latestPendingSavingsPaymentTime =
+    latestPendingSavingsPayment?.submittedAt ?? null;
   const latestCronRunAt =
     latestCronDailyAccrualJob?.lastRunAt ??
     latestCronProfitSettlementJob?.lastRunAt ??
@@ -886,7 +893,8 @@ export async function getSuperAdminSystemHealth(options?: {
     underfundedPaidInvestmentOrders,
     creditedSavingsWithoutTransactions,
     missingProviderReferences: missingProviderReferenceCount,
-    approvedBankSubmissionsNotReflected: approvedBankSubmissionsNotReflectedTotal,
+    approvedBankSubmissionsNotReflected:
+      approvedBankSubmissionsNotReflectedTotal,
     pendingInvestmentPayments,
     pendingSavingsPayments,
     pendingWithdrawals,
@@ -999,9 +1007,13 @@ export async function getSuperAdminSystemHealth(options?: {
         };
       });
 
-  const submittedProofItems = [...investmentProofItems, ...savingsProofItems].sort(
+  const submittedProofItems = [
+    ...investmentProofItems,
+    ...savingsProofItems,
+  ].sort(
     (left, right) =>
-      new Date(right.submittedAt).getTime() - new Date(left.submittedAt).getTime(),
+      new Date(right.submittedAt).getTime() -
+      new Date(left.submittedAt).getTime(),
   );
 
   const totalSubmittedProofs = submittedProofItems.length;
@@ -1036,8 +1048,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Database",
       value: staleCronLocks > 0 ? "Warning" : "Healthy",
       tone: staleCronLocks > 0 ? "warning" : "healthy",
-      description:
-        `${formatCount(totalCronJobs)} cron job record(s) and ${formatCount(staleCronLocks)} stale lock(s) are currently tracked.`,
+      description: `${formatCount(totalCronJobs)} cron job record(s) and ${formatCount(staleCronLocks)} stale lock(s) are currently tracked.`,
       meta: `${formatCount(activeCronJobs)} cron job(s) running`,
       icon: "database",
     },
@@ -1045,8 +1056,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Payments",
       value: paymentQueueTone === "healthy" ? "Healthy" : "Warning",
       tone: paymentQueueTone,
-      description:
-        `${formatCount(pendingInvestmentPayments)} investment and ${formatCount(pendingSavingsPayments)} savings submissions are waiting review.`,
+      description: `${formatCount(pendingInvestmentPayments)} investment and ${formatCount(pendingSavingsPayments)} savings submissions are waiting review.`,
       meta: `${formatCount(pendingWithdrawals)} withdrawals queued`,
       icon: "creditCard",
     },
@@ -1054,8 +1064,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Crypto webhooks",
       value: getStatusLabel(webhookTone),
       tone: webhookTone,
-      description:
-        `${formatCount(failedWebhookEvents24h)} failed and ${formatCount(unprocessedWebhookEvents)} pending webhook event(s) in the last 24 hours.`,
+      description: `${formatCount(failedWebhookEvents24h)} failed and ${formatCount(unprocessedWebhookEvents)} pending webhook event(s) in the last 24 hours.`,
       meta: `Latest issue ${formatRelativeTime(latestFailedWebhookTime)}`,
       icon: "wallet",
     },
@@ -1063,8 +1072,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Jobs & cron",
       value: cronTone === "healthy" ? "Healthy" : "Warning",
       tone: cronTone,
-      description:
-        `${formatCount(activeCronJobs)} cron job record(s) are active and ${formatCount(staleCronLocks)} lock(s) appear stale.`,
+      description: `${formatCount(activeCronJobs)} cron job record(s) are active and ${formatCount(staleCronLocks)} lock(s) appear stale.`,
       meta: nextCronRunAt
         ? `Next expected run ${formatUtcDateTime(nextCronRunAt)}`
         : "No next run scheduled",
@@ -1074,8 +1082,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "KYC verification",
       value: kycTone === "healthy" ? "Healthy" : "Warning",
       tone: kycTone,
-      description:
-        `${formatCount(pendingKyc)} pending review record(s) and ${formatCount(staleKycSessions)} stale verification session(s).`,
+      description: `${formatCount(pendingKyc)} pending review record(s) and ${formatCount(staleKycSessions)} stale verification session(s).`,
       meta: `${formatCount(verifiedKyc)} verified, ${formatCount(rejectedKyc)} rejected`,
       icon: "shieldCheck",
     },
@@ -1083,8 +1090,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Notifications",
       value: unreadNotifications > 20 ? "Warning" : "Healthy",
       tone: unreadNotifications > 20 ? "warning" : "healthy",
-      description:
-        `${formatCount(unreadNotifications)} unread notification(s) and ${formatCount(recentNotifications)} new notification(s) in the last 24 hours.`,
+      description: `${formatCount(unreadNotifications)} unread notification(s) and ${formatCount(recentNotifications)} new notification(s) in the last 24 hours.`,
       meta: `${formatCount(recentNotifications)} new in 24h`,
       icon: "bell",
     },
@@ -1092,8 +1098,7 @@ export async function getSuperAdminSystemHealth(options?: {
       title: "Storage",
       value: recentUploads > 0 ? "Healthy" : "Warning",
       tone: recentUploads > 0 ? "healthy" : "warning",
-      description:
-        `${formatCount(recentUploads)} upload(s) landed in the last 24 hours across ${formatCount(totalFileAssets)} stored file asset(s).`,
+      description: `${formatCount(recentUploads)} upload(s) landed in the last 24 hours across ${formatCount(totalFileAssets)} stored file asset(s).`,
       meta: latestUpload
         ? `Latest upload ${formatRelativeTime(latestUpload.createdAt)}`
         : "No recent uploads",
@@ -1224,7 +1229,8 @@ export async function getSuperAdminSystemHealth(options?: {
     {
       label: "Approved bank submissions not reflected on target",
       count: approvedBankSubmissionsNotReflectedTotal,
-      tone: approvedBankSubmissionsNotReflectedTotal > 0 ? "warning" : "healthy",
+      tone:
+        approvedBankSubmissionsNotReflectedTotal > 0 ? "warning" : "healthy",
       helper:
         "Approved records that may not have fully updated the linked order or savings target.",
     },
@@ -1255,8 +1261,7 @@ export async function getSuperAdminSystemHealth(options?: {
       name: "App API",
       status: "Operational",
       tone: "healthy",
-      detail:
-        `${formatCount(totalUsers)} user record(s), ${formatCount(activePlatformPaymentMethods)} active payment method(s), and live dashboard reads are available.`,
+      detail: `${formatCount(totalUsers)} user record(s), ${formatCount(activePlatformPaymentMethods)} active payment method(s), and live dashboard reads are available.`,
       icon: "server",
     },
     {
@@ -1290,8 +1295,7 @@ export async function getSuperAdminSystemHealth(options?: {
     },
     {
       name: "Email delivery",
-      status:
-        failedPromotionDeliveries > 0 ? "Degraded" : "Operational",
+      status: failedPromotionDeliveries > 0 ? "Degraded" : "Operational",
       tone: failedPromotionDeliveries > 0 ? "warning" : "healthy",
       detail: `${formatCount(deliveredPromotionDeliveries)} delivered and ${formatCount(failedPromotionDeliveries)} failed email delivery record(s) in the last 24 hours.`,
       icon: "mail",

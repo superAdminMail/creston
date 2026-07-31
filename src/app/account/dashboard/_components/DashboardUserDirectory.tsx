@@ -40,6 +40,7 @@ import {
   DASHBOARD_PAGE_SURFACE_CLASS,
   DASHBOARD_TABLE_SHELL_CLASS,
 } from "./dashboardSurfaces";
+import { cn } from "@/lib/utils";
 
 const heroPillClass =
   "inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300";
@@ -315,7 +316,9 @@ function UserDirectoryMobileCard({
           openUser(user);
         }
       }}
-      className={DASHBOARD_PAGE_SURFACE_CLASS + " cursor-pointer overflow-hidden"}
+      className={
+        DASHBOARD_PAGE_SURFACE_CLASS + " cursor-pointer overflow-hidden"
+      }
     >
       <div className="space-y-4 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
@@ -343,9 +346,7 @@ function UserDirectoryMobileCard({
           <DetailField label="Email verification">
             {getEmailVerificationBadge(user.emailVerified)}
           </DetailField>
-          <DetailField label="KYC">
-            {getKycBadge(user.kycStatus)}
-          </DetailField>
+          <DetailField label="KYC">{getKycBadge(user.kycStatus)}</DetailField>
           <DetailField label="Deposits">
             <p className="text-sm font-semibold text-slate-950 dark:text-white">
               {formatDirectoryCurrency(user.totalDeposits)}
@@ -531,7 +532,9 @@ export function DashboardUserDirectory({
         >
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-4">
-              <Badge className={heroPillClass}>{badgeLabel}</Badge>
+              <Badge className={cn(heroPillClass, "hidden md:block")}>
+                {badgeLabel}
+              </Badge>
 
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
@@ -637,7 +640,11 @@ export function DashboardUserDirectory({
               ) : null}
             </div>
 
-            <div className={DASHBOARD_TABLE_SHELL_CLASS + " hidden overflow-hidden md:block"}>
+            <div
+              className={
+                DASHBOARD_TABLE_SHELL_CLASS + " hidden overflow-hidden md:block"
+              }
+            >
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[980px] text-left">
                   <thead className="bg-white/80 dark:bg-white/[0.04]">

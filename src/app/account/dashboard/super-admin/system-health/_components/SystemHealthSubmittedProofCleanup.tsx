@@ -206,7 +206,8 @@ export function SystemHealthSubmittedProofCleanup({
         : "Delete selected proofs";
 
   return (
-    <div className="rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+    // <div className="rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+    <div className="p-4 sm:p-5 md:p-6 lg:p-7">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 max-w-3xl">
           <p className="text-[10px] uppercase tracking-[0.32em] text-sky-700/90 sm:text-[11px] dark:text-sky-300/80">

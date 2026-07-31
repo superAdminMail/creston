@@ -34,10 +34,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-} from "../../../_components/dashboardSurfaces";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "../../../_components/dashboardSurfaces";
 
 import { SystemHealthNotificationCleanup } from "./SystemHealthNotificationCleanup";
 import { SystemHealthSubmittedProofCleanup } from "./SystemHealthSubmittedProofCleanup";
@@ -78,7 +75,8 @@ const TONE_ICON_MAP = {
 function toneClasses(tone: HealthTone) {
   if (tone === "healthy") {
     return {
-      badge: "border-emerald-400/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-300",
+      badge:
+        "border-emerald-400/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-300",
       dot: "bg-emerald-400",
       card: "border-emerald-400/10",
       iconWrap: `${SYSTEM_HEALTH_ICON_BASE} border-emerald-400/20 bg-emerald-500/10 text-emerald-900 dark:text-emerald-300`,
@@ -87,7 +85,8 @@ function toneClasses(tone: HealthTone) {
 
   if (tone === "warning") {
     return {
-      badge: "border-amber-400/20 bg-amber-500/10 text-amber-900 dark:text-amber-300",
+      badge:
+        "border-amber-400/20 bg-amber-500/10 text-amber-900 dark:text-amber-300",
       dot: "bg-amber-400",
       card: "border-amber-400/10",
       iconWrap: `${SYSTEM_HEALTH_ICON_BASE} border-amber-400/20 bg-amber-500/10 text-amber-900 dark:text-amber-300`,
@@ -186,18 +185,14 @@ type SystemHealthClientProps = {
 
 export function SystemHealthClient({ health }: SystemHealthClientProps) {
   return (
-    <div
-      className={cn(
-        "mx-auto w-full max-w-7xl p-5 sm:p-6 md:p-8",
-        DASHBOARD_PAGE_PANEL_CLASS,
-      )}
-    >
+    <div>
       <div className="flex flex-col gap-6 border-b border-slate-200/80 pb-6 lg:flex-row lg:items-end lg:justify-between lg:gap-8 dark:border-white/10">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-950/20 bg-blue-950 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.32em] text-white shadow-sm sm:text-[11px] dark:border-white/10 dark:bg-white/[0.04] dark:text-sky-300">
-            <Siren className="h-3.5 w-3.5 shrink-0 text-white dark:text-sky-300" />
+          <div className="md:inline-flex hidden items-center gap-2 rounded-full border border-blue-950/20 bg-blue-950 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.32em] text-white shadow-sm sm:text-[11px] dark:border-white/10 dark:bg-white/[0.04] dark:text-sky-300">
+            <Siren className="h-3.5 w-3.5 shrink-0 text-sky-300 dark:text-sky-200" />
             Super admin control
           </div>
+
           <h1 className="text-balance mt-4 text-3xl font-semibold leading-tight tracking-tight text-sky-950 sm:text-4xl dark:text-sky-100">
             System health
           </h1>
@@ -323,7 +318,9 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
       </div>
 
       <div className="mt-10 grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.9fr)]">
-        <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+        {/* <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+         */}
+        <div className="min-w-0 p-4 sm:p-5 md:p-6 lg:p-7">
           <SectionHeader
             eyebrow="Operations"
             title="Live incidents and warnings"
@@ -388,7 +385,9 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+        {/* <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+         */}
+        <div className="min-w-0 p-4 sm:p-5 md:p-6 lg:p-7">
           <SectionHeader
             eyebrow="Service map"
             title="Subsystem status"
@@ -439,13 +438,14 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
       </div>
 
       <div className="mt-10 grid gap-6 xl:grid-cols-2">
-        <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+        {/* <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+         */}
+        <div className="min-w-0 p-4 sm:p-5 md:p-6 lg:p-7">
           <SectionHeader
             eyebrow="Queues"
             title="Operational backlogs"
             description="Work queues that super admins and operations teams should monitor closely."
           />
-
           <div className="space-y-3">
             {health.queueMetrics.map((item) => (
               <Card
@@ -476,7 +476,9 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+        {/* <div className="min-w-0 rounded-[1.75rem] border border-border/60 bg-white/75 dark:bg-white/[0.04] p-4 shadow-sm sm:p-5 md:p-6 lg:p-7">
+         */}
+        <div className="min-w-0 p-4 sm:p-5 md:p-6 lg:p-7">
           <SectionHeader
             eyebrow="Integrity"
             title="Data consistency checks"
@@ -686,4 +688,3 @@ export function SystemHealthClient({ health }: SystemHealthClientProps) {
     </div>
   );
 }
-
