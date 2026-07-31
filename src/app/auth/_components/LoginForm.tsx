@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Loader2,
-  ShieldAlert,
-} from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, ShieldAlert } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -101,7 +95,7 @@ export default function LoginForm({
 
       if (accountAccess?.status === "SUSPENDED") {
         router.replace("/account-suspended");
-        router.refresh();
+        // router.refresh();
         return;
       }
 
@@ -127,7 +121,7 @@ export default function LoginForm({
         : successHref;
 
       router.replace(targetHref);
-      router.refresh();
+      //  router.refresh();
     });
   };
 
@@ -281,8 +275,8 @@ export default function LoginForm({
                 Account deleted
               </DialogTitle>
               <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                This account has been deleted. Please contact support to
-                restore your account before signing in again.
+                This account has been deleted. Please contact support to restore
+                your account before signing in again.
               </DialogDescription>
             </DialogHeader>
 

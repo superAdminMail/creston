@@ -103,7 +103,7 @@ export default function ProfileForm({ userData }: Props) {
       });
 
       toast.success("Profile updated");
-      router.refresh();
+      // router.refresh();
       router.push("/account/dashboard/profile");
     });
   };

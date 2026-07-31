@@ -121,11 +121,9 @@ export function FooterClient({
                     <div className="mt-2 space-y-2">
                       {phoneEntries.map((entry) => (
                         <p key={entry.label} className="flex items-start gap-2">
-                          <div>
-                            <span className="shrink-0">
-                              <Phone className="mt-0.5 h-5 w-5 text-blue-300" />
-                            </span>
-                          </div>
+                          <span className="shrink-0">
+                            <Phone className="mt-0.5 h-5 w-5 text-blue-300" />
+                          </span>
 
                           <span className="flex flex-wrap gap-2">
                             <span className="uppercase tracking-[0.12em] text-slate-500">

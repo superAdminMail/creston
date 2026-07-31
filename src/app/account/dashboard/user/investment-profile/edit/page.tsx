@@ -33,7 +33,7 @@ export default async function Page() {
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/12 dark:text-sky-100 md:hidden">
+        <div className="flex jsutify-center items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/12 dark:text-sky-100 md:hidden">
           <PencilLine className="h-4 w-4 text-sky-700 dark:text-sky-100" />
           Profile update
         </div>
@@ -59,7 +59,7 @@ export default async function Page() {
             successMessage="Profile updated successfully."
             compactFields
             tone="dashboard"
-            redirectHref="/account/dashboard/profile"
+            redirectHref="/account/dashboard/user/investment-profile"
             siteName={siteName}
           />
         </div>

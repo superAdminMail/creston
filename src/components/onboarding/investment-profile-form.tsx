@@ -309,7 +309,7 @@ export function InvestmentProfileForm({
 
       if (redirectHref) {
         router.push(redirectHref);
-        router.refresh();
+        // router.refresh();
       }
     });
   };
@@ -334,7 +334,7 @@ export function InvestmentProfileForm({
     ? "text-sm text-slate-500 dark:text-slate-400"
     : "text-sm text-slate-400";
   const inputClassName = cn(
-    "h-11 rounded-xl",
+    "h-11  rounded-xl",
     isDashboardTone
       ? `${DASHBOARD_FIELD_CLASS} px-3 shadow-sm focus-visible:ring-sky-400/30`
       : "input-premium",
@@ -380,82 +380,90 @@ export function InvestmentProfileForm({
           <FieldLabel className={labelClassName}>Contact number</FieldLabel>
           <FieldContent>
             {compactFields ? (
-              <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
-                <Controller
-                  control={form.control}
-                  name="countryCallingCode"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldContent>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          inputMode="tel"
-                          placeholder="+1"
-                          className={inputClassName}
-                        />
-                      </FieldContent>
-                    </Field>
-                  )}
-                />
+              <div className="flex gap-2">
+                <div className="w-20 shrink-0">
+                  <Controller
+                    control={form.control}
+                    name="countryCallingCode"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid || undefined}>
+                        <FieldContent>
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            inputMode="tel"
+                            placeholder="+1"
+                            className={cn(inputClassName)}
+                          />
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
+                </div>
 
-                <Controller
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldContent>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          inputMode="tel"
-                          autoComplete="tel-national"
-                          placeholder="555 123 4567"
-                          className={inputClassName}
-                        />
-                      </FieldContent>
-                    </Field>
-                  )}
-                />
+                <div className="flex-1">
+                  <Controller
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid || undefined}>
+                        <FieldContent>
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            inputMode="tel"
+                            autoComplete="tel-national"
+                            placeholder="555 123 4567"
+                            className={inputClassName}
+                          />
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
+                </div>
               </div>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]">
-                <Controller
-                  control={form.control}
-                  name="countryCallingCode"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldContent>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          inputMode="tel"
-                          placeholder="+1"
-                          className={inputClassName}
-                        />
-                      </FieldContent>
-                    </Field>
-                  )}
-                />
+              <div className="flex gap-2">
+                <div className="w-20 shrink-0">
+                  <Controller
+                    control={form.control}
+                    name="countryCallingCode"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid || undefined}>
+                        <FieldContent>
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            inputMode="tel"
+                            placeholder="+1"
+                            className={cn(inputClassName, "w-20")}
+                          />
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
+                </div>
 
-                <Controller
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid || undefined}>
-                      <FieldContent>
-                        <Input
-                          {...field}
-                          disabled={isPending}
-                          inputMode="tel"
-                          autoComplete="tel-national"
-                          placeholder="555 123 4567"
-                          className={inputClassName}
-                        />
-                      </FieldContent>
-                    </Field>
-                  )}
-                />
+                <div className="flex-1">
+                  <Controller
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid || undefined}>
+                        <FieldContent>
+                          <Input
+                            {...field}
+                            disabled={isPending}
+                            inputMode="tel"
+                            autoComplete="tel-national"
+                            placeholder="555 123 4567"
+                            className={inputClassName}
+                          />
+                        </FieldContent>
+                      </Field>
+                    )}
+                  />
+                </div>
               </div>
             )}
             <FieldDescription className={cn("pt-1", descriptionClassName)}>

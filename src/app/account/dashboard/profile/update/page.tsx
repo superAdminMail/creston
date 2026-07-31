@@ -26,11 +26,6 @@ type ProfileEditUser = {
   profileAvatar: { url: string; key: string } | null;
 };
 
-const PROFILE_PANEL_CLASS = cn(
-  DASHBOARD_PAGE_PANEL_CLASS,
-  "overflow-hidden rounded-[2.5rem] p-5 sm:p-7 lg:p-9",
-);
-
 const PROFILE_SURFACE_CLASS = cn(
   DASHBOARD_PAGE_SURFACE_CLASS,
   "rounded-[1.9rem] p-6 sm:p-7 lg:p-8",
@@ -79,11 +74,6 @@ export default async function Page() {
       : null,
   };
 
-  const initials = getUserInitials({
-    name: user.name ?? undefined,
-    email: user.email ?? "",
-    username: user.username ?? undefined,
-  });
   const canReviewInvestmentProfile = role === "USER";
 
   return (
