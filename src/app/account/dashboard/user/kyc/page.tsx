@@ -144,7 +144,7 @@ export default async function Page({
           Identity Verification
         </h1>
         <p className="text-sm text-muted-foreground">
-          Complete your KYC to unlock full access to your account.
+          Complete your ID verification to unlock full access to your account.
         </p>
       </header>
 

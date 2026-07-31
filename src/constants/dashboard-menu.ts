@@ -122,7 +122,7 @@ export const DASHBOARD_MENU = {
       title: "Verification",
       links: [
         {
-          name: "KYC Verification",
+          name: "Identity Verification",
           href: "/account/dashboard/user/kyc",
           icon: BadgeCheck,
         },
