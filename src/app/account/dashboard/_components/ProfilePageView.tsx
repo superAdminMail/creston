@@ -32,6 +32,7 @@ import {
 type ProfilePageProps = {
   siteName?: string;
   user: {
+    accountId: string;
     name: string;
     email: string;
     username?: string | null;
@@ -75,8 +76,12 @@ export default function ProfilePageView({
   referrals = [],
 }: ProfilePageProps) {
   const resolvedSiteName = siteName?.trim() || "Company";
+
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
+
+  const [accountIdCopied, setAccountIdCopied] = useState(false);
+
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
   const avatarFallback = getUserInitials({
     name: user.name ?? undefined,
@@ -138,6 +143,16 @@ export default function ProfilePageView({
       }
     } catch {
       setShared(false);
+    }
+  }
+
+  async function handleCopyAccountId() {
+    try {
+      await navigator.clipboard.writeText(user.accountId);
+      setAccountIdCopied(true);
+      window.setTimeout(() => setAccountIdCopied(false), 2000);
+    } catch {
+      setAccountIdCopied(false);
     }
   }
 
@@ -237,6 +252,36 @@ export default function ProfilePageView({
             </p>
 
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "min-w-0 p-4")}>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-sky-700 dark:text-sky-300" />
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Account ID
+                  </p>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="min-w-0 truncate font-mono text-sm font-medium text-slate-950 dark:text-white">
+                    {user.accountId}
+                  </p>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyAccountId}
+                    className="shrink-0 rounded-xl border-slate-200/80 bg-white/80 dark:border-white/10 dark:bg-white/[0.04]"
+                  >
+                    {accountIdCopied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                    {accountIdCopied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </div>
+
               <InfoCard
                 icon={
                   <User2 className="h-4 w-4 text-sky-700 dark:text-sky-300" />

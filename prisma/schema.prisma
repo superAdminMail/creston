@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -17,73 +12,59 @@ datasource db {
 /// *  AUTHENTICATION & USER MANAGEMENT
 /// * ===========================
 model User {
-  id            String  @id
-  name          String
-  email         String
-  password      String?
-  username      String?
-  emailVerified Boolean @default(false)
-  image         String?
-
-  accountStatus             UserAccountStatus @default(PENDING_VERIFICATION)
-  emailVerificationRequired Boolean           @default(true)
-  isDisposableEmail         Boolean           @default(false)
-  disposableEmailChecked    Boolean           @default(false)
-  disposableEmailDomain     String?
-  disposableCheckProvider   String?
-  disposableCheckedAt       DateTime?
-  emailVerifiedAt           DateTime?
-
-  isSuspended Boolean   @default(false)
-  suspendedAt DateTime?
-
-  isDeleted           Boolean   @default(false)
-  deletedAt           DateTime?
-  scheduledDeletionAt DateTime?
-
-  role UserRole @default(USER)
-
-  hasCompletedOnboarding Boolean   @default(false)
-  skippedOnboardingAt    DateTime?
-
-  profileAvatarFileAssetId String?
-  profileAvatarFileAsset   FileAsset? @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id], onDelete: SetNull)
-
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  sessions   Session[]
-  accounts   Account[]
-  fileAssets FileAsset[] @relation("UploadedByUser")
-
-  investorProfile      InvestorProfile?
-  auditLogs            AuditLog[]            @relation("ActorAuditLogs")
-  cryptoFundingIntents CryptoFundingIntent[]
-
-  agentConversations  Conversation[]       @relation("ConversationAgent")
-  agentProfile        AgentProfile?
-  conversationMembers ConversationMember[]
-  notifications       Notification[]
-  conversations       Conversation[]       @relation("ConversationUser")
-
-  submittedInvestmentOrderPayments InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentSubmittedBy")
-  reviewedInvestmentOrderPayments  InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentReviewedBy")
-  investmentOrderAdjustments       InvestmentOrderAdjustment[]
-
-  createdPromotionCampaigns PromotionCampaign[] @relation("PromotionCampaignCreatedBy")
-  promotionDeliveries       PromotionDelivery[] @relation("PromotionDeliveryUser")
-
-  submittedSavingsTransactionPayments SavingsTransactionPayment[] @relation("SavingsTransactionPaymentSubmittedBy")
-  reviewedSavingsTransactionPayments  SavingsTransactionPayment[] @relation("SavingsTransactionPaymentReviewedBy")
+  id                                  String                      @id
+  name                                String
+  email                               String                      @unique
+  password                            String?
+  username                            String?
+  emailVerified                       Boolean                     @default(false)
+  image                               String?
+  accountStatus                       UserAccountStatus           @default(PENDING_VERIFICATION)
+  emailVerificationRequired           Boolean                     @default(true)
+  isDisposableEmail                   Boolean                     @default(false)
+  disposableEmailChecked              Boolean                     @default(false)
+  disposableEmailDomain               String?
+  disposableCheckProvider             String?
+  disposableCheckedAt                 DateTime?
+  emailVerifiedAt                     DateTime?
+  isDeleted                           Boolean                     @default(false)
+  deletedAt                           DateTime?
+  scheduledDeletionAt                 DateTime?
+  role                                UserRole                    @default(USER)
+  hasCompletedOnboarding              Boolean                     @default(false)
+  skippedOnboardingAt                 DateTime?
+  profileAvatarFileAssetId            String?
+  createdAt                           DateTime                    @default(now())
+  updatedAt                           DateTime                    @updatedAt
+  referralCode                        String?                     @unique
+  referredByCode                      String?
+  isSuspended                         Boolean                     @default(false)
+  suspendedAt                         DateTime?
+  accountId                           String                      @unique
+  agentProfile                        AgentProfile?
+  agentConversations                  Conversation[]              @relation("ConversationAgent")
+  conversations                       Conversation[]              @relation("ConversationUser")
+  conversationMembers                 ConversationMember[]
+  cryptoFundingIntents                CryptoFundingIntent[]
+  notifications                       Notification[]
+  accounts                            Account[]
+  auditLogs                           AuditLog[]                  @relation("ActorAuditLogs")
+  fileAssets                          FileAsset[]                 @relation("UploadedByUser")
+  investmentOrderAdjustments          InvestmentOrderAdjustment[]
+  reviewedInvestmentOrderPayments     InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentReviewedBy")
+  submittedInvestmentOrderPayments    InvestmentOrderPayment[]    @relation("InvestmentOrderPaymentSubmittedBy")
+  investorProfile                     InvestorProfile?
+  createdPromotionCampaigns           PromotionCampaign[]         @relation("PromotionCampaignCreatedBy")
+  promotionDeliveries                 PromotionDelivery[]         @relation("PromotionDeliveryUser")
+  referralReceived                    Referral?                   @relation("ReferralsReceived")
+  referralsMade                       Referral[]                  @relation("ReferralsMade")
+  referralRewards                     ReferralReward[]            @relation("ReferralRewards")
   savingsFundingIntents               SavingsFundingIntent[]
+  reviewedSavingsTransactionPayments  SavingsTransactionPayment[] @relation("SavingsTransactionPaymentReviewedBy")
+  submittedSavingsTransactionPayments SavingsTransactionPayment[] @relation("SavingsTransactionPaymentSubmittedBy")
+  sessions                            Session[]
+  profileAvatarFileAsset              FileAsset?                  @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id])
 
-  referralCode   String? @unique
-  referredByCode String?
-
-  referralsMade    Referral[]       @relation("ReferralsMade")
-  referralReceived Referral?        @relation("ReferralsReceived")
-  referralRewards  ReferralReward[] @relation("ReferralRewards")
-
-  @@unique([email])
   @@index([accountStatus])
   @@index([emailVerified])
   @@index([isDisposableEmail])
@@ -94,7 +75,7 @@ model User {
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -102,7 +83,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@index([userId])
   @@map("session")
 }
@@ -112,7 +92,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -122,6 +101,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("account")
@@ -164,44 +144,34 @@ model PasswordResetAttempt {
 /// *  FILE ASSETS & MEDIA MANAGEMENT
 /// * ===========================
 model FileAsset {
-  id String @id @default(cuid())
-
-  fileName     String
-  originalName String?
-
-  mimeType       String?
-  extension      String?
-  sizeBytes      BigInt?
-  checksumSha256 String?
-
-  storageKey      String              @unique
-  storageBucket   String?
-  storageProvider FileStorageProvider
-  url             String?
-
-  type       FileAssetType       @default(OTHER)
-  visibility FileAssetVisibility @default(PRIVATE)
-
-  uploadedById String?
-  uploadedBy   User?   @relation("UploadedByUser", fields: [uploadedById], references: [id], onDelete: SetNull)
-
-  investmentIcons Investment[] @relation("InvestmentIconAsset")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  usersAsProfileAvatar     User[]            @relation("UserProfileAvatarAsset")
-  investorProfilesAsAvatar InvestorProfile[] @relation("InvestorAvatar")
-
-  siteConfigurationDefaultOgImages SiteConfiguration[] @relation("SiteConfigurationDefaultOgImage")
-  siteLogo                         SiteConfiguration?  @relation("SiteConfigurationLogo")
-  investmentPlanSeoImages          InvestmentPlan[]    @relation("InvestmentPlanSeoImage")
-
-  testimonyAvatarFiles       Testimony[]                 @relation("TestimonyAvatarFile")
-  testimonyVideoFiles        Testimony[]                 @relation("TestimonyVideoFile")
-  management                 Management[]
-  investmentOrderPayments    InvestmentOrderPayment[]
-  savingsTransactionPayments SavingsTransactionPayment[]
+  id                               String                      @id @default(cuid())
+  fileName                         String
+  originalName                     String?
+  mimeType                         String?
+  extension                        String?
+  sizeBytes                        BigInt?
+  checksumSha256                   String?
+  storageKey                       String                      @unique
+  storageBucket                    String?
+  storageProvider                  FileStorageProvider
+  url                              String?
+  type                             FileAssetType               @default(OTHER)
+  visibility                       FileAssetVisibility         @default(PRIVATE)
+  uploadedById                     String?
+  createdAt                        DateTime                    @default(now())
+  updatedAt                        DateTime                    @updatedAt
+  uploadedBy                       User?                       @relation("UploadedByUser", fields: [uploadedById], references: [id])
+  investmentIcons                  Investment[]                @relation("InvestmentIconAsset")
+  investmentOrderPayments          InvestmentOrderPayment[]
+  investmentPlanSeoImages          InvestmentPlan[]            @relation("InvestmentPlanSeoImage")
+  investorProfilesAsAvatar         InvestorProfile[]           @relation("InvestorAvatar")
+  management                       Management[]
+  savingsTransactionPayments       SavingsTransactionPayment[]
+  siteConfigurationDefaultOgImages SiteConfiguration[]         @relation("SiteConfigurationDefaultOgImage")
+  siteLogo                         SiteConfiguration?          @relation("SiteConfigurationLogo")
+  testimonyAvatarFiles             Testimony[]                 @relation("TestimonyAvatarFile")
+  testimonyVideoFiles              Testimony[]                 @relation("TestimonyVideoFile")
+  usersAsProfileAvatar             User[]                      @relation("UserProfileAvatarAsset")
 
   @@index([uploadedById])
   @@index([type])
@@ -214,36 +184,29 @@ model FileAsset {
 /// *  INVESTOR PROFILES & INVESTMENTS
 /// * ===========================
 model InvestorProfile {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  isVerified Boolean @default(false)
-
-  phoneNumber  String?
-  dateOfBirth  DateTime?
-  age          Int       @default(18)
-  country      String?
-  state        String?
-  city         String?
-  addressLine1 String?
-
-  kycStatus       KycStatus        @default(NOT_STARTED)
-  kycVerification KYCVerification?
-
-  avatarFileId String?
-  avatarFile   FileAsset? @relation("InvestorAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
-
-  investmentAccounts InvestmentAccount[]
-
-  investmentOrders InvestmentOrder[]
-
+  id                      String                   @id @default(cuid())
+  userId                  String                   @unique
+  isVerified              Boolean                  @default(false)
+  phoneNumber             String?
+  dateOfBirth             DateTime?
+  age                     Int                      @default(18)
+  country                 String?
+  state                   String?
+  city                    String?
+  addressLine1            String?
+  kycStatus               KycStatus                @default(NOT_STARTED)
+  avatarFileId            String?
   createdAt               DateTime                 @default(now())
   updatedAt               DateTime                 @updatedAt
-  withdrawalOrders        WithdrawalOrder[]
-  savingsAccounts         SavingsAccount[]
-  paymentMethods          PaymentMethod[]
+  kycVerification         KYCVerification?
   kycVerificationSessions KycVerificationSession[]
+  paymentMethods          PaymentMethod[]
+  investmentAccounts      InvestmentAccount[]
+  investmentOrders        InvestmentOrder[]
+  avatarFile              FileAsset?               @relation("InvestorAvatar", fields: [avatarFileId], references: [id])
+  user                    User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savingsAccounts         SavingsAccount[]
+  withdrawalOrders        WithdrawalOrder[]
 
   @@index([kycStatus])
   @@index([avatarFileId])
@@ -251,26 +214,21 @@ model InvestorProfile {
 }
 
 model InvestmentAccount {
-  id                String @id @default(cuid())
+  id                String            @id @default(cuid())
   investorProfileId String
   investmentPlanId  String
-
-  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentPlan  InvestmentPlan  @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
-
-  pendingWithdrawal Decimal @default(0)
-
-  investmentOrders InvestmentOrder[]
-  status           AccountStatus     @default(PENDING)
-  balance          Decimal           @default(0) @db.Decimal(18, 2)
-  openedAt         DateTime?
-  closedAt         DateTime?
-
-  currency String @default("USD")
-
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  withdrawalOrders WithdrawalOrder[]
+  pendingWithdrawal Decimal           @default(0)
+  status            AccountStatus     @default(PENDING)
+  balance           Decimal           @default(0) @db.Decimal(18, 2)
+  openedAt          DateTime?
+  closedAt          DateTime?
+  currency          String            @default("USD")
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  investmentPlan    InvestmentPlan    @relation(fields: [investmentPlanId], references: [id])
+  investorProfile   InvestorProfile   @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  investmentOrders  InvestmentOrder[]
+  withdrawalOrders  WithdrawalOrder[]
 
   @@unique([investorProfileId, investmentPlanId])
   @@index([investorProfileId])
@@ -280,27 +238,20 @@ model InvestmentAccount {
 }
 
 model Investment {
-  id   String @id @default(cuid())
-  name String
-  slug String @unique
-
-  description String?
-
-  symbol String? // e.g. BTC, AAPL, GLD
-
-  type   InvestmentType          @default(CRYPTO)
-  status InvestmentCatalogStatus @default(ACTIVE)
-
+  id              String                  @id @default(cuid())
+  name            String
+  slug            String                  @unique
+  description     String?
+  symbol          String?
+  type            InvestmentType          @default(CRYPTO)
+  status          InvestmentCatalogStatus @default(ACTIVE)
   iconFileAssetId String?
-  iconFileAsset   FileAsset? @relation("InvestmentIconAsset", fields: [iconFileAssetId], references: [id], onDelete: SetNull)
-
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
-
+  sortOrder       Int                     @default(0)
+  isActive        Boolean                 @default(true)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  iconFileAsset   FileAsset?              @relation("InvestmentIconAsset", fields: [iconFileAssetId], references: [id])
   investmentPlans InvestmentPlan[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@index([type])
   @@index([status])
@@ -311,16 +262,11 @@ model Investment {
 }
 
 model InvestmentPrice {
-  id String @id @default(cuid())
-
-  symbol String
-
-  price Decimal @db.Decimal(18, 8)
-
-  source String?
-
-  isLatest Boolean @default(true)
-
+  id         String   @id @default(cuid())
+  symbol     String
+  price      Decimal  @db.Decimal(18, 8)
+  source     String?
+  isLatest   Boolean  @default(true)
   recordedAt DateTime @default(now())
 
   @@index([symbol, recordedAt])
@@ -328,48 +274,35 @@ model InvestmentPrice {
 }
 
 model InvestmentPlan {
-  id           String @id @default(cuid())
-  investmentId String
-
-  name String
-  slug String @unique
-
-  description String?
-
-  penaltyPeriodDays Int @default(0)
-
+  id                          String               @id @default(cuid())
+  investmentId                String
+  name                        String
+  slug                        String               @unique
+  description                 String?
   penaltyType                 PenaltyType?
-  earlyWithdrawalPenaltyValue Decimal?     @db.Decimal(18, 2)
-  maxPenaltyAmount            Decimal?     @db.Decimal(18, 2)
-
-  investmentModel InvestmentModel
-
-  expectedReturnMin Decimal? @db.Decimal(5, 2)
-  expectedReturnMax Decimal? @db.Decimal(5, 2)
-
-  isLocked        Boolean @default(false)
-  allowWithdrawal Boolean @default(true)
-
-  seoTitle       String?
-  seoDescription String?
-  seoImageFileId String?
-  seoImageFile   FileAsset? @relation("InvestmentPlanSeoImage", fields: [seoImageFileId], references: [id], onDelete: SetNull)
-
-  sortOrder    Int              @default(0)
-  durationDays Int              @default(7)
-  period       InvestmentPeriod @default(LONG_TERM)
-
-  currency String  @default("USD")
-  isActive Boolean @default(true)
-
-  investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
-
-  investmentAccounts InvestmentAccount[]
-  investmentOrders   InvestmentOrder[]
-  tiers              InvestmentPlanTier[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  earlyWithdrawalPenaltyValue Decimal?             @db.Decimal(18, 2)
+  maxPenaltyAmount            Decimal?             @db.Decimal(18, 2)
+  investmentModel             InvestmentModel
+  expectedReturnMin           Decimal?             @db.Decimal(5, 2)
+  expectedReturnMax           Decimal?             @db.Decimal(5, 2)
+  isLocked                    Boolean              @default(false)
+  allowWithdrawal             Boolean              @default(true)
+  seoTitle                    String?
+  seoDescription              String?
+  seoImageFileId              String?
+  sortOrder                   Int                  @default(0)
+  durationDays                Int                  @default(7)
+  period                      InvestmentPeriod     @default(LONG_TERM)
+  currency                    String               @default("USD")
+  isActive                    Boolean              @default(true)
+  createdAt                   DateTime             @default(now())
+  updatedAt                   DateTime             @updatedAt
+  penaltyPeriodDays           Int                  @default(0)
+  investmentAccounts          InvestmentAccount[]
+  investmentOrders            InvestmentOrder[]
+  investment                  Investment           @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  seoImageFile                FileAsset?           @relation("InvestmentPlanSeoImage", fields: [seoImageFileId], references: [id])
+  tiers                       InvestmentPlanTier[]
 
   @@index([investmentId])
   @@index([investmentModel])
@@ -379,25 +312,19 @@ model InvestmentPlan {
 }
 
 model InvestmentPlanTier {
-  id               String @id @default(cuid())
+  id               String              @id @default(cuid())
   investmentPlanId String
-
-  level InvestmentTierLevel @default(CORE)
-
-  minAmount Decimal @db.Decimal(18, 2)
-  maxAmount Decimal @db.Decimal(18, 2)
-
-  fixedRoiPercent Decimal? @db.Decimal(5, 2)
-  projectedRoiMin Decimal? @db.Decimal(5, 2)
-  projectedRoiMax Decimal? @db.Decimal(5, 2)
-
-  isActive Boolean @default(true)
-
-  investmentPlan InvestmentPlan @relation(fields: [investmentPlanId], references: [id], onDelete: Cascade)
-
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  level            InvestmentTierLevel @default(CORE)
+  minAmount        Decimal             @db.Decimal(18, 2)
+  maxAmount        Decimal             @db.Decimal(18, 2)
+  isActive         Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  fixedRoiPercent  Decimal?            @db.Decimal(5, 2)
+  projectedRoiMax  Decimal?            @db.Decimal(5, 2)
+  projectedRoiMin  Decimal?            @db.Decimal(5, 2)
   investmentOrders InvestmentOrder[]
+  investmentPlan   InvestmentPlan      @relation(fields: [investmentPlanId], references: [id], onDelete: Cascade)
 
   @@unique([investmentPlanId, level])
   @@index([investmentPlanId])
@@ -406,78 +333,62 @@ model InvestmentPlanTier {
 }
 
 model InvestmentOrder {
-  id                   String @id @default(cuid())
-  investorProfileId    String
-  investmentPlanId     String
-  investmentAccountId  String
-  investmentPlanTierId String
-
-  investmentModel InvestmentModel
-  runtimeStatus   RuntimeStatus   @default(NOT_STARTED)
-
-  startDate    DateTime?
-  maturityDate DateTime?
-
-  expectedReturn Decimal?  @db.Decimal(18, 2)
-  accruedProfit  Decimal   @default(0) @db.Decimal(18, 2)
-  lastAccruedAt  DateTime?
-  completedAt    DateTime?
-
-  dailyProfitAccumulated Decimal   @default(0)
-  lastProfitResetAt      DateTime?
-
-  units           Decimal?  @db.Decimal(18, 8)
-  entryPrice      Decimal?  @db.Decimal(18, 8)
-  currentValue    Decimal?  @db.Decimal(18, 2)
-  lastValuationAt DateTime?
-
-  isMatured   Boolean               @default(false)
-  isWithdrawn Boolean               @default(false)
-  status      InvestmentOrderStatus @default(PENDING_PAYMENT)
-
+  id                      String                       @id @default(cuid())
+  investorProfileId       String
+  investmentPlanId        String
+  investmentAccountId     String
+  investmentPlanTierId    String
+  investmentModel         InvestmentModel
+  startDate               DateTime?
+  maturityDate            DateTime?
+  expectedReturn          Decimal?                     @db.Decimal(18, 2)
+  accruedProfit           Decimal                      @default(0) @db.Decimal(18, 2)
+  lastAccruedAt           DateTime?
+  completedAt             DateTime?
+  dailyProfitAccumulated  Decimal                      @default(0)
+  lastProfitResetAt       DateTime?
+  units                   Decimal?                     @db.Decimal(18, 8)
+  entryPrice              Decimal?                     @db.Decimal(18, 8)
+  currentValue            Decimal?                     @db.Decimal(18, 2)
+  lastValuationAt         DateTime?
+  isMatured               Boolean                      @default(false)
+  isWithdrawn             Boolean                      @default(false)
+  status                  InvestmentOrderStatus        @default(PENDING_PAYMENT)
   paymentMethodType       InvestmentPaymentMethodType?
   platformPaymentMethodId String?
+  amountPaid              Decimal                      @default(0) @db.Decimal(18, 2)
+  amount                  Decimal                      @db.Decimal(18, 2)
+  currency                String                       @default("USD")
+  lastPaymentSubmittedAt  DateTime?
+  lastPaymentReviewedAt   DateTime?
+  paymentMetadata         Json?
+  paymentReference        String?
+  paidAt                  DateTime?
+  confirmedAt             DateTime?
+  cancelledAt             DateTime?
+  cancellationReason      String?
+  adminNotes              String?
+  createdAt               DateTime                     @default(now())
+  updatedAt               DateTime                     @updatedAt
+  runtimeStatus           RuntimeStatus                @default(NOT_STARTED)
+  upgradeAmount           Decimal?                     @db.Decimal(18, 2)
+  upgradePaymentId        String?
+  upgradeRequestedAt      DateTime?
+  upgradeReviewedAt       DateTime?
+  upgradeStatus           InvestmentOrderUpgradeStatus @default(DISABLED)
   bankInfoRequestedAt     DateTime?
   bankInfoRespondedAt     DateTime?
-
-  upgradeStatus      InvestmentOrderUpgradeStatus @default(DISABLED)
-  upgradeAmount      Decimal?                     @db.Decimal(18, 2)
-  upgradePaymentId   String?
-  upgradeRequestedAt DateTime?
-  upgradeReviewedAt  DateTime?
-
-  amountPaid Decimal @default(0) @db.Decimal(18, 2)
-  amount     Decimal @db.Decimal(18, 2)
-  currency   String  @default("USD")
-
-  lastPaymentSubmittedAt DateTime?
-  lastPaymentReviewedAt  DateTime?
-
-  paymentMetadata Json?
-
-  paymentReference String?
-  paidAt           DateTime?
-  confirmedAt      DateTime?
-  cancelledAt      DateTime?
-
-  cancellationReason String?
-  adminNotes         String?
-
-  investmentPlanTier    InvestmentPlanTier     @relation(fields: [investmentPlanTierId], references: [id])
-  investorProfile       InvestorProfile        @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentPlan        InvestmentPlan         @relation(fields: [investmentPlanId], references: [id], onDelete: Restrict)
-  investmentAccount     InvestmentAccount      @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
-  platformPaymentMethod PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  withdrawalOrders      WithdrawalOrder[]
-  investmentEarnings    InvestmentEarning[]
-  adjustments           InvestmentOrderAdjustment[]
-  payments              InvestmentOrderPayment[]
-  cryptoFundingIntents  CryptoFundingIntent[]
-  withdrawalAllocations WithdrawalOrderAllocation[]
+  cryptoFundingIntents    CryptoFundingIntent[]
+  investmentEarnings      InvestmentEarning[]
+  investmentAccount       InvestmentAccount            @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentPlan          InvestmentPlan               @relation(fields: [investmentPlanId], references: [id])
+  investmentPlanTier      InvestmentPlanTier           @relation(fields: [investmentPlanTierId], references: [id])
+  investorProfile         InvestorProfile              @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  platformPaymentMethod   PlatformPaymentMethod?       @relation(fields: [platformPaymentMethodId], references: [id])
+  adjustments             InvestmentOrderAdjustment[]
+  payments                InvestmentOrderPayment[]
+  withdrawalOrders        WithdrawalOrder[]
+  withdrawalAllocations   WithdrawalOrderAllocation[]
 
   @@index([paymentMethodType])
   @@index([platformPaymentMethodId])
@@ -494,43 +405,33 @@ model InvestmentOrder {
 }
 
 model InvestmentEarning {
-  id String @id @default(cuid())
-
+  id                String          @id @default(cuid())
   investmentOrderId String
-
-  date   DateTime
-  amount Decimal  @db.Decimal(18, 2)
-
-  createdAt DateTime @default(now())
-
-  investmentOrder InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+  date              DateTime
+  amount            Decimal         @db.Decimal(18, 2)
+  createdAt         DateTime        @default(now())
+  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
 
   @@unique([investmentOrderId, date])
 }
 
 model InvestmentOrderAdjustment {
-  id String @id @default(cuid())
-
-  reference String @unique
-
+  id                String                             @id @default(cuid())
+  reference         String                             @unique
   investmentOrderId String
-  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
-
-  adjustedByUserId String
-  adjustedByUser   User   @relation(fields: [adjustedByUserId], references: [id], onDelete: Restrict)
-
-  direction InvestmentOrderAdjustmentDirection
-
-  amount         Decimal @db.Decimal(18, 2)
-  earningsBefore Decimal @db.Decimal(18, 2)
-  earningsAfter  Decimal @db.Decimal(18, 2)
-  balanceBefore  Decimal @db.Decimal(18, 2)
-  balanceAfter   Decimal @db.Decimal(18, 2)
-  currency       String  @default("USD")
-  reason         String?
-  metadata       Json?
-
-  createdAt DateTime @default(now())
+  adjustedByUserId  String
+  direction         InvestmentOrderAdjustmentDirection
+  amount            Decimal                            @db.Decimal(18, 2)
+  earningsBefore    Decimal                            @db.Decimal(18, 2)
+  earningsAfter     Decimal                            @db.Decimal(18, 2)
+  balanceBefore     Decimal                            @db.Decimal(18, 2)
+  balanceAfter      Decimal                            @db.Decimal(18, 2)
+  currency          String                             @default("USD")
+  reason            String?
+  metadata          Json?
+  createdAt         DateTime                           @default(now())
+  adjustedByUser    User                               @relation(fields: [adjustedByUserId], references: [id])
+  investmentOrder   InvestmentOrder                    @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
 
   @@index([investmentOrderId])
   @@index([adjustedByUserId])
@@ -544,36 +445,26 @@ model InvestmentOrderAdjustment {
 /// * 
 /// * ===========================
 model SavingsProduct {
-  id String @id @default(cuid())
-
-  name        String
-  description String?
-
+  id                      String                    @id @default(cuid())
+  name                    String
+  description             String?
   interestRatePercent     Decimal?                  @db.Decimal(5, 2)
   interestPayoutFrequency SavingsInterestFrequency?
   interestEnabled         Boolean                   @default(false)
-
-  isLockable      Boolean @default(false)
-  minimumLockDays Int?
-  maximumLockDays Int?
-
-  allowsWithdrawals Boolean @default(true)
-  allowsDeposits    Boolean @default(true)
-
-  minBalance Decimal? @db.Decimal(18, 2)
-  maxBalance Decimal? @db.Decimal(18, 2)
-
-  currency String @default("USD")
-
-  isActive  Boolean @default(true)
-  sortOrder Int     @default(0)
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  savingsAccounts SavingsAccount[]
+  isLockable              Boolean                   @default(false)
+  minimumLockDays         Int?
+  maximumLockDays         Int?
+  allowsWithdrawals       Boolean                   @default(true)
+  allowsDeposits          Boolean                   @default(true)
+  minBalance              Decimal?                  @db.Decimal(18, 2)
+  maxBalance              Decimal?                  @db.Decimal(18, 2)
+  currency                String                    @default("USD")
+  isActive                Boolean                   @default(true)
+  sortOrder               Int                       @default(0)
+  metadata                Json?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  savingsAccounts         SavingsAccount[]
 
   @@index([isActive])
   @@index([sortOrder])
@@ -581,43 +472,31 @@ model SavingsProduct {
 }
 
 model SavingsAccount {
-  id String @id @default(cuid())
-
-  investorProfileId String
-  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-
-  savingsProductId String
-  savingsProduct   SavingsProduct @relation(fields: [savingsProductId], references: [id], onDelete: Restrict)
-
-  name        String
-  description String?
-
-  balance       Decimal       @default(0) @db.Decimal(18, 2)
-  targetAmount  Decimal?      @db.Decimal(18, 2)
-  currency      String        @default("USD")
-  runtimeStatus RuntimeStatus @default(NOT_STARTED)
-
-  isLocked    Boolean   @default(false)
-  lockedUntil DateTime?
-
-  lastInterestAppliedAt DateTime?
-
-  status SavingsStatus @default(ACTIVE)
-
+  id                      String                      @id @default(cuid())
+  investorProfileId       String
+  savingsProductId        String
+  name                    String
+  description             String?
+  balance                 Decimal                     @default(0) @db.Decimal(18, 2)
+  targetAmount            Decimal?                    @db.Decimal(18, 2)
+  currency                String                      @default("USD")
+  isLocked                Boolean                     @default(false)
+  lockedUntil             DateTime?
+  lastInterestAppliedAt   DateTime?
+  status                  SavingsStatus               @default(ACTIVE)
+  metadata                Json?
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  runtimeStatus           RuntimeStatus               @default(NOT_STARTED)
+  bankInfoRequestedAt     DateTime?
+  bankInfoRespondedAt     DateTime?
   platformPaymentMethodId String?
-  platformPaymentMethod   PlatformPaymentMethod? @relation("SavingsAccountBankInfoMethod", fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  bankInfoRequestedAt DateTime?
-  bankInfoRespondedAt DateTime?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  transactions          SavingsTransaction[]
-  savingsFundingIntents SavingsFundingIntent[]
-  withdrawalAllocations WithdrawalOrderAllocation[]
+  investorProfile         InvestorProfile             @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  platformPaymentMethod   PlatformPaymentMethod?      @relation("SavingsAccountBankInfoMethod", fields: [platformPaymentMethodId], references: [id])
+  savingsProduct          SavingsProduct              @relation(fields: [savingsProductId], references: [id])
+  savingsFundingIntents   SavingsFundingIntent[]
+  transactions            SavingsTransaction[]
+  withdrawalAllocations   WithdrawalOrderAllocation[]
 
   @@index([investorProfileId])
   @@index([savingsProductId])
@@ -628,28 +507,20 @@ model SavingsAccount {
 }
 
 model SavingsTransaction {
-  id String @id @default(cuid())
-
-  savingsAccountId String
-  savingsAccount   SavingsAccount @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
-
+  id                     String                 @id @default(cuid())
+  savingsAccountId       String
   savingsFundingIntentId String?
-  savingsFundingIntent   SavingsFundingIntent? @relation(fields: [savingsFundingIntentId], references: [id], onDelete: SetNull)
-
-  type SavingsTransactionType
-
-  amount   Decimal @db.Decimal(18, 2)
-  currency String  @default("USD")
-
-  balanceBefore Decimal @db.Decimal(18, 2)
-  balanceAfter  Decimal @db.Decimal(18, 2)
-
-  reference String?
-  note      String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
+  type                   SavingsTransactionType
+  amount                 Decimal                @db.Decimal(18, 2)
+  currency               String                 @default("USD")
+  balanceBefore          Decimal                @db.Decimal(18, 2)
+  balanceAfter           Decimal                @db.Decimal(18, 2)
+  reference              String?
+  note                   String?
+  metadata               Json?
+  createdAt              DateTime               @default(now())
+  savingsAccount         SavingsAccount         @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
+  savingsFundingIntent   SavingsFundingIntent?  @relation(fields: [savingsFundingIntentId], references: [id])
 
   @@index([savingsFundingIntentId])
   @@index([savingsAccountId])
@@ -663,47 +534,34 @@ model SavingsTransaction {
 /// *  Withdrawal Order & Payout
 /// * ===========================
 model WithdrawalOrder {
-  id String @id @default(cuid())
-
-  externalReference String? @unique
-
+  id                  String                      @id @default(cuid())
+  externalReference   String?                     @unique
   investorProfileId   String
   investmentAccountId String?
   investmentOrderId   String?
-
-  amount   Decimal @db.Decimal(18, 2)
-  currency String  @default("USD")
-
-  status WithdrawalStatus @default(PENDING)
-
-  hasCommissionFees Boolean          @default(false)
-  commissionStatus  CommissionStatus @default(PENDING)
-  commissionPercent Decimal          @default(0) @db.Decimal(5, 2)
-  savingsFeeAmount  Decimal?         @db.Decimal(18, 2)
-
-  payoutMethodId String?
-
-  payoutMethod PaymentMethod? @relation(fields: [payoutMethodId], references: [id], onDelete: SetNull)
-
-  payoutSnapshot Json?
-
-  reference String?
-
-  requestedAt DateTime  @default(now())
-  processedAt DateTime?
-  completedAt DateTime?
-  rejectedAt  DateTime?
-
-  rejectionReason String?
-  adminNotes      String?
-
-  investorProfile   InvestorProfile             @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  investmentAccount InvestmentAccount?          @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
-  investmentOrder   InvestmentOrder?            @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
-  allocations       WithdrawalOrderAllocation[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  amount              Decimal                     @db.Decimal(18, 2)
+  currency            String                      @default("USD")
+  status              WithdrawalStatus            @default(PENDING)
+  payoutMethodId      String?
+  payoutSnapshot      Json?
+  reference           String?
+  requestedAt         DateTime                    @default(now())
+  processedAt         DateTime?
+  completedAt         DateTime?
+  rejectedAt          DateTime?
+  rejectionReason     String?
+  adminNotes          String?
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  commissionPercent   Decimal                     @default(0) @db.Decimal(5, 2)
+  commissionStatus    CommissionStatus            @default(PENDING)
+  hasCommissionFees   Boolean                     @default(false)
+  savingsFeeAmount    Decimal?                    @db.Decimal(18, 2)
+  investmentAccount   InvestmentAccount?          @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentOrder     InvestmentOrder?            @relation(fields: [investmentOrderId], references: [id])
+  investorProfile     InvestorProfile             @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  payoutMethod        PaymentMethod?              @relation(fields: [payoutMethodId], references: [id])
+  allocations         WithdrawalOrderAllocation[]
 
   @@index([payoutMethodId])
   @@index([investorProfileId])
@@ -714,26 +572,21 @@ model WithdrawalOrder {
 }
 
 model WithdrawalOrderAllocation {
-  id String @id @default(cuid())
-
-  withdrawalOrderId String
-  sourceType        WithdrawalAllocationSourceType
-  sourceId          String
-  sourceLabel       String?
-
-  sourceGrossAmount   Decimal @db.Decimal(18, 2)
-  sourcePenaltyAmount Decimal @default(0) @db.Decimal(18, 2)
-  sourceNetAmount     Decimal @db.Decimal(18, 2)
-  currency            String  @default("USD")
-
-  investmentOrderId String?
-  savingsAccountId  String?
-
-  withdrawalOrder WithdrawalOrder  @relation(fields: [withdrawalOrderId], references: [id], onDelete: Cascade)
-  investmentOrder InvestmentOrder? @relation(fields: [investmentOrderId], references: [id], onDelete: SetNull)
-  savingsAccount  SavingsAccount?  @relation(fields: [savingsAccountId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
+  id                  String                         @id @default(cuid())
+  withdrawalOrderId   String
+  sourceType          WithdrawalAllocationSourceType
+  sourceId            String
+  sourceLabel         String?
+  sourceGrossAmount   Decimal                        @db.Decimal(18, 2)
+  sourcePenaltyAmount Decimal                        @default(0) @db.Decimal(18, 2)
+  sourceNetAmount     Decimal                        @db.Decimal(18, 2)
+  currency            String                         @default("USD")
+  investmentOrderId   String?
+  savingsAccountId    String?
+  createdAt           DateTime                       @default(now())
+  investmentOrder     InvestmentOrder?               @relation(fields: [investmentOrderId], references: [id])
+  savingsAccount      SavingsAccount?                @relation(fields: [savingsAccountId], references: [id])
+  withdrawalOrder     WithdrawalOrder                @relation(fields: [withdrawalOrderId], references: [id], onDelete: Cascade)
 
   @@index([withdrawalOrderId])
   @@index([sourceType, sourceId])
@@ -743,33 +596,25 @@ model WithdrawalOrderAllocation {
 }
 
 model PaymentMethod {
-  id String @id @default(cuid())
-
+  id                String            @id @default(cuid())
   investorProfileId String
-  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-
-  type PaymentMethodType
-
-  bankName      String?
-  accountName   String?
-  accountNumber String?
-  bankCode      String?
-  iban          String?
-  swiftCode     String?
-  routingNumber String?
-  branchName    String?
-
-  network String?
-  address String?
-
-  isVerified Boolean @default(false)
-
-  isDefault Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  withdrawalOrders WithdrawalOrder[]
+  type              PaymentMethodType
+  bankName          String?
+  accountName       String?
+  accountNumber     String?
+  network           String?
+  address           String?
+  isVerified        Boolean           @default(false)
+  isDefault         Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  bankCode          String?
+  branchName        String?
+  iban              String?
+  routingNumber     String?
+  swiftCode         String?
+  investorProfile   InvestorProfile   @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  withdrawalOrders  WithdrawalOrder[]
 
   @@index([investorProfileId])
 }
@@ -779,16 +624,13 @@ model PaymentMethod {
 /// *  CRON JOBS & BACKGROUND TASKS
 /// * ===========================
 model CronJob {
-  id String @id @default(cuid())
-
-  key String @unique
-
+  id        String    @id @default(cuid())
+  key       String    @unique
   lastRunAt DateTime?
   nextRunAt DateTime?
   isRunning Boolean   @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model CronLock {
@@ -801,54 +643,41 @@ model CronLock {
 /// *   KYC & DOCUMENT VERIFICATION
 /// * ===========================
 model KYCVerification {
-  id String @id @default(cuid())
-
+  id                String          @id @default(cuid())
   investorProfileId String          @unique
-  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-
-  provider String @default("didit")
-
+  provider          String          @default("didit")
   providerSessionId String?
   vendorData        String?
-
-  status KycStatus @default(PENDING_REVIEW)
-
-  faceMatchScore Float?
-  livenessPassed Boolean?
-
-  failureReason String?
-
-  verifiedAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  status            KycStatus       @default(PENDING_REVIEW)
+  faceMatchScore    Float?
+  livenessPassed    Boolean?
+  failureReason     String?
+  verifiedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
 
   @@index([status])
 }
 
 model KycVerificationSession {
-  id                String @id @default(cuid())
+  id                String          @id @default(cuid())
   investorProfileId String
-  provider          String @default("DIDIT")
-
-  providerSessionId String  @unique
+  provider          String          @default("DIDIT")
+  providerSessionId String          @unique
   sessionUrl        String?
   callbackUrl       String?
-
-  status       String
-  startedAt    DateTime?
-  completedAt  DateTime?
-  abandonedAt  DateTime?
-  expiredAt    DateTime?
-  lastSyncedAt DateTime?
-
-  attemptCount Int   @default(1)
-  rawPayload   Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  investorProfile InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  status            String
+  startedAt         DateTime?
+  completedAt       DateTime?
+  abandonedAt       DateTime?
+  expiredAt         DateTime?
+  lastSyncedAt      DateTime?
+  attemptCount      Int             @default(1)
+  rawPayload        Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  investorProfile   InvestorProfile @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
 
   @@index([investorProfileId, status])
 }
@@ -858,10 +687,8 @@ model KycVerificationSession {
 /// *   AUDIT LOGS
 /// * ===========================
 model AuditLog {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   actorUserId String?
-  actorUser   User?   @relation("ActorAuditLogs", fields: [actorUserId], references: [id], onDelete: SetNull)
-
   action      String
   entityType  String
   entityId    String?
@@ -869,8 +696,8 @@ model AuditLog {
   ipAddress   String?
   userAgent   String?
   metadata    Json?
-
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  actorUser   User?    @relation("ActorAuditLogs", fields: [actorUserId], references: [id])
 
   @@index([actorUserId])
   @@index([entityType, entityId])
@@ -884,24 +711,21 @@ model AuditLog {
 /// * TESTIMONIES & MANAGEMENT PROFILES
 /// * ===========================
 model Testimony {
-  id          String          @id @default(cuid())
-  fullName    String
-  roleOrTitle String?         @default("CLIENT")
-  message     String
-  rating      Int?
-  isFeatured  Boolean         @default(false)
-  status      TestimonyStatus @default(DRAFT)
-
+  id           String          @id @default(cuid())
+  fullName     String
+  roleOrTitle  String?         @default("CLIENT")
+  message      String
+  rating       Int?
+  isFeatured   Boolean         @default(false)
+  status       TestimonyStatus @default(DRAFT)
   avatarFileId String?
-  avatarFile   FileAsset? @relation("TestimonyAvatarFile", fields: [avatarFileId], references: [id], onDelete: SetNull)
-
-  videoFileId String?
-  videoFile   FileAsset? @relation("TestimonyVideoFile", fields: [videoFileId], references: [id], onDelete: SetNull)
-
-  sortOrder   Int       @default(0)
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  sortOrder    Int             @default(0)
+  publishedAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  videoFileId  String?
+  avatarFile   FileAsset?      @relation("TestimonyAvatarFile", fields: [avatarFileId], references: [id])
+  videoFile    FileAsset?      @relation("TestimonyVideoFile", fields: [videoFileId], references: [id])
 
   @@index([status])
   @@index([isFeatured])
@@ -912,24 +736,19 @@ model Testimony {
 }
 
 model Management {
-  id String @id @default(cuid())
-
-  name  String
-  title String?
-  role  String?
-
-  email String?
-  phone String?
-  bio   String?
-
+  id          String     @id @default(cuid())
+  name        String
+  title       String?
+  role        String?
+  email       String?
+  phone       String?
+  bio         String?
   photoFileId String?
-  photoFile   FileAsset? @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
-
-  sortOrder Int     @default(0)
-  isActive  Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  photoFile   FileAsset? @relation(fields: [photoFileId], references: [id])
 
   @@index([isActive])
   @@index([sortOrder])
@@ -942,53 +761,41 @@ model Management {
 /// * PLATFORM PAYMENT METHODS & FUNDING INTENTS
 /// * ===========================
 model PlatformPaymentMethod {
-  id String @id @default(cuid())
-
-  label String
-  type  PlatformPaymentMethodType
-
-  providerName String?
-  accountName  String?
-  reference    String?
-  bankAddress  String?
-
-  currency String? @default("USD")
-  country  String?
-
-  instructions String?
-  notes        String?
-
-  isPrivate Boolean @default(false)
-
-  isActive  Boolean @default(true)
-  isDefault Boolean @default(false)
-  sortOrder Int     @default(0)
-
-  verificationStatus PlatformPaymentVerificationStatus @default(UNVERIFIED)
-
-  bankName      String?
-  bankCode      String?
-  accountNumber String?
-  iban          String?
-  swiftCode     String?
-  routingNumber String?
-  branchName    String?
-
-  cryptoAsset   CryptoAsset?
-  cryptoNetwork CryptoNetwork?
-  walletAddress String?
-  walletTag     String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id                         String                            @id @default(cuid())
+  label                      String
+  type                       PlatformPaymentMethodType
+  providerName               String?
+  accountName                String?
+  currency                   String?                           @default("USD")
+  country                    String?
+  instructions               String?
+  notes                      String?
+  isActive                   Boolean                           @default(true)
+  isDefault                  Boolean                           @default(false)
+  sortOrder                  Int                               @default(0)
+  verificationStatus         PlatformPaymentVerificationStatus @default(UNVERIFIED)
+  bankName                   String?
+  bankCode                   String?
+  accountNumber              String?
+  iban                       String?
+  swiftCode                  String?
+  routingNumber              String?
+  branchName                 String?
+  cryptoAsset                CryptoAsset?
+  cryptoNetwork              CryptoNetwork?
+  walletAddress              String?
+  walletTag                  String?
+  metadata                   Json?
+  createdAt                  DateTime                          @default(now())
+  updatedAt                  DateTime                          @updatedAt
+  isPrivate                  Boolean                           @default(false)
+  reference                  String?
+  bankAddress                String?
   fundingIntents             CryptoFundingIntent[]
   investmentOrders           InvestmentOrder[]
   investmentOrderPayments    InvestmentOrderPayment[]
+  savingsAccountsForBankInfo SavingsAccount[]                  @relation("SavingsAccountBankInfoMethod")
   savingsFundingIntents      SavingsFundingIntent[]
-  savingsAccountsForBankInfo SavingsAccount[]            @relation("SavingsAccountBankInfoMethod")
   savingsTransactionPayments SavingsTransactionPayment[]
 
   @@index([type, isActive])
@@ -1000,50 +807,38 @@ model PlatformPaymentMethod {
 }
 
 model InvestmentOrderPayment {
-  id String @id @default(cuid())
-
-  investmentOrderId String
-  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
-
-  type           InvestmentOrderPaymentType
-  status         InvestmentOrderPaymentStatus         @default(PENDING_REVIEW)
-  submissionKind InvestmentOrderPaymentSubmissionKind @default(STANDARD)
-
+  id                      String                               @id @default(cuid())
+  investmentOrderId       String
+  type                    InvestmentOrderPaymentType
+  status                  InvestmentOrderPaymentStatus         @default(PENDING_REVIEW)
   platformPaymentMethodId String?
-  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  submittedByUserId String?
-  submittedByUser   User?   @relation("InvestmentOrderPaymentSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
-
-  reviewedByUserId String?
-  reviewedByUser   User?   @relation("InvestmentOrderPaymentReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
-
-  claimedAmount  Decimal  @db.Decimal(18, 2)
-  approvedAmount Decimal? @db.Decimal(18, 2)
-  currency       String   @default("USD")
-
-  depositorName        String?
-  depositorAccountName String?
-  depositorAccountNo   String?
-  transferReference    String?
-  blockchainTxHash     String?
-
-  receiptFileId String?
-  receiptFile   FileAsset? @relation(fields: [receiptFileId], references: [id], onDelete: SetNull)
-
-  note            String?
-  reviewNote      String?
-  rejectionReason String?
-
-  submittedAt DateTime  @default(now())
-  reviewedAt  DateTime?
-
-  providerReference String?
-  providerPayload   Json?
-  metadata          Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  submittedByUserId       String?
+  reviewedByUserId        String?
+  claimedAmount           Decimal                              @db.Decimal(18, 2)
+  approvedAmount          Decimal?                             @db.Decimal(18, 2)
+  currency                String                               @default("USD")
+  depositorName           String?
+  depositorAccountName    String?
+  depositorAccountNo      String?
+  transferReference       String?
+  blockchainTxHash        String?
+  receiptFileId           String?
+  note                    String?
+  reviewNote              String?
+  rejectionReason         String?
+  submittedAt             DateTime                             @default(now())
+  reviewedAt              DateTime?
+  providerReference       String?
+  providerPayload         Json?
+  metadata                Json?
+  createdAt               DateTime                             @default(now())
+  updatedAt               DateTime                             @updatedAt
+  submissionKind          InvestmentOrderPaymentSubmissionKind @default(STANDARD)
+  investmentOrder         InvestmentOrder                      @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+  platformPaymentMethod   PlatformPaymentMethod?               @relation(fields: [platformPaymentMethodId], references: [id])
+  receiptFile             FileAsset?                           @relation(fields: [receiptFileId], references: [id])
+  reviewedByUser          User?                                @relation("InvestmentOrderPaymentReviewedBy", fields: [reviewedByUserId], references: [id])
+  submittedByUser         User?                                @relation("InvestmentOrderPaymentSubmittedBy", fields: [submittedByUserId], references: [id])
 
   @@index([investmentOrderId])
   @@index([status])
@@ -1056,54 +851,40 @@ model InvestmentOrderPayment {
 }
 
 model CryptoFundingIntent {
-  id       String                @id @default(cuid())
-  userId   String
-  provider CryptoFundingProvider
-  asset    CryptoAsset
-  network  CryptoNetwork
-
-  fiatCurrency String  @default("USD")
-  fiatAmount   Decimal @db.Decimal(18, 2)
-
-  expectedCryptoAmount Decimal? @db.Decimal(36, 18)
-  receivedCryptoAmount Decimal? @db.Decimal(36, 18)
-
-  status CryptoFundingIntentStatus @default(PENDING)
-
+  id                      String                    @id @default(cuid())
+  userId                  String
+  provider                CryptoFundingProvider
+  asset                   CryptoAsset
+  network                 CryptoNetwork
+  fiatCurrency            String                    @default("USD")
+  fiatAmount              Decimal                   @db.Decimal(18, 2)
+  expectedCryptoAmount    Decimal?                  @db.Decimal(36, 18)
+  receivedCryptoAmount    Decimal?                  @db.Decimal(36, 18)
+  status                  CryptoFundingIntentStatus @default(PENDING)
   platformPaymentMethodId String?
   destinationReference    String?
   destinationLabel        String?
-
-  providerSessionId  String?
-  providerExternalId String?
-  providerReference  String?
-
-  partnerCustomerId String?
-  redirectUrl       String?
-
-  expiresAt  DateTime?
-  fundedAt   DateTime?
-  failedAt   DateTime?
-  canceledAt DateTime?
-
-  failureCode    String?
-  failureMessage String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  creditedFiatAmount Decimal?  @db.Decimal(18, 2)
-  creditedAt         DateTime?
-
-  investmentOrderId String
-  investmentOrder   InvestmentOrder @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
-
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  platformPaymentMethod PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  webhookEvents CryptoWebhookEvent[]
+  providerSessionId       String?
+  providerExternalId      String?
+  providerReference       String?
+  partnerCustomerId       String?
+  redirectUrl             String?
+  expiresAt               DateTime?
+  fundedAt                DateTime?
+  failedAt                DateTime?
+  canceledAt              DateTime?
+  failureCode             String?
+  failureMessage          String?
+  metadata                Json?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  creditedFiatAmount      Decimal?                  @db.Decimal(18, 2)
+  creditedAt              DateTime?
+  investmentOrderId       String
+  investmentOrder         InvestmentOrder           @relation(fields: [investmentOrderId], references: [id], onDelete: Cascade)
+  platformPaymentMethod   PlatformPaymentMethod?    @relation(fields: [platformPaymentMethodId], references: [id])
+  user                    User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webhookEvents           CryptoWebhookEvent[]
 
   @@index([userId, status])
   @@index([provider, status])
@@ -1115,49 +896,37 @@ model CryptoFundingIntent {
 }
 
 model SavingsFundingIntent {
-  id String @id @default(cuid())
-
-  savingsAccountId String
-  savingsAccount   SavingsAccount @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  fundingMethodType SavingsFundingMethodType
-  status            SavingsFundingIntentStatus @default(PENDING)
-
+  id                      String                      @id @default(cuid())
+  savingsAccountId        String
+  userId                  String
+  fundingMethodType       SavingsFundingMethodType
+  status                  SavingsFundingIntentStatus  @default(PENDING)
   platformPaymentMethodId String?
-  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  currency       String  @default("USD")
-  targetAmount   Decimal @db.Decimal(18, 2)
-  creditedAmount Decimal @default(0) @db.Decimal(18, 2)
-
-  paymentReference String?
-
-  provider             CryptoFundingProvider?
-  providerSessionId    String?
-  providerExternalId   String?
-  providerReference    String?
-  expectedCryptoAmount Decimal?               @db.Decimal(36, 18)
-  receivedCryptoAmount Decimal?               @db.Decimal(36, 18)
-
-  submittedAt DateTime?
-  paidAt      DateTime?
-  creditedAt  DateTime?
-  cancelledAt DateTime?
-  failedAt    DateTime?
-
-  failureCode    String?
-  failureMessage String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  payments     SavingsTransactionPayment[]
-  transactions SavingsTransaction[]
+  currency                String                      @default("USD")
+  targetAmount            Decimal                     @db.Decimal(18, 2)
+  creditedAmount          Decimal                     @default(0) @db.Decimal(18, 2)
+  paymentReference        String?
+  provider                CryptoFundingProvider?
+  providerSessionId       String?
+  providerExternalId      String?
+  providerReference       String?
+  expectedCryptoAmount    Decimal?                    @db.Decimal(36, 18)
+  receivedCryptoAmount    Decimal?                    @db.Decimal(36, 18)
+  submittedAt             DateTime?
+  paidAt                  DateTime?
+  creditedAt              DateTime?
+  cancelledAt             DateTime?
+  failedAt                DateTime?
+  failureCode             String?
+  failureMessage          String?
+  metadata                Json?
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
+  platformPaymentMethod   PlatformPaymentMethod?      @relation(fields: [platformPaymentMethodId], references: [id])
+  savingsAccount          SavingsAccount              @relation(fields: [savingsAccountId], references: [id], onDelete: Cascade)
+  user                    User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions            SavingsTransaction[]
+  payments                SavingsTransactionPayment[]
 
   @@index([savingsAccountId])
   @@index([userId, status])
@@ -1171,49 +940,37 @@ model SavingsFundingIntent {
 }
 
 model SavingsTransactionPayment {
-  id String @id @default(cuid())
-
-  savingsFundingIntentId String
-  savingsFundingIntent   SavingsFundingIntent @relation(fields: [savingsFundingIntentId], references: [id], onDelete: Cascade)
-
-  type   SavingsTransactionPaymentType
-  status SavingsTransactionPaymentStatus @default(PENDING_REVIEW)
-
+  id                      String                          @id @default(cuid())
+  savingsFundingIntentId  String
+  type                    SavingsTransactionPaymentType
+  status                  SavingsTransactionPaymentStatus @default(PENDING_REVIEW)
   platformPaymentMethodId String?
-  platformPaymentMethod   PlatformPaymentMethod? @relation(fields: [platformPaymentMethodId], references: [id], onDelete: SetNull)
-
-  submittedByUserId String?
-  submittedByUser   User?   @relation("SavingsTransactionPaymentSubmittedBy", fields: [submittedByUserId], references: [id], onDelete: SetNull)
-
-  reviewedByUserId String?
-  reviewedByUser   User?   @relation("SavingsTransactionPaymentReviewedBy", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
-
-  claimedAmount  Decimal  @db.Decimal(18, 2)
-  approvedAmount Decimal? @db.Decimal(18, 2)
-  currency       String   @default("USD")
-
-  depositorName        String?
-  depositorAccountName String?
-  depositorAccountNo   String?
-  transferReference    String?
-  blockchainTxHash     String?
-
-  receiptFileId String?
-  receiptFile   FileAsset? @relation(fields: [receiptFileId], references: [id], onDelete: SetNull)
-
-  note            String?
-  reviewNote      String?
-  rejectionReason String?
-
-  submittedAt DateTime  @default(now())
-  reviewedAt  DateTime?
-
-  providerReference String?
-  providerPayload   Json?
-  metadata          Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  submittedByUserId       String?
+  reviewedByUserId        String?
+  claimedAmount           Decimal                         @db.Decimal(18, 2)
+  approvedAmount          Decimal?                        @db.Decimal(18, 2)
+  currency                String                          @default("USD")
+  depositorName           String?
+  depositorAccountName    String?
+  depositorAccountNo      String?
+  transferReference       String?
+  blockchainTxHash        String?
+  receiptFileId           String?
+  note                    String?
+  reviewNote              String?
+  rejectionReason         String?
+  submittedAt             DateTime                        @default(now())
+  reviewedAt              DateTime?
+  providerReference       String?
+  providerPayload         Json?
+  metadata                Json?
+  createdAt               DateTime                        @default(now())
+  updatedAt               DateTime                        @updatedAt
+  platformPaymentMethod   PlatformPaymentMethod?          @relation(fields: [platformPaymentMethodId], references: [id])
+  receiptFile             FileAsset?                      @relation(fields: [receiptFileId], references: [id])
+  reviewedByUser          User?                           @relation("SavingsTransactionPaymentReviewedBy", fields: [reviewedByUserId], references: [id])
+  savingsFundingIntent    SavingsFundingIntent            @relation(fields: [savingsFundingIntentId], references: [id], onDelete: Cascade)
+  submittedByUser         User?                           @relation("SavingsTransactionPaymentSubmittedBy", fields: [submittedByUserId], references: [id])
 
   @@index([savingsFundingIntentId])
   @@index([status])
@@ -1230,25 +987,19 @@ model CryptoWebhookEvent {
   source           CryptoWebhookSource
   eventType        String
   processingStatus CryptoWebhookProcessingStatus @default(RECEIVED)
-
   fundingIntentId  String?
   providerEventId  String?
   providerObjectId String?
-
-  idempotencyKey String? @unique
-  signature      String?
-
-  receivedAt  DateTime  @default(now())
-  processedAt DateTime?
-  failedAt    DateTime?
-
-  errorMessage String?
-  payload      Json
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  fundingIntent CryptoFundingIntent? @relation(fields: [fundingIntentId], references: [id], onDelete: SetNull)
+  idempotencyKey   String?                       @unique
+  signature        String?
+  receivedAt       DateTime                      @default(now())
+  processedAt      DateTime?
+  failedAt         DateTime?
+  errorMessage     String?
+  payload          Json
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+  fundingIntent    CryptoFundingIntent?          @relation(fields: [fundingIntentId], references: [id])
 
   @@index([source, eventType])
   @@index([processingStatus])
@@ -1262,31 +1013,24 @@ model CryptoWebhookEvent {
 /// * MESSAGE SYSTEM & NOTIFICATIONS
 /// * ===========================
 model Conversation {
-  id                  String  @id @default(cuid())
+  id                  String               @id @default(cuid())
   investmentAccountId String?
   userId              String?
-
-  type   ConversationType
-  status ConversationStatus @default(OPEN)
-
-  subject       String?
-  lastMessageAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  contactName  String?
-  contactEmail String?
-  source       String?
-
-  agentId String?
-  agent   User?   @relation("ConversationAgent", fields: [agentId], references: [id])
-  user    User?   @relation("ConversationUser", fields: [userId], references: [id], onDelete: SetNull)
-
-  priority ConversationPriority @default(NORMAL)
-
-  members  ConversationMember[]
-  messages Message[]
+  type                ConversationType
+  status              ConversationStatus   @default(OPEN)
+  subject             String?
+  lastMessageAt       DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  contactName         String?
+  contactEmail        String?
+  source              String?
+  agentId             String?
+  priority            ConversationPriority @default(NORMAL)
+  agent               User?                @relation("ConversationAgent", fields: [agentId], references: [id])
+  user                User?                @relation("ConversationUser", fields: [userId], references: [id])
+  members             ConversationMember[]
+  messages            Message[]
 
   @@index([lastMessageAt])
   @@index([userId])
@@ -1303,61 +1047,46 @@ model AgentProfile {
 }
 
 model Message {
-  id             String @id @default(cuid())
+  id             String       @id @default(cuid())
   conversationId String
-
-  senderId   String?
-  senderType SenderType
-
-  content String
-
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-
-  createdAt   DateTime  @default(now())
-  deliveredAt DateTime?
+  senderId       String?
+  senderType     SenderType
+  content        String
+  createdAt      DateTime     @default(now())
+  deliveredAt    DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 
   @@index([conversationId, createdAt])
 }
 
 model ConversationMember {
-  id             String @id @default(cuid())
+  id             String           @id @default(cuid())
   conversationId String
   userId         String
-
-  role ConversationRole @default(USER)
-
-  joinedAt DateTime @default(now())
-
-  unreadCount Int @default(0)
-
-  lastReadAt DateTime?
-
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           ConversationRole @default(USER)
+  joinedAt       DateTime         @default(now())
+  unreadCount    Int              @default(0)
+  lastReadAt     DateTime?
+  conversation   Conversation     @relation(fields: [conversationId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
   @@index([userId])
 }
 
 model Notification {
-  id      String  @id @default(cuid())
-  userId  String
-  title   String
-  message String
-  read    Boolean @default(false)
-
-  link String?
-  type String?
-
-  key String? @unique
-
-  metadata Json?
-
+  id                  String              @id @default(cuid())
+  userId              String
+  title               String
+  message             String
+  read                Boolean             @default(false)
+  link                String?
+  type                String?
+  key                 String?             @unique
+  metadata            Json?
+  createdAt           DateTime            @default(now())
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   promotionDeliveries PromotionDelivery[]
-
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// *
@@ -1365,43 +1094,34 @@ model Notification {
 /// *   SITE CONFIGURATION 
 /// * ===========================
 model SiteConfiguration {
-  id String @id @default("default")
-
-  siteName              String
-  supportEmail          String?
-  supportPhone          String?
-  supportPhoneSecondary String?
-
-  siteDescription         String?
-  siteTagline             String?
-  siteAddress             String?
-  siteCRN                 String?
-  siteFRN                 String?
-  maintenanceModeEnabled  Boolean @default(false)
-  disclaimerBannerEnabled Boolean @default(false)
-
-  siteLogoFileAssetId String?    @unique
-  siteLogoFileAsset   FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id], onDelete: SetNull)
-
-  heroCapitalInflowOffset  Decimal   @default(796000000) @db.Decimal(18, 2)
-  heroInvestorCountOffset  Int       @default(65000)
-  heroMetricsLastAccruedAt DateTime?
-
-  seoTitle       String?
-  seoDescription String?
-
-  locale   String?  @default("en_US")
-  keywords String[] @default([])
-
-  defaultTwitterHandle String?
-  facebookUrl          String?
-  instagramUrl         String?
-
+  id                        String     @id @default("default")
+  siteName                  String
+  supportEmail              String?
+  supportPhone              String?
+  siteDescription           String?
+  siteTagline               String?
+  siteAddress               String?
+  siteLogoFileAssetId       String?    @unique
+  seoTitle                  String?
+  seoDescription            String?
+  locale                    String?    @default("en_US")
+  keywords                  String[]   @default([])
+  defaultTwitterHandle      String?
+  facebookUrl               String?
+  instagramUrl              String?
   defaultOgImageFileAssetId String?
-  defaultOgImageFileAsset   FileAsset? @relation("SiteConfigurationDefaultOgImage", fields: [defaultOgImageFileAssetId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt                 DateTime   @default(now())
+  updatedAt                 DateTime   @updatedAt
+  supportPhoneSecondary     String?
+  siteCRN                   String?
+  siteFRN                   String?
+  disclaimerBannerEnabled   Boolean    @default(false)
+  maintenanceModeEnabled    Boolean    @default(false)
+  heroCapitalInflowOffset   Decimal    @default(696000000) @db.Decimal(18, 2)
+  heroInvestorCountOffset   Int        @default(65000)
+  heroMetricsLastAccruedAt  DateTime?
+  defaultOgImageFileAsset   FileAsset? @relation("SiteConfigurationDefaultOgImage", fields: [defaultOgImageFileAssetId], references: [id])
+  siteLogoFileAsset         FileAsset? @relation("SiteConfigurationLogo", fields: [siteLogoFileAssetId], references: [id])
 
   @@index([defaultOgImageFileAssetId])
   @@map("site_configuration")
@@ -1412,45 +1132,35 @@ model SiteConfiguration {
 /// *   PROMOTIONS & REFERRALS
 /// * ===========================
 model PromotionCampaign {
-  id String @id @default(cuid())
-
+  id              String                  @id @default(cuid())
   createdByUserId String
-  createdByUser   User   @relation("PromotionCampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
-
-  title   String
-  subject String?
-  message String
-
-  promoCode       String?   @unique
-  rewardEnabled   Boolean   @default(false)
-  rewardAmount    Decimal   @default(100) @db.Decimal(18, 2)
-  rewardCurrency  String    @default("USD")
-  startsAt        DateTime?
+  title           String
+  subject         String?
+  message         String
+  audienceType    PromotionAudienceType
+  channel         PromotionChannel
+  status          PromotionCampaignStatus @default(DRAFT)
+  sendToAllUsers  Boolean                 @default(false)
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  failedAt        DateTime?
+  failureMessage  String?
+  metadata        Json?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
   expiresAt       DateTime?
   maxRedemptions  Int?
-  redemptionCount Int       @default(0)
-
-  audienceType PromotionAudienceType
-  channel      PromotionChannel
-  status       PromotionCampaignStatus @default(DRAFT)
-
-  sendToAllUsers Boolean @default(false)
-
-  scheduledAt DateTime?
-  startedAt   DateTime?
-  completedAt DateTime?
-  cancelledAt DateTime?
-  failedAt    DateTime?
-
-  failureMessage String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  deliveries PromotionDelivery[]
-  rewards    ReferralReward[]
+  promoCode       String?                 @unique
+  redemptionCount Int                     @default(0)
+  rewardAmount    Decimal                 @default(100) @db.Decimal(18, 2)
+  rewardCurrency  String                  @default("USD")
+  rewardEnabled   Boolean                 @default(false)
+  startsAt        DateTime?
+  createdByUser   User                    @relation("PromotionCampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  deliveries      PromotionDelivery[]
+  rewards         ReferralReward[]
 
   @@index([createdByUserId])
   @@index([status])
@@ -1461,30 +1171,23 @@ model PromotionCampaign {
 }
 
 model PromotionDelivery {
-  id String @id @default(cuid())
-
-  campaignId String
-  campaign   PromotionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-
-  userId String
-  user   User   @relation("PromotionDeliveryUser", fields: [userId], references: [id], onDelete: Cascade)
-
-  channel PromotionChannel
-  status  PromotionDeliveryStatus @default(PENDING)
-
+  id             String                  @id @default(cuid())
+  campaignId     String
+  userId         String
+  channel        PromotionChannel
+  status         PromotionDeliveryStatus @default(PENDING)
   notificationId String?
-  notification   Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
-
-  emailAddress String?
-  emailSentAt  DateTime?
-  deliveredAt  DateTime?
-  readAt       DateTime?
-  failedAt     DateTime?
-
+  emailAddress   String?
+  emailSentAt    DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  failedAt       DateTime?
   failureMessage String?
-
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  campaign       PromotionCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  notification   Notification?           @relation(fields: [notificationId], references: [id])
+  user           User                    @relation("PromotionDeliveryUser", fields: [userId], references: [id], onDelete: Cascade)
   referralReward ReferralReward?
 
   @@unique([campaignId, userId, channel])
@@ -1496,32 +1199,23 @@ model PromotionDelivery {
 }
 
 model Referral {
-  id String @id @default(cuid())
-
-  referrerUserId String
-  referredUserId String @unique
-
-  code String
-
-  status ReferralStatus @default(PENDING)
-
-  rewardCurrency       String  @default("USD")
-  referrerRewardAmount Decimal @default(100) @db.Decimal(18, 2)
-  referredRewardAmount Decimal @default(100) @db.Decimal(18, 2)
-
-  activatedBy         ReferralActivationType?
-  activatedByEntityId String?
-
-  activatedAt DateTime?
-  rewardedAt  DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  referrer User @relation("ReferralsMade", fields: [referrerUserId], references: [id], onDelete: Cascade)
-  referred User @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
-
-  rewards ReferralReward[]
+  id                   String                  @id @default(cuid())
+  referrerUserId       String
+  referredUserId       String                  @unique
+  code                 String
+  status               ReferralStatus          @default(PENDING)
+  rewardCurrency       String                  @default("USD")
+  referrerRewardAmount Decimal                 @default(100) @db.Decimal(18, 2)
+  referredRewardAmount Decimal                 @default(100) @db.Decimal(18, 2)
+  activatedBy          ReferralActivationType?
+  activatedByEntityId  String?
+  activatedAt          DateTime?
+  rewardedAt           DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  referred             User                    @relation("ReferralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
+  referrer             User                    @relation("ReferralsMade", fields: [referrerUserId], references: [id], onDelete: Cascade)
+  rewards              ReferralReward[]
 
   @@index([referrerUserId])
   @@index([referredUserId])
@@ -1531,55 +1225,38 @@ model Referral {
 }
 
 model ReferralReward {
-  id String @id @default(cuid())
-
-  source RewardSource @default(USER_REFERRAL)
-
-  referralId String?
-  userId     String
-
-  promotionCampaignId String?
-  promotionDeliveryId String?
-
-  type   ReferralRewardType
-  status ReferralRewardStatus @default(PENDING)
-
-  amount   Decimal @db.Decimal(18, 2)
-  currency String  @default("USD")
-
-  destinationType RewardDestinationType?
-  destinationId   String?
-
+  id                  String                  @id @default(cuid())
+  referralId          String?
+  userId              String
+  type                ReferralRewardType
+  status              ReferralRewardStatus    @default(PENDING)
+  amount              Decimal                 @db.Decimal(18, 2)
+  currency            String                  @default("USD")
+  creditedAt          DateTime?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  activatedAt         DateTime?
   activatedBy         ReferralActivationType?
   activatedByEntityId String?
-  activatedAt         DateTime?
-
-  creditedAt DateTime?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  referral          Referral?          @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  promotionCampaign PromotionCampaign? @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
-  promotionDelivery PromotionDelivery? @relation(fields: [promotionDeliveryId], references: [id], onDelete: SetNull)
-  user              User               @relation("ReferralRewards", fields: [userId], references: [id], onDelete: Cascade)
+  destinationId       String?
+  destinationType     RewardDestinationType?
+  metadata            Json?
+  promotionCampaignId String?
+  promotionDeliveryId String?                 @unique
+  source              RewardSource            @default(USER_REFERRAL)
+  promotionCampaign   PromotionCampaign?      @relation(fields: [promotionCampaignId], references: [id])
+  promotionDelivery   PromotionDelivery?      @relation(fields: [promotionDeliveryId], references: [id])
+  referral            Referral?               @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  user                User                    @relation("ReferralRewards", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([referralId, type])
   @@unique([promotionCampaignId, userId])
-  @@unique([promotionDeliveryId])
   @@index([source])
   @@index([promotionCampaignId])
   @@index([userId])
   @@index([status])
   @@map("referral_reward")
 }
-
-/// *
-/// * ===========================
-/// * Enums & Constants
-/// * ===========================
 
 enum ReferralStatus {
   PENDING

@@ -71,6 +71,7 @@ export default async function Page() {
     where: { id: sessionUser.id },
     select: {
       id: true,
+      accountId: true,
       name: true,
       email: true,
       username: true,
@@ -121,6 +122,7 @@ export default async function Page() {
     <ProfilePageView
       siteName={site?.siteName?.trim() || "Company"}
       user={{
+        accountId: dbUser.accountId,
         name: dbUser.name,
         email: dbUser.email,
         username: dbUser.username,
