@@ -7,6 +7,8 @@ import { UserTransactionsClient } from "./_components/UserTransactionsClient";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { TradingViewMarketChart } from "@/components/home/TradingViewMarketChart";
+import { getCurrentUserSupportVerification } from "@/lib/support/getCurrentUserSupportVerification";
+import SupportVerificationNotice from "./_components/SupportVerificationNotice";
 
 export default async function Page() {
   const userId = await getCurrentUserId();
@@ -28,8 +30,14 @@ export default async function Page() {
 
   const transactions = await getUserTransactions(userId);
 
+  const supportVerification = await getCurrentUserSupportVerification(userId);
+
   return (
     <div className="space-y-5">
+      {supportVerification ? (
+        <SupportVerificationNotice verification={supportVerification} />
+      ) : null}
+
       <UserDashboardPage
         userName={userName}
         stats={stats}

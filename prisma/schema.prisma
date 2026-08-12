@@ -65,6 +65,10 @@ model User {
   sessions                            Session[]
   profileAvatarFileAsset              FileAsset?                  @relation("UserProfileAvatarAsset", fields: [profileAvatarFileAssetId], references: [id])
 
+  supportVerificationsReceived SupportVerification[]
+  //supportVerificationsRepresented SupportVerification[] @relation("SupportVerificationRepresentative")
+  supportVerificationsCreated  SupportVerification[] @relation("SupportVerificationCreatedBy")
+
   @@index([accountStatus])
   @@index([emailVerified])
   @@index([isDisposableEmail])
@@ -1091,6 +1095,43 @@ model Notification {
 
 /// *
 /// * ===========================
+/// * SUPPORT SESSION VERIFICATION
+/// * ===========================
+model SupportVerification {
+  id               String  @id @default(cuid())
+  userId           String
+  representativeId String?
+  createdById      String
+
+  representativeName String
+  department         String @default("Customer Support")
+  reason             String
+
+  status SupportVerificationStatus @default(PENDING)
+  show   Boolean                   @default(false)
+
+  requestedAt DateTime  @default(now())
+  confirmedAt DateTime?
+  expiresAt   DateTime?
+  cancelledAt DateTime?
+
+  metadata Json?
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // representative User? @relation("SupportVerificationRepresentative", fields: [representativeId], references: [id])
+  createdBy User @relation("SupportVerificationCreatedBy", fields: [createdById], references: [id])
+
+  @@index([userId, status])
+  @@index([userId, show])
+  // @@index([representativeId, status])
+  @@index([createdById])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("support_verification")
+}
+
+/// *
+/// * ===========================
 /// *   SITE CONFIGURATION 
 /// * ===========================
 model SiteConfiguration {
@@ -1256,6 +1297,18 @@ model ReferralReward {
   @@index([userId])
   @@index([status])
   @@map("referral_reward")
+}
+
+/// *
+/// * ===========================
+/// *     ENUM & CONSTANTS
+/// * ===========================
+
+enum SupportVerificationStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  CANCELLED
 }
 
 enum ReferralStatus {

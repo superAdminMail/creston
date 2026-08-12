@@ -53,13 +53,24 @@ import { deleteSupportConversationsAction } from "@/actions/inbox/admin/deleteSu
 import SupportDeleteConversationDialog from "./SupportDeleteConversationDialog";
 import { DASHBOARD_PAGE_SURFACE_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
 import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
+import SendSupportVerificationDialog from "@/app/account/dashboard/admin/_components/SendSupportVerificationDialog";
+import { SupportVerificationPreview } from "@/actions/admin/support/getSupportVerificationsAction";
+import SupportVerificationList from "@/app/account/dashboard/admin/_components/SupportVerificationList";
+
+type SupportVerificationUserOption = {
+  id: string;
+  name: string | null;
+  email: string;
+};
 
 type Props = {
   mode: SupportInboxMode;
   viewerId: string;
   viewerRole: UserRole;
   initialConversations: SupportConversationPreview[];
+  users?: SupportVerificationUserOption[];
   detailBasePath?: string;
+  verifications?: SupportVerificationPreview[];
 };
 
 type FilterOption = {
@@ -155,6 +166,8 @@ export default function SupportInboxWorkspace({
   viewerRole,
   initialConversations,
   detailBasePath,
+  users = [],
+  verifications = [],
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -163,7 +176,10 @@ export default function SupportInboxWorkspace({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<SupportInboxFilter>("all");
   const [sort, setSort] = useState<SupportInboxSort>("latest");
+
   const [createOpen, setCreateOpen] = useState(false);
+  const [supportVerificationOpen, setSupportVerificationOpen] = useState(false);
+
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConversationIds, setDeleteConversationIds] = useState<
     string[] | null
@@ -408,14 +424,26 @@ export default function SupportInboxWorkspace({
           </div>
         </div>
 
-        {!isStaffView ? (
+        {isStaffView ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              onClick={() => setSupportVerificationOpen(true)}
+              className="rounded-full border border-sky-400/20 bg-sky-500/10 px-5 text-sky-900 shadow-sm hover:bg-sky-500/20 hover:text-sky-950 dark:text-sky-200 dark:hover:text-white"
+              variant="outline"
+            >
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Send support verification
+            </Button>
+          </div>
+        ) : (
           <Button
             onClick={() => setCreateOpen(true)}
             className="rounded-full bg-[#3c9ee0] px-5 text-white shadow-[0_18px_40px_-22px_rgba(60,158,224,0.9)] hover:bg-[#2f8bd0]"
           >
             New support ticket
           </Button>
-        ) : null}
+        )}
       </div>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -524,8 +552,6 @@ export default function SupportInboxWorkspace({
             <div className="space-y-3">
               {filteredConversations.length ? (
                 filteredConversations.map((ticket) => (
-                  // Private withdrawal support conversations are only visible to super-admins,
-                  // but we still surface a tiny label so they stand out in the queue.
                   <div
                     key={ticket.id}
                     role="button"
@@ -665,71 +691,77 @@ export default function SupportInboxWorkspace({
         </Card>
 
         {isStaffView ? (
-          <Card
-            className={cn(SUPPORT_SIDE_CLASS, "text-slate-950 dark:text-white")}
-          >
-            <CardContent className="flex min-h-full flex-col justify-between p-5">
-              <div className="space-y-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600 dark:text-slate-500">
-                    Support ops
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                    Team queue
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Manage assignment, unread replies, and ticket state from a
-                    single operational view.
-                  </p>
+          <div className="space-y-6">
+            <Card
+              className={cn(
+                SUPPORT_SIDE_CLASS,
+                "text-slate-950 dark:text-white",
+              )}
+            >
+              <CardContent className="flex min-h-full flex-col justify-between p-5">
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600 dark:text-slate-500">
+                      Support ops
+                    </p>
+                    <h2 className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
+                      Team queue
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                      Manage assignment, unread replies, and ticket state from a
+                      single operational view.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
+                        Total tickets
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
+                        {stats.total}
+                      </p>
+                    </div>
+                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
+                        Unread
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
+                        {stats.unread}
+                      </p>
+                    </div>
+                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
+                        Open
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
+                        {stats.open}
+                      </p>
+                    </div>
+                    <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
+                        Pending
+                      </p>
+                      <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
+                        {stats.waiting}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                    Use the filters to find the queue you want, then assign or
+                    open the ticket directly from the list.
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                  <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
-                      Total tickets
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                      {stats.total}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
-                      Unread
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                      {stats.unread}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
-                      Open
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                      {stats.open}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-600 dark:text-slate-500">
-                      Pending
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">
-                      {stats.waiting}
-                    </p>
-                  </div>
+                <div className="mt-6 rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
+                  Tip: High-priority work shows up faster when the queue is
+                  filtered to unread or unassigned tickets.
                 </div>
-
-                <div className="rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
-                  Use the filters to find the queue you want, then assign or
-                  open the ticket directly from the list.
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-[1.4rem] border border-slate-200/80 bg-white/75 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
-                Tip: High-priority work shows up faster when the queue is
-                filtered to unread or unassigned tickets.
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            <SupportVerificationList verifications={verifications} />
+          </div>
         ) : (
           <Card
             className={cn(SUPPORT_SIDE_CLASS, "text-slate-950 dark:text-white")}
@@ -831,6 +863,7 @@ export default function SupportInboxWorkspace({
             <DialogHeader>
               <DialogTitle>Create support ticket</DialogTitle>
             </DialogHeader>
+
             <NewConversationModal
               onClose={() => setCreateOpen(false)}
               onCreated={handleCreated}
@@ -839,11 +872,20 @@ export default function SupportInboxWorkspace({
         </Dialog>
       ) : null}
 
+      {isStaffView ? (
+        <SendSupportVerificationDialog
+          open={supportVerificationOpen}
+          onOpenChange={setSupportVerificationOpen}
+          users={users}
+        />
+      ) : null}
+
       {canDeleteTickets ? (
         <SupportDeleteConversationDialog
           open={deleteOpen}
           onOpenChange={(open) => {
             setDeleteOpen(open);
+
             if (!open) {
               setDeleteConversationIds(null);
             }
