@@ -264,18 +264,20 @@ function getMigrationBadge(
         <Badge
           className={`${statusBadgeClass} border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300`}
         >
-          Not legacy
+          New User
         </Badge>
       )}
 
-      <Badge
-        className={`${statusBadgeClass} ${migrationMeta.className} hover:bg-transparent`}
-      >
-        <span
-          className={`mr-1.5 h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
-        />
-        {migrationMeta.label}
-      </Badge>
+      {legacyBadge && (
+        <Badge
+          className={`${statusBadgeClass} ${migrationMeta.className} hover:bg-transparent`}
+        >
+          <span
+            className={`mr-1.5 h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+          />
+          {migrationMeta.label}
+        </Badge>
+      )}
     </div>
   );
 }
@@ -987,7 +989,7 @@ export function DashboardUserDirectory({
               </DialogHeader>
 
               <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
                   <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
                     <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
                       Role
