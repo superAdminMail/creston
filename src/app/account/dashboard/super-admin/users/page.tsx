@@ -16,9 +16,11 @@ export default async function SuperAdminUsersPage() {
       cardTitle="Users"
       cardDescription="Dynamic user records available to the super admin team."
       searchPlaceholder="Search users by name, email, role, or joined date..."
+      siteName={site?.siteName?.trim() || "Company"}
       users={data.users}
       stats={data.stats}
       canSuspendUsers
+      showMigrationControls
     />
   );
 }

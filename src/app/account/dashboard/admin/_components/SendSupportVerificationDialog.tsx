@@ -19,6 +19,7 @@ import {
   createSupportVerificationAction,
   type CreateSupportVerificationActionState,
 } from "@/actions/admin/support/createSupportVerificationAction";
+import { getSupportVerificationCopy } from "@/lib/support/supportVerificationCopy";
 
 import { DashboardActionSubmitButton } from "../../_components/DashboardActionSubmitButton";
 
@@ -32,6 +33,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   users: UserOption[];
+  siteName: string;
 };
 
 const initialState: CreateSupportVerificationActionState = {
@@ -49,6 +51,7 @@ export default function SendSupportVerificationDialog({
   open,
   onOpenChange,
   users,
+  siteName,
 }: Props) {
   const [state, formAction, isPending] = useActionState(
     createSupportVerificationAction,
@@ -58,6 +61,7 @@ export default function SendSupportVerificationDialog({
   const [form, setForm] = useState(DEFAULT_VALUES);
 
   const lastToastKey = useRef<string | null>(null);
+  const supportVerificationCopy = getSupportVerificationCopy(siteName);
 
   const updateField = (field: keyof typeof DEFAULT_VALUES, value: string) => {
     setForm((current) => ({
@@ -120,7 +124,7 @@ export default function SendSupportVerificationDialog({
 
             <div className="space-y-1">
               <DialogTitle className="text-slate-950 dark:text-white">
-                Send support verification
+                {supportVerificationCopy.adminPreviewTitle}
               </DialogTitle>
 
               <DialogDescription className="leading-6 text-slate-600 dark:text-slate-400">
@@ -212,8 +216,7 @@ export default function SendSupportVerificationDialog({
           </div>
 
           <div className="rounded-2xl border border-sky-200/70 bg-sky-50/70 p-4 text-sm leading-6 text-sky-950 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
-            The customer will see this as a dashboard notice and can confirm
-            that they are speaking with the designated support representative.
+            {supportVerificationCopy.adminPreviewDescription}
           </div>
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

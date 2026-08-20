@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { getUserDashboardDataAction } from "@/actions/dashboard/get-user-dashboard-data";
 import { getCurrentUserInvestmentProfileData } from "@/actions/profile/get-current-user-investment-profile";
+import { prisma } from "@/lib/prisma";
 import UserDashboardPage from "./_components/UserDashboardPage";
 import { UserTransactionsClient } from "./_components/UserTransactionsClient";
 import { getUserTransactions } from "@/lib/service/getUserTransactions";
@@ -9,6 +10,7 @@ import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { TradingViewMarketChart } from "@/components/home/TradingViewMarketChart";
 import { getCurrentUserSupportVerification } from "@/lib/support/getCurrentUserSupportVerification";
 import SupportVerificationNotice from "./_components/SupportVerificationNotice";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function Page() {
   const userId = await getCurrentUserId();
@@ -27,6 +29,16 @@ export default async function Page() {
 
   const { userName, stats } = await getUserDashboardDataAction();
   const investmentProfile = await getCurrentUserInvestmentProfileData();
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
+  const migrationUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      isLegacyUser: true,
+      migrationStatus: true,
+      migratedAt: true,
+    },
+  });
 
   const transactions = await getUserTransactions(userId);
 
@@ -35,13 +47,25 @@ export default async function Page() {
   return (
     <div className="space-y-5">
       {supportVerification ? (
-        <SupportVerificationNotice verification={supportVerification} />
+        <SupportVerificationNotice
+          siteName={siteName}
+          verification={supportVerification}
+        />
       ) : null}
 
       <UserDashboardPage
         userName={userName}
         stats={stats}
         investmentProfileComplete={investmentProfile.profileComplete}
+        legacyAccount={
+          migrationUser
+            ? {
+                isLegacyUser: migrationUser.isLegacyUser,
+                migrationStatus: migrationUser.migrationStatus,
+                migratedAt: migrationUser.migratedAt?.toISOString() ?? null,
+              }
+            : null
+        }
       />
       <UserTransactionsClient transactions={transactions} />
       <TradingViewMarketChart tone="surface" />

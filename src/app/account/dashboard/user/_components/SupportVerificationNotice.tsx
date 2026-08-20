@@ -10,8 +10,10 @@ import { BrowserLocalTimestamp } from "@/components/time/BrowserLocalTimestamp";
 import { cancelSupportVerificationAction } from "@/actions/support/cancelSupportVerificationAction";
 import { confirmSupportVerificationAction } from "@/actions/support/confirmSupportVerificationAction";
 import { useRouter } from "next/navigation";
+import { getSupportVerificationCopy } from "@/lib/support/supportVerificationCopy";
 
 type SupportVerificationNoticeProps = {
+  siteName: string;
   verification: {
     id: string;
     representativeName: string;
@@ -23,9 +25,11 @@ type SupportVerificationNoticeProps = {
 };
 
 export default function SupportVerificationNotice({
+  siteName,
   verification,
 }: SupportVerificationNoticeProps) {
   const router = useRouter();
+  const supportVerificationCopy = getSupportVerificationCopy(siteName);
 
   const [isCancelPending, startCancelTransition] = useTransition();
   const [isConfirmPending, startConfirmTransition] = useTransition();
@@ -111,12 +115,11 @@ export default function SupportVerificationNotice({
                 </p>
 
                 <h2 className="mt-1 text-base font-semibold text-slate-950 dark:text-white sm:text-lg">
-                  Creston Capital Support Verification
+                  {supportVerificationCopy.userHeading}
                 </h2>
 
                 <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  A support representative is requesting confirmation before
-                  discussing account-related information with you.
+                  {supportVerificationCopy.userDescription}
                 </p>
               </div>
             </div>
@@ -217,7 +220,7 @@ export default function SupportVerificationNotice({
               <p className="text-sm leading-6">
                 {isExpired
                   ? "This support verification has expired. Please ask the support representative to send a new verification request."
-                  : "Only confirm this session if you recognize the representative and are currently speaking with them through an expected Creston Capital support channel."}
+                  : supportVerificationCopy.userExpectationMessage}
               </p>
             </div>
           </div>

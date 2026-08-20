@@ -79,6 +79,9 @@ export default async function Page() {
       role: true,
       emailVerified: true,
       referralCode: true,
+      isLegacyUser: true,
+      migrationStatus: true,
+      migratedAt: true,
       profileAvatarFileAsset: {
         select: {
           storageKey: true,
@@ -130,6 +133,9 @@ export default async function Page() {
         role: dbUser.role,
         isEmailVerified: dbUser.emailVerified,
         referralCode,
+        isLegacyUser: dbUser.isLegacyUser,
+        migrationStatus: dbUser.migrationStatus,
+        migratedAt: dbUser.migratedAt?.toISOString() ?? null,
       }}
       referrals={dbUser.referralsMade.map((referral) => ({
         id: referral.id,

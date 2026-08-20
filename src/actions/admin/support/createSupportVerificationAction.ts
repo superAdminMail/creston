@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { createSupportVerificationSchema } from "@/lib/zodValidations/supportVerification";
 import { SUPPORT_VERIFICATION_EXPIRY_MINUTES } from "@/lib/support/supportVerificationConstants";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { getSupportVerificationCopy } from "@/lib/support/supportVerificationCopy";
 
 export type CreateSupportVerificationActionState = {
   status: "idle" | "success" | "error";
@@ -51,6 +53,9 @@ export async function createSupportVerificationAction(
   const input = parsed.data;
 
   try {
+    const site = await getSiteConfigurationCached();
+    const supportVerificationCopy = getSupportVerificationCopy(site?.siteName);
+
     const user = await prisma.user.findUnique({
       where: {
         id: input.userId,
@@ -122,10 +127,9 @@ export async function createSupportVerificationAction(
         data: {
           userId: user.id,
 
-          title: "Creston Capital Support Verification",
+          title: supportVerificationCopy.notificationTitle,
 
-          message:
-            "A Creston Capital support representative is requesting confirmation that they are speaking with the account owner.",
+          message: supportVerificationCopy.notificationMessage,
 
           type: "SUPPORT_VERIFICATION",
 

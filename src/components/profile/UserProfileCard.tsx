@@ -18,6 +18,10 @@ import DeleteAcountModal from "../modal/DeleteAcountModal";
 import { getUserInitials } from "@/lib/User-Initials/user";
 import { getRoleLabel } from "../account/DashboardNavbar.client";
 import { VerifyEmailRequestInlineForm } from "@/app/auth/_components/VerifyEmailRequestForm";
+import {
+  getLegacyAccountBadgeMeta,
+  getMigrationStatusMeta,
+} from "@/lib/migration/migrationPresentation";
 
 type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN" | "MODERATOR";
 
@@ -30,6 +34,8 @@ export type CurrentProfileUser = {
   image: string | null;
   emailVerified: boolean;
   createdAt: Date;
+  isLegacyUser?: boolean;
+  migrationStatus?: "NEW_USER" | "MIGRATION_PENDING" | "MIGRATED" | null;
 };
 
 type UserProfileCardProps = {
@@ -58,6 +64,8 @@ export function UserProfileCard({
 
   const roleLabel = getRoleLabel(user.role);
   const canReviewInvestmentProfile = user.role === "USER";
+  const legacyBadge = getLegacyAccountBadgeMeta(Boolean(user.isLegacyUser));
+  const migrationMeta = getMigrationStatusMeta(user.migrationStatus ?? null);
 
   const initials = getUserInitials(user);
 
@@ -122,6 +130,25 @@ export function UserProfileCard({
                 </DialogContent>
               </Dialog>
             )}
+
+            {legacyBadge ? (
+              <Badge
+                className={`h-6 px-2 text-[11px] font-medium ${legacyBadge.className}`}
+              >
+                {legacyBadge.label}
+              </Badge>
+            ) : null}
+
+            {user.isLegacyUser ? (
+              <Badge
+                className={`h-6 px-2 text-[11px] font-medium ${migrationMeta.className}`}
+              >
+                <span
+                  className={`mr-1.5 h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+                />
+                {migrationMeta.label}
+              </Badge>
+            ) : null}
           </div>
 
           <Badge className="w-fit text-xs bg-[#3c9ee0]/10 text-[#3c9ee0] border border-[#3c9ee0]/20">

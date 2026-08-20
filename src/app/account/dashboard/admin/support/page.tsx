@@ -5,6 +5,7 @@ import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRo
 import { getSupportInboxConversations } from "@/lib/support/supportConversationService";
 import { prisma } from "@/lib/prisma";
 import { getSupportVerificationsAction } from "@/actions/admin/support/getSupportVerificationsAction";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function AdminSupportPage({
   searchParams,
@@ -17,6 +18,8 @@ export default async function AdminSupportPage({
   ]);
 
   const { conversation } = await searchParams;
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
 
   if (conversation) {
     redirect(`/account/dashboard/admin/support/${conversation}`);
@@ -55,6 +58,7 @@ export default async function AdminSupportPage({
   return (
     <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
       <SupportInboxWorkspace
+        siteName={siteName}
         mode="staff"
         viewerId={userId}
         viewerRole={role}

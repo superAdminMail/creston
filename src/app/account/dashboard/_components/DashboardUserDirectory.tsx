@@ -34,12 +34,18 @@ import { Input } from "@/components/ui/input";
 import { suspendUserAction } from "@/actions/super-admin/users/suspendUserAction";
 import { unsuspendUserAction } from "@/actions/super-admin/users/unsuspendUserAction";
 import { formatDirectoryCurrency } from "@/lib/formatters/directory";
+import {
+  formatMigrationTimelineTimestamp,
+  getLegacyAccountBadgeMeta,
+  getMigrationStatusMeta,
+} from "@/lib/migration/migrationPresentation";
 import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
 import {
   DASHBOARD_PAGE_PANEL_CLASS,
   DASHBOARD_PAGE_SURFACE_CLASS,
   DASHBOARD_TABLE_SHELL_CLASS,
 } from "./dashboardSurfaces";
+import { UserMigrationControls } from "./UserMigrationControls";
 import { cn } from "@/lib/utils";
 
 const heroPillClass =
@@ -71,6 +77,7 @@ type DashboardUserDirectoryProps = {
   cardTitle: string;
   cardDescription: string;
   searchPlaceholder: string;
+  siteName?: string;
   users: DashboardDirectoryUser[];
   stats: {
     totalUsers: number;
@@ -79,6 +86,7 @@ type DashboardUserDirectoryProps = {
     totalManagedFunds: number;
   };
   canSuspendUsers?: boolean;
+  showMigrationControls?: boolean;
 };
 
 function getRoleBadge(role: UserRole) {
@@ -237,6 +245,41 @@ function getAccountStatusBadge(status: AccountStatus) {
   }
 }
 
+function getMigrationBadge(
+  isLegacyUser: boolean,
+  migrationStatus: DashboardDirectoryUser["migrationStatus"],
+) {
+  const legacyBadge = getLegacyAccountBadgeMeta(isLegacyUser);
+  const migrationMeta = getMigrationStatusMeta(migrationStatus);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {legacyBadge ? (
+        <Badge
+          className={`${statusBadgeClass} ${legacyBadge.className} hover:bg-transparent`}
+        >
+          {legacyBadge.label}
+        </Badge>
+      ) : (
+        <Badge
+          className={`${statusBadgeClass} border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300`}
+        >
+          Not legacy
+        </Badge>
+      )}
+
+      <Badge
+        className={`${statusBadgeClass} ${migrationMeta.className} hover:bg-transparent`}
+      >
+        <span
+          className={`mr-1.5 h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+        />
+        {migrationMeta.label}
+      </Badge>
+    </div>
+  );
+}
+
 function StatCard({
   title,
   value,
@@ -340,6 +383,9 @@ function UserDirectoryMobileCard({
           <DetailField label="Verification">
             {getVerificationBadge(user.verificationStatus)}
           </DetailField>
+          <DetailField label="Migration">
+            {getMigrationBadge(user.isLegacyUser, user.migrationStatus)}
+          </DetailField>
           <DetailField label="Account">
             {getAccountStatusBadge(user.accountStatus)}
           </DetailField>
@@ -436,9 +482,11 @@ export function DashboardUserDirectory({
   cardTitle,
   cardDescription,
   searchPlaceholder,
+  siteName,
   users,
   stats,
   canSuspendUsers = false,
+  showMigrationControls = false,
 }: DashboardUserDirectoryProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -462,6 +510,8 @@ export function DashboardUserDirectory({
         user.country.toLowerCase().includes(value) ||
         user.role.toLowerCase().includes(value) ||
         user.verificationStatus.toLowerCase().includes(value) ||
+        user.migrationStatus.toLowerCase().includes(value) ||
+        (user.isLegacyUser ? "legacy" : "standard").includes(value) ||
         user.accountStatus.toLowerCase().includes(value) ||
         user.id.toLowerCase().includes(value)
       );
@@ -470,6 +520,12 @@ export function DashboardUserDirectory({
 
   function openUser(user: DashboardDirectoryUser) {
     setSelectedUser(user);
+  }
+
+  function handleMigratedUser(nextUser: DashboardDirectoryUser) {
+    setSelectedUser((current) =>
+      current?.id === nextUser.id ? nextUser : current,
+    );
   }
 
   function openUserActionDialog(
@@ -590,6 +646,14 @@ export function DashboardUserDirectory({
           />
         </section>
 
+        {showMigrationControls ? (
+          <UserMigrationControls
+            users={users}
+            siteName={siteName?.trim() || "Company"}
+            onMigrated={handleMigratedUser}
+          />
+        ) : null}
+
         <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -662,6 +726,9 @@ export function DashboardUserDirectory({
                         Account
                       </th>
                       <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                        Migration
+                      </th>
+                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                         Deposits
                       </th>
                       <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
@@ -718,6 +785,12 @@ export function DashboardUserDirectory({
                         </td>
                         <td className="px-4 py-4">
                           {getAccountStatusBadge(user.accountStatus)}
+                        </td>
+                        <td className="px-4 py-4">
+                          {getMigrationBadge(
+                            user.isLegacyUser,
+                            user.migrationStatus,
+                          )}
                         </td>
                         <td className="px-4 py-4 text-sm text-slate-700 dark:text-slate-300">
                           {formatDirectoryCurrency(user.totalDeposits)}
@@ -795,7 +868,7 @@ export function DashboardUserDirectory({
                     {filteredUsers.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={9}
+                          colSpan={10}
                           className="px-4 py-12 text-center text-sm text-slate-500"
                         >
                           No records matched your search.
@@ -939,6 +1012,17 @@ export function DashboardUserDirectory({
                       {getKycBadge(selectedUser.kycStatus)}
                     </div>
                   </div>
+                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
+                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
+                      Migration status
+                    </p>
+                    <div className="mt-3">
+                      {getMigrationBadge(
+                        selectedUser.isLegacyUser,
+                        selectedUser.migrationStatus,
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -1012,6 +1096,37 @@ export function DashboardUserDirectory({
                     {selectedUser.joinedAt}
                   </p>
                 </div>
+
+                {selectedUser.isLegacyUser ? (
+                  selectedUser.migratedAt ? (
+                    <div className="rounded-[1.35rem] border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(236,253,245,0.92))] p-4 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-800 dark:text-sky-200">
+                        Account Migration Completed
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+                        {formatMigrationTimelineTimestamp(
+                          selectedUser.migratedAt,
+                        )}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                        Your legacy account information was successfully
+                        migrated to {siteName?.trim() || "Company"}.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-[1.35rem] border border-slate-200/70 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                        Migration timeline
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+                        Migration pending
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                        Migration has not been completed yet.
+                      </p>
+                    </div>
+                  )
+                ) : null}
               </div>
             </div>
           ) : null}

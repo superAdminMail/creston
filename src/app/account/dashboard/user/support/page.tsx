@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SupportInboxWorkspace from "@/components/support/SupportInboxWorkspace";
 import { getCurrentUserId, getCurrentUserRole } from "@/lib/getCurrentUser";
 import { getSupportInboxConversations } from "@/lib/support/supportConversationService";
+import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 
 export default async function SupportPage({
   searchParams,
@@ -21,6 +22,9 @@ export default async function SupportPage({
     redirect(`/account/dashboard/user/support/${conversation}`);
   }
 
+  const site = await getSiteConfigurationCached();
+  const siteName = site?.siteName?.trim() || "Company";
+
   const inbox = await getSupportInboxConversations({
     viewerUserId: userId,
     viewerRole: role,
@@ -31,6 +35,7 @@ export default async function SupportPage({
   return (
     <div className="mx-auto min-h-[calc(100dvh-7rem)] max-w-7xl">
       <SupportInboxWorkspace
+        siteName={siteName}
         mode="user"
         viewerId={userId}
         viewerRole={role}

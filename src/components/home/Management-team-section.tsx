@@ -26,7 +26,7 @@ export async function ManagementTeamSection() {
   return (
     <ManagementTeamSectionClient
       team={team}
-      brandName={siteConfig?.siteName?.trim() || "Creston Capital"}
+      brandName={siteConfig?.siteName?.trim() || "Company"}
       brandTagline={
         "Structured financial systems, operational clarity, and long-term trust."
       }

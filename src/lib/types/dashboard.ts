@@ -14,6 +14,9 @@ export type DashboardDirectoryUser = {
   accountStatus: "ACTIVE" | "SUSPENDED" | "REVIEW" | "DELETED";
   isSuspended: boolean;
   isDeleted: boolean;
+  isLegacyUser: boolean;
+  migrationStatus: "NEW_USER" | "MIGRATION_PENDING" | "MIGRATED";
+  migratedAt: string | null;
   totalDeposits: number;
   totalInvested: number;
   walletBalance: number;

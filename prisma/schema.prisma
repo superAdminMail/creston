@@ -69,6 +69,10 @@ model User {
   //supportVerificationsRepresented SupportVerification[] @relation("SupportVerificationRepresentative")
   supportVerificationsCreated  SupportVerification[] @relation("SupportVerificationCreatedBy")
 
+  isLegacyUser    Boolean         @default(false)
+  migrationStatus MigrationStatus @default(NEW_USER)
+  migratedAt      DateTime?
+
   @@index([accountStatus])
   @@index([emailVerified])
   @@index([isDisposableEmail])
@@ -1303,6 +1307,12 @@ model ReferralReward {
 /// * ===========================
 /// *     ENUM & CONSTANTS
 /// * ===========================
+
+enum MigrationStatus {
+  NEW_USER
+  MIGRATION_PENDING
+  MIGRATED
+}
 
 enum SupportVerificationStatus {
   PENDING

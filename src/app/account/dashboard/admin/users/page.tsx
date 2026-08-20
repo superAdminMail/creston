@@ -17,8 +17,10 @@ export default async function AdminUsersPage() {
       cardTitle="Users"
       cardDescription="Active user records"
       searchPlaceholder="Search users by name, email, role, or joined date..."
+      siteName={siteName}
       users={data.users}
       stats={data.stats}
+      showMigrationControls
     />
   );
 }

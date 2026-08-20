@@ -14,6 +14,13 @@ import {
   User2,
 } from "lucide-react";
 
+import {
+  formatMigrationTimelineTimestamp,
+  getLegacyAccountBadgeMeta,
+  getMigrationCompletedMessage,
+  getMigrationStatusMeta,
+  getMigrationTimelineTitle,
+} from "@/lib/migration/migrationPresentation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +47,9 @@ type ProfilePageProps = {
     role?: string | null;
     isEmailVerified?: boolean | null;
     referralCode?: string | null;
+    isLegacyUser?: boolean;
+    migrationStatus?: "NEW_USER" | "MIGRATION_PENDING" | "MIGRATED" | null;
+    migratedAt?: string | null;
   };
   referrals?: ReferralActivityItem[];
 };
@@ -89,6 +99,10 @@ export default function ProfilePageView({
     username: user.username ?? undefined,
   });
   const canReviewInvestmentProfile = user.role === "USER";
+  const legacyBadge = getLegacyAccountBadgeMeta(Boolean(user.isLegacyUser));
+  const migrationMeta = getMigrationStatusMeta(user.migrationStatus ?? null);
+  const hasCompletedMigration =
+    Boolean(user.migratedAt) || user.migrationStatus === "MIGRATED";
   const referralSummary = referrals.reduce(
     (acc, referral) => {
       acc.total += 1;
@@ -233,6 +247,24 @@ export default function ProfilePageView({
                 </div>
               )}
 
+              {legacyBadge ? (
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${legacyBadge.className}`}
+                  >
+                    {legacyBadge.label}
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${migrationMeta.className}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+                    />
+                    {migrationMeta.label}
+                  </span>
+                </div>
+              ) : null}
+
               <h2 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">
                 {user.name}
               </h2>
@@ -305,6 +337,66 @@ export default function ProfilePageView({
               />
             </div>
           </section>
+
+          {user.isLegacyUser ? (
+            <section className={PROFILE_SURFACE_CLASS}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
+                    Migration timeline
+                  </h3>
+                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Legacy account history for your {resolvedSiteName}
+                    {""} profile.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${migrationMeta.className}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+                    />
+                    {migrationMeta.label}
+                  </span>
+                  {legacyBadge ? (
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${legacyBadge.className}`}
+                    >
+                      {legacyBadge.label}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+
+              {hasCompletedMigration ? (
+                <div className="mt-5 rounded-[1.4rem] border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(236,253,245,0.92))] p-4 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-800 dark:text-sky-200">
+                    {getMigrationTimelineTitle()}
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+                    {formatMigrationTimelineTimestamp(user.migratedAt)}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
+                    {getMigrationCompletedMessage(resolvedSiteName)}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-5 rounded-[1.4rem] border border-slate-200/70 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                    Migration timeline
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+                    Migration pending
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Migration status has not been completed yet.
+                  </p>
+                </div>
+              )}
+            </section>
+          ) : null}
 
           {canReviewInvestmentProfile ? (
             <div className="grid gap-4 sm:grid-cols-2">

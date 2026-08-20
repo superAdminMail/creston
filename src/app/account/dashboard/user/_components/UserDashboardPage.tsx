@@ -11,6 +11,11 @@ import {
 import Link from "next/link";
 
 import { formatUsd } from "@/lib/formatters/formatters";
+import {
+  formatMigrationTimelineTimestamp,
+  getLegacyAccountBadgeMeta,
+  getMigrationStatusMeta,
+} from "@/lib/migration/migrationPresentation";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 
 const DASHBOARD_FLAT_SURFACE_CLASS =
@@ -20,6 +25,11 @@ type UserDashboardPageProps = {
   userName: string;
   stats: UserDashboardStats;
   investmentProfileComplete: boolean;
+  legacyAccount?: {
+    isLegacyUser: boolean;
+    migrationStatus: "NEW_USER" | "MIGRATION_PENDING" | "MIGRATED";
+    migratedAt: string | null;
+  } | null;
 };
 
 export type UserDashboardStats = {
@@ -78,7 +88,16 @@ export default function UserDashboardPage({
   userName,
   stats,
   investmentProfileComplete,
+  legacyAccount,
 }: UserDashboardPageProps) {
+  const legacyBadge = legacyAccount
+    ? getLegacyAccountBadgeMeta(legacyAccount.isLegacyUser)
+    : null;
+  const migrationMeta = legacyAccount
+    ? getMigrationStatusMeta(legacyAccount.migrationStatus)
+    : null;
+  const hasCompletedMigration = Boolean(legacyAccount?.migratedAt);
+
   return (
     <div className="space-y-5 sm:space-y-6">
       <section className="space-y-5 sm:space-y-6">
@@ -106,6 +125,67 @@ export default function UserDashboardPage({
           </div>
         </div>
       </section>
+
+      {legacyAccount?.isLegacyUser ? (
+        <section className="rounded-[1.5rem] border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.96),rgba(236,253,245,0.94))] p-4 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {legacyBadge ? (
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] ${legacyBadge.className}`}
+                  >
+                    {legacyBadge.label}
+                  </span>
+                ) : null}
+                {migrationMeta ? (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] ${migrationMeta.className}`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+                    />
+                    {migrationMeta.label}
+                  </span>
+                ) : null}
+              </div>
+
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+                Legacy account migration
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-slate-700 dark:text-slate-200">
+                Account information for clearer review.
+              </p>
+            </div>
+
+            {hasCompletedMigration ? (
+              <div className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Migration timeline
+                </p>
+                <p className="mt-2 font-medium text-slate-950 dark:text-white">
+                  Account Migration Completed
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  {formatMigrationTimelineTimestamp(legacyAccount.migratedAt)}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-200">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Migration timeline
+                </p>
+                <p className="mt-2 font-medium text-slate-950 dark:text-white">
+                  Migration pending
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                  Migration is not yet completed.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       {!investmentProfileComplete ? (
         <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">

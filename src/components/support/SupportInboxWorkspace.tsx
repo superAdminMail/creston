@@ -67,6 +67,7 @@ type Props = {
   mode: SupportInboxMode;
   viewerId: string;
   viewerRole: UserRole;
+  siteName: string;
   initialConversations: SupportConversationPreview[];
   users?: SupportVerificationUserOption[];
   detailBasePath?: string;
@@ -164,6 +165,7 @@ export default function SupportInboxWorkspace({
   mode,
   viewerId,
   viewerRole,
+  siteName,
   initialConversations,
   detailBasePath,
   users = [],
@@ -874,6 +876,7 @@ export default function SupportInboxWorkspace({
 
       {isStaffView ? (
         <SendSupportVerificationDialog
+          siteName={siteName}
           open={supportVerificationOpen}
           onOpenChange={setSupportVerificationOpen}
           users={users}

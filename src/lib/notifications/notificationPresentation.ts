@@ -31,6 +31,13 @@ function isSupportNotification(notification?: Pick<
   return notification?.metadata?.kind === "support_ticket" || notification?.metadata?.kind === "support_reply";
 }
 
+function isMigrationNotification(notification?: Pick<
+  NotificationDTO,
+  "type" | "metadata"
+> | null) {
+  return notification?.metadata?.kind === "account_migration";
+}
+
 export function getNotificationDisplayType(
   notification?: Pick<NotificationDTO, "type" | "metadata"> | null,
 ) {
@@ -48,6 +55,10 @@ export function getNotificationDisplayType(
     return notification?.metadata?.kind === "support_reply"
       ? "Support Reply"
       : "Support Ticket";
+  }
+
+  if (isMigrationNotification(notification)) {
+    return "Account Migration";
   }
 
   if (isInvestmentOrderBankInfoRequestNotification(notification)) {

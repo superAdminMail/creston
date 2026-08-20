@@ -19,6 +19,7 @@ import {
   createSupportVerificationAction,
   type CreateSupportVerificationActionState,
 } from "@/actions/admin/support/createSupportVerificationAction";
+import { getSupportVerificationCopy } from "@/lib/support/supportVerificationCopy";
 import { DashboardActionSubmitButton } from "../../_components/DashboardActionSubmitButton";
 
 type SupportVerificationUserOption = {
@@ -29,19 +30,21 @@ type SupportVerificationUserOption = {
 
 type Props = {
   users: SupportVerificationUserOption[];
+  siteName: string;
 };
 
 const initialState: CreateSupportVerificationActionState = {
   status: "idle",
 };
 
-export default function SupportVerificationForm({ users }: Props) {
+export default function SupportVerificationForm({ users, siteName }: Props) {
   const [state, formAction] = useActionState(
     createSupportVerificationAction,
     initialState,
   );
 
   const lastToastKey = useRef<string | null>(null);
+  const supportVerificationCopy = getSupportVerificationCopy(siteName);
 
   const userOptions = useMemo(() => {
     return users.map((user) => ({
@@ -197,7 +200,7 @@ export default function SupportVerificationForm({ users }: Props) {
 
             <div className="mt-3 space-y-1 text-sm text-slate-300">
               <p className="font-semibold text-white">
-                Creston Support Verification
+                {supportVerificationCopy.adminPreviewTitle}
               </p>
 
               <p>

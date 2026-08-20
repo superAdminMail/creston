@@ -11,6 +11,12 @@ import {
   isSavingsFundingBankInfoRequestNotification,
 } from "@/lib/notifications/savingsFundingBankInfo";
 
+function isMigrationNotification(
+  notification?: Pick<NotificationDTO, "type" | "metadata">,
+) {
+  return notification?.metadata?.kind === "account_migration";
+}
+
 export function getNotificationIcon(
   notification?: Pick<NotificationDTO, "type" | "metadata">,
 ) {
@@ -41,6 +47,10 @@ export function getNotificationIcon(
 
   if (isInvestmentBankInfo || isSavingsBankInfo) {
     return CreditCard;
+  }
+
+  if (isMigrationNotification(notification)) {
+    return Bell;
   }
 
   switch (notification?.type) {
