@@ -1,5 +1,5 @@
 export function getPromotionCampaignTypeLabel(rewardEnabled: boolean) {
-  return rewardEnabled ? "Promo Invite" : "Broadcast";
+  return rewardEnabled ? "Reward" : "Broadcast";
 }
 
 const PROMOTION_BADGE_BASE_CLASS =
@@ -25,12 +25,7 @@ export function getPromotionCampaignStatusLabel(input: {
     return "Draft";
   }
 
-  if (
-    input.rewardEnabled &&
-    input.expiresAt &&
-    new Date(input.expiresAt).getTime() < Date.now() &&
-    input.status !== "SENT"
-  ) {
+  if (input.expiresAt && new Date(input.expiresAt).getTime() < Date.now()) {
     return "Expired";
   }
 
@@ -59,10 +54,13 @@ export function getPromotionCampaignStatusBadgeClass(input: {
   switch (statusLabel) {
     case "Active":
       return `${PROMOTION_BADGE_BASE_CLASS} border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200`;
+
     case "Completed":
       return `${PROMOTION_BADGE_BASE_CLASS} border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-200`;
+
     case "Expired":
       return `${PROMOTION_BADGE_BASE_CLASS} border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200`;
+
     case "Draft":
     default:
       return `${PROMOTION_BADGE_BASE_CLASS} border-slate-200/80 bg-slate-100 text-slate-700 dark:border-slate-500/20 dark:bg-slate-500/10 dark:text-slate-200`;

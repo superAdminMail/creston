@@ -3,6 +3,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import {
+  type PromotionHighlight,
+  type PromotionStep,
+  type PromotionTerm,
+  PromotionType,
+  promotionTypeSchema,
+} from "@/lib/promotions/promotion-types";
+import {
   getPromotionCampaignStatusLabel,
   getPromotionCampaignTypeLabel,
 } from "./promotionCampaignChips";
@@ -10,8 +17,15 @@ import {
 export type PromotionCampaignDetails = {
   id: string;
   title: string;
+  promotionType: PromotionType;
   subject: string | null;
-  message: string;
+  message: string | null;
+
+  description: string | null;
+  highlights: PromotionHighlight[];
+  steps: PromotionStep[];
+  terms: PromotionTerm[];
+
   promoCode: string | null;
   rewardEnabled: boolean;
   rewardAmount: string;
@@ -20,24 +34,30 @@ export type PromotionCampaignDetails = {
   expiresAt: string | null;
   maxRedemptions: number | null;
   redemptionCount: number;
+
   campaignTypeLabel: string;
   campaignStatusLabel: string;
+
   audienceType: string;
   channel: string;
   status: string;
   sendToAllUsers: boolean;
+
   scheduledAt: string | null;
   startedAt: string | null;
   completedAt: string | null;
   cancelledAt: string | null;
   failedAt: string | null;
   failureMessage: string | null;
+
   createdAt: string;
+
   createdBy: {
     id: string;
     name: string | null;
     email: string | null;
   };
+
   deliveries: Array<{
     id: string;
     user: {
@@ -61,6 +81,7 @@ export type PromotionCampaignDetails = {
     } | null;
     createdAt: string;
   }>;
+
   stats: {
     total: number;
     pending: number;
@@ -72,6 +93,62 @@ export type PromotionCampaignDetails = {
   };
 };
 
+function parseHighlights(value: unknown): PromotionHighlight[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === "object" && item !== null,
+    )
+    .map((item) => ({
+      title: typeof item.title === "string" ? item.title : "",
+      description:
+        typeof item.description === "string" ? item.description : undefined,
+    }))
+    .filter((item) => item.title.trim().length > 0);
+}
+
+function parseSteps(value: unknown): PromotionStep[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === "object" && item !== null,
+    )
+    .map((item, index) => ({
+      number:
+        typeof item.number === "string"
+          ? item.number
+          : String(index + 1).padStart(2, "0"),
+      title: typeof item.title === "string" ? item.title : "",
+      description: typeof item.description === "string" ? item.description : "",
+    }))
+    .filter((item) => item.title.trim().length > 0);
+}
+
+function parseTerms(value: unknown): PromotionTerm[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(
+      (item): item is Record<string, unknown> =>
+        typeof item === "object" && item !== null,
+    )
+    .map((item) => ({
+      title: typeof item.title === "string" ? item.title : "",
+      description: typeof item.description === "string" ? item.description : "",
+    }))
+    .filter((item) => item.title.trim().length > 0);
+}
+
 export async function getPromotionCampaignDetails(
   campaignId: string,
 ): Promise<PromotionCampaignDetails> {
@@ -81,30 +158,49 @@ export async function getPromotionCampaignDetails(
     where: {
       id: campaignId,
     },
+
     select: {
       id: true,
       title: true,
+
+      promotionType: true,
+
       subject: true,
+
       message: true,
+
+      description: true,
+      highlights: true,
+      steps: true,
+      terms: true,
+
       promoCode: true,
+
       rewardEnabled: true,
       rewardAmount: true,
       rewardCurrency: true,
+
       startsAt: true,
       expiresAt: true,
+
       maxRedemptions: true,
       redemptionCount: true,
+
       audienceType: true,
       channel: true,
       status: true,
+
       sendToAllUsers: true,
+
       scheduledAt: true,
       startedAt: true,
       completedAt: true,
       cancelledAt: true,
       failedAt: true,
       failureMessage: true,
+
       createdAt: true,
+
       createdByUser: {
         select: {
           id: true,
@@ -112,21 +208,28 @@ export async function getPromotionCampaignDetails(
           email: true,
         },
       },
+
       deliveries: {
         orderBy: {
           createdAt: "desc",
         },
+
         select: {
           id: true,
           channel: true,
           status: true,
+
           emailAddress: true,
           emailSentAt: true,
+
           deliveredAt: true,
           readAt: true,
+
           failedAt: true,
           failureMessage: true,
+
           createdAt: true,
+
           user: {
             select: {
               id: true,
@@ -134,6 +237,7 @@ export async function getPromotionCampaignDetails(
               email: true,
             },
           },
+
           notification: {
             select: {
               id: true,
@@ -151,6 +255,18 @@ export async function getPromotionCampaignDetails(
     notFound();
   }
 
+  const promotionTypeResult = promotionTypeSchema.safeParse(
+    campaign.promotionType,
+  );
+
+  const promotionType = promotionTypeResult.success
+    ? promotionTypeResult.data
+    : "ANNOUNCEMENT";
+
+  const highlights = parseHighlights(campaign.highlights);
+  const steps = parseSteps(campaign.steps);
+  const terms = parseTerms(campaign.terms);
+
   const stats = campaign.deliveries.reduce(
     (acc, delivery) => {
       acc.total += 1;
@@ -159,21 +275,27 @@ export async function getPromotionCampaignDetails(
         case "PENDING":
           acc.pending += 1;
           break;
+
         case "SENT":
           acc.sent += 1;
           break;
+
         case "DELIVERED":
           acc.delivered += 1;
           break;
+
         case "READ":
           acc.read += 1;
           break;
+
         case "FAILED":
           acc.failed += 1;
           break;
+
         case "CANCELLED":
           acc.cancelled += 1;
           break;
+
         default:
           break;
       }
@@ -193,18 +315,39 @@ export async function getPromotionCampaignDetails(
 
   return {
     id: campaign.id,
+
     title: campaign.title,
+
+    promotionType,
+
     subject: campaign.subject,
-    message: campaign.message,
+
+    message: campaign.message ?? null,
+
+    description: campaign.description ?? null,
+
+    highlights,
+    steps,
+    terms,
+
     promoCode: campaign.promoCode,
+
     rewardEnabled: campaign.rewardEnabled,
+
     rewardAmount: campaign.rewardAmount.toString(),
+
     rewardCurrency: campaign.rewardCurrency,
+
     startsAt: campaign.startsAt?.toISOString() ?? null,
+
     expiresAt: campaign.expiresAt?.toISOString() ?? null,
+
     maxRedemptions: campaign.maxRedemptions,
+
     redemptionCount: campaign.redemptionCount,
+
     campaignTypeLabel: getPromotionCampaignTypeLabel(campaign.rewardEnabled),
+
     campaignStatusLabel: getPromotionCampaignStatusLabel({
       status: campaign.status,
       rewardEnabled: campaign.rewardEnabled,
@@ -213,37 +356,60 @@ export async function getPromotionCampaignDetails(
       cancelledAt: campaign.cancelledAt?.toISOString() ?? null,
       failedAt: campaign.failedAt?.toISOString() ?? null,
     }),
+
     audienceType: campaign.audienceType,
+
     channel: campaign.channel,
+
     status: campaign.status,
+
     sendToAllUsers: campaign.sendToAllUsers,
+
     scheduledAt: campaign.scheduledAt?.toISOString() ?? null,
+
     startedAt: campaign.startedAt?.toISOString() ?? null,
+
     completedAt: campaign.completedAt?.toISOString() ?? null,
+
     cancelledAt: campaign.cancelledAt?.toISOString() ?? null,
+
     failedAt: campaign.failedAt?.toISOString() ?? null,
+
     failureMessage: campaign.failureMessage ?? null,
+
     createdAt: campaign.createdAt.toISOString(),
+
     createdBy: {
       id: campaign.createdByUser.id,
       name: campaign.createdByUser.name,
       email: campaign.createdByUser.email,
     },
+
     deliveries: campaign.deliveries.map((delivery) => ({
       id: delivery.id,
+
       user: {
         id: delivery.user.id,
         name: delivery.user.name,
         email: delivery.user.email,
       },
+
       channel: delivery.channel,
+
       status: delivery.status,
+
       emailAddress: delivery.emailAddress ?? null,
+
       emailSentAt: delivery.emailSentAt?.toISOString() ?? null,
+
       deliveredAt: delivery.deliveredAt?.toISOString() ?? null,
+
       readAt: delivery.readAt?.toISOString() ?? null,
+
       failedAt: delivery.failedAt?.toISOString() ?? null,
+
       failureMessage: delivery.failureMessage ?? null,
+
       notification: delivery.notification
         ? {
             id: delivery.notification.id,
@@ -252,8 +418,10 @@ export async function getPromotionCampaignDetails(
             createdAt: delivery.notification.createdAt.toISOString(),
           }
         : null,
+
       createdAt: delivery.createdAt.toISOString(),
     })),
+
     stats,
   };
 }

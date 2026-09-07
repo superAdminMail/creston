@@ -1181,7 +1181,14 @@ model PromotionCampaign {
   createdByUserId String
   title           String
   subject         String?
-  message         String
+  message         String?
+  promotionType   String                  @default("ANNOUNCEMENT") @db.VarChar(32)
+  description     String?
+  highlights      Json?
+  steps           Json?
+  terms           Json?
+  slug            String?                 @unique
+  isPublic        Boolean                 @default(false)
   audienceType    PromotionAudienceType
   channel         PromotionChannel
   status          PromotionCampaignStatus @default(DRAFT)
