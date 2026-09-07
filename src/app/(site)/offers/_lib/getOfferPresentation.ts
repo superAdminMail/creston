@@ -18,9 +18,9 @@ export function getOfferPresentation(offer: Offer): OfferPresentation {
   }
 
   return {
-    eyebrow: "Featured opportunity",
+    eyebrow: offer.isFeatured ? "Featured opportunity" : "Opportunity",
     category: "Opportunity",
-    badge: "Featured opportunity",
+    badge: offer.isFeatured ? "Featured opportunity" : "Current opportunity",
     cta: "Get started",
     heroLabel: "Opportunity overview",
     heroTitle: "Explore with confidence",
@@ -36,7 +36,11 @@ export function getOfferHeroStats(offer: Offer): OfferHeroStat[] {
   const stats: OfferHeroStat[] = [
     {
       label: "Offer type",
-      value: offer.rewardEnabled ? "Reward promotion" : "Featured opportunity",
+      value: offer.rewardEnabled
+        ? "Reward promotion"
+        : offer.isFeatured
+          ? "Featured opportunity"
+          : "Opportunity",
     },
   ];
 
@@ -59,7 +63,11 @@ export function getOfferDetails(offer: Offer): OfferDetail[] {
   const details: OfferDetail[] = [
     {
       label: "Offer type",
-      value: offer.rewardEnabled ? "Reward promotion" : "Featured opportunity",
+      value: offer.rewardEnabled
+        ? "Reward promotion"
+        : offer.isFeatured
+          ? "Featured opportunity"
+          : "Opportunity",
     },
     {
       label: "Status",

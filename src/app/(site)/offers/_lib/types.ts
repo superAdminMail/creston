@@ -34,6 +34,7 @@ export type Offer = {
   redemptionCount: number;
   metadata: unknown;
   createdAt: string;
+  isFeatured: boolean;
 };
 
 export type OfferPresentation = {

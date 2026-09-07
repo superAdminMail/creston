@@ -78,6 +78,7 @@ export async function getPublicOfferBySlug(slug: string) {
       title: true,
       subject: true,
       promotionType: true,
+      isFeatured: true,
 
       description: true,
       highlights: true,
@@ -119,6 +120,7 @@ export async function getPublicOfferBySlug(slug: string) {
     title: campaign.title,
     subject: campaign.subject,
     promotionType: campaign.promotionType,
+    isFeatured: campaign.isFeatured,
 
     description: campaign.description,
     highlights,
