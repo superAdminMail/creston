@@ -148,6 +148,9 @@ export async function createPromotionCampaignAction(
       | "true"
       | "false",
     isPublic: String(formData.get("isPublic") ?? "false") as "true" | "false",
+    isFeatured: String(formData.get("isFeatured") ?? "false") as
+      | "true"
+      | "false",
   };
 
   const parsed = createPromotionCampaignSchema.safeParse(rawInput);
@@ -167,6 +170,7 @@ export async function createPromotionCampaignAction(
   const rewardEnabled = input.rewardEnabled === "true";
   const claimCtaEnabled = input.claimCtaEnabled === "true";
   const isPublic = input.isPublic === "true";
+  const isFeatured = input.isFeatured === "true";
 
   const deliveryMessage = getPromotionDeliveryMessage({
     promotionType,
@@ -192,11 +196,6 @@ export async function createPromotionCampaignAction(
       ? input.rewardCurrency?.trim().toUpperCase() || "USD"
       : "USD";
 
-    /**
-     * Claim CTA intentionally opens the investment-order flow.
-     * The promo code is passed through the URL so the investment
-     * order flow can process it.
-     */
     const claimCtaLink = claimCtaEnabled
       ? promoCode
         ? `/account/dashboard/user/investment-orders/new?promoCode=${encodeURIComponent(
@@ -264,11 +263,18 @@ export async function createPromotionCampaignAction(
       };
     }
 
-    /**
-     * Create the campaign first.
-     * This transaction is intentionally small.
-     */
     const campaign = await prisma.$transaction(async (tx) => {
+      if (isFeatured) {
+        await tx.promotionCampaign.updateMany({
+          where: {
+            isFeatured: true,
+          },
+          data: {
+            isFeatured: false,
+          },
+        });
+      }
+
       const slug = isPublic ? await generateUniqueSlug(tx, input.title) : null;
 
       if (promoCode) {
@@ -299,6 +305,7 @@ export async function createPromotionCampaignAction(
           terms: input.terms,
           slug,
           isPublic,
+          isFeatured,
           promoCode,
           rewardEnabled,
           rewardAmount,
@@ -336,6 +343,7 @@ export async function createPromotionCampaignAction(
           rewardEnabled: true,
           slug: true,
           isPublic: true,
+          isFeatured: true,
         },
       });
     });
@@ -360,23 +368,6 @@ export async function createPromotionCampaignAction(
       throw new Error("No eligible users found for this promotion.");
     }
 
-    /**
-     * IN-APP DELIVERY
-     *
-     * IMPORTANT:
-     * Do NOT create one notification + one delivery inside a
-     * loop within an interactive transaction.
-     *
-     * That caused Prisma P2028 because the default transaction
-     * timeout is 5 seconds.
-     *
-     * Instead:
-     *   1. create all notifications with createMany()
-     *   2. fetch their IDs in one query
-     *   3. create all deliveries with createMany()
-     *
-     * This keeps the transaction to only a few database queries.
-     */
     if (campaign.channel === PromotionChannel.IN_APP) {
       const now = new Date();
 
@@ -408,21 +399,10 @@ export async function createPromotionCampaignAction(
       );
 
       await prisma.$transaction(async (tx) => {
-        /**
-         * Query 1:
-         * Create all notifications at once.
-         */
         await tx.notification.createMany({
           data: notificationRows,
         });
 
-        /**
-         * Query 2:
-         * Fetch the generated notification IDs.
-         *
-         * The unique notification key lets us reliably map
-         * each notification back to its user.
-         */
         const notifications = await tx.notification.findMany({
           where: {
             key: {
@@ -442,10 +422,6 @@ export async function createPromotionCampaignAction(
           ]),
         );
 
-        /**
-         * Query 3:
-         * Create all promotion delivery records at once.
-         */
         await tx.promotionDelivery.createMany({
           data: users.map((user) => {
             const notificationId = notificationIdByUserId.get(user.id);
@@ -469,12 +445,6 @@ export async function createPromotionCampaignAction(
       });
     }
 
-    /**
-     * EMAIL DELIVERY
-     *
-     * Email sending remains unchanged for now.
-     * This only records the intended delivery state.
-     */
     if (campaign.channel === PromotionChannel.EMAIL) {
       const now = new Date();
 
@@ -495,10 +465,6 @@ export async function createPromotionCampaignAction(
       });
     }
 
-    /**
-     * Mark campaign as successfully sent only after
-     * delivery records have been created.
-     */
     await prisma.promotionCampaign.update({
       where: {
         id: campaign.id,

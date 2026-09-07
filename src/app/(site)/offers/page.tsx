@@ -49,6 +49,28 @@ function isPromotionTerm(value: unknown): value is {
   return typeof item.title === "string" && typeof item.description === "string";
 }
 
+const campaignSelect = {
+  id: true,
+  slug: true,
+  title: true,
+  subject: true,
+  promotionType: true,
+  description: true,
+  highlights: true,
+  steps: true,
+  terms: true,
+  rewardEnabled: true,
+  rewardAmount: true,
+  rewardCurrency: true,
+  promoCode: true,
+  startsAt: true,
+  expiresAt: true,
+  maxRedemptions: true,
+  redemptionCount: true,
+  metadata: true,
+  createdAt: true,
+} as const;
+
 export default async function OffersPage() {
   const now = new Date();
 
@@ -57,46 +79,44 @@ export default async function OffersPage() {
     getSiteConfigurationCached(),
   ]);
 
-  const campaigns = await prisma.promotionCampaign.findMany({
-    where: {
-      isPublic: true,
-      status: "SENT",
-      AND: [
-        {
-          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-        },
-        {
-          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-        },
-      ],
-    },
-    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      subject: true,
-      promotionType: true,
+  const baseAvailability = {
+    isPublic: true,
+    status: "SENT" as const,
+    AND: [
+      {
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+      },
+      {
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+    ],
+  };
 
-      description: true,
-      highlights: true,
-      steps: true,
-      terms: true,
+  const [featuredCampaign, campaigns] = await Promise.all([
+    prisma.promotionCampaign.findFirst({
+      where: {
+        ...baseAvailability,
+        isFeatured: true,
+      },
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      select: campaignSelect,
+    }),
 
-      rewardEnabled: true,
-      rewardAmount: true,
-      rewardCurrency: true,
-      promoCode: true,
-      startsAt: true,
-      expiresAt: true,
-      maxRedemptions: true,
-      redemptionCount: true,
-      metadata: true,
-      createdAt: true,
-    },
-  });
+    prisma.promotionCampaign.findMany({
+      where: {
+        ...baseAvailability,
+        isFeatured: false,
+      },
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      select: campaignSelect,
+    }),
+  ]);
 
-  const serializedCampaigns = campaigns.map((campaign) => {
+  function serializeCampaign(campaign: typeof featuredCampaign) {
+    if (!campaign) {
+      return null;
+    }
+
     const highlights = Array.isArray(campaign.highlights)
       ? campaign.highlights.filter(isPromotionHighlight)
       : [];
@@ -115,13 +135,10 @@ export default async function OffersPage() {
       title: campaign.title,
       subject: campaign.subject,
       promotionType: campaign.promotionType,
-
-      // Canonical campaign content
       description: campaign.description,
       highlights,
       steps,
       terms,
-
       rewardEnabled: campaign.rewardEnabled,
       rewardAmount: campaign.rewardAmount.toString(),
       rewardCurrency: campaign.rewardCurrency,
@@ -133,11 +150,27 @@ export default async function OffersPage() {
       metadata: campaign.metadata,
       createdAt: campaign.createdAt.toISOString(),
     };
-  });
+  }
+
+  const serializedFeaturedCampaign = serializeCampaign(featuredCampaign);
+
+  const serializedCampaigns = campaigns.map((campaign) =>
+    serializeCampaign(campaign),
+  );
+
+  const visibleCampaigns = serializedCampaigns.filter(
+    (campaign): campaign is NonNullable<typeof campaign> =>
+      Boolean(campaign?.slug),
+  );
+
+  const visibleFeaturedCampaign = serializedFeaturedCampaign?.slug
+    ? serializedFeaturedCampaign
+    : null;
 
   return (
     <OffersClient
-      campaigns={serializedCampaigns}
+      featuredCampaign={visibleFeaturedCampaign}
+      campaigns={visibleCampaigns}
       siteName={siteConfiguration?.siteName?.trim() || "Company"}
     />
   );

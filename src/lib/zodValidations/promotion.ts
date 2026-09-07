@@ -102,6 +102,8 @@ export const createPromotionCampaignSchema = z
 
     isPublic: z.enum(["true", "false"]).optional().default("false"),
 
+    isFeatured: z.enum(["true", "false"]).optional().default("false"),
+
     description: z.string().trim().max(10000).optional().default(""),
 
     highlights: jsonArrayField(highlightSchema),
@@ -112,6 +114,16 @@ export const createPromotionCampaignSchema = z
   })
   .superRefine((data, ctx) => {
     const rewardEnabled = data.rewardEnabled === "true";
+    const isPublic = data.isPublic === "true";
+    const isFeatured = data.isFeatured === "true";
+
+    if (isFeatured && !isPublic) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["isFeatured"],
+        message: "A featured promotion must be public.",
+      });
+    }
 
     if (rewardEnabled) {
       if (!data.promoCode?.trim()) {

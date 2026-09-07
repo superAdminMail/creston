@@ -49,11 +49,13 @@ type Campaign = {
 };
 
 type OffersClientProps = {
+  featuredCampaign: Campaign | null;
   campaigns: Campaign[];
   siteName: string;
 };
 
 export default function OffersClient({
+  featuredCampaign,
   campaigns,
   siteName,
 }: OffersClientProps) {
@@ -121,18 +123,26 @@ export default function OffersClient({
           </div>
 
           <div className="text-sm text-muted-foreground">
-            {visibleCampaigns.length}{" "}
-            {visibleCampaigns.length === 1 ? "opportunity" : "opportunities"}{" "}
+            {visibleCampaigns.length + (featuredCampaign ? 1 : 0)}{" "}
+            {visibleCampaigns.length + (featuredCampaign ? 1 : 0) === 1
+              ? "opportunity"
+              : "opportunities"}{" "}
             available
           </div>
         </div>
 
-        {visibleCampaigns.length > 0 ? (
+        {featuredCampaign || visibleCampaigns.length > 0 ? (
           <div className="grid gap-6 lg:grid-cols-2">
-            <FeaturedCampaign campaign={visibleCampaigns[0]} />
+            {featuredCampaign ? (
+              <FeaturedCampaign campaign={featuredCampaign} />
+            ) : (
+              <div className="lg:col-span-2">
+                <EmptyFeaturedOffer />
+              </div>
+            )}
 
             <div className="grid gap-6">
-              {visibleCampaigns.slice(1).map((campaign) => (
+              {visibleCampaigns.map((campaign) => (
                 <CampaignCard key={campaign.id} campaign={campaign} />
               ))}
             </div>
@@ -354,6 +364,25 @@ function EmptyOffers() {
         There are no public opportunities available right now. Check back soon
         for new campaigns and promotions.
       </p>
+    </div>
+  );
+}
+
+function EmptyFeaturedOffer() {
+  return (
+    <div className="flex min-h-[520px] items-center justify-center rounded-3xl border bg-card px-6 py-20 text-center shadow-sm">
+      <div>
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border bg-muted/40">
+          <Sparkles className="size-6 text-primary" />
+        </div>
+
+        <h3 className="mt-5 text-xl font-semibold">No featured opportunity</h3>
+
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          There is currently no featured opportunity available. Explore the
+          other opportunities below.
+        </p>
+      </div>
     </div>
   );
 }

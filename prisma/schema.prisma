@@ -1189,6 +1189,7 @@ model PromotionCampaign {
   terms           Json?
   slug            String?                 @unique
   isPublic        Boolean                 @default(false)
+  isFeatured      Boolean                 @default(false)
   audienceType    PromotionAudienceType
   channel         PromotionChannel
   status          PromotionCampaignStatus @default(DRAFT)

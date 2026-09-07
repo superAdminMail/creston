@@ -126,6 +126,7 @@ export default function PromotionCampaignForm({
   const [claimCtaEnabled, setClaimCtaEnabled] = useState(false);
 
   const [isPublic, setIsPublic] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
 
   const userOptions = useMemo(() => {
     return users.map((user) => ({
@@ -267,6 +268,12 @@ export default function PromotionCampaignForm({
               value={isPublic ? "true" : "false"}
             />
 
+            <input
+              type="hidden"
+              name="isFeatured"
+              value={isFeatured ? "true" : "false"}
+            />
+
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -300,6 +307,22 @@ export default function PromotionCampaignForm({
                 </div>
 
                 <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white">
+                    Feature this promotion
+                  </p>
+                  <p className="text-xs leading-5 text-slate-400">
+                    Make this the featured promotion on the public offers page.
+                    If another promotion is currently featured, it will
+                    automatically be replaced.
+                  </p>
+                </div>
+                <Switch checked={isFeatured} onCheckedChange={setIsFeatured} />
               </div>
             </div>
 
