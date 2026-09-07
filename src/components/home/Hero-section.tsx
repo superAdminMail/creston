@@ -86,7 +86,7 @@ export async function HeroSection() {
 
             <Link
               href="/offers"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3.5 text-sm font-semibold text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-400/30 bg-blue-500/10 px-6 py-3.5 text-sm font-semibold text-blue-200 transition-colors hover:bg-blue-500/20"
             >
               View offers <ArrowRight className="h-4 w-4" />
             </Link>
