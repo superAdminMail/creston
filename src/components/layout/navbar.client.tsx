@@ -16,9 +16,10 @@ export type NavbarClientProps = {
 };
 
 const marketingLinks = (siteName: string) => [
-    { href: "#why-platform", label: `Why ${siteName}` },
+  { href: "#why-platform", label: `Why ${siteName}` },
   { href: "#how-it-works", label: "How It Works" },
   { href: "#benefits", label: "Benefits" },
+  { href: "/offers", label: "Offers" },
   { href: "#testimonials", label: "Testimonials" },
   { href: "#faq", label: "FAQ" },
 ];
@@ -192,9 +193,8 @@ export function NavbarClient({
   const menuId = useId();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isSignedIn = Boolean(session?.user);
-  const sessionRole = (
-    session?.user as { role?: string | null } | undefined
-  )?.role;
+  const sessionRole = (session?.user as { role?: string | null } | undefined)
+    ?.role;
   const dashboardHref = sessionRole
     ? getDashboardHomeByRole(sessionRole)
     : dashboardLink;

@@ -83,6 +83,13 @@ export async function HeroSection() {
             >
               Explore plans
             </Link>
+
+            <Link
+              href="/offers"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3.5 text-sm font-semibold text-white"
+            >
+              View offers <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
 
           {/* TRUST */}
