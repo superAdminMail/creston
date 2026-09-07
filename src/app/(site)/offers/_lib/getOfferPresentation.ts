@@ -6,6 +6,17 @@ import type {
 } from "./types";
 
 export function getOfferPresentation(offer: Offer): OfferPresentation {
+  if (offer.rewardEnabled && offer.isFeatured) {
+    return {
+      eyebrow: "Featured offer",
+      category: "Promotion",
+      badge: "Featured promotion",
+      cta: "Claim offer",
+      heroLabel: "Featured opportunity",
+      heroTitle: "Explore with confidence",
+    };
+  }
+
   if (offer.rewardEnabled) {
     return {
       eyebrow: "Special offer",
@@ -27,6 +38,22 @@ export function getOfferPresentation(offer: Offer): OfferPresentation {
   };
 }
 
+function getOfferType(offer: Offer): string {
+  if (offer.rewardEnabled && offer.isFeatured) {
+    return "Featured reward promotion";
+  }
+
+  if (offer.rewardEnabled) {
+    return "Reward promotion";
+  }
+
+  if (offer.isFeatured) {
+    return "Featured opportunity";
+  }
+
+  return "Opportunity";
+}
+
 export function getOfferHeroStats(offer: Offer): OfferHeroStat[] {
   const availability =
     offer.maxRedemptions !== null
@@ -36,11 +63,7 @@ export function getOfferHeroStats(offer: Offer): OfferHeroStat[] {
   const stats: OfferHeroStat[] = [
     {
       label: "Offer type",
-      value: offer.rewardEnabled
-        ? "Reward promotion"
-        : offer.isFeatured
-          ? "Featured opportunity"
-          : "Opportunity",
+      value: getOfferType(offer),
     },
   ];
 
@@ -63,11 +86,7 @@ export function getOfferDetails(offer: Offer): OfferDetail[] {
   const details: OfferDetail[] = [
     {
       label: "Offer type",
-      value: offer.rewardEnabled
-        ? "Reward promotion"
-        : offer.isFeatured
-          ? "Featured opportunity"
-          : "Opportunity",
+      value: getOfferType(offer),
     },
     {
       label: "Status",
