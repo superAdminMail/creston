@@ -46,6 +46,7 @@ type Campaign = {
   redemptionCount: number;
   metadata: unknown;
   createdAt: string;
+  isFeatured: boolean;
 };
 
 type OffersClientProps = {
@@ -388,6 +389,16 @@ function EmptyFeaturedOffer() {
 }
 
 function getCampaignPresentation(campaign: Campaign) {
+  if (campaign.rewardEnabled && campaign.isFeatured) {
+    return {
+      category: "Promotion",
+      badge: "Featured promotion",
+      cta: "Explore offer",
+      accent: "from-emerald-600/20 via-teal-500/10 to-transparent",
+      icon: Sparkles,
+    };
+  }
+
   if (campaign.rewardEnabled) {
     return {
       category: "Promotion",
@@ -398,9 +409,19 @@ function getCampaignPresentation(campaign: Campaign) {
     };
   }
 
+  if (campaign.isFeatured) {
+    return {
+      category: "Opportunity",
+      badge: "Featured opportunity",
+      cta: "Explore opportunity",
+      accent: "from-blue-600/20 via-cyan-500/10 to-transparent",
+      icon: TrendingUp,
+    };
+  }
+
   return {
     category: "Opportunity",
-    badge: "Featured opportunity",
+    badge: "Current opportunity",
     cta: "Explore opportunity",
     accent: "from-blue-600/20 via-cyan-500/10 to-transparent",
     icon: TrendingUp,
