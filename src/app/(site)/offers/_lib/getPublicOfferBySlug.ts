@@ -16,6 +16,18 @@ export type PublicPromotionTerm = {
   description: string;
 };
 
+export type PublicOfferCta = {
+  enabled: boolean;
+  label: string;
+  link: string | null;
+};
+
+type PromotionMetadata = {
+  claimCtaEnabled?: boolean;
+  claimCtaLabel?: string | null;
+  claimCtaLink?: string | null;
+};
+
 function isPromotionHighlight(
   value: unknown,
 ): value is PublicPromotionHighlight {
@@ -53,6 +65,41 @@ function isPromotionTerm(value: unknown): value is PublicPromotionTerm {
   const item = value as Record<string, unknown>;
 
   return typeof item.title === "string" && typeof item.description === "string";
+}
+
+function getPromotionMetadata(value: unknown): PromotionMetadata {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  const metadata = value as Record<string, unknown>;
+
+  return {
+    claimCtaEnabled:
+      typeof metadata.claimCtaEnabled === "boolean"
+        ? metadata.claimCtaEnabled
+        : false,
+
+    claimCtaLabel:
+      typeof metadata.claimCtaLabel === "string"
+        ? metadata.claimCtaLabel
+        : null,
+
+    claimCtaLink:
+      typeof metadata.claimCtaLink === "string" ? metadata.claimCtaLink : null,
+  };
+}
+
+function getPublicOfferCta(metadata: unknown): PublicOfferCta {
+  const promotionMetadata = getPromotionMetadata(metadata);
+
+  const enabled = promotionMetadata.claimCtaEnabled === true;
+
+  return {
+    enabled,
+    label: promotionMetadata.claimCtaLabel?.trim() || "CLAIM",
+    link: enabled ? (promotionMetadata.claimCtaLink ?? null) : null,
+  };
 }
 
 export async function getPublicOfferBySlug(slug: string) {
@@ -114,6 +161,8 @@ export async function getPublicOfferBySlug(slug: string) {
     ? campaign.terms.filter(isPromotionTerm)
     : [];
 
+  const cta = getPublicOfferCta(campaign.metadata);
+
   return {
     id: campaign.id,
     slug: campaign.slug!,
@@ -135,7 +184,11 @@ export async function getPublicOfferBySlug(slug: string) {
     expiresAt: campaign.expiresAt?.toISOString() ?? null,
     maxRedemptions: campaign.maxRedemptions,
     redemptionCount: campaign.redemptionCount,
+
     metadata: campaign.metadata,
+
+    cta,
+
     createdAt: campaign.createdAt.toISOString(),
   };
 }

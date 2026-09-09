@@ -40,6 +40,9 @@ export default function OfferClient({ offer, siteName }: OfferClientProps) {
 
   const Icon = offer.rewardEnabled ? Sparkles : TrendingUp;
 
+  const ctaLink = offer.cta.enabled ? offer.cta.link : null;
+  const ctaLabel = offer.cta.label;
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="relative overflow-hidden border-b">
@@ -77,13 +80,15 @@ export default function OfferClient({ offer, siteName }: OfferClientProps) {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/auth/get-started"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
-                >
-                  {presentation.cta}
-                  <ArrowRight className="size-4" />
-                </Link>
+                {ctaLink && (
+                  <Link
+                    href={ctaLink}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
+                  >
+                    {ctaLabel}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                )}
 
                 <Link
                   href="#details"
@@ -377,13 +382,15 @@ export default function OfferClient({ offer, siteName }: OfferClientProps) {
                 </p>
               </div>
 
-              <Link
-                href="/auth/get-started"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
-              >
-                {presentation.cta}
-                <ArrowRight className="size-4" />
-              </Link>
+              {ctaLink && (
+                <Link
+                  href={ctaLink}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:opacity-90"
+                >
+                  {ctaLabel}
+                  <ArrowRight className="size-4" />
+                </Link>
+              )}
             </div>
           </div>
         </div>

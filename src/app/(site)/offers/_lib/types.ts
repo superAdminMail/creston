@@ -14,6 +14,12 @@ export type OfferStep = {
   description: string;
 };
 
+export type OfferCta = {
+  enabled: boolean;
+  label: string;
+  link: string | null;
+};
+
 export type Offer = {
   id: string;
   slug: string;
@@ -24,15 +30,21 @@ export type Offer = {
   highlights: Highlight[];
   terms: OfferTerm[];
   steps: OfferStep[];
+
   rewardEnabled: boolean;
   rewardAmount: string;
   rewardCurrency: string;
   promoCode: string | null;
+
   startsAt: string | null;
   expiresAt: string | null;
   maxRedemptions: number | null;
   redemptionCount: number;
+
   metadata: unknown;
+
+  cta: OfferCta;
+
   createdAt: string;
   isFeatured: boolean;
 };
