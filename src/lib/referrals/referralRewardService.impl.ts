@@ -51,10 +51,9 @@ type CreditPendingReferralRewardsInput = {
   adjustedByUserId: string;
 };
 
-type CreateReferralInput = {
-  referrerUserId: string;
-  referredUserId: string;
-  code: string;
+type CreateReferralForNewUserInput = {
+  newUserId: string;
+  referralCode: string;
 };
 
 type DecimalInput = Prisma.Decimal | string | number | null | undefined;
@@ -130,14 +129,6 @@ async function setRewardDestination(
   });
 }
 
-/**
- * A referral can only become REWARDED when every reward that was created
- * for that referral has been credited.
- *
- * This prevents the referral from being marked REWARDED when, for example,
- * the referred user's reward was credited but the referrer's reward is
- * still pending.
- */
 async function syncReferralStatusInTransaction(
   tx: Prisma.TransactionClient,
   referralId: string,
@@ -194,18 +185,22 @@ async function syncReferralStatusInTransaction(
   });
 }
 
-export async function createReferralForNewUser(input: CreateReferralInput) {
-  if (!input.referrerUserId || !input.referredUserId || !input.code) {
+export async function createReferralForNewUser(
+  input: CreateReferralForNewUserInput,
+) {
+  if (!input.newUserId || !input.referralCode) {
     return null;
   }
 
-  if (input.referrerUserId === input.referredUserId) {
+  const referralCode = input.referralCode.trim().toUpperCase();
+
+  if (!referralCode) {
     return null;
   }
 
   const existing = await prisma.referral.findUnique({
     where: {
-      referredUserId: input.referredUserId,
+      referredUserId: input.newUserId,
     },
   });
 
@@ -215,7 +210,7 @@ export async function createReferralForNewUser(input: CreateReferralInput) {
 
   const referrer = await prisma.user.findUnique({
     where: {
-      id: input.referrerUserId,
+      referralCode,
     },
     select: {
       id: true,
@@ -226,11 +221,15 @@ export async function createReferralForNewUser(input: CreateReferralInput) {
     return null;
   }
 
+  if (referrer.id === input.newUserId) {
+    return null;
+  }
+
   return prisma.referral.create({
     data: {
-      referrerUserId: input.referrerUserId,
-      referredUserId: input.referredUserId,
-      code: input.code,
+      referrerUserId: referrer.id,
+      referredUserId: input.newUserId,
+      code: referralCode,
       status: ReferralStatus.PENDING,
     },
   });
@@ -250,7 +249,7 @@ export async function activateReferralForReferredUser(
       return {
         success: true,
         activated: false,
-        reason: "REFERRAL_NOT_FOUND",
+        reason: "REFERRAL NOT FOUND",
       };
     }
 
@@ -261,7 +260,7 @@ export async function activateReferralForReferredUser(
       return {
         success: true,
         activated: false,
-        reason: "REFERRAL_ALREADY_SETTLED",
+        reason: "REFERRAL ALREADY SETTLED",
       };
     }
 
@@ -269,7 +268,7 @@ export async function activateReferralForReferredUser(
       return {
         success: true,
         activated: false,
-        reason: "NOT_ELIGIBLE",
+        reason: "NOT ELIGIBLE",
       };
     }
 
