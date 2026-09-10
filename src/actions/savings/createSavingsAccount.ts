@@ -12,9 +12,7 @@ import {
 } from "@/lib/forms/actionState";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import {
-  activateEligibleRewardsForUser,
-} from "@/lib/referrals/referralRewardService";
+import { activateEligibleRewardsForUser } from "@/lib/referrals/referralRewardService";
 import { createSavingsAccountSchema } from "@/lib/zodValidations/account-operations";
 
 type CreateSavingsAccountFieldName =
@@ -85,7 +83,9 @@ export async function createSavingsAccount(
     return createErrorFormState(
       "Verify your identity before opening a savings account.",
       {
-        productId: ["KYC verification is required before you can open savings."],
+        productId: [
+          "KYC verification is required before you can open savings.",
+        ],
       },
     );
   }
@@ -124,7 +124,7 @@ export async function createSavingsAccount(
       : null;
 
   try {
-    const savingsAccount = await prisma.savingsAccount.create({
+    await prisma.savingsAccount.create({
       data: {
         investorProfileId: profile.id,
         savingsProductId: product.id,
@@ -141,17 +141,6 @@ export async function createSavingsAccount(
         id: true,
       },
     });
-
-    try {
-      await activateEligibleRewardsForUser({
-        referredUserId: user.id,
-        activationType: "SAVINGS_ACCOUNT_CREATED",
-        activationEntityId: savingsAccount.id,
-        savingsAccountId: savingsAccount.id,
-      });
-    } catch (error) {
-      console.error("[createSavingsAccount.referrals]", error);
-    }
   } catch (error) {
     return createErrorFormState(
       getFriendlyServerError(
