@@ -347,6 +347,7 @@ model InvestmentOrder {
   investmentAccountId     String
   investmentPlanTierId    String
   investmentModel         InvestmentModel
+  promotionCampaignId     String?
   startDate               DateTime?
   maturityDate            DateTime?
   expectedReturn          Decimal?                     @db.Decimal(18, 2)
@@ -393,6 +394,7 @@ model InvestmentOrder {
   investmentPlanTier      InvestmentPlanTier           @relation(fields: [investmentPlanTierId], references: [id])
   investorProfile         InvestorProfile              @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
   platformPaymentMethod   PlatformPaymentMethod?       @relation(fields: [platformPaymentMethodId], references: [id])
+  promotionCampaign       PromotionCampaign?           @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
   adjustments             InvestmentOrderAdjustment[]
   payments                InvestmentOrderPayment[]
   withdrawalOrders        WithdrawalOrder[]
@@ -1177,43 +1179,44 @@ model SiteConfiguration {
 /// *   PROMOTIONS & REFERRALS
 /// * ===========================
 model PromotionCampaign {
-  id              String                  @id @default(cuid())
-  createdByUserId String
-  title           String
-  subject         String?
-  message         String?
-  promotionType   String                  @default("ANNOUNCEMENT") @db.VarChar(32)
-  description     String?
-  highlights      Json?
-  steps           Json?
-  terms           Json?
-  slug            String?                 @unique
-  isPublic        Boolean                 @default(false)
-  isFeatured      Boolean                 @default(false)
-  audienceType    PromotionAudienceType
-  channel         PromotionChannel
-  status          PromotionCampaignStatus @default(DRAFT)
-  sendToAllUsers  Boolean                 @default(false)
-  scheduledAt     DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  cancelledAt     DateTime?
-  failedAt        DateTime?
-  failureMessage  String?
-  metadata        Json?
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  expiresAt       DateTime?
-  maxRedemptions  Int?
-  promoCode       String?                 @unique
-  redemptionCount Int                     @default(0)
-  rewardAmount    Decimal                 @default(100) @db.Decimal(18, 2)
-  rewardCurrency  String                  @default("USD")
-  rewardEnabled   Boolean                 @default(false)
-  startsAt        DateTime?
-  createdByUser   User                    @relation("PromotionCampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
-  deliveries      PromotionDelivery[]
-  rewards         ReferralReward[]
+  id               String                  @id @default(cuid())
+  createdByUserId  String
+  title            String
+  subject          String?
+  message          String?
+  promotionType    String                  @default("ANNOUNCEMENT") @db.VarChar(32)
+  description      String?
+  highlights       Json?
+  steps            Json?
+  terms            Json?
+  slug             String?                 @unique
+  isPublic         Boolean                 @default(false)
+  isFeatured       Boolean                 @default(false)
+  audienceType     PromotionAudienceType
+  channel          PromotionChannel
+  status           PromotionCampaignStatus @default(DRAFT)
+  sendToAllUsers   Boolean                 @default(false)
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  failedAt         DateTime?
+  failureMessage   String?
+  metadata         Json?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  expiresAt        DateTime?
+  maxRedemptions   Int?
+  promoCode        String?                 @unique
+  redemptionCount  Int                     @default(0)
+  rewardAmount     Decimal                 @default(100) @db.Decimal(18, 2)
+  rewardCurrency   String                  @default("USD")
+  rewardEnabled    Boolean                 @default(false)
+  startsAt         DateTime?
+  createdByUser    User                    @relation("PromotionCampaignCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  deliveries       PromotionDelivery[]
+  rewards          ReferralReward[]
+  investmentOrders InvestmentOrder[]
 
   @@index([createdByUserId])
   @@index([status])

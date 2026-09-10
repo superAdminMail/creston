@@ -7,7 +7,6 @@ import {
   ReferralActivationType,
   ReferralRewardStatus,
   ReferralRewardType,
-  RewardDestinationType,
   RewardSource,
   SavingsTransactionType,
 } from "@/generated/prisma";
@@ -17,16 +16,16 @@ import { prisma } from "@/lib/prisma";
 import { toDecimal } from "@/lib/services/investment/decimal";
 
 import {
-  PlatformPromoRewardRow,
-  RewardDestination,
-  canReceiveReward,
-  resolveRewardDestination,
-} from "./rewardTypes";
-import {
   promoRewardNotificationKey,
   upsertRewardNotification,
 } from "./rewardNotifications";
 import { writeRewardAudit } from "./rewardAudits";
+import {
+  PlatformPromoRewardRow,
+  canReceiveReward,
+  RewardDestination,
+  resolveRewardDestination,
+} from "./rewardTypes";
 
 async function findPlatformPromoRewardByCampaignAndUser(
   tx: Prisma.TransactionClient,
@@ -65,15 +64,27 @@ async function findPlatformPromoRewardByCampaignAndUser(
   }) as Promise<PlatformPromoRewardRow | null>;
 }
 
-async function findActivePromotionCampaignByCode(
-  tx: Prisma.TransactionClient,
+type PromotionCampaignQueryClient = {
+  promotionCampaign: {
+    findFirst: typeof prisma.promotionCampaign.findFirst;
+  };
+};
+
+export async function findActivePromotionCampaignByCode(
+  tx: PromotionCampaignQueryClient,
   promoCode: string,
 ) {
+  const normalizedPromoCode = promoCode.trim().toUpperCase();
+
+  if (!normalizedPromoCode) {
+    return null;
+  }
+
   const now = new Date();
 
   const campaign = await tx.promotionCampaign.findFirst({
     where: {
-      promoCode,
+      promoCode: normalizedPromoCode,
       rewardEnabled: true,
       startsAt: {
         lte: now,
@@ -584,6 +595,7 @@ export async function creditPlatformPromoRewardToInvestment(
 
 export async function creditPendingPlatformPromoRewardForUser(params: {
   userId: string;
+  promotionCampaignId: string;
   activationType: ReferralActivationType;
   activationEntityId: string;
   savingsAccountId?: string;
@@ -693,8 +705,10 @@ export async function creditPendingPlatformPromoRewardForUser(params: {
 
     const pendingRewards = (await tx.referralReward.findMany({
       where: {
+        promotionCampaignId: params.promotionCampaignId,
         userId: params.userId,
         source: RewardSource.PLATFORM_PROMOTION,
+        type: ReferralRewardType.PROMOTION_BONUS,
         status: ReferralRewardStatus.PENDING,
       },
       select: {

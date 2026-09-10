@@ -12,6 +12,7 @@ import { DashboardActionSubmitButton } from "../../../../_components/DashboardAc
 type InvestmentReviewStepProps = {
   investmentId: string;
   investmentName: string;
+  promoCode?: string | null;
   plan: InvestmentOrderCreationPlanOption;
   tier: InvestmentOrderCreationTierOption;
   investmentTypeLabel: string;
@@ -25,6 +26,7 @@ type InvestmentReviewStepProps = {
 export function InvestmentReviewStep({
   investmentId,
   investmentName,
+  promoCode,
   plan,
   tier,
   investmentTypeLabel,
@@ -36,6 +38,9 @@ export function InvestmentReviewStep({
 }: InvestmentReviewStepProps) {
   return (
     <form action={formAction} className="space-y-6">
+      {promoCode ? (
+        <input type="hidden" name="promoCode" value={promoCode} />
+      ) : null}
       <input type="hidden" name="investmentId" value={investmentId} />
       <input type="hidden" name="investmentPlanId" value={plan.id} />
       <input type="hidden" name="investmentPlanTierId" value={tier.id} />

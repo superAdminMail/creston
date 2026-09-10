@@ -25,6 +25,7 @@ import type {
 } from "./createInvestmentOrder.state";
 import { getPrice } from "@/lib/services/price/priceService";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
+import { findActivePromotionCampaignByCode } from "@/lib/referrals/platformPromoRewardService";
 
 function getFormValue(formData: FormData, key: OrderFieldName) {
   const value = formData.get(key);
@@ -143,7 +144,9 @@ async function notifyInvestorAboutInvestmentOrderCreated(input: {
     userId: input.userId,
     event: "INVESTMENT_ORDER",
     title: "Investment order created successfully",
-    message: `Your ${input.planName || input.investmentName || "investment"} order for ${formatCurrency(
+    message: `Your ${
+      input.planName || input.investmentName || "investment"
+    } order for ${formatCurrency(
       input.amount,
       input.currency,
     )} has been created successfully.`,
@@ -202,6 +205,9 @@ export async function createInvestmentOrder(
     amount: getFormValue(formData, "amount"),
   };
 
+  const rawPromoCode = formData.get("promoCode");
+  const promoCode = typeof rawPromoCode === "string" ? rawPromoCode.trim() : "";
+
   const parsedValues = createInvestmentOrderSchema.safeParse(rawValues);
 
   if (!parsedValues.success) {
@@ -226,42 +232,59 @@ export async function createInvestmentOrder(
     });
   }
 
+  let promotionCampaignId: string | null = null;
+
+  if (promoCode) {
+    const promotionCampaign = await findActivePromotionCampaignByCode(
+      prisma,
+      promoCode,
+    );
+
+    if (!promotionCampaign) {
+      return createErrorState(
+        "This promotion is no longer available. Please remove the promotion code and try again.",
+      );
+    }
+
+    promotionCampaignId = promotionCampaign.id;
+  }
+
   const selectedPlan = await prisma.investmentPlan.findUnique({
-      where: {
-        id: parsedValues.data.investmentPlanId,
-      },
-      select: {
-        id: true,
-        name: true,
-        currency: true,
-        isActive: true,
-        investmentModel: true,
-        investment: {
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-            status: true,
-            symbol: true,
-          },
-        },
-        tiers: {
-          where: {
-            id: parsedValues.data.investmentPlanTierId,
-          },
-          select: {
-            id: true,
-            level: true,
-            minAmount: true,
-            maxAmount: true,
-            fixedRoiPercent: true,
-            projectedRoiMin: true,
-            projectedRoiMax: true,
-            isActive: true,
-          },
+    where: {
+      id: parsedValues.data.investmentPlanId,
+    },
+    select: {
+      id: true,
+      name: true,
+      currency: true,
+      isActive: true,
+      investmentModel: true,
+      investment: {
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+          status: true,
+          symbol: true,
         },
       },
-    });
+      tiers: {
+        where: {
+          id: parsedValues.data.investmentPlanTierId,
+        },
+        select: {
+          id: true,
+          level: true,
+          minAmount: true,
+          maxAmount: true,
+          fixedRoiPercent: true,
+          projectedRoiMin: true,
+          projectedRoiMax: true,
+          isActive: true,
+        },
+      },
+    },
+  });
 
   if (!selectedPlan?.isActive) {
     return createErrorState(
@@ -386,7 +409,7 @@ export async function createInvestmentOrder(
     );
   }
 
-  //market calculation logic
+  // Market calculation logic
   let units: Prisma.Decimal | null = null;
   let entryPrice: Prisma.Decimal | null = null;
   let currentValue: Prisma.Decimal | null = null;
@@ -404,7 +427,6 @@ export async function createInvestmentOrder(
       const price = await getPrice(symbol);
 
       const numericAmount = amount;
-
       const calculatedUnits = numericAmount / price;
 
       units = new Prisma.Decimal(calculatedUnits);
@@ -435,14 +457,15 @@ export async function createInvestmentOrder(
       units,
       entryPrice,
       currentValue,
+
+      promotionCampaignId,
     },
     select: {
       id: true,
     },
   });
 
-  const investorName =
-    user.name?.trim() || user.email?.trim() || "Investor";
+  const investorName = user.name?.trim() || user.email?.trim() || "Investor";
 
   await notifyAdminsAboutInvestmentOrderCreated({
     orderId: order.id,

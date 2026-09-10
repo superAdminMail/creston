@@ -6,22 +6,25 @@ export {
   createReferralRewardRow,
   ensureReferralRewardRow,
   claimReferralReward,
-} from "./rewardTypes";
+} from "../services/rewards/rewardTypes";
 
 export type {
   ReferralRewardRow,
   PlatformPromoRewardRow,
   RewardDestination,
   ReferralRewardCreditInput,
-} from "./rewardTypes";
+} from "../services/rewards/rewardTypes";
 
 export {
   referralNotificationKey,
   promoRewardNotificationKey,
   upsertRewardNotification,
-} from "./rewardNotifications";
+} from "../services/rewards/rewardNotifications";
 
-export { writeReferralAudit, writeRewardAudit } from "./rewardAudits";
+export {
+  writeReferralAudit,
+  writeRewardAudit,
+} from "../services/rewards/rewardAudits";
 
 export {
   createReferralForNewUser,
@@ -40,9 +43,9 @@ export {
   creditRewardToSavingsAccount,
   creditRewardToInvestmentOrder,
   creditPendingRewardToDestination,
-} from "./platformPromoRewardService";
+} from "../services/rewards/platformPromoRewardService";
 
-export { activateEligibleRewardsForUser } from "./rewardActivationService";
+export { activateEligibleRewardsForUser } from "../services/rewards/rewardActivationService";
 
 // "use server";
 

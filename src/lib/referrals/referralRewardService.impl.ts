@@ -23,12 +23,12 @@ import {
   resolveRewardDestination,
   type ReferralRewardRow,
   type RewardDestination,
-} from "./rewardTypes";
+} from "../services/rewards/rewardTypes";
 import {
   referralNotificationKey,
   upsertRewardNotification,
-} from "./rewardNotifications";
-import { writeReferralAudit } from "./rewardAudits";
+} from "../services/rewards/rewardNotifications";
+import { writeReferralAudit } from "../services/rewards/rewardAudits";
 
 type ActivateReferralForReferredUserInput = {
   referredUserId: string;
@@ -46,6 +46,7 @@ type CreditReferralRewardInput = {
 
 type CreditPendingReferralRewardsInput = {
   userId: string;
+  referralId: string;
   savingsAccountId?: string;
   investmentOrderId?: string;
   adjustedByUserId: string;
@@ -844,8 +845,12 @@ export async function creditPendingReferralRewardForUser(
   const pendingRewards = (await prisma.referralReward.findMany({
     where: {
       userId: input.userId,
+      referralId: input.referralId,
       source: RewardSource.USER_REFERRAL,
       status: ReferralRewardStatus.PENDING,
+      referral: {
+        status: ReferralStatus.ACTIVE,
+      },
     },
     orderBy: {
       createdAt: "asc",

@@ -12,6 +12,7 @@ import { CreateInvestmentOrderWizard } from "./_components/CreateInvestmentOrder
 type NewInvestmentOrderPageProps = {
   searchParams?: Promise<{
     created?: string;
+    promo?: string;
   }>;
 };
 
@@ -31,6 +32,7 @@ export default async function NewInvestmentOrderPage({
   const siteName = site?.siteName ?? "";
   const params = searchParams ? await searchParams : undefined;
   const createdOrderId = params?.created ?? null;
+  const promoCode = params?.promo?.trim() || null;
 
   return (
     <div className="space-y-6">
@@ -47,6 +49,7 @@ export default async function NewInvestmentOrderPage({
         <CreateInvestmentOrderWizard
           options={data}
           createdOrderId={createdOrderId}
+          promoCode={promoCode}
           siteName={siteName}
         />
       )}

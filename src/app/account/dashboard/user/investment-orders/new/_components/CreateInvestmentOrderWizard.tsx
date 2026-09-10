@@ -27,6 +27,7 @@ const stepTitles = ["Investment", "Plan", "Tier", "Amount", "Review"] as const;
 type CreateInvestmentOrderWizardProps = {
   options: InvestmentOrderCreationOptionsData;
   createdOrderId?: string | null;
+  promoCode?: string | null;
   siteName: string;
 };
 
@@ -65,6 +66,7 @@ function getAmountError(
 export function CreateInvestmentOrderWizard({
   options,
   createdOrderId,
+  promoCode,
   siteName,
 }: CreateInvestmentOrderWizardProps) {
   const wizardRootRef = useRef<HTMLDivElement>(null);
@@ -77,8 +79,7 @@ export function CreateInvestmentOrderWizard({
   const firstInvestment = options.investments[0] ?? null;
   const firstPlan = firstInvestment?.plans[0] ?? null;
   const firstTier = firstPlan?.tiers[0] ?? null;
-  const hasReachedActiveUnpaidOrderLimit =
-    options.activeUnpaidOrdersCount >= 3;
+  const hasReachedActiveUnpaidOrderLimit = options.activeUnpaidOrdersCount >= 3;
 
   const [selectedInvestmentId, setSelectedInvestmentId] = useState<
     string | null
@@ -333,6 +334,7 @@ export function CreateInvestmentOrderWizard({
                 tier={selectedTier}
                 investmentTypeLabel={selectedInvestment.typeLabel}
                 amount={amount}
+                promoCode={promoCode}
                 formAction={formAction}
                 actionState={actionState}
                 onBack={() => setCurrentStep(3)}
