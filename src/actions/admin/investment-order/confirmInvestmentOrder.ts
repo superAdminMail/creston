@@ -61,6 +61,7 @@ export async function confirmInvestmentOrder(
       currentValue: true,
       lastValuationAt: true,
       paymentMetadata: true,
+      promotionCampaignId: true,
       investorProfile: {
         select: {
           userId: true,
@@ -146,6 +147,7 @@ export async function confirmInvestmentOrder(
       activationType: ReferralActivationType.INVESTMENT_ORDER_CONFIRMED,
       activationEntityId: order.id,
       investmentOrderId: order.id,
+      promotionCampaignId: order.promotionCampaignId ?? undefined,
       adjustedByUserId: user.id,
     });
   } catch (error) {
