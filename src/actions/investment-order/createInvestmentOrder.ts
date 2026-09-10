@@ -25,7 +25,7 @@ import type {
 } from "./createInvestmentOrder.state";
 import { getPrice } from "@/lib/services/price/priceService";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
-import { findActivePromotionCampaignByCode } from "@/lib/referrals/platformPromoRewardService";
+import { findActivePromotionCampaignByCode } from "@/lib/services/rewards/platformPromoRewardService";
 
 function getFormValue(formData: FormData, key: OrderFieldName) {
   const value = formData.get(key);
