@@ -1337,7 +1337,7 @@ enum ReferralStatus {
 }
 
 enum ReferralActivationType {
-  SAVINGS_ACCOUNT_CREATED
+  SAVINGS_DEPOSIT_CONFIRMED
   INVESTMENT_ORDER_CONFIRMED
 }
 

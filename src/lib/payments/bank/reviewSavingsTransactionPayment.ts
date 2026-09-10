@@ -2,6 +2,7 @@
 
 import {
   Prisma,
+  ReferralActivationType,
   SavingsFundingIntentStatus,
   SavingsStatus,
   SavingsTransactionPaymentStatus,
@@ -10,6 +11,7 @@ import {
 } from "@/generated/prisma";
 import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { prisma } from "@/lib/prisma";
+import { activateEligibleRewardsForUser } from "@/lib/referrals/referralRewardService";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
 
 type ReviewSavingsTransactionPaymentBase = {
@@ -98,25 +100,32 @@ export async function approveSavingsTransactionPaymentReview({
   }
 
   if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
-    throw new Error("Partial approval amount must be lower than the claimed amount.");
+    throw new Error(
+      "Partial approval amount must be lower than the claimed amount.",
+    );
   }
 
   const currentBalance = new Prisma.Decimal(
     payment.savingsFundingIntent.savingsAccount.balance,
   );
+
   const maxBalance = payment.savingsFundingIntent.savingsAccount.savingsProduct
     .maxBalance
     ? new Prisma.Decimal(
         payment.savingsFundingIntent.savingsAccount.savingsProduct.maxBalance,
       )
     : null;
+
   const targetAmount = payment.savingsFundingIntent.savingsAccount.targetAmount
-    ? new Prisma.Decimal(payment.savingsFundingIntent.savingsAccount.targetAmount)
+    ? new Prisma.Decimal(
+        payment.savingsFundingIntent.savingsAccount.targetAmount,
+      )
     : null;
 
   const remainingToTargetAmount = targetAmount
     ? targetAmount.minus(currentBalance)
     : null;
+
   const remainingToMaxBalance = maxBalance
     ? maxBalance.minus(currentBalance)
     : null;
@@ -124,9 +133,11 @@ export async function approveSavingsTransactionPaymentReview({
   const currentCreditedAmount = new Prisma.Decimal(
     payment.savingsFundingIntent.creditedAmount,
   );
+
   const targetFundingAmount = new Prisma.Decimal(
     payment.savingsFundingIntent.targetAmount,
   );
+
   const remainingToFundingIntent = targetFundingAmount.minus(
     currentCreditedAmount,
   );
@@ -144,7 +155,10 @@ export async function approveSavingsTransactionPaymentReview({
         )
       : null;
 
-  if (remainingCapacity && new Prisma.Decimal(approvedAmount).gt(remainingCapacity)) {
+  if (
+    remainingCapacity &&
+    new Prisma.Decimal(approvedAmount).gt(remainingCapacity)
+  ) {
     throw new Error(
       "Approved amount cannot exceed the remaining fundable amount.",
     );
@@ -155,18 +169,21 @@ export async function approveSavingsTransactionPaymentReview({
   const newCreditedAmount = currentCreditedAmount.plus(approvedAmountDecimal);
 
   if (maxBalance && newBalance.gt(maxBalance)) {
-    throw new Error("Savings account balance would exceed the configured maximum.");
+    throw new Error(
+      "Savings account balance would exceed the configured maximum.",
+    );
   }
 
   const nextStatus =
     approvalMode === "FULL"
       ? SavingsFundingIntentStatus.CREDITED
       : SavingsFundingIntentStatus.PARTIALLY_PAID;
+
   const isCryptoProof =
     proofMode === "CRYPTO_PROVIDER" ||
     payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER;
 
-  await prisma.$transaction(async (tx) => {
+  const savingsTransactionId = await prisma.$transaction(async (tx) => {
     const updateResult = await tx.savingsTransactionPayment.updateMany({
       where: {
         id: payment.id,
@@ -187,12 +204,12 @@ export async function approveSavingsTransactionPaymentReview({
     }
 
     const now = new Date();
-    const creditReference =
-      payment.transferReference?.trim() ||
-      payment.id;
+
+    const creditReference = payment.transferReference?.trim() || payment.id;
+
     const creditedAt =
       approvalMode === "FULL"
-        ? payment.savingsFundingIntent.creditedAt ?? now
+        ? (payment.savingsFundingIntent.creditedAt ?? now)
         : payment.savingsFundingIntent.creditedAt;
 
     await tx.savingsFundingIntent.update({
@@ -208,7 +225,9 @@ export async function approveSavingsTransactionPaymentReview({
     });
 
     await tx.savingsAccount.update({
-      where: { id: payment.savingsFundingIntent.savingsAccount.id },
+      where: {
+        id: payment.savingsFundingIntent.savingsAccount.id,
+      },
       data: {
         balance: newBalance,
         ...(approvalMode === "FULL"
@@ -219,7 +238,7 @@ export async function approveSavingsTransactionPaymentReview({
       },
     });
 
-    await tx.savingsTransaction.create({
+    const savingsTransaction = await tx.savingsTransaction.create({
       data: {
         savingsAccountId: payment.savingsFundingIntent.savingsAccount.id,
         savingsFundingIntentId: payment.savingsFundingIntent.id,
@@ -260,7 +279,11 @@ export async function approveSavingsTransactionPaymentReview({
           : isCryptoProof
             ? "Your crypto payment proof was partially approved and credited."
             : "Your savings deposit proof was partially approved and credited.",
-      link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}&fundingMethodType=${payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER ? "CRYPTO_PROVIDER" : "BANK_TRANSFER"}`,
+      link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}&fundingMethodType=${
+        payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER
+          ? "CRYPTO_PROVIDER"
+          : "BANK_TRANSFER"
+      }`,
       metadata: {
         paymentId: payment.id,
         savingsAccountId: payment.savingsFundingIntent.savingsAccount.id,
@@ -271,7 +294,24 @@ export async function approveSavingsTransactionPaymentReview({
         reviewedByUserId: adminUserId,
       },
     });
+
+    return savingsTransaction.id;
   });
+
+  if (approvalMode === "FULL") {
+    try {
+      await activateEligibleRewardsForUser({
+        referredUserId:
+          payment.savingsFundingIntent.savingsAccount.investorProfile.userId,
+        activationType: ReferralActivationType.SAVINGS_DEPOSIT_CONFIRMED,
+        activationEntityId: savingsTransactionId,
+        savingsAccountId: payment.savingsFundingIntent.savingsAccount.id,
+        adjustedByUserId: adminUserId,
+      });
+    } catch (error) {
+      console.error("[approveSavingsTransactionPaymentReview.rewards]", error);
+    }
+  }
 
   return { ok: true };
 }
@@ -355,7 +395,11 @@ export async function rejectSavingsTransactionPaymentReview({
         key: `savings-payment-review:${payment.id}:REJECTED`,
         title: "Savings payment rejected",
         message: "Your savings deposit proof was rejected by the admin team.",
-        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${intent.savingsAccountId}&fundingMethodType=${payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER ? "CRYPTO_PROVIDER" : "BANK_TRANSFER"}`,
+        link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${intent.savingsAccountId}&fundingMethodType=${
+          payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER
+            ? "CRYPTO_PROVIDER"
+            : "BANK_TRANSFER"
+        }`,
         metadata: {
           paymentId: payment.id,
           savingsAccountId: intent.savingsAccountId,

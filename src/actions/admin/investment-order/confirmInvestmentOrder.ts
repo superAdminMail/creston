@@ -2,16 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 
-import { Prisma, InvestmentOrderStatus, RuntimeStatus } from "@/generated/prisma";
+import {
+  Prisma,
+  InvestmentOrderStatus,
+  RuntimeStatus,
+  ReferralActivationType,
+} from "@/generated/prisma";
 import { pusherServer } from "@/lib/pusher";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { activateEligibleRewardsForUser } from "@/lib/referrals/referralRewardService";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
-import {
-  calculateFixedExpectedReturn,
-} from "@/lib/services/investment/fixedOrderLifecycle";
+import { calculateFixedExpectedReturn } from "@/lib/services/investment/fixedOrderLifecycle";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { hasWithdrawalPauseHold } from "@/lib/payments/withdrawals/withdrawalInvestmentOrderHolds";
 
@@ -96,8 +99,8 @@ export async function confirmInvestmentOrder(
   const roiPercent = order.investmentPlanTier.fixedRoiPercent;
   const expectedReturn =
     order.investmentModel === "FIXED"
-      ? order.expectedReturn ??
-        calculateFixedExpectedReturn(amount, roiPercent ?? null)
+      ? (order.expectedReturn ??
+        calculateFixedExpectedReturn(amount, roiPercent ?? null))
       : null;
   const orderSchedule = resolveInvestmentOrderSchedule(
     order.startDate,
@@ -140,9 +143,10 @@ export async function confirmInvestmentOrder(
   try {
     await activateEligibleRewardsForUser({
       referredUserId: order.investorProfile.userId,
-      activationType: "INVESTMENT_ORDER_CONFIRMED",
+      activationType: ReferralActivationType.INVESTMENT_ORDER_CONFIRMED,
       activationEntityId: order.id,
       investmentOrderId: order.id,
+      adjustedByUserId: user.id,
     });
   } catch (error) {
     console.error("[confirmInvestmentOrder.referrals]", error);
@@ -171,7 +175,9 @@ export async function confirmInvestmentOrder(
   revalidatePath(`/account/dashboard/admin/investment-orders/${order.id}`);
   revalidatePath("/account/dashboard/user/investment-orders");
   revalidatePath(`/account/dashboard/user/investment-orders/${order.id}`);
-  revalidatePath(`/account/dashboard/user/investment-orders/${order.id}/payment`);
+  revalidatePath(
+    `/account/dashboard/user/investment-orders/${order.id}/payment`,
+  );
   revalidatePath("/account/dashboard/notifications");
 
   return {
