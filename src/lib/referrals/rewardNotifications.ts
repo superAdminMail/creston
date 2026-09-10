@@ -1,5 +1,3 @@
-"use server";
-
 import { Prisma } from "@/generated/prisma";
 
 import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
