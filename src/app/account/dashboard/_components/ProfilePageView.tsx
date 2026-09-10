@@ -58,7 +58,10 @@ type ReferralActivityItem = {
   id: string;
   code: string;
   status: "PENDING" | "ACTIVE" | "REWARDED" | "CANCELLED";
-  activatedBy?: "SAVINGS_ACCOUNT_CREATED" | "INVESTMENT_ORDER_CONFIRMED" | null;
+  activatedBy?:
+    | "INVESTMENT_ORDER_CONFIRMED"
+    | "SAVINGS_DEPOSIT_CONFIRMED"
+    | null;
   activatedAt?: string | null;
   rewardedAt?: string | null;
   referredUser: {
@@ -721,7 +724,7 @@ function getReferralActivationNote(referral: ReferralActivityItem) {
       return "Activated after the referred user completed their first successful investment order.";
     }
 
-    if (referral.activatedBy === "SAVINGS_ACCOUNT_CREATED") {
+    if (referral.activatedBy === "SAVINGS_DEPOSIT_CONFIRMED") {
       return "Activated after the referred user completed their first successful savings activity.";
     }
 
