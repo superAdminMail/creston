@@ -9,7 +9,6 @@ import {
   createPendingPlatformPromoRewardForUser,
   createReferralForNewUser,
 } from "@/lib/referrals/referralRewardService";
-import { withUniqueAccountIdRetry } from "@/lib/auth/accountID";
 
 type RegisterUserInput = {
   email: string;
@@ -96,27 +95,24 @@ export async function registerUserAction(
       },
     });
 
-    const updatedUser = await withUniqueAccountIdRetry((accountId) =>
-      prisma.user.update({
-        where: { email },
-        data: {
-          accountId,
-          accountStatus: "PENDING_VERIFICATION",
-          emailVerificationRequired: true,
-          emailVerified: false,
-          emailVerifiedAt: null,
-          isDisposableEmail: false,
-          disposableEmailChecked: true,
-          disposableEmailDomain: domain,
-          disposableCheckProvider: "local_blocklist",
-          disposableCheckedAt: new Date(),
-        },
-        select: {
-          id: true,
-          accountId: true,
-        },
-      }),
-    );
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: {
+        accountStatus: "PENDING_VERIFICATION",
+        emailVerificationRequired: true,
+        emailVerified: false,
+        emailVerifiedAt: null,
+        isDisposableEmail: false,
+        disposableEmailChecked: true,
+        disposableEmailDomain: domain,
+        disposableCheckProvider: "local_blocklist",
+        disposableCheckedAt: new Date(),
+      },
+      select: {
+        id: true,
+        accountId: true,
+      },
+    });
 
     if (referralCode) {
       await createReferralForNewUser({

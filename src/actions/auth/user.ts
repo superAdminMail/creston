@@ -21,11 +21,7 @@ import {
 
 const utapi = new UTApi();
 
-type UpdateUserProfileFieldName =
-  | "name"
-  | "username"
-  | "profileAvatar"
-  ;
+type UpdateUserProfileFieldName = "name" | "username" | "profileAvatar";
 
 export type UpdateUserProfileResult = {
   success?: true;
@@ -83,7 +79,6 @@ export const deleteProfileAvatarAction = async () => {
   }
 };
 
-//update user profile action
 export async function updateUserProfile(
   values: updateUserSchemaType,
 ): Promise<UpdateUserProfileResult> {
@@ -95,11 +90,7 @@ export async function updateUserProfile(
     };
   }
 
-  const {
-    name,
-    username,
-    profileAvatar,
-  } = parsed.data;
+  const { name, username, profileAvatar } = parsed.data;
 
   const user = await getCurrentSessionUser();
   if (!user) return { error: "Unauthorized" };
@@ -178,7 +169,10 @@ export async function updateUserProfile(
           },
         });
       } catch (error) {
-        console.error("Failed to sync auth session after profile update:", error);
+        console.error(
+          "Failed to sync auth session after profile update:",
+          error,
+        );
       }
     }
 

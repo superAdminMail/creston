@@ -6,6 +6,7 @@ import PasswordResetEmailTemplate from "./password-reset/PasswordResetEmailTempl
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
 import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
 import { sendPostVerificationWelcome } from "@/lib/welcome/sendPostVerificationWelcome";
+import { generateAccountId } from "@/lib/auth/accountID";
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) return null;
@@ -55,6 +56,33 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+
+  user: {
+    additionalFields: {
+      accountId: {
+        type: "string",
+        required: false,
+        unique: true,
+        input: false,
+        returned: true,
+      },
+    },
+  },
+
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          return {
+            data: {
+              ...user,
+              accountId: generateAccountId(),
+            },
+          };
+        },
+      },
+    },
+  },
 
   baseURL: getAuthBaseUrl(),
   trustedOrigins: getTrustedOrigins(),
@@ -131,6 +159,10 @@ export const auth = betterAuth({
         replyTo: process.env.EMAIL_FROM_SUPPORT,
       });
     },
+  },
+
+  logger: {
+    level: "debug",
   },
 
   session: {
