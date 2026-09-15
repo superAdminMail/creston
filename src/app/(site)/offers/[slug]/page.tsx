@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 
 import { getPublicOfferBySlug } from "../_lib/getPublicOfferBySlug";
-import OfferClient from "./OfferClient";
+import OfferClient from "../_components/OfferClient";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+import { OfferExpired } from "../_components/OfferExpired";
+import OfferUpcoming from "../_components/OfferUpcoming";
 
 type PageProps = {
   params: Promise<{
@@ -19,11 +21,29 @@ export default async function OfferPage({ params }: PageProps) {
     getSiteConfigurationCached(),
   ]);
 
-  const offer = await getPublicOfferBySlug(slug);
+  const result = await getPublicOfferBySlug(slug);
 
-  if (!offer) {
+  if (result.state === "NOT_FOUND") {
     notFound();
   }
 
-  return <OfferClient offer={offer} siteName={site.siteName} />;
+  if (result.state === "EXPIRED") {
+    return (
+      <OfferExpired
+        title={result.offer.title}
+        expiredAt={result.offer.expiresAt}
+      />
+    );
+  }
+
+  if (result.state === "UPCOMING") {
+    return (
+      <OfferUpcoming
+        title={result.offer.title}
+        startsAt={result.offer.startsAt}
+      />
+    );
+  }
+
+  return <OfferClient offer={result.offer} siteName={site.siteName} />;
 }

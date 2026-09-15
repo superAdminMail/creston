@@ -22,10 +22,52 @@ export type PublicOfferCta = {
   link: string | null;
 };
 
+export type PublicOfferState = "NOT_FOUND" | "UPCOMING" | "EXPIRED" | "ACTIVE";
+
+export type PublicOfferResult =
+  | {
+      state: "NOT_FOUND";
+      offer: null;
+    }
+  | {
+      state: "UPCOMING" | "EXPIRED" | "ACTIVE";
+      offer: PublicOffer;
+    };
+
 type PromotionMetadata = {
   claimCtaEnabled?: boolean;
   claimCtaLabel?: string | null;
   claimCtaLink?: string | null;
+};
+
+export type PublicOffer = {
+  id: string;
+  slug: string;
+  title: string;
+  subject: string | null;
+  promotionType: string;
+  isFeatured: boolean;
+
+  description: string | null;
+  highlights: PublicPromotionHighlight[];
+  steps: PublicPromotionStep[];
+  terms: PublicPromotionTerm[];
+
+  rewardEnabled: boolean;
+  rewardAmount: string;
+  rewardCurrency: string;
+  promoCode: string | null;
+
+  startsAt: string | null;
+  expiresAt: string | null;
+
+  maxRedemptions: number | null;
+  redemptionCount: number;
+
+  metadata: unknown;
+  cta: PublicOfferCta;
+
+  createdAt: string;
 };
 
 function isPromotionHighlight(
@@ -102,7 +144,25 @@ function getPublicOfferCta(metadata: unknown): PublicOfferCta {
   };
 }
 
-export async function getPublicOfferBySlug(slug: string) {
+function getPublicOfferState(
+  startsAt: Date | null,
+  expiresAt: Date | null,
+  now: Date,
+): Exclude<PublicOfferState, "NOT_FOUND"> {
+  if (expiresAt && expiresAt <= now) {
+    return "EXPIRED";
+  }
+
+  if (startsAt && startsAt > now) {
+    return "UPCOMING";
+  }
+
+  return "ACTIVE";
+}
+
+export async function getPublicOfferBySlug(
+  slug: string,
+): Promise<PublicOfferResult> {
   const now = new Date();
 
   const campaign = await prisma.promotionCampaign.findFirst({
@@ -110,14 +170,6 @@ export async function getPublicOfferBySlug(slug: string) {
       slug,
       isPublic: true,
       status: "SENT",
-      AND: [
-        {
-          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-        },
-        {
-          OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-        },
-      ],
     },
     select: {
       id: true,
@@ -145,8 +197,11 @@ export async function getPublicOfferBySlug(slug: string) {
     },
   });
 
-  if (!campaign) {
-    return null;
+  if (!campaign || !campaign.slug) {
+    return {
+      state: "NOT_FOUND",
+      offer: null,
+    };
   }
 
   const highlights = Array.isArray(campaign.highlights)
@@ -163,9 +218,9 @@ export async function getPublicOfferBySlug(slug: string) {
 
   const cta = getPublicOfferCta(campaign.metadata);
 
-  return {
+  const offer: PublicOffer = {
     id: campaign.id,
-    slug: campaign.slug!,
+    slug: campaign.slug,
     title: campaign.title,
     subject: campaign.subject,
     promotionType: campaign.promotionType,
@@ -180,8 +235,10 @@ export async function getPublicOfferBySlug(slug: string) {
     rewardAmount: campaign.rewardAmount.toString(),
     rewardCurrency: campaign.rewardCurrency,
     promoCode: campaign.promoCode,
+
     startsAt: campaign.startsAt?.toISOString() ?? null,
     expiresAt: campaign.expiresAt?.toISOString() ?? null,
+
     maxRedemptions: campaign.maxRedemptions,
     redemptionCount: campaign.redemptionCount,
 
@@ -190,5 +247,10 @@ export async function getPublicOfferBySlug(slug: string) {
     cta,
 
     createdAt: campaign.createdAt.toISOString(),
+  };
+
+  return {
+    state: getPublicOfferState(campaign.startsAt, campaign.expiresAt, now),
+    offer,
   };
 }
