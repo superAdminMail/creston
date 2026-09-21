@@ -45,6 +45,22 @@ type LoginFormProps = {
   blockedAccount?: "deleted" | null;
 };
 
+type LoginError = {
+  code?: string;
+  message?: string;
+};
+
+function isEmailNotVerifiedError(error: LoginError | null | undefined) {
+  const code = error?.code?.toUpperCase();
+  const message = error?.message?.toLowerCase() ?? "";
+
+  return (
+    code === "EMAIL_NOT_VERIFIED" ||
+    message.includes("email not verified") ||
+    message.includes("email is not verified")
+  );
+}
+
 export default function LoginForm({
   siteName,
   siteLogoUrl,
@@ -105,6 +121,13 @@ export default function LoginForm({
       });
 
       if (error) {
+        if (isEmailNotVerifiedError(error)) {
+          router.replace(
+            `/auth/send-verify-email?email=${encodeURIComponent(values.email)}`,
+          );
+          return;
+        }
+
         setError(error.message ?? "Invalid credentials");
         form.reset();
         return;
