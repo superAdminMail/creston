@@ -9,6 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import type { KycStatus } from "@/generated/prisma";
 
 import { formatUsd } from "@/lib/formatters/formatters";
 import {
@@ -25,6 +26,7 @@ type UserDashboardPageProps = {
   userName: string;
   stats: UserDashboardStats;
   investmentProfileComplete: boolean;
+  kycStatus: KycStatus | null;
   legacyAccount?: {
     isLegacyUser: boolean;
     migrationStatus: "NEW_USER" | "MIGRATION_PENDING" | "MIGRATED";
@@ -88,6 +90,7 @@ export default function UserDashboardPage({
   userName,
   stats,
   investmentProfileComplete,
+  kycStatus,
   legacyAccount,
 }: UserDashboardPageProps) {
   const legacyBadge = legacyAccount
@@ -97,6 +100,7 @@ export default function UserDashboardPage({
     ? getMigrationStatusMeta(legacyAccount.migrationStatus)
     : null;
   const hasCompletedMigration = Boolean(legacyAccount?.migratedAt);
+  const kycVerified = kycStatus === "VERIFIED";
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -201,6 +205,26 @@ export default function UserDashboardPage({
                 className="inline-flex items-center rounded-full border border-amber-200/80 bg-white px-3 py-1 text-xs font-medium text-amber-900 transition hover:bg-white hover:text-amber-600 dark:border-amber-400/20 dark:bg-slate-900 dark:text-amber-100"
               >
                 Complete profile
+              </Link>
+            </div>
+          </AlertTitle>
+        </Alert>
+      ) : null}
+
+      {!kycVerified ? (
+        <Alert className="rounded-[1.5rem] border border-sky-200/70 bg-sky-50 px-5 py-4 text-sky-950 dark:border-sky-400/20 dark:bg-sky-950 dark:text-sky-100">
+          <AlertTriangle className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+          <AlertTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold">
+              Complete KYC verification to unlock account activity
+            </span>
+
+            <div>
+              <Link
+                href="/account/dashboard/user/kyc"
+                className="inline-flex items-center rounded-full border border-sky-200/80 bg-white px-3 py-1 text-xs font-medium text-sky-900 transition hover:bg-white hover:text-sky-600 dark:border-sky-400/20 dark:bg-slate-900 dark:text-sky-100"
+              >
+                Verify KYC
               </Link>
             </div>
           </AlertTitle>

@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 
 export type CurrentUserInvestmentProfileData = {
   profileStatusLabel: string;
+  kycStatus: KycStatus | null;
   kycStatusLabel: string;
   profileComplete: boolean;
   completionPercent: number;
@@ -114,6 +115,7 @@ export async function getCurrentUserInvestmentProfileData(): Promise<CurrentUser
     profileStatusLabel: completionSnapshot.profileComplete
       ? "Investment profile complete"
       : "Investment profile incomplete",
+    kycStatus: investorProfile?.kycStatus ?? null,
     kycStatusLabel: formatKycStatus(investorProfile?.kycStatus),
     profileComplete: completionSnapshot.profileComplete,
     completionPercent: completionSnapshot.completionPercent,

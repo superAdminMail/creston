@@ -57,6 +57,7 @@ export default async function Page() {
         userName={userName}
         stats={stats}
         investmentProfileComplete={investmentProfile.profileComplete}
+        kycStatus={investmentProfile.kycStatus}
         legacyAccount={
           migrationUser
             ? {
