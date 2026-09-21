@@ -262,7 +262,9 @@ export default function SavingsFundingClient({
         />
       ) : null}
 
-      {!isSavingsFullySettled && selectedFundingMethod === "BANK_TRANSFER" && !bankMethod ? (
+      {!isSavingsFullySettled &&
+      selectedFundingMethod === "BANK_TRANSFER" &&
+      !bankMethod ? (
         <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
@@ -313,7 +315,12 @@ export default function SavingsFundingClient({
                 </p>
               </div>
 
-              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "inline-flex max-w-full items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300")}>
+              <div
+                className={cn(
+                  DASHBOARD_PAGE_SURFACE_CLASS,
+                  "inline-flex max-w-full items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300",
+                )}
+              >
                 {cryptoSelected ? (
                   <>
                     <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
@@ -370,7 +377,10 @@ export default function SavingsFundingClient({
                     label="Account number"
                     value={bankMethod.accountNumber}
                   />
-                  <CopyableDetailRow label="Bank code" value={bankMethod.bankCode} />
+                  <CopyableDetailRow
+                    label="Bank code"
+                    value={bankMethod.bankCode}
+                  />
                   <CopyableDetailRow
                     label="Wire routing number"
                     value={bankMethod.routingNumber}
@@ -398,10 +408,10 @@ export default function SavingsFundingClient({
                     </div>
                   ) : null}
                 </div>
-                  ) : (
-                    <div className="w-full rounded-[1.15rem] border border-dashed border-slate-300/80 bg-slate-50/95 p-4 dark:border-white/10 dark:bg-slate-900/60 sm:rounded-[1.25rem]">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Bank details are not available yet.
+              ) : (
+                <div className="w-full rounded-[1.15rem] border border-dashed border-slate-300/80 bg-slate-50/95 p-4 dark:border-white/10 dark:bg-slate-900/60 sm:rounded-[1.25rem]">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    Bank details are not available yet.
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
                     A platform bank method must be available before you can
@@ -520,16 +530,15 @@ export default function SavingsFundingClient({
                     >
                       {effectivePaymentMode === null
                         ? "Choose payment mode first"
-                        : "I&apos;ve made this payment"}
+                        : "I've made this payment"}
                     </Button>
 
                     {effectivePaymentMode === "FULL" ? (
                       cryptoCheckoutButton
                     ) : (
                       <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm sm:rounded-[1.25rem] dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300">
-                        Paymento checkout is available for full payment only.
-                        Use the proof button above for partial crypto
-                        submissions.
+                        Pay Now checkout is available for full payment only. Use
+                        the proof button above for partial crypto submissions.
                       </div>
                     )}
                   </div>
@@ -592,7 +601,8 @@ export default function SavingsFundingClient({
                         {formatCurrency(
                           latestPaymentShortfall,
                           details.account.currency,
-                        )}.
+                        )}
+                        .
                       </p>
                     ) : null}
                   </div>
@@ -617,7 +627,12 @@ export default function SavingsFundingClient({
       ) : null}
 
       {isSavingsFullySettled ? (
-        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full border-emerald-200/70 bg-emerald-50/90 dark:border-emerald-400/20 dark:bg-slate-900/60")}>
+        <Card
+          className={cn(
+            DASHBOARD_PAGE_PANEL_CLASS,
+            "w-full border-emerald-200/70 bg-emerald-50/90 dark:border-emerald-400/20 dark:bg-slate-900/60",
+          )}
+        >
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Savings account fully funded
@@ -670,7 +685,12 @@ export default function SavingsFundingClient({
         />
       ) : null}
 
-      <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300")}>
+      <div
+        className={cn(
+          DASHBOARD_PAGE_SURFACE_CLASS,
+          "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300",
+        )}
+      >
         <Shield className="h-4 w-4 text-sky-500" />
         <span className="max-w-[32rem] text-center sm:text-left">
           Secure and encrypted payment flow

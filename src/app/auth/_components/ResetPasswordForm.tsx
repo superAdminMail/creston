@@ -90,12 +90,14 @@ export default function ResetPasswordForm({
           return;
         }
 
-        setSuccess(result?.message ?? "Password updated successfully. Redirecting...");
+        setSuccess(
+          result?.message ?? "Password updated successfully. Redirecting...",
+        );
         setPassword("");
         setConfirmPassword("");
 
         setTimeout(() => {
-          router.push("/auth/sign-in");
+          router.push("/auth/login");
         }, 1500);
       } catch {
         setError("Something went wrong. Please try again.");
@@ -170,7 +172,9 @@ export default function ResetPasswordForm({
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     disabled={isPending}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                     className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-500 transition hover:text-blue-200 disabled:pointer-events-none disabled:opacity-60"
                   >
                     {showPassword ? (
@@ -184,21 +188,27 @@ export default function ResetPasswordForm({
                 <div className="mt-2 space-y-1 text-xs">
                   <p
                     className={
-                      passwordChecks.minLength ? "text-emerald-400" : "text-white/40"
+                      passwordChecks.minLength
+                        ? "text-emerald-400"
+                        : "text-white/40"
                     }
                   >
                     At least 8 characters
                   </p>
                   <p
                     className={
-                      passwordChecks.hasLetter ? "text-emerald-400" : "text-white/40"
+                      passwordChecks.hasLetter
+                        ? "text-emerald-400"
+                        : "text-white/40"
                     }
                   >
                     Contains a letter
                   </p>
                   <p
                     className={
-                      passwordChecks.hasNumber ? "text-emerald-400" : "text-white/40"
+                      passwordChecks.hasNumber
+                        ? "text-emerald-400"
+                        : "text-white/40"
                     }
                   >
                     Contains a number

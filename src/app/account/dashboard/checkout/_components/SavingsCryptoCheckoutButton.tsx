@@ -15,7 +15,7 @@ type Props = {
 
 export default function SavingsCryptoCheckoutButton({
   savingsAccountId,
-  label = "Pay with crypto",
+  label = "Pay Now",
   className,
 }: Props) {
   const [pending, setPending] = useState(false);
@@ -36,12 +36,12 @@ export default function SavingsCryptoCheckoutButton({
       }
 
       window.location.assign(result.redirectUrl);
-      } catch (error) {
-        console.error("SavingsCryptoCheckoutButton error:", error);
-        toast.error("Unable to open crypto checkout right now.");
-      } finally {
-        setPending(false);
-      }
+    } catch (error) {
+      console.error("SavingsCryptoCheckoutButton error:", error);
+      toast.error("Unable to open crypto checkout right now.");
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
