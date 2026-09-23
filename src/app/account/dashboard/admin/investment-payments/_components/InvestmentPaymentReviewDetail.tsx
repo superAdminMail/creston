@@ -433,7 +433,7 @@ export default function InvestmentPaymentReviewDetail({
                   variant="secondary"
                   onClick={handleMarkPartiallyPaid}
                   disabled={pending}
-                  className="rounded-2xl px-4 py-2.5 text-sm font-medium text-slate-800"
+                  className="rounded-2xl px-4 py-2.5 text-sm font-medium"
                 >
                   Mark partially paid
                 </Button>
