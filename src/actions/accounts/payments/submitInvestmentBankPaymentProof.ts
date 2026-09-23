@@ -24,6 +24,7 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
   }
 
   const data = parsed.data;
+
   try {
     const result = await createInvestmentOrderBankDepositSubmission({
       investmentOrderId: data.orderId,
@@ -32,6 +33,7 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
       proofMode: data.proofMode ?? "BANK_TRANSFER",
       isUpgradeFlow: data.isUpgradeFlow ?? false,
       claimedAmount: data.claimedAmount,
+      usePartialPayment: data.usePartialPayment ?? false,
       depositorName: data.depositorName,
       depositorAccountName: data.depositorAccountName,
       depositorAccountNo: data.depositorAccountNo,
@@ -47,7 +49,9 @@ export async function submitInvestmentBankPaymentProof(input: Input) {
       `/account/dashboard/user/investment-orders/${result.orderId}/upgrade`,
     );
     revalidatePath("/account/dashboard/admin/investment-payments");
-    revalidatePath(`/account/dashboard/admin/investment-payments/${result.paymentId}`);
+    revalidatePath(
+      `/account/dashboard/admin/investment-payments/${result.paymentId}`,
+    );
     revalidatePath("/account/dashboard/notifications");
 
     return {

@@ -12,6 +12,7 @@ type Props = {
   maxAmount: number;
   amountReadOnly?: boolean;
   proofMode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
+  paymentMode?: "FULL" | "PARTIAL";
   isUpgradeFlow?: boolean;
 };
 
@@ -25,6 +26,7 @@ export default function PaymentProofModal({
   maxAmount,
   amountReadOnly = false,
   proofMode = "BANK_TRANSFER",
+  paymentMode = "FULL",
   isUpgradeFlow = false,
 }: Props) {
   const isCryptoMode = proofMode === "CRYPTO_PROVIDER";
@@ -61,15 +63,15 @@ export default function PaymentProofModal({
           };
         }
 
-        const { submitInvestmentBankPaymentProof } = await import(
-          "@/actions/accounts/payments/submitInvestmentBankPaymentProof"
-        );
+        const { submitInvestmentBankPaymentProof } =
+          await import("@/actions/accounts/payments/submitInvestmentBankPaymentProof");
 
         return submitInvestmentBankPaymentProof({
           orderId,
           platformPaymentMethodId,
           proofMode: isCryptoMode ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
           isUpgradeFlow,
+          usePartialPayment: paymentMode === "PARTIAL",
           claimedAmount: input.claimedAmount,
           depositorName: input.depositorName,
           depositorAccountName: input.depositorAccountName,

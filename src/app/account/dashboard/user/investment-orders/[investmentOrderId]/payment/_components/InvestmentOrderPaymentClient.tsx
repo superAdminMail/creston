@@ -617,6 +617,7 @@ export default function InvestmentOrderPaymentClient({
           currency={order.currency}
           defaultAmount={selectedAmount}
           maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
+          paymentMode={isUpgradeFlow ? "FULL" : (selectedPaymentMode ?? "FULL")}
           isUpgradeFlow={isUpgradeFlow}
           amountReadOnly={
             !isUpgradeFlow &&
@@ -635,6 +636,7 @@ export default function InvestmentOrderPaymentClient({
           currency={order.currency}
           defaultAmount={selectedAmount}
           maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
+          paymentMode={isUpgradeFlow ? "FULL" : (selectedPaymentMode ?? "FULL")}
           proofMode="CRYPTO_PROVIDER"
           isUpgradeFlow={isUpgradeFlow}
         />

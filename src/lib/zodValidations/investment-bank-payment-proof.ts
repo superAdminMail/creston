@@ -5,6 +5,7 @@ export const submitInvestmentBankPaymentProofSchema = z.object({
   platformPaymentMethodId: z.string().min(1),
   proofMode: z.enum(["BANK_TRANSFER", "CRYPTO_PROVIDER"]).optional(),
   claimedAmount: z.number().positive(),
+  usePartialPayment: z.boolean().optional(),
   isUpgradeFlow: z.boolean().optional(),
   depositorName: z.string().trim().max(120).optional(),
   depositorAccountName: z.string().trim().max(120).optional(),

@@ -297,7 +297,9 @@ export default function SharedPaymentProofModal({
                 </label>
                 <Input
                   value={depositorAccountNo}
-                  onChange={(event) => setDepositorAccountNo(event.target.value)}
+                  onChange={(event) =>
+                    setDepositorAccountNo(event.target.value)
+                  }
                   placeholder="Enter depositor account number"
                   className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
                 />
@@ -305,13 +307,11 @@ export default function SharedPaymentProofModal({
             </>
           ) : null}
 
-          <div className="grid gap-3">
+          <div className="grid gap-3 rounded-[1.25rem] border border-white/10 bg-[#0F172A] p-4 shadow-[0_14px_32px_rgba(2,6,23,0.18)]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <div>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  Receipt image
-                </p>
-                <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                <p className="text-sm font-medium text-white">Receipt image</p>
+                <p className="text-xs leading-5 text-slate-400">
                   Upload a clear receipt or transfer screenshot.
                 </p>
               </div>
@@ -323,7 +323,7 @@ export default function SharedPaymentProofModal({
                   size="sm"
                   onClick={() => void removeReceiptAttachment()}
                   disabled={isRemovingReceipt}
-                  className="w-full rounded-full border border-slate-200/80 bg-white/80 text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700 sm:w-auto dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
+                  className="w-full rounded-full border border-white/10 bg-slate-950/60 text-slate-300 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200 sm:w-auto"
                 >
                   {isRemovingReceipt ? "Removing..." : "Delete"}
                 </Button>
@@ -331,22 +331,23 @@ export default function SharedPaymentProofModal({
             </div>
 
             {!receiptAttachment ? (
-              <div className="w-full rounded-[1.25rem] border border-dashed border-slate-300/70 bg-slate-50/95 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
+              <div className="w-full rounded-[1.25rem] border border-dashed border-white/10 bg-[#050B1F] p-4 shadow-[0_10px_24px_rgba(2,6,23,0.18)]">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-slate-950 dark:text-white">
+                  <p className="text-sm font-medium text-white">
                     Add receipt image
                   </p>
-                  <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  <p className="text-xs leading-5 text-slate-400">
                     PNG, JPG, and WEBP files are supported.
                   </p>
                 </div>
 
                 <UploadButton
                   endpoint="photoManager"
-                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-slate-200 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-50 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto dark:ut-button:border-white/10 dark:ut-button:bg-slate-950 dark:ut-button:text-white dark:ut-button:hover:bg-slate-900"
+                  className="ut-button:mt-4 ut-button:inline-flex ut-button:h-11 ut-button:w-full ut-button:items-center ut-button:justify-center ut-button:rounded-full ut-button:border ut-button:border-white/10 ut-button:bg-white ut-button:px-5 ut-button:text-sm ut-button:font-semibold ut-button:text-slate-900 ut-button:shadow-sm ut-button:transition ut-button:hover:-translate-y-0.5 ut-button:hover:bg-slate-100 ut-button:hover:text-slate-950 ut-button:disabled:translate-y-0 ut-button:disabled:opacity-70 sm:ut-button:w-auto"
                   onClientUploadComplete={async (res) => {
                     try {
                       const file = res?.[0];
+
                       if (!file) {
                         toast.error("Upload failed");
                         return;
@@ -379,8 +380,8 @@ export default function SharedPaymentProofModal({
                 />
               </div>
             ) : (
-              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-slate-200/80 bg-white/92 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.08)] sm:flex-row sm:items-center dark:border-white/10 dark:bg-slate-900/60">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="flex flex-col gap-4 rounded-[1.25rem] border border-white/10 bg-[#050B1F] p-4 shadow-[0_14px_32px_rgba(2,6,23,0.18)] sm:flex-row sm:items-center">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
                   <Image
                     src={receiptAttachment.url}
                     alt={receiptAttachment.name ?? "Receipt preview"}
@@ -391,10 +392,10 @@ export default function SharedPaymentProofModal({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-950 dark:text-white">
+                  <p className="truncate text-sm font-medium text-white">
                     {receiptAttachment.name ?? "Receipt image"}
                   </p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-xs leading-5 text-slate-400">
                     Attached receipt ready for submission.
                   </p>
                 </div>
@@ -402,7 +403,7 @@ export default function SharedPaymentProofModal({
             )}
 
             {!hasReceiptImage ? (
-              <p className="text-xs font-medium text-rose-500 dark:text-rose-300">
+              <p className="text-xs font-medium text-rose-300">
                 Receipt image is required before submission.
               </p>
             ) : null}
