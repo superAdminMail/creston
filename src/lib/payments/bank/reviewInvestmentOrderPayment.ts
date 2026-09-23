@@ -68,7 +68,10 @@ export async function approveInvestmentOrderPaymentReview({
   const paymentKind = readPaymentKind(payment.submissionKind);
   const claimedAmount = payment.claimedAmount.toNumber();
 
-  if (payment.investmentOrder.status === "CONFIRMED" && paymentKind !== "UPGRADE") {
+  if (
+    payment.investmentOrder.status === "CONFIRMED" &&
+    paymentKind !== "UPGRADE"
+  ) {
     throw new Error(
       "This order is already confirmed and can no longer be reviewed here.",
     );
@@ -83,21 +86,25 @@ export async function approveInvestmentOrderPaymentReview({
   }
 
   if (paymentKind === "UPGRADE" && approvedAmount !== claimedAmount) {
-    throw new Error("Upgrade approval must match the submitted upgrade amount.");
-  }
-
-  if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
     throw new Error(
-      "Partial approval amount must be lower than the claimed amount.",
+      "Upgrade approval must match the submitted upgrade amount.",
     );
   }
+
+  // if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
+  //   throw new Error(
+  //     "Partial approval amount must be lower than the claimed amount.",
+  //   );
+  // }
 
   const orderAmount = payment.investmentOrder.amount.toNumber();
   const currentPaid = payment.investmentOrder.amountPaid.toNumber();
   const remaining = Math.max(orderAmount - currentPaid, 0);
 
   if (approvedAmount > remaining) {
-    throw new Error("Approved amount cannot exceed the remaining order balance.");
+    throw new Error(
+      "Approved amount cannot exceed the remaining order balance.",
+    );
   }
 
   const isCryptoProof =

@@ -10,6 +10,7 @@ type Props = {
   currency: string;
   defaultAmount: number;
   maxAmount: number;
+  amountReadOnly?: boolean;
   proofMode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
   isUpgradeFlow?: boolean;
 };
@@ -22,6 +23,7 @@ export default function PaymentProofModal({
   currency,
   defaultAmount,
   maxAmount,
+  amountReadOnly = false,
   proofMode = "BANK_TRANSFER",
   isUpgradeFlow = false,
 }: Props) {
@@ -43,6 +45,12 @@ export default function PaymentProofModal({
       amountLabel={`${isUpgradeFlow ? "Upgrade amount" : "Claim amount"} (${currency})`}
       amountMin={isUpgradeFlow ? maxAmount : 1}
       amountMax={maxAmount}
+      amountReadOnly={amountReadOnly}
+      amountHint={
+        amountReadOnly
+          ? "Partial payment amount is calculated from your order balance and cannot be edited."
+          : undefined
+      }
       submitLabel="Submit proof"
       mode={proofMode}
       submit={async (input) => {

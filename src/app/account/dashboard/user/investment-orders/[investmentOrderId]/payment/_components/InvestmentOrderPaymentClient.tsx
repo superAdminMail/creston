@@ -618,6 +618,11 @@ export default function InvestmentOrderPaymentClient({
           defaultAmount={selectedAmount}
           maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
           isUpgradeFlow={isUpgradeFlow}
+          amountReadOnly={
+            !isUpgradeFlow &&
+            selectedFundingMethod === "BANK_TRANSFER" &&
+            selectedPaymentMode === "PARTIAL"
+          }
         />
       ) : showModal &&
         selectedFundingMethod === "CRYPTO_PROVIDER" &&

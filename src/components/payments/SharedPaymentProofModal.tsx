@@ -56,6 +56,7 @@ type Props = {
   amountMin: number;
   amountMax: number | null;
   amountHint?: ReactNode;
+  amountReadOnly?: boolean;
   mode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
   submitLabel?: string;
   submit: (input: PaymentProofSubmitInput) => Promise<PaymentProofSubmitResult>;
@@ -71,6 +72,7 @@ export default function SharedPaymentProofModal({
   amountMin,
   amountMax,
   amountHint,
+  amountReadOnly = false,
   mode = "BANK_TRANSFER",
   submitLabel = "Submit proof",
   submit,
@@ -124,10 +126,11 @@ export default function SharedPaymentProofModal({
   }, []);
 
   const receiptFileId = receiptAttachment?.assetId ?? "";
+  const effectiveClaimedAmount = amountReadOnly ? defaultAmount : claimedAmount;
   const amountIsInvalid =
-    !Number.isFinite(claimedAmount) ||
-    claimedAmount < amountMin ||
-    (amountMax !== null && claimedAmount > amountMax);
+    !Number.isFinite(effectiveClaimedAmount) ||
+    effectiveClaimedAmount < amountMin ||
+    (amountMax !== null && effectiveClaimedAmount > amountMax);
 
   function resetForm() {
     setDepositorName("");
@@ -172,7 +175,7 @@ export default function SharedPaymentProofModal({
     startTransition(async () => {
       try {
         const result = await submit({
-          claimedAmount,
+          claimedAmount: effectiveClaimedAmount,
           depositorName: mode === "BANK_TRANSFER" ? depositorName : "",
           depositorAccountName:
             mode === "BANK_TRANSFER" ? depositorAccountName : "",
@@ -230,11 +233,17 @@ export default function SharedPaymentProofModal({
                 min={amountMin}
                 max={amountMax ?? undefined}
                 step="0.01"
-                value={claimedAmount}
+                value={amountReadOnly ? defaultAmount : claimedAmount}
+                readOnly={amountReadOnly}
+                aria-readonly={amountReadOnly}
                 onChange={(event) =>
                   setClaimedAmount(Number(event.target.value))
                 }
-                className="border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60"
+                className={`border-slate-200/80 bg-white/90 shadow-sm focus-visible:ring-2 focus-visible:ring-sky-500/20 dark:border-white/10 dark:bg-slate-900/60 ${
+                  amountReadOnly
+                    ? "cursor-not-allowed bg-slate-100 text-slate-600 dark:bg-slate-900/80 dark:text-slate-300"
+                    : ""
+                }`}
               />
               {amountHint ? <div>{amountHint}</div> : null}
             </div>
