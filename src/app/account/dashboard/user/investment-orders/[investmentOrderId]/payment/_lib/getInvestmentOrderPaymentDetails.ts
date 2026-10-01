@@ -129,11 +129,11 @@ export async function getInvestmentOrderPaymentDetails(
           currency: order.currency,
           preferredType: "WALLET_ADDRESS",
         })
-      : bankInfoState.bankMethod ??
+      : (bankInfoState.bankMethod ??
         (await getPublicPlatformPaymentMethodForCheckout({
           currency: order.currency,
           preferredType: "BANK_INFO",
-        }));
+        })));
 
   const amount = toNumber(order.amount);
   const amountPaid = toNumber(order.amountPaid);
@@ -194,7 +194,7 @@ export async function getInvestmentOrderPaymentDetails(
           projectedRoiMax: order.investmentPlanTier.projectedRoiMax
             ? toNumber(order.investmentPlanTier.projectedRoiMax)
             : null,
-          }) ?? 0,
+        }) ?? 0,
       returnLabel: formatInvestmentTierReturnLabel({
         investmentModel: order.investmentPlan.investmentModel,
         fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
@@ -217,6 +217,8 @@ export async function getInvestmentOrderPaymentDetails(
           bankName: resolvedBankMethod.bankName,
           bankCode: resolvedBankMethod.bankCode ?? null,
           accountName: resolvedBankMethod.accountName,
+          accountType: resolvedBankMethod.accountType ?? null,
+          recipientType: resolvedBankMethod.recipientType ?? null,
           reference: resolvedBankMethod.reference ?? null,
           bankAddress: resolvedBankMethod.bankAddress ?? null,
           accountNumber: resolvedBankMethod.accountNumber,

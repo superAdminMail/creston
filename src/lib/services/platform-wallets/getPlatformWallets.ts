@@ -65,6 +65,8 @@ export const getPublicPlatformPaymentMethods = cache(async () => {
       type: true,
       providerName: true,
       accountName: true,
+      accountType: true,
+      recipientType: true,
       reference: true,
       bankAddress: true,
       currency: true,

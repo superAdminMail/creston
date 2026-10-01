@@ -9,6 +9,8 @@ export type PrivateBankMethod = {
   bankName: string | null;
   bankCode: string | null;
   accountName: string | null;
+  accountType: string | null;
+  recipientType: string | null;
   reference: string | null;
   bankAddress: string | null;
   accountNumber: string | null;
@@ -39,6 +41,8 @@ export const privateBankMethodSelect = {
   bankName: true,
   bankCode: true,
   accountName: true,
+  accountType: true,
+  recipientType: true,
   reference: true,
   bankAddress: true,
   accountNumber: true,
