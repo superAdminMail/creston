@@ -54,13 +54,17 @@ export async function respondToSavingsFundingBankInfoRequest(
 ): Promise<RespondToSavingsFundingBankInfoRequestState> {
   await requireDashboardRoleAccess(["ADMIN", "SUPER_ADMIN"]);
 
-  const savingsAccountId = String(formData.get("savingsAccountId") ?? "").trim();
+  const savingsAccountId = String(
+    formData.get("savingsAccountId") ?? "",
+  ).trim();
 
   const submittedValues: PlatformPaymentMethodFormInput = {
     type: "BANK_INFO",
     label: getStringValue(formData, "label"),
     providerName: getStringValue(formData, "providerName"),
     accountName: getStringValue(formData, "accountName"),
+    accountType: getStringValue(formData, "accountType"),
+    recipientType: getStringValue(formData, "recipientType"),
     reference: getStringValue(formData, "reference"),
     bankAddress: getStringValue(formData, "bankAddress"),
     currency: getStringValue(formData, "currency"),
@@ -71,8 +75,10 @@ export async function respondToSavingsFundingBankInfoRequest(
     isActive: getBooleanValue(formData, "isActive", true),
     isDefault: getBooleanValue(formData, "isDefault", false),
     sortOrder: getNumberValue(formData, "sortOrder"),
-    verificationStatus:
-      getStringValue(formData, "verificationStatus") as PlatformPaymentMethodFormInput["verificationStatus"],
+    verificationStatus: getStringValue(
+      formData,
+      "verificationStatus",
+    ) as PlatformPaymentMethodFormInput["verificationStatus"],
     bankName: getStringValue(formData, "bankName"),
     bankCode: getStringValue(formData, "bankCode"),
     accountNumber: getStringValue(formData, "accountNumber"),
@@ -91,7 +97,8 @@ export async function respondToSavingsFundingBankInfoRequest(
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0];
     return createErrorFormState(
-      firstIssue?.message ?? "Please review the bank details before sending them.",
+      firstIssue?.message ??
+        "Please review the bank details before sending them.",
     );
   }
 
