@@ -22,6 +22,8 @@ type PlatformPaymentMethodField =
   | "label"
   | "providerName"
   | "accountName"
+  | "accountType"
+  | "recipientType"
   | "reference"
   | "bankAddress"
   | "currency"
@@ -73,11 +75,16 @@ export async function createPlatformPaymentMethod(
   formData: FormData,
 ): Promise<PlatformPaymentMethodFormActionState> {
   const submittedValues: PlatformPaymentMethodFormInput = {
-    type: getStringValue(formData, "type") as PlatformPaymentMethodFormInput["type"],
+    type: getStringValue(
+      formData,
+      "type",
+    ) as PlatformPaymentMethodFormInput["type"],
     label: getStringValue(formData, "label"),
     providerName: getStringValue(formData, "providerName"),
     accountName: getStringValue(formData, "accountName"),
     reference: getStringValue(formData, "reference"),
+    accountType: getStringValue(formData, "accountType"),
+    recipientType: getStringValue(formData, "recipientType"),
     bankAddress: getStringValue(formData, "bankAddress"),
     currency: getStringValue(formData, "currency"),
     country: getStringValue(formData, "country"),
@@ -87,7 +94,10 @@ export async function createPlatformPaymentMethod(
     isActive: getBooleanValue(formData, "isActive", true),
     isDefault: getBooleanValue(formData, "isDefault", false),
     sortOrder: getNumberValue(formData, "sortOrder"),
-    verificationStatus: getStringValue(formData, "verificationStatus") as PlatformPaymentMethodFormInput["verificationStatus"],
+    verificationStatus: getStringValue(
+      formData,
+      "verificationStatus",
+    ) as PlatformPaymentMethodFormInput["verificationStatus"],
     bankName: getStringValue(formData, "bankName"),
     bankCode: getStringValue(formData, "bankCode"),
     accountNumber: getStringValue(formData, "accountNumber"),
@@ -95,8 +105,14 @@ export async function createPlatformPaymentMethod(
     swiftCode: getStringValue(formData, "swiftCode"),
     routingNumber: getStringValue(formData, "routingNumber"),
     branchName: getStringValue(formData, "branchName"),
-    cryptoAsset: getStringValue(formData, "cryptoAsset") as PlatformPaymentMethodFormInput["cryptoAsset"],
-    cryptoNetwork: getStringValue(formData, "cryptoNetwork") as PlatformPaymentMethodFormInput["cryptoNetwork"],
+    cryptoAsset: getStringValue(
+      formData,
+      "cryptoAsset",
+    ) as PlatformPaymentMethodFormInput["cryptoAsset"],
+    cryptoNetwork: getStringValue(
+      formData,
+      "cryptoNetwork",
+    ) as PlatformPaymentMethodFormInput["cryptoNetwork"],
     walletAddress: getStringValue(formData, "walletAddress"),
     walletTag: getStringValue(formData, "walletTag"),
   };
@@ -105,7 +121,10 @@ export async function createPlatformPaymentMethod(
 
   if (!parsed.success) {
     return createValidationErrorState(
-      parsed.error.flatten().fieldErrors as Record<PlatformPaymentMethodField, string[]>,
+      parsed.error.flatten().fieldErrors as Record<
+        PlatformPaymentMethodField,
+        string[]
+      >,
       "Please review the platform payment method details.",
     );
   }
@@ -164,7 +183,9 @@ export async function createPlatformPaymentMethod(
     revalidatePath("/account/dashboard/admin/platform-wallets");
     revalidatePath("/account/dashboard/super-admin/platform-wallets");
 
-    return createSuccessFormState("Platform payment method added successfully.");
+    return createSuccessFormState(
+      "Platform payment method added successfully.",
+    );
   } catch (error) {
     return createErrorFormState(
       getFriendlyServerError(
