@@ -13,6 +13,8 @@ type Props = {
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
+    accountType: string | null;
+    recipientType: string | null;
     reference: string | null;
     bankAddress: string | null;
     accountNumber: string | null;
@@ -49,6 +51,8 @@ export default function BankTransferInstructionsCard({
     { label: "Bank", value: bankMethod.bankName },
     { label: "Account name", value: bankMethod.accountName },
     { label: "Reference", value: bankMethod.reference },
+    { label: "Account Type", value: bankMethod.accountType },
+    { label: "Recipient Type", value: bankMethod.recipientType },
     { label: "Bank address", value: bankMethod.bankAddress },
     { label: "Account number", value: bankMethod.accountNumber },
     { label: "Bank code", value: bankMethod.bankCode },

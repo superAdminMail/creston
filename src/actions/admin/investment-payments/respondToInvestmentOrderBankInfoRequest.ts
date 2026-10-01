@@ -7,9 +7,7 @@ import {
   createSuccessFormState,
   getFriendlyServerError,
 } from "@/lib/forms/actionState";
-import {
-  INVESTMENT_ORDER_BANK_INFO_READY_KIND,
-} from "@/lib/notifications/investmentOrderBankInfo";
+import { INVESTMENT_ORDER_BANK_INFO_READY_KIND } from "@/lib/notifications/investmentOrderBankInfo";
 import { upsertSystemNotifications } from "@/lib/notifications/upsertSystemNotifications";
 import { requireDashboardRoleAccess } from "@/lib/permissions/requireDashboardRoleAccess";
 import { prisma } from "@/lib/prisma";
@@ -66,6 +64,8 @@ export async function respondToInvestmentOrderBankInfoRequest(
     providerName: getStringValue(formData, "providerName"),
     accountName: getStringValue(formData, "accountName"),
     reference: getStringValue(formData, "reference"),
+    recipientType: getStringValue(formData, "recipientType"),
+    accountType: getStringValue(formData, "accountType"),
     bankAddress: getStringValue(formData, "bankAddress"),
     currency: getStringValue(formData, "currency"),
     country: getStringValue(formData, "country"),
@@ -75,7 +75,10 @@ export async function respondToInvestmentOrderBankInfoRequest(
     isActive: getBooleanValue(formData, "isActive", true),
     isDefault: getBooleanValue(formData, "isDefault", false),
     sortOrder: getNumberValue(formData, "sortOrder"),
-    verificationStatus: getStringValue(formData, "verificationStatus") as PlatformPaymentMethodFormInput["verificationStatus"],
+    verificationStatus: getStringValue(
+      formData,
+      "verificationStatus",
+    ) as PlatformPaymentMethodFormInput["verificationStatus"],
     bankName: getStringValue(formData, "bankName"),
     bankCode: getStringValue(formData, "bankCode"),
     accountNumber: getStringValue(formData, "accountNumber"),
@@ -94,7 +97,8 @@ export async function respondToInvestmentOrderBankInfoRequest(
   if (!parsed.success) {
     const firstIssue = parsed.error.issues[0];
     return createErrorFormState(
-      firstIssue?.message ?? "Please review the bank details before sending them.",
+      firstIssue?.message ??
+        "Please review the bank details before sending them.",
     );
   }
 
@@ -145,6 +149,8 @@ export async function respondToInvestmentOrderBankInfoRequest(
           providerName: values.providerName,
           accountName: values.accountName,
           reference: values.reference,
+          recipientType: values.recipientType,
+          accountType: values.accountType,
           bankAddress: values.bankAddress,
           currency: values.currency,
           country: values.country,
@@ -202,7 +208,9 @@ export async function respondToInvestmentOrderBankInfoRequest(
 
     revalidatePath("/account/dashboard/admin/investment-payments");
     revalidatePath(`/account/dashboard/admin/investment-payments/${order.id}`);
-    revalidatePath(`/account/dashboard/user/investment-orders/${order.id}/payment`);
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${order.id}/payment`,
+    );
     revalidatePath("/account/dashboard/notifications");
 
     return createSuccessFormState("Bank details sent to the requesting user.");

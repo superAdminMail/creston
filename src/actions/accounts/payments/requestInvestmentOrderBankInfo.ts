@@ -115,7 +115,7 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
         userId: admin.id,
         title: "Investment bank info request",
         message: requestMessage,
-        link: "/account/dashboard/admin/investment-payments",
+        link: "/account/dashboard/admin/bank-info-requests",
         metadata: {
           kind: INVESTMENT_ORDER_BANK_INFO_REQUEST_KIND,
           orderId: order.id,
@@ -133,7 +133,7 @@ export async function requestInvestmentOrderBankInfo(orderId: string) {
     `/account/dashboard/user/investment-orders/${order.id}/payment`,
   );
   revalidatePath("/account/dashboard/notifications");
-  revalidatePath("/account/dashboard/admin/investment-payments");
+  revalidatePath("/account/dashboard/admin/bank-info-requests");
 
   return {
     ok: true,

@@ -8,10 +8,5 @@ export default async function AdminInvestmentPaymentsPage() {
     getInvestmentBankInfoRequests(),
   ]);
 
-  return (
-    <InvestmentPaymentReviewList
-      payments={payments}
-      bankInfoRequests={bankInfoRequests}
-    />
-  );
+  return <InvestmentPaymentReviewList payments={payments} />;
 }

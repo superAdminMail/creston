@@ -80,7 +80,6 @@ function getDateKey(value: string) {
 
 export default function InvestmentPaymentReviewList({
   payments,
-  bankInfoRequests = [],
 }: {
   payments: InvestmentPaymentReviewListItem[];
   bankInfoRequests?: InvestmentBankInfoRequestItem[];
@@ -134,44 +133,13 @@ export default function InvestmentPaymentReviewList({
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card shadow-sm">
-        <CardHeader className="space-y-2">
+        <CardHeader className="space-y-2 px-2 pb-2 sm:px-4 sm:pb-3">
           <CardTitle className="text-xl text-slate-950 dark:text-white">
             Investment payment reviews
           </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-5 px-4 pb-5 sm:px-6 sm:pb-6">
-          {bankInfoRequests.length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                    Pending bank info requests
-                  </p>
-                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    Respond with bank details for the users waiting on transfer
-                    instructions.
-                  </p>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100"
-                >
-                  {bankInfoRequests.length}
-                </Badge>
-              </div>
-
-              <div className="space-y-4">
-                {bankInfoRequests.map((request) => (
-                  <InvestmentBankInfoRequestForm
-                    key={request.requestNotificationId}
-                    request={request}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           <div className="grid gap-4 rounded-[1.5rem] border border-border/60 bg-white/80 p-4 shadow-sm xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto] xl:items-end dark:bg-slate-900/70">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-300">

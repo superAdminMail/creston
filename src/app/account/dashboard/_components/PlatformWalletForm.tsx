@@ -54,6 +54,8 @@ export type PlatformPaymentMethodFormDefaults = {
   providerName?: string | null;
   accountName?: string | null;
   reference?: string | null;
+  recipientType?: string | null;
+  accountType?: string | null;
   bankAddress?: string | null;
   currency?: string | null;
   country?: string | null;
@@ -132,8 +134,10 @@ function PlatformPaymentMethodFields({
       {type === "BANK_INFO" ? (
         <div className={FIELD_SURFACE_CLASS}>
           <p className={FIELD_LABEL_CLASS}>Bank Details</p>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2 min-w-0">
+            {/* Row 1 */}
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Provider Name</FieldLabel>
               <Input
                 name="providerName"
@@ -144,7 +148,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="providerName" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Account Name</FieldLabel>
               <Input
                 name="accountName"
@@ -156,7 +161,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="accountName" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Bank Name</FieldLabel>
               <Input
                 name="bankName"
@@ -167,7 +173,32 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="bankName" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            {/* Row 2 */}
+            <div className="min-w-0 space-y-2">
+              <FieldLabel>Account Type</FieldLabel>
+              <Input
+                name="accountType"
+                defaultValue={defaultValues?.accountType ?? ""}
+                aria-invalid={Boolean(fieldErrors?.accountType?.[0])}
+                className={FIELD_INPUT_CLASS}
+              />
+              <FieldError fieldErrors={fieldErrors} name="accountType" />
+            </div>
+
+            <div className="min-w-0 space-y-2">
+              <FieldLabel>Recipient Type</FieldLabel>
+              <Input
+                name="recipientType"
+                defaultValue={defaultValues?.recipientType ?? ""}
+                required
+                aria-invalid={Boolean(fieldErrors?.recipientType?.[0])}
+                className={FIELD_INPUT_CLASS}
+              />
+              <FieldError fieldErrors={fieldErrors} name="recipientType" />
+            </div>
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Bank Code</FieldLabel>
               <Input
                 name="bankCode"
@@ -177,7 +208,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="bankCode" />
             </div>
-            <div className="space-y-2 min-w-0">
+            {/* Row 3 */}
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Account Number</FieldLabel>
               <Input
                 name="accountNumber"
@@ -188,7 +220,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="accountNumber" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Reference</FieldLabel>
               <Input
                 name="reference"
@@ -199,7 +232,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="reference" />
             </div>
-            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-2">
+
+            <div className="min-w-0 space-y-2 sm:col-span-2 lg:col-span-2">
               <FieldLabel>Bank Address</FieldLabel>
               <Input
                 name="bankAddress"
@@ -210,7 +244,9 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="bankAddress" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            {/* Row 4 */}
+            <div className="min-w-0 space-y-2">
               <FieldLabel>IBAN</FieldLabel>
               <Input
                 name="iban"
@@ -220,7 +256,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="iban" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Swift Code</FieldLabel>
               <Input
                 name="swiftCode"
@@ -230,7 +267,8 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="swiftCode" />
             </div>
-            <div className="space-y-2 min-w-0">
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Routing Number</FieldLabel>
               <Input
                 name="routingNumber"
@@ -240,7 +278,21 @@ function PlatformPaymentMethodFields({
               />
               <FieldError fieldErrors={fieldErrors} name="routingNumber" />
             </div>
-            <div className="space-y-2 min-w-0 sm:col-span-2 lg:col-span-3">
+
+            {/* Row 5 */}
+            <div className="min-w-0 space-y-2 sm:col-span-2 lg:col-span-2">
+              <FieldLabel>Bank Address</FieldLabel>
+              <Input
+                name="bankAddress"
+                defaultValue={defaultValues?.bankAddress ?? ""}
+                aria-invalid={Boolean(fieldErrors?.bankAddress?.[0])}
+                className={FIELD_INPUT_CLASS}
+                placeholder="Optional bank address"
+              />
+              <FieldError fieldErrors={fieldErrors} name="bankAddress" />
+            </div>
+
+            <div className="min-w-0 space-y-2">
               <FieldLabel>Branch Name</FieldLabel>
               <Input
                 name="branchName"

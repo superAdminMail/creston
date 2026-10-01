@@ -775,6 +775,8 @@ model PlatformPaymentMethod {
   label                      String
   type                       PlatformPaymentMethodType
   providerName               String?
+  accountType                String?
+  recipientType              String?
   accountName                String?
   currency                   String?                           @default("USD")
   country                    String?

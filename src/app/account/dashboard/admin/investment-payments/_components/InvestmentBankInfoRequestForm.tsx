@@ -117,6 +117,26 @@ export default function InvestmentBankInfoRequestForm({
                 className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
               />
             </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Account Type
+              </label>
+              <Input
+                name="accountType"
+                placeholder="Checking or savings"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                Recipient Type
+              </label>
+              <Input
+                name="recipientType"
+                placeholder="Business or personal"
+                className="h-11 rounded-2xl border-border/70 bg-background px-4 text-slate-800 shadow-sm dark:text-slate-100"
+              />
+            </div>
 
             <div className="grid gap-2">
               <label className="text-sm font-medium text-slate-800 dark:text-slate-200">

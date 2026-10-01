@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function single(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] ?? null : value ?? null;
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
 
 export default async function PlatformWalletsAdminPage({
@@ -54,6 +54,8 @@ export default async function PlatformWalletsAdminPage({
           providerName: wallet.providerName,
           accountName: wallet.accountName,
           reference: wallet.reference,
+          accountType: wallet.accountType,
+          recipientType: wallet.recipientType,
           bankAddress: wallet.bankAddress,
           currency: wallet.currency,
           country: wallet.country,

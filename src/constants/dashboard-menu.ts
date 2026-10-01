@@ -283,6 +283,11 @@ export const DASHBOARD_MENU = {
           icon: Landmark,
         },
         {
+          name: "Bank Info Requests",
+          href: "/account/dashboard/admin/bank-info-requests",
+          icon: CircleDollarSign,
+        },
+        {
           name: "Investment Payments",
           href: "/account/dashboard/admin/investment-payments",
           icon: CircleDollarSign,

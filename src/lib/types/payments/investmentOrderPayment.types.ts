@@ -41,6 +41,8 @@ export type InvestmentOrderPaymentDetails = {
     bankName: string | null;
     bankCode: string | null;
     accountName: string | null;
+    accountType: string | null;
+    recipientType: string | null;
     reference: string | null;
     bankAddress: string | null;
     accountNumber: string | null;

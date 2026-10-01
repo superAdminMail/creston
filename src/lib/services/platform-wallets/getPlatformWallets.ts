@@ -19,6 +19,8 @@ export const getAdminPlatformPaymentMethods = cache(async () => {
       providerName: true,
       accountName: true,
       reference: true,
+      accountType: true,
+      recipientType: true,
       bankAddress: true,
       currency: true,
       country: true,
@@ -110,7 +112,5 @@ export async function getPublicPlatformPaymentMethodForCheckout({
         (method.currency === currency || method.currency === null),
     ) ?? null;
 
-  return (
-    findByType(preferredType)
-  );
+  return findByType(preferredType);
 }
