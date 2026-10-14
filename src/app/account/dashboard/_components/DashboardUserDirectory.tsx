@@ -121,8 +121,7 @@ export function DashboardUserDirectory({
   const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
   const pageCount = Math.max(1, totalPages);
 
-  // Keep the displayed page valid when the result count changes,
-  // such as after a user is deleted.
+  
   const safeCurrentPage = Math.min(currentPage, pageCount);
 
   useEffect(() => {
