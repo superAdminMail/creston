@@ -15,6 +15,7 @@ import { AndroidRenderModeMarker } from "@/components/layout/AndroidRenderModeMa
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteSeoConfig } from "@/lib/seo/getSiteSeoConfig";
 import { resolveGenericPageSeo } from "@/lib/seo/resolveSeoFallbacks";
+import { FloatingSupportButtonServer } from "@/components/support/floating-support-button-server";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,6 +62,7 @@ export default async function RootLayout({
             <AndroidRenderModeMarker />
             {children}
             <Toaster richColors closeButton position="top-right" />
+            <FloatingSupportButtonServer />
           </TooltipProvider>
         </QueryProvider>
       </body>

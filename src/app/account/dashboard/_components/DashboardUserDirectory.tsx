@@ -1,28 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Filter,
-  Search,
-  ShieldCheck,
-  TrendingUp,
-  ShieldAlert,
-  UserCheck,
-  Users,
-} from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useMemo, useState } from "react";
+import { Filter, Search } from "lucide-react";
 
-import type { UserRole } from "@/generated/prisma";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -31,40 +12,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { suspendUserAction } from "@/actions/super-admin/users/suspendUserAction";
-import { unsuspendUserAction } from "@/actions/super-admin/users/unsuspendUserAction";
-import { formatDirectoryCurrency } from "@/lib/formatters/directory";
 import {
-  formatMigrationTimelineTimestamp,
-  getLegacyAccountBadgeMeta,
-  getMigrationStatusMeta,
-} from "@/lib/migration/migrationPresentation";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import type { DashboardDirectoryUser } from "@/lib/types/dashboard";
+
+import { DeleteUnverifiedUserDialog } from "./DeleteUnverifiedUserDialog";
+import { UserDirectoryAccountActionDialog } from "./UserDirectoryAccountActionDialog";
+import { UserDirectoryDetailsDialog } from "./UserDirectoryDetailsDialog";
 import {
-  DASHBOARD_PAGE_PANEL_CLASS,
-  DASHBOARD_PAGE_SURFACE_CLASS,
-  DASHBOARD_TABLE_SHELL_CLASS,
-} from "./dashboardSurfaces";
+  getAccountStatusBadge,
+  getEmailVerificationBadge,
+  getKycBadge,
+  getMigrationBadge,
+  getRoleBadge,
+} from "./UserDirectoryBadges";
+import { UserDirectoryHeader } from "./UserDirectoryHeader";
+import { UserDirectoryMobileCard } from "./UserDirectoryMobileCard";
+import { UserDirectoryTable } from "./UserDirectoryTable";
 import { UserMigrationControls } from "./UserMigrationControls";
-import { cn } from "@/lib/utils";
+import { DASHBOARD_PAGE_SURFACE_CLASS } from "./dashboardSurfaces";
 
-const heroPillClass =
-  "inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-700 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300";
-
-const statTitleClass =
-  "text-xs font-medium uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80";
-
-const statusBadgeClass =
-  "rounded-full border px-3 py-1 text-xs font-medium shadow-sm transition";
+const PAGE_SIZE = 10;
 
 const summaryPillClass =
   "inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white";
 
-const initialSuspendUserState = { status: "idle" as const };
-
-type VerificationStatus = DashboardDirectoryUser["verificationStatus"];
-type AccountStatus = DashboardDirectoryUser["accountStatus"];
 type UserActionMode = "suspend" | "unsuspend";
+
 type UserActionTarget = {
   user: DashboardDirectoryUser;
   mode: UserActionMode;
@@ -89,394 +68,6 @@ type DashboardUserDirectoryProps = {
   showMigrationControls?: boolean;
 };
 
-function getRoleBadge(role: UserRole) {
-  switch (role) {
-    case "SUPER_ADMIN":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-sky-200/70 bg-sky-50 text-sky-700 hover:bg-sky-50 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10`}
-        >
-          Super Admin
-        </Badge>
-      );
-    case "ADMIN":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-violet-200/70 bg-violet-50 text-violet-700 hover:bg-violet-50 dark:border-violet-400/20 dark:bg-violet-400/10 dark:text-violet-300 dark:hover:bg-violet-400/10`}
-        >
-          Admin
-        </Badge>
-      );
-    case "MODERATOR":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-fuchsia-200/70 bg-fuchsia-50 text-fuchsia-700 hover:bg-fuchsia-50 dark:border-fuchsia-400/20 dark:bg-fuchsia-400/10 dark:text-fuchsia-300 dark:hover:bg-fuchsia-400/10`}
-        >
-          Moderator
-        </Badge>
-      );
-    default:
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.08]`}
-        >
-          User
-        </Badge>
-      );
-  }
-}
-
-function getVerificationBadge(status: VerificationStatus) {
-  switch (status) {
-    case "VERIFIED":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-emerald-200/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10`}
-        >
-          Verified
-        </Badge>
-      );
-    case "PENDING":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-amber-200/70 bg-amber-50 text-amber-700 hover:bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/10`}
-        >
-          Pending
-        </Badge>
-      );
-    default:
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-rose-200/70 bg-rose-50 text-rose-700 hover:bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10`}
-        >
-          Rejected
-        </Badge>
-      );
-  }
-}
-
-function getEmailVerificationBadge(isVerified: boolean) {
-  return isVerified ? (
-    <Badge
-      className={`${statusBadgeClass} border-emerald-200/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10`}
-    >
-      Verified
-    </Badge>
-  ) : (
-    <Badge
-      className={`${statusBadgeClass} border-amber-200/70 bg-amber-50 text-amber-700 hover:bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/10`}
-    >
-      Not verified
-    </Badge>
-  );
-}
-
-function getKycBadge(status: DashboardDirectoryUser["kycStatus"]) {
-  switch (status) {
-    case "VERIFIED":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-emerald-200/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10`}
-        >
-          KYC verified
-        </Badge>
-      );
-    case "PENDING_REVIEW":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-amber-200/70 bg-amber-50 text-amber-700 hover:bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/10`}
-        >
-          KYC pending
-        </Badge>
-      );
-    case "REJECTED":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-rose-200/70 bg-rose-50 text-rose-700 hover:bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10`}
-        >
-          KYC rejected
-        </Badge>
-      );
-    default:
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:bg-white/[0.08]`}
-        >
-          KYC not started
-        </Badge>
-      );
-  }
-}
-
-function getAccountStatusBadge(status: AccountStatus) {
-  switch (status) {
-    case "ACTIVE":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-emerald-200/70 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10`}
-        >
-          Active
-        </Badge>
-      );
-    case "DELETED":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-rose-200/70 bg-rose-50 text-rose-700 hover:bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10`}
-        >
-          Deleted
-        </Badge>
-      );
-    case "REVIEW":
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-amber-200/70 bg-amber-50 text-amber-700 hover:bg-amber-50 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300 dark:hover:bg-amber-400/10`}
-        >
-          Under Review
-        </Badge>
-      );
-    default:
-      return (
-        <Badge
-          className={`${statusBadgeClass} border-rose-200/70 bg-rose-50 text-rose-700 hover:bg-rose-50 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10`}
-        >
-          Suspended
-        </Badge>
-      );
-  }
-}
-
-function getMigrationBadge(
-  isLegacyUser: boolean,
-  migrationStatus: DashboardDirectoryUser["migrationStatus"],
-) {
-  const legacyBadge = getLegacyAccountBadgeMeta(isLegacyUser);
-  const migrationMeta = getMigrationStatusMeta(migrationStatus);
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {legacyBadge ? (
-        <Badge
-          className={`${statusBadgeClass} ${legacyBadge.className} hover:bg-transparent`}
-        >
-          {legacyBadge.label}
-        </Badge>
-      ) : (
-        <Badge
-          className={`${statusBadgeClass} border-slate-200/80 bg-white/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300`}
-        >
-          New User
-        </Badge>
-      )}
-
-      {legacyBadge && (
-        <Badge
-          className={`${statusBadgeClass} ${migrationMeta.className} hover:bg-transparent`}
-        >
-          <span
-            className={`mr-1.5 h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
-          />
-          {migrationMeta.label}
-        </Badge>
-      )}
-    </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  description,
-  icon,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: ReactNode;
-}) {
-  return (
-    <Card className={DASHBOARD_PAGE_SURFACE_CLASS}>
-      <CardContent className="p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-sky-700/90 dark:text-sky-300/80">
-              {title}
-            </p>
-            <h3 className="break-words text-2xl font-semibold leading-tight tracking-tight text-slate-950 dark:text-white">
-              {value}
-            </h3>
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              {description}
-            </p>
-          </div>
-
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-400/20 bg-sky-500/10 px-3 py-3 text-sky-700 dark:text-sky-200">
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function DetailField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-sky-700/90 dark:text-sky-300/80">
-        {label}
-      </p>
-      <div className="min-w-0">{children}</div>
-    </div>
-  );
-}
-
-function UserDirectoryMobileCard({
-  user,
-  canSuspendUsers,
-  openUser,
-  openUserActionDialog,
-}: {
-  user: DashboardDirectoryUser;
-  canSuspendUsers: boolean;
-  openUser: (user: DashboardDirectoryUser) => void;
-  openUserActionDialog: (
-    user: DashboardDirectoryUser,
-    mode: UserActionMode,
-  ) => void;
-}) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${user.fullName} record`}
-      onClick={() => openUser(user)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          openUser(user);
-        }
-      }}
-      className={
-        DASHBOARD_PAGE_SURFACE_CLASS + " cursor-pointer overflow-hidden"
-      }
-    >
-      <div className="space-y-4 p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <p className="break-words text-base font-semibold text-slate-950 dark:text-white">
-              {user.fullName}
-            </p>
-            <p className="break-words text-sm text-slate-600 dark:text-slate-400">
-              {user.email}
-            </p>
-            <p className="break-words text-xs text-slate-500">
-              {user.id} | {user.country}
-            </p>
-          </div>
-          <div className="shrink-0">{getRoleBadge(user.role)}</div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <DetailField label="Verification">
-            {getVerificationBadge(user.verificationStatus)}
-          </DetailField>
-          <DetailField label="Migration">
-            {getMigrationBadge(user.isLegacyUser, user.migrationStatus)}
-          </DetailField>
-          <DetailField label="Account">
-            {getAccountStatusBadge(user.accountStatus)}
-          </DetailField>
-          <DetailField label="Email verification">
-            {getEmailVerificationBadge(user.emailVerified)}
-          </DetailField>
-          <DetailField label="KYC">{getKycBadge(user.kycStatus)}</DetailField>
-          <DetailField label="Deposits">
-            <p className="text-sm font-semibold text-slate-950 dark:text-white">
-              {formatDirectoryCurrency(user.totalDeposits)}
-            </p>
-          </DetailField>
-          <DetailField label="Invested">
-            <p className="text-sm font-semibold text-slate-950 dark:text-white">
-              {formatDirectoryCurrency(user.totalInvested)}
-            </p>
-          </DetailField>
-          <DetailField label="Wallet">
-            <p className="text-sm font-semibold text-slate-950 dark:text-white">
-              {formatDirectoryCurrency(user.walletBalance)}
-            </p>
-          </DetailField>
-          <DetailField label="Joined">
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              {user.joinedAt}
-            </p>
-          </DetailField>
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-1">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              openUser(user);
-            }}
-            className="inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10 dark:hover:text-sky-100"
-            aria-label={`Open ${user.fullName} record`}
-          >
-            Record loaded
-            <span aria-hidden="true">-&gt;</span>
-          </button>
-
-          {canSuspendUsers ? (
-            user.isDeleted ? (
-              <button
-                type="button"
-                onClick={(event) => event.stopPropagation()}
-                disabled
-                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
-                aria-label={`${user.fullName} is deleted`}
-              >
-                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
-                Deleted
-              </button>
-            ) : user.isSuspended || user.accountStatus === "SUSPENDED" ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openUserActionDialog(user, "unsuspend");
-                }}
-                className="inline-flex items-center justify-center rounded-full border border-emerald-200/70 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-100"
-                aria-label={`Reactivate ${user.fullName}`}
-              >
-                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
-                Unsuspend
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  openUserActionDialog(user, "suspend");
-                }}
-                className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
-                aria-label={`Suspend ${user.fullName}`}
-              >
-                <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
-                Suspend
-              </button>
-            )
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function DashboardUserDirectory({
   badgeLabel,
   title,
@@ -490,13 +81,20 @@ export function DashboardUserDirectory({
   canSuspendUsers = false,
   showMigrationControls = false,
 }: DashboardUserDirectoryProps) {
-  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [selectedUser, setSelectedUser] =
     useState<DashboardDirectoryUser | null>(null);
+
+  const [deleteUserTarget, setDeleteUserTarget] = useState<{
+    id: string;
+    fullName: string;
+    email: string;
+  } | null>(null);
+
   const [userActionTarget, setUserActionTarget] =
     useState<UserActionTarget>(null);
-  const [isUserActionPending, startUserActionTransition] = useTransition();
 
   const filteredUsers = useMemo(() => {
     const value = query.trim().toLowerCase();
@@ -520,6 +118,38 @@ export function DashboardUserDirectory({
     });
   }, [query, users]);
 
+  const totalPages = Math.ceil(filteredUsers.length / PAGE_SIZE);
+  const pageCount = Math.max(1, totalPages);
+
+  // Keep the displayed page valid when the result count changes,
+  // such as after a user is deleted.
+  const safeCurrentPage = Math.min(currentPage, pageCount);
+
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) {
+      setCurrentPage(safeCurrentPage);
+    }
+  }, [currentPage, safeCurrentPage]);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+
+    return filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredUsers, safeCurrentPage]);
+
+  const firstVisibleUser =
+    filteredUsers.length === 0 ? 0 : (safeCurrentPage - 1) * PAGE_SIZE + 1;
+
+  const lastVisibleUser = Math.min(
+    safeCurrentPage * PAGE_SIZE,
+    filteredUsers.length,
+  );
+
+  function handleSearchChange(value: string) {
+    setQuery(value);
+    setCurrentPage(1);
+  }
+
   function openUser(user: DashboardDirectoryUser) {
     setSelectedUser(user);
   }
@@ -537,116 +167,23 @@ export function DashboardUserDirectory({
     setUserActionTarget({ user, mode });
   }
 
-  function handleUserAction() {
-    if (!userActionTarget) return;
-
-    startUserActionTransition(async () => {
-      const formData = new FormData();
-      formData.set("userId", userActionTarget.user.id);
-
-      const action =
-        userActionTarget.mode === "suspend"
-          ? suspendUserAction
-          : unsuspendUserAction;
-
-      const result = await action(initialSuspendUserState, formData);
-
-      if (result.status === "error") {
-        toast.error(
-          result.message ??
-            (userActionTarget.mode === "suspend"
-              ? "Unable to suspend this user."
-              : "Unable to reactivate this user."),
-        );
-        return;
-      }
-
-      toast.success(
-        result.message ??
-          (userActionTarget.mode === "suspend"
-            ? "User suspended successfully."
-            : "User reactivated successfully."),
-      );
-
-      if (selectedUser?.id === userActionTarget.user.id) {
-        setSelectedUser({
-          ...selectedUser,
-          isSuspended: userActionTarget.mode === "suspend",
-          accountStatus:
-            userActionTarget.mode === "suspend" ? "SUSPENDED" : "ACTIVE",
-        });
-      }
-
-      setUserActionTarget(null);
-      router.refresh();
+  function openDeleteUserDialog(user: DashboardDirectoryUser) {
+    setDeleteUserTarget({
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
     });
   }
 
   return (
     <div className="space-y-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <section
-          className={DASHBOARD_PAGE_PANEL_CLASS + " overflow-hidden p-6 md:p-8"}
-        >
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-4">
-              <Badge className={cn(heroPillClass, "hidden md:block")}>
-                {badgeLabel}
-              </Badge>
-
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 dark:text-white md:text-4xl">
-                  {title}
-                </h1>
-                <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400 md:text-base">
-                  {description}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl">
-              <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                <p className={statTitleClass}>Managed accounts</p>
-                <p className="mt-2 break-words text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
-                  {stats.totalUsers}
-                </p>
-              </div>
-              <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                <p className={statTitleClass}>Managed capital</p>
-                <p className="mt-2 break-words text-2xl font-semibold leading-tight text-slate-950 dark:text-white">
-                  {formatDirectoryCurrency(stats.totalManagedFunds)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            title="Total accounts"
-            value={String(stats.totalUsers)}
-            description="Accounts included in this directory"
-            icon={<Users className="h-5 w-5" />}
-          />
-          <StatCard
-            title="Verified Accounts"
-            value={String(stats.verifiedUsers)}
-            description="Profiles with verified identity or account status"
-            icon={<ShieldCheck className="h-5 w-5" />}
-          />
-          <StatCard
-            title="Active Accounts"
-            value={String(stats.activeUsers)}
-            description="Accounts currently active on the platform"
-            icon={<UserCheck className="h-5 w-5" />}
-          />
-          <StatCard
-            title="Invested Capital"
-            value={formatDirectoryCurrency(stats.totalManagedFunds)}
-            description="Total capital tracked across all listed records"
-            icon={<TrendingUp className="h-5 w-5" />}
-          />
-        </section>
+        <UserDirectoryHeader
+          badgeLabel={badgeLabel}
+          title={title}
+          description={description}
+          stats={stats}
+        />
 
         {showMigrationControls ? (
           <UserMigrationControls
@@ -663,6 +200,7 @@ export function DashboardUserDirectory({
                 <CardTitle className="text-xl text-slate-950 dark:text-white">
                   {cardTitle}
                 </CardTitle>
+
                 <CardDescription className="text-slate-600 dark:text-slate-400">
                   {cardDescription}
                 </CardDescription>
@@ -671,9 +209,10 @@ export function DashboardUserDirectory({
               <div className="flex flex-col gap-3 sm:flex-row">
                 <div className="relative min-w-[260px]">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+
                   <Input
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(event) => handleSearchChange(event.target.value)}
                     placeholder={searchPlaceholder}
                     className="super-admin-field pl-9 focus-visible:ring-sky-500"
                   />
@@ -689,13 +228,14 @@ export function DashboardUserDirectory({
 
           <CardContent className="space-y-4">
             <div className="grid gap-3 md:hidden">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <UserDirectoryMobileCard
                   key={user.id}
                   user={user}
                   canSuspendUsers={canSuspendUsers}
                   openUser={openUser}
                   openUserActionDialog={openUserActionDialog}
+                  openDeleteUserDialog={openDeleteUserDialog}
                 />
               ))}
 
@@ -706,434 +246,104 @@ export function DashboardUserDirectory({
               ) : null}
             </div>
 
-            <div
-              className={
-                DASHBOARD_TABLE_SHELL_CLASS + " hidden overflow-hidden md:block"
-              }
-            >
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] text-left">
-                  <thead className="bg-white/80 dark:bg-white/[0.04]">
-                    <tr className="border-b border-border/60 dark:border-white/10">
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        User
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Role
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Verification
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Account
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Migration
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Deposits
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Invested
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Wallet
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Joined
-                      </th>
-                      <th className="px-4 py-4 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
+            <UserDirectoryTable
+              users={paginatedUsers}
+              canSuspendUsers={canSuspendUsers}
+              onOpenUser={openUser}
+              onOpenUserAction={openUserActionDialog}
+              onOpenDeleteUser={openDeleteUserDialog}
+            />
+            <div className="flex flex-col gap-4 border-t border-border/60 pt-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+              <p
+                className="text-sm text-slate-500 dark:text-slate-400"
+                aria-live="polite"
+              >
+                Showing{" "}
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {firstVisibleUser}–{lastVisibleUser}
+                </span>{" "}
+                of{" "}
+                <span className="font-medium text-slate-700 dark:text-slate-200">
+                  {filteredUsers.length}
+                </span>{" "}
+                users
+              </p>
 
-                  <tbody>
-                    {filteredUsers.map((user, index) => (
-                      <tr
-                        key={user.id}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Open ${user.fullName} record`}
-                        onClick={() => openUser(user)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            openUser(user);
-                          }
-                        }}
-                        className={`border-b border-white/10 transition hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3c9ee0]/40 ${
-                          index % 2 === 0
-                            ? "bg-white/60 dark:bg-white/[0.02]"
-                            : "bg-transparent"
-                        }`}
-                      >
-                        <td className="px-4 py-4">
-                          <div className="space-y-1">
-                            <p className="font-medium text-slate-950 dark:text-white">
-                              {user.fullName}
-                            </p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {user.email}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {user.id} | {user.country}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">{getRoleBadge(user.role)}</td>
-                        <td className="px-4 py-4">
-                          {getVerificationBadge(user.verificationStatus)}
-                        </td>
-                        <td className="px-4 py-4">
-                          {getAccountStatusBadge(user.accountStatus)}
-                        </td>
-                        <td className="px-4 py-4">
-                          {getMigrationBadge(
-                            user.isLegacyUser,
-                            user.migrationStatus,
-                          )}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-700 dark:text-slate-300">
-                          {formatDirectoryCurrency(user.totalDeposits)}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-700 dark:text-slate-300">
-                          {formatDirectoryCurrency(user.totalInvested)}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-700 dark:text-slate-300">
-                          {formatDirectoryCurrency(user.walletBalance)}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-slate-500">
-                          {user.joinedAt}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col gap-2">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openUser(user);
-                              }}
-                              className="inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 shadow-sm transition hover:bg-sky-100 hover:text-sky-900 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-300 dark:hover:bg-sky-400/10 dark:hover:text-sky-100"
-                              aria-label={`Open ${user.fullName} record`}
-                            >
-                              Record loaded
-                              <span aria-hidden="true">-&gt;</span>
-                            </button>
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent className="gap-2">
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() =>
+                        setCurrentPage((page) => Math.max(1, page - 1))
+                      }
+                      disabled={safeCurrentPage <= 1}
+                      aria-label="Go to previous page"
+                    />
+                  </PaginationItem>
 
-                            {canSuspendUsers ? (
-                              user.isDeleted ? (
-                                <button
-                                  type="button"
-                                  onClick={(event) => event.stopPropagation()}
-                                  disabled
-                                  className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
-                                  aria-label={`${user.fullName} is deleted`}
-                                >
-                                  <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
-                                  Deleted
-                                </button>
-                              ) : user.isSuspended ||
-                                user.accountStatus === "SUSPENDED" ? (
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    openUserActionDialog(user, "unsuspend");
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-full border border-emerald-200/70 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-100"
-                                  aria-label={`Reactivate ${user.fullName}`}
-                                >
-                                  <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
-                                  Unsuspend
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    openUserActionDialog(user, "suspend");
-                                  }}
-                                  className="inline-flex items-center justify-center rounded-full border border-rose-200/70 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 hover:text-rose-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300 dark:hover:bg-rose-400/10 dark:hover:text-rose-100"
-                                  aria-label={`Suspend ${user.fullName}`}
-                                >
-                                  <ShieldAlert className="mr-1.5 h-3.5 w-3.5" />
-                                  Suspend
-                                </button>
-                              )
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                  <PaginationItem>
+                    <span
+                      className="whitespace-nowrap px-2 text-sm text-slate-600 dark:text-slate-300"
+                      aria-current="page"
+                    >
+                      Page {safeCurrentPage} of {pageCount}
+                    </span>
+                  </PaginationItem>
 
-                    {filteredUsers.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={10}
-                          className="px-4 py-12 text-center text-sm text-slate-500"
-                        >
-                          No records matched your search.
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() =>
+                        setCurrentPage((page) => Math.min(pageCount, page + 1))
+                      }
+                      disabled={
+                        filteredUsers.length === 0 ||
+                        safeCurrentPage >= pageCount
+                      }
+                      aria-label="Go to next page"
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Dialog
-        open={Boolean(userActionTarget)}
+      <UserDirectoryAccountActionDialog
+        target={userActionTarget}
+        selectedUser={selectedUser}
         onOpenChange={(open) => {
-          if (!open) {
-            setUserActionTarget(null);
+          if (!open) setUserActionTarget(null);
+        }}
+        onUserUpdated={(updatedUser) => {
+          setSelectedUser(updatedUser);
+        }}
+      />
+
+      <UserDirectoryDetailsDialog
+        user={selectedUser}
+        siteName={siteName}
+        onOpenChange={(open) => {
+          if (!open) setSelectedUser(null);
+        }}
+        renderRoleBadge={getRoleBadge}
+        renderEmailVerificationBadge={getEmailVerificationBadge}
+        renderKycBadge={getKycBadge}
+        renderMigrationBadge={getMigrationBadge}
+        renderAccountStatusBadge={getAccountStatusBadge}
+      />
+
+      <DeleteUnverifiedUserDialog
+        user={deleteUserTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteUserTarget(null);
+        }}
+        onDeleted={(deletedUserId) => {
+          if (selectedUser?.id === deletedUserId) {
+            setSelectedUser(null);
           }
         }}
-      >
-        <DialogContent className="!rounded-[1.75rem] !border-slate-200 !bg-white !bg-none !p-0 !text-slate-950 !shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:!border-white/10 dark:!bg-zinc-950 dark:!text-white">
-          {userActionTarget ? (
-            <div className="space-y-5 p-5 sm:p-6">
-              <DialogHeader className="space-y-3">
-                <div
-                  className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border shadow-sm ${
-                    userActionTarget.mode === "suspend"
-                      ? "border-rose-200/70 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300"
-                      : "border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
-                  }`}
-                >
-                  {userActionTarget.mode === "suspend" ? (
-                    <ShieldAlert className="h-5 w-5" />
-                  ) : (
-                    <ShieldCheck className="h-5 w-5" />
-                  )}
-                </div>
-                <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-                  {userActionTarget.mode === "suspend"
-                    ? "Suspend user"
-                    : "Unsuspend user"}
-                </DialogTitle>
-                <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  {userActionTarget.mode === "suspend"
-                    ? `${userActionTarget.user.fullName} will be suspended immediately and prevented from signing in until support reactivates the account.`
-                    : `${userActionTarget.user.fullName} will regain access to the dashboard immediately after reactivation.`}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid gap-3 rounded-[1.35rem] border border-slate-200/80 bg-slate-50 p-4 text-sm text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
-                <div className="flex items-center justify-between gap-4">
-                  <span>Email</span>
-                  <span className="font-medium text-slate-950 dark:text-white">
-                    {userActionTarget.user.email}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <span>Account status</span>
-                  <span className="font-medium text-slate-950 dark:text-white">
-                    {getAccountStatusBadge(userActionTarget.user.accountStatus)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 border-t border-slate-200/80 pt-4 sm:flex-row sm:justify-end dark:border-white/10">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setUserActionTarget(null)}
-                  className="rounded-full border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-950 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08]"
-                  disabled={isUserActionPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleUserAction}
-                  disabled={isUserActionPending}
-                  className={`rounded-full text-white ${
-                    userActionTarget.mode === "suspend"
-                      ? "bg-rose-600 hover:bg-rose-700"
-                      : "bg-emerald-600 hover:bg-emerald-700"
-                  }`}
-                >
-                  {isUserActionPending
-                    ? userActionTarget.mode === "suspend"
-                      ? "Suspending..."
-                      : "Unsuspending..."
-                    : userActionTarget.mode === "suspend"
-                      ? "Suspend user"
-                      : "Unsuspend user"}
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(selectedUser)}
-        onOpenChange={(open) => !open && setSelectedUser(null)}
-      >
-        <DialogContent className="max-h-[92dvh] w-[min(96vw,46rem)] overflow-hidden rounded-[1.75rem] border border-border/60 bg-white/95 p-0 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:border-white/10 dark:bg-zinc-950/95 dark:text-white dark:shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
-          {selectedUser ? (
-            <div className="flex max-h-[92dvh] flex-col">
-              <DialogHeader className="border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5 dark:border-white/10">
-                <DialogTitle className="text-xl font-semibold tracking-tight text-slate-950 sm:text-2xl dark:text-white">
-                  {selectedUser.fullName}
-                </DialogTitle>
-                <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  User record loaded from the directory. Review the account
-                  profile, balances, and verification state in one place.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Role
-                    </p>
-                    <div className="mt-3">
-                      {getRoleBadge(selectedUser.role)}
-                    </div>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Email verification
-                    </p>
-                    <div className="mt-3">
-                      {getEmailVerificationBadge(selectedUser.emailVerified)}
-                    </div>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      KYC
-                    </p>
-                    <div className="mt-3">
-                      {getKycBadge(selectedUser.kycStatus)}
-                    </div>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Migration status
-                    </p>
-                    <div className="mt-3">
-                      {getMigrationBadge(
-                        selectedUser.isLegacyUser,
-                        selectedUser.migrationStatus,
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Phone
-                    </p>
-                    <p className="mt-2 truncate text-sm font-medium text-slate-950 dark:text-white">
-                      {selectedUser.phoneNumber?.trim() || "Not set"}
-                    </p>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Email
-                    </p>
-                    <p className="mt-2 truncate text-sm font-medium text-slate-950 dark:text-white">
-                      {selectedUser.email}
-                    </p>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Account
-                    </p>
-                    <div className="mt-3">
-                      {getAccountStatusBadge(selectedUser.accountStatus)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                  <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                    Country
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                    {selectedUser.country}
-                  </p>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Deposits
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                      {formatDirectoryCurrency(selectedUser.totalDeposits)}
-                    </p>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Invested
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                      {formatDirectoryCurrency(selectedUser.totalInvested)}
-                    </p>
-                  </div>
-                  <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                      Wallet
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                      {formatDirectoryCurrency(selectedUser.walletBalance)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className={DASHBOARD_PAGE_SURFACE_CLASS + " p-4"}>
-                  <p className="text-xs uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">
-                    Joined
-                  </p>
-                  <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                    {selectedUser.joinedAt}
-                  </p>
-                </div>
-
-                {selectedUser.isLegacyUser ? (
-                  selectedUser.migratedAt ? (
-                    <div className="rounded-[1.35rem] border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(236,253,245,0.92))] p-4 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-800 dark:text-sky-200">
-                        Account Migration Completed
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                        {formatMigrationTimelineTimestamp(
-                          selectedUser.migratedAt,
-                        )}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                        Your legacy account information was successfully
-                        migrated to {siteName?.trim() || "Company"}.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="rounded-[1.35rem] border border-slate-200/70 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                        Migration timeline
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                        Migration pending
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                        Migration has not been completed yet.
-                      </p>
-                    </div>
-                  )
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
+      />
     </div>
   );
 }

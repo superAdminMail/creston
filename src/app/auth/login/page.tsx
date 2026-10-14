@@ -42,13 +42,16 @@ const page = async ({
   const blockedAccount =
     accessState?.status === "DELETED" || account === "deleted"
       ? "deleted"
-      : null;
+      : accessState?.status === "DEACTIVATED" || account === "deactivated"
+        ? "deactivated"
+        : null;
 
   const [site, config] = await Promise.all([
     getSiteSeoConfig(),
     getSiteConfigurationCached(),
   ]);
   const createAccountSearchParams = new URLSearchParams();
+
   if (referralCode) {
     createAccountSearchParams.set("ref", referralCode);
   }

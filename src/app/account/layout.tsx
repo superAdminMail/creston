@@ -59,9 +59,8 @@ export default async function AccountLayout({
 
   const cookieStore = await cookies();
   const initialDisclaimerBannerDismissed =
-    cookieStore.get(
-      getAppNoticeBannerCookieName(disclaimerBannerDismissalKey),
-    )?.value === "1";
+    cookieStore.get(getAppNoticeBannerCookieName(disclaimerBannerDismissalKey))
+      ?.value === "1";
 
   if (!accessState) {
     redirect("/auth/login");
@@ -69,6 +68,10 @@ export default async function AccountLayout({
 
   if (accessState.status === "DELETED") {
     redirect("/auth/login?account=deleted");
+  }
+
+  if (accessState.status === "DEACTIVATED") {
+    redirect("/auth/login?account=deactivated");
   }
 
   if (accessState.status === "SUSPENDED") {
@@ -88,9 +91,7 @@ export default async function AccountLayout({
       siteLogoUrl={config?.siteLogoFileAsset?.url ?? site.defaultOgImageUrl}
       disclaimerBannerEnabled={config?.disclaimerBannerEnabled ?? false}
       disclaimerBannerDismissalKey={disclaimerBannerDismissalKey}
-      initialDisclaimerBannerDismissed={
-        initialDisclaimerBannerDismissed
-      }
+      initialDisclaimerBannerDismissed={initialDisclaimerBannerDismissed}
     >
       <NotificationListener userId={user.id} />
       {children}

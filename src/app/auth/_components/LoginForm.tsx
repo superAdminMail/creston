@@ -34,6 +34,8 @@ import {
   loginUserSchemaType,
 } from "@/lib/zodValidations/user";
 
+type BlockedAccount = "deleted" | "deactivated";
+
 type LoginFormProps = {
   siteName: string;
   siteLogoUrl?: string | null;
@@ -42,7 +44,7 @@ type LoginFormProps = {
   title: string;
   description: string;
   footer?: React.ReactNode;
-  blockedAccount?: "deleted" | null;
+  blockedAccount?: BlockedAccount | null;
 };
 
 type LoginError = {
@@ -74,8 +76,10 @@ export default function LoginForm({
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [showPassword, setShowPassword] = useState(false);
+  const [activeBlockedAccount, setActiveBlockedAccount] =
+    useState<BlockedAccount | null>(blockedAccount ?? null);
   const [blockedAccountOpen, setBlockedAccountOpen] = useState(
-    blockedAccount === "deleted",
+    Boolean(blockedAccount),
   );
   const [isPending, startTransition] = useTransition();
 
@@ -88,65 +92,83 @@ export default function LoginForm({
   });
 
   useEffect(() => {
-    if (blockedAccount !== "deleted") return;
+    if (!blockedAccount) return;
 
+    setActiveBlockedAccount(blockedAccount);
     setBlockedAccountOpen(true);
     void signOut().catch(() => {});
   }, [blockedAccount]);
+
+  const showBlockedAccountDialog = (status: BlockedAccount) => {
+    setActiveBlockedAccount(status);
+    setBlockedAccountOpen(true);
+    form.reset();
+    void signOut().catch(() => {});
+  };
 
   const handleSubmit = (values: loginUserSchemaType) => {
     setError(undefined);
 
     startTransition(async () => {
-      const accountAccess = await inspectLoginAccountAccessStateAction(
-        values.email,
-      );
+      try {
+        const accountAccess = await inspectLoginAccountAccessStateAction(
+          values.email,
+        );
 
-      if (accountAccess?.status === "DELETED") {
-        setBlockedAccountOpen(true);
-        form.reset();
-        await signOut().catch(() => {});
-        return;
-      }
-
-      if (accountAccess?.status === "SUSPENDED") {
-        router.replace("/account-suspended");
-        // router.refresh();
-        return;
-      }
-
-      const { error } = await signIn.email({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (error) {
-        if (isEmailNotVerifiedError(error)) {
-          router.replace(
-            `/auth/send-verify-email?email=${encodeURIComponent(values.email)}`,
+        if (
+          accountAccess?.status === "DELETED" ||
+          accountAccess?.status === "DEACTIVATED"
+        ) {
+          showBlockedAccountDialog(
+            accountAccess.status === "DELETED" ? "deleted" : "deactivated",
           );
           return;
         }
 
-        setError(error.message ?? "Invalid credentials");
-        form.reset();
-        return;
+        if (accountAccess?.status === "SUSPENDED") {
+          router.replace("/account-suspended");
+          return;
+        }
+
+        const { error: signInError } = await signIn.email({
+          email: values.email,
+          password: values.password,
+        });
+
+        if (signInError) {
+          if (isEmailNotVerifiedError(signInError)) {
+            router.replace(
+              `/auth/send-verify-email?email=${encodeURIComponent(values.email)}`,
+            );
+            return;
+          }
+
+          setError(signInError.message ?? "Invalid credentials");
+          form.reset();
+          return;
+        }
+
+        const sessionResult = await getSession();
+        const session =
+          sessionResult && "data" in sessionResult ? sessionResult.data : null;
+
+        const sessionRole = (
+          session?.user as { role?: string | null } | undefined
+        )?.role;
+
+        const targetHref = sessionRole
+          ? getDashboardHomeByRole(sessionRole)
+          : successHref;
+
+        router.replace(targetHref);
+      } catch {
+        setError("Unable to sign in right now. Please try again.");
       }
-
-      const sessionResult = await getSession();
-      const session =
-        sessionResult && "data" in sessionResult ? sessionResult.data : null;
-      const sessionRole = (
-        session?.user as { role?: string | null } | undefined
-      )?.role;
-      const targetHref = sessionRole
-        ? getDashboardHomeByRole(sessionRole)
-        : successHref;
-
-      router.replace(targetHref);
-      //  router.refresh();
     });
   };
+
+  const isDeletedAccount = activeBlockedAccount === "deleted";
+  const isDeactivatedAccount = activeBlockedAccount === "deactivated";
 
   return (
     <AuthShell
@@ -294,12 +316,21 @@ export default function LoginForm({
               <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-rose-200/70 bg-rose-50 text-rose-700 shadow-sm dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
                 <ShieldAlert className="h-5 w-5" />
               </div>
+
               <DialogTitle className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 dark:text-white">
-                Account deleted
+                {isDeletedAccount
+                  ? "Account deleted"
+                  : isDeactivatedAccount
+                    ? "Account deactivated"
+                    : "Account access unavailable"}
               </DialogTitle>
+
               <DialogDescription className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                This account has been deleted. Please contact support to restore
-                your account before signing in again.
+                {isDeletedAccount
+                  ? "This registration has been permanently deleted. You can create a new account using a valid email address that you can access and verify."
+                  : isDeactivatedAccount
+                    ? `Access to this ${siteName} account has been deactivated. To request reinstatement, contact our support team using the email address registered to your account. Reinstatement is subject to review by an authorized administrator.`
+                    : "We cannot allow access to this account. Please contact support for assistance."}
               </DialogDescription>
             </DialogHeader>
 
@@ -313,12 +344,22 @@ export default function LoginForm({
                 >
                   Close
                 </Button>
-                <Button
-                  asChild
-                  className="rounded-full bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
-                >
-                  <Link href="/contact">Contact support</Link>
-                </Button>
+
+                {isDeletedAccount ? (
+                  <Button
+                    asChild
+                    className="rounded-full bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+                  >
+                    <Link href="/auth/get-started">Create a new account</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    asChild
+                    className="rounded-full bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+                  >
+                    <Link href="/contact">Contact support</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

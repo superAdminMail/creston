@@ -35,7 +35,7 @@ export async function requireActiveVerifiedUser(): Promise<RequireActiveVerified
     redirect("/auth/login");
   }
 
-  let user = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: sessionUser.id },
     select: {
       id: true,
@@ -46,6 +46,7 @@ export async function requireActiveVerifiedUser(): Promise<RequireActiveVerified
       emailVerifiedAt: true,
       hasCompletedOnboarding: true,
       isDeleted: true,
+      isSuspended: true,
       profileAvatarFileAsset: {
         select: {
           storageKey: true,
@@ -62,38 +63,38 @@ export async function requireActiveVerifiedUser(): Promise<RequireActiveVerified
     },
   });
 
-  if (!user || user.isDeleted) {
-    redirect("/auth/login");
+  if (!user || user.isDeleted || user.accountStatus === "DELETED") {
+    redirect("/auth/login?account=deleted");
   }
 
-  if (user.emailVerified && user.accountStatus !== "ACTIVE") {
-    const verifiedAt = user.emailVerifiedAt ?? new Date();
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        accountStatus: "ACTIVE",
-        emailVerifiedAt: verifiedAt,
-      },
-    });
-
-    user = {
-      ...user,
-      accountStatus: "ACTIVE",
-      emailVerifiedAt: verifiedAt,
-    };
+  if (user.accountStatus === "DEACTIVATED") {
+    redirect("/auth/login?account=deactivated");
   }
 
-  if (!user.emailVerified || user.accountStatus !== "ACTIVE") {
+  if (
+    user.isSuspended ||
+    user.accountStatus === "SUSPENDED" ||
+    user.accountStatus === "BLOCKED"
+  ) {
+    redirect("/account-suspended");
+  }
+
+  if (!user.emailVerified) {
     redirect("/auth/send-verify-email");
   }
 
+  if (user.accountStatus !== "ACTIVE") {
+    redirect("/auth/login");
+  }
+
+  const { isSuspended: _isSuspended, ...activeUser } = user;
+
   return {
-    ...user,
-    profileAvatarFileAsset: user.profileAvatarFileAsset?.storageKey
+    ...activeUser,
+    profileAvatarFileAsset: activeUser.profileAvatarFileAsset?.storageKey
       ? {
-          storageKey: user.profileAvatarFileAsset.storageKey,
-          url: user.profileAvatarFileAsset.url,
+          storageKey: activeUser.profileAvatarFileAsset.storageKey,
+          url: activeUser.profileAvatarFileAsset.url,
         }
       : null,
   };

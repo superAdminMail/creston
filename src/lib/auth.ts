@@ -7,6 +7,8 @@ import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCache
 import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
 import { sendPostVerificationWelcome } from "@/lib/welcome/sendPostVerificationWelcome";
 import { generateAccountId } from "@/lib/auth/accountID";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+import { UserAccountStatus } from "@/generated/prisma";
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) return null;
@@ -52,10 +54,80 @@ function getTrustedOrigins() {
   );
 }
 
+async function assertAccountCanAuthenticate(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      accountStatus: true,
+      isDeleted: true,
+      isSuspended: true,
+    },
+  });
+
+  if (
+    !user ||
+    user.isDeleted ||
+    user.accountStatus === UserAccountStatus.DELETED
+  ) {
+    throw new APIError("FORBIDDEN", {
+      message: "This account is unavailable.",
+    });
+  }
+
+  if (user.accountStatus === UserAccountStatus.DEACTIVATED) {
+    throw new APIError("FORBIDDEN", {
+      message: "This account has been deactivated.",
+    });
+  }
+
+  if (
+    user.isSuspended ||
+    user.accountStatus === UserAccountStatus.SUSPENDED ||
+    user.accountStatus === UserAccountStatus.BLOCKED
+  ) {
+    throw new APIError("FORBIDDEN", {
+      message: "This account is suspended.",
+    });
+  }
+
+  if (user.accountStatus !== UserAccountStatus.ACTIVE) {
+    throw new APIError("FORBIDDEN", {
+      message: "This account is not eligible to sign in.",
+    });
+  }
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email") return;
+
+      const body = ctx.body as { email?: unknown } | undefined;
+      const email = body?.email;
+
+      if (typeof email !== "string" || !email.trim()) return;
+
+      const user = await prisma.user.findFirst({
+        where: {
+          email: {
+            equals: email.trim(),
+            mode: "insensitive",
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (user) {
+        await assertAccountCanAuthenticate(user.id);
+      }
+    }),
+  },
 
   user: {
     additionalFields: {
@@ -72,13 +144,20 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user) => {
-          return {
-            data: {
-              ...user,
-              accountId: generateAccountId(),
-            },
-          };
+        before: async (user) => ({
+          data: {
+            ...user,
+            accountId: generateAccountId(),
+          },
+        }),
+      },
+    },
+
+    session: {
+      create: {
+        before: async (session) => {
+          await assertAccountCanAuthenticate(session.userId);
+          return { data: session };
         },
       },
     },
@@ -110,7 +189,6 @@ export const auth = betterAuth({
       });
     },
 
-    // optional
     onPasswordReset: async ({ user }) => {
       console.log(`Password reset completed for ${user.email}`);
     },
@@ -126,11 +204,13 @@ export const auth = betterAuth({
       await prisma.user.updateMany({
         where: {
           id: user.id,
-          accountStatus: { not: "ACTIVE" },
+          accountStatus: UserAccountStatus.PENDING_VERIFICATION,
+          isDeleted: false,
+          isSuspended: false,
         },
         data: {
           emailVerifiedAt: new Date(),
-          accountStatus: "ACTIVE",
+          accountStatus: UserAccountStatus.ACTIVE,
         },
       });
     },

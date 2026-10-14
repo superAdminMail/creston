@@ -109,7 +109,7 @@ export function FooterClient({
             </p>
 
             <div className="mt-6 space-y-4 text-sm text-slate-400">
-              <div className="space-y-4">
+              <div className="space-y-4 ">
                 <div>
                   <div>
                     <p className="flex items-center gap-2">

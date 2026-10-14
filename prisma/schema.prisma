@@ -30,6 +30,7 @@ model User {
   isDeleted                           Boolean                     @default(false)
   deletedAt                           DateTime?
   scheduledDeletionAt                 DateTime?
+  deactivatedAt                       DateTime?
   role                                UserRole                    @default(USER)
   hasCompletedOnboarding              Boolean                     @default(false)
   skippedOnboardingAt                 DateTime?
@@ -1683,6 +1684,7 @@ enum UserAccountStatus {
   SUSPENDED
   BLOCKED
   DELETED
+  DEACTIVATED
 }
 
 enum PromotionAudienceType {

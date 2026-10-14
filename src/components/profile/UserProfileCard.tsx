@@ -14,7 +14,6 @@ import { CalendarDays, Check, Mail } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import DeleteAcountModal from "../modal/DeleteAcountModal";
 import { getUserInitials } from "@/lib/User-Initials/user";
 import { getRoleLabel } from "../account/DashboardNavbar.client";
 import { VerifyEmailRequestInlineForm } from "@/app/auth/_components/VerifyEmailRequestForm";
@@ -121,7 +120,8 @@ export function UserProfileCard({
                       Verify your email
                     </DialogTitle>
                     <DialogDescription className="text-sm leading-6 text-slate-400">
-                      Request a fresh verification link for your {siteName} account.
+                      Request a fresh verification link for your {siteName}{" "}
+                      account.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="px-6 pb-6">
@@ -180,13 +180,9 @@ export function UserProfileCard({
       <Separator className="bg-white/10" />
 
       {/* Actions */}
-      <div className="relative z-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button className="w-full rounded-xl bg-[#3c9ee0] text-white shadow-md hover:bg-[#2f8bd0] sm:w-auto">
-          <Link href="/account/dashboard/profile/update">Update Profile</Link>
-        </Button>
-
-        <DeleteAcountModal userId={user.id} />
-      </div>
+      <Button className="w-full rounded-xl bg-[#3c9ee0] text-white shadow-md hover:bg-[#2f8bd0] sm:w-auto">
+        <Link href="/account/dashboard/profile/update">Update Profile</Link>
+      </Button>
 
       {canReviewInvestmentProfile ? (
         <div className="relative z-10 rounded-[1.5rem] border border-blue-400/10 bg-blue-500/5 p-4 sm:rounded-[1.75rem] sm:p-5">
