@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Headset, LoaderCircle } from "lucide-react";
 
 import { getSupportTicketRoute } from "@/lib/support/get-support-ticket-route";
@@ -14,15 +14,35 @@ type FloatingSupportButtonProps = {
 
 export function FloatingSupportButton({ role }: FloatingSupportButtonProps) {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [isNavigating, setIsNavigating] = useState(false);
+  const targetRouteRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isNavigating || !targetRouteRef.current) return;
+
+    const targetRoute = targetRouteRef.current;
+    const hasReachedTarget =
+      pathname === targetRoute || pathname.startsWith(`${targetRoute}/`);
+
+    if (hasReachedTarget) {
+      targetRouteRef.current = null;
+      setIsNavigating(false);
+    }
+  }, [pathname, isNavigating]);
 
   const handleClick = () => {
     if (isNavigating) return;
 
-    setIsNavigating(true);
-
     const route = role ? getSupportTicketRoute(role) : "/contact";
 
+    if (pathname === route || pathname.startsWith(`${route}/`)) {
+      return;
+    }
+
+    targetRouteRef.current = route;
+    setIsNavigating(true);
     router.push(route);
   };
 
