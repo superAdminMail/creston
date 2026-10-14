@@ -8,6 +8,7 @@ import { ScrollReveal } from "@/components/home/ScrollReveal-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { WhySection } from "@/components/home/why-section";
 import { InvestmentModelsSection } from "@/components/home/investment-model-section";
+import { TrustSection } from "@/components/home/trust-section";
 
 const HomeContent = () => {
   return (
@@ -22,7 +23,9 @@ const HomeContent = () => {
 
       <BenefitsSection />
 
-      <TestimonialsSection />
+      <TrustSection />
+
+      {/* <TestimonialsSection /> */}
 
       <FaqSection />
 

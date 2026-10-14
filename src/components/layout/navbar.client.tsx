@@ -20,7 +20,7 @@ const marketingLinks = (siteName: string) => [
   { href: "#how-it-works", label: "How It Works" },
   { href: "#benefits", label: "Benefits" },
   { href: "/offers", label: "Offers" },
-  { href: "#testimonials", label: "Testimonials" },
+  { href: "/testimonials", label: "Testimonials" },
   { href: "#faq", label: "FAQ" },
 ];
 
