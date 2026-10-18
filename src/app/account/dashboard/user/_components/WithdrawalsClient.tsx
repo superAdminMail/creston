@@ -879,7 +879,7 @@ export default function WithdrawalsClient({
         <DrawerSurface
           tone="light"
           className={cn(
-            "z-[90] flex min-h-0 flex-col overflow-hidden border-border/70 bg-white/98 text-slate-950 shadow-[0_32px_90px_rgba(15,23,42,0.24)]",
+            "z-[90] flex flex-col overflow-hidden border-border/70 bg-white/98 text-slate-950 shadow-[0_32px_90px_rgba(15,23,42,0.24)]",
             "data-[vaul-drawer-direction=bottom]:h-[84dvh]",
             "data-[vaul-drawer-direction=bottom]:max-h-[84dvh]",
             "data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]",
@@ -896,7 +896,7 @@ export default function WithdrawalsClient({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] md:px-6">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] md:px-6">
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm uppercase tracking-[0.24em] text-slate-600 dark:text-slate-400">
