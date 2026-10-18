@@ -622,10 +622,15 @@ export default function WithdrawalsClient({
       <Drawer open={reviewOpen} onOpenChange={handleReviewOpenChange}>
         <DrawerSurface
           tone="light"
-          className="overflow-hidden data-[vaul-drawer-direction=bottom]:max-h-[92vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]"
+          className={cn(
+            "flex min-h-0 flex-col overflow-hidden",
+            "data-[vaul-drawer-direction=bottom]:h-[92dvh]",
+            "data-[vaul-drawer-direction=bottom]:max-h-[92dvh]",
+            "data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]",
+          )}
         >
-          <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
-            <DrawerHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
+          <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-hidden">
+            <DrawerHeader className="shrink-0 border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
               <DrawerTitle className="text-left text-xl text-slate-950 dark:text-white">
                 Review withdrawal
               </DrawerTitle>
@@ -635,7 +640,7 @@ export default function WithdrawalsClient({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-6">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] md:px-6">
               {serverState.status === "error" && serverState.message ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900 shadow-sm dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-100">
                   <p className="font-medium">Unable to submit withdrawal</p>
@@ -837,7 +842,7 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
+            <DrawerFooter className="shrink-0 border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <div className="grid gap-3 sm:grid-cols-2">
                 <DrawerClose asChild>
                   <Button
@@ -873,10 +878,16 @@ export default function WithdrawalsClient({
       <Drawer open={sourcePickerOpen} onOpenChange={setSourcePickerOpen}>
         <DrawerSurface
           tone="light"
-          className="z-[90] overflow-hidden border-border/70 bg-white/98 text-slate-950 shadow-[0_32px_90px_rgba(15,23,42,0.24)] data-[vaul-drawer-direction=bottom]:max-h-[84vh] data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem] dark:border-white/10 dark:bg-slate-950/98 dark:text-white dark:shadow-[0_32px_90px_rgba(15,23,42,0.44)]"
+          className={cn(
+            "z-[90] flex min-h-0 flex-col overflow-hidden border-border/70 bg-white/98 text-slate-950 shadow-[0_32px_90px_rgba(15,23,42,0.24)]",
+            "data-[vaul-drawer-direction=bottom]:h-[84dvh]",
+            "data-[vaul-drawer-direction=bottom]:max-h-[84dvh]",
+            "data-[vaul-drawer-direction=bottom]:rounded-t-[1.75rem]",
+            "dark:border-white/10 dark:bg-slate-950/98 dark:text-white dark:shadow-[0_32px_90px_rgba(15,23,42,0.44)]",
+          )}
         >
-          <div className="mx-auto flex h-full w-full max-w-3xl flex-col">
-            <DrawerHeader className="border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
+          <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-hidden">
+            <DrawerHeader className="shrink-0 border-b border-border/60 px-4 pb-4 pt-4 text-left md:px-6">
               <DrawerTitle className="text-left text-lg text-slate-950 dark:text-white">
                 Choose withdrawal source
               </DrawerTitle>
@@ -885,7 +896,7 @@ export default function WithdrawalsClient({
               </DrawerDescription>
             </DrawerHeader>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 [-webkit-overflow-scrolling:touch] md:px-6">
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
                 <div className="flex items-start justify-between gap-4">
                   <p className="text-sm uppercase tracking-[0.24em] text-slate-600 dark:text-slate-400">
@@ -980,7 +991,7 @@ export default function WithdrawalsClient({
               </div>
             </div>
 
-            <DrawerFooter className="border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
+            <DrawerFooter className="shrink-0 border-t border-border/60 bg-white/85 px-4 py-4 md:px-6 dark:border-white/10 dark:bg-white/[0.04]">
               <DrawerClose asChild>
                 <Button
                   type="button"
