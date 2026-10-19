@@ -442,15 +442,12 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                       <p className="break-words text-lg font-medium text-balance text-slate-900 dark:text-white">
                         {isCommissionUnderReview
                           ? "Your commission proof is under review."
-                          : `Pay commission ${formatCurrency(
-                              commissionDueAmount,
-                              withdrawal.currency,
-                            )}`}
+                          : `Pay commission`}
                       </p>
                       <p className="text-sm leading-6 text-slate-700 dark:text-amber-100/80">
                         {isCommissionUnderReview
                           ? "You can check back once the admin team confirms the payment."
-                          : "Submit commission payment before this withdrawal can continue."}
+                          : "Submit commission payment to complete this withdrawal."}
                       </p>
                     </div>
 
@@ -465,14 +462,15 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                     ) : (
                       <Button
                         asChild
-                        className="w-full rounded-full bg-amber-50 text-slate-950 hover:bg-white sm:w-auto"
+                        variant={"ghost"}
+                        className="w-full rounded-full border bg-amber-50 text-slate-950 hover:bg-white hover:text-slate-900 sm:w-auto"
                       >
                         <Link
                           href={buildWithdrawalCommissionCheckoutUrl(
                             withdrawal.id,
                           )}
                         >
-                          Pay commission (Taxes and Platform fees)
+                          Pay{" "}
                           {formatCurrency(
                             commissionDueAmount,
                             withdrawal.currency,
@@ -513,7 +511,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                               suggestedAmount: supportFeeAmount,
                             })}
                           >
-                            Pay fee{" "}
+                            Pay fee
                             {formatCurrency(
                               supportFeeAmount,
                               withdrawal.currency,
@@ -546,7 +544,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                               {allocation.sourceLabel ?? "Withdrawal source"}
                             </p>
                             <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                              Gross:{" "}
+                              Gross:
                               {formatCurrency(
                                 Number(allocation.sourceGrossAmount ?? 0),
                                 allocation.currency ?? withdrawal.currency,
@@ -555,7 +553,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                           </div>
                           <div className="text-xs text-slate-600 dark:text-slate-400 sm:text-right">
                             <p>
-                              Penalty:{" "}
+                              Penalty:
                               {formatCurrency(
                                 Number(allocation.sourcePenaltyAmount ?? 0),
                                 allocation.currency ?? withdrawal.currency,
