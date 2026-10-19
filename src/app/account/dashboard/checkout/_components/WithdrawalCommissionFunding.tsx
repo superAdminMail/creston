@@ -125,7 +125,7 @@ export default function WithdrawalCommissionFunding({
     );
 
     return (
-      <div className="mx-auto max-w-3xl px-3 py-4 sm:px-4 sm:py-6 md:px-6">
+      <div className="mx-auto max-w-3xl">
         <Card
           className={cn(
             DASHBOARD_PAGE_PANEL_CLASS,
@@ -154,7 +154,9 @@ export default function WithdrawalCommissionFunding({
                   : "text-rose-100/90",
               )}
             >
-              {getWithdrawalTerminalStatusDescription(details.withdrawal.status)}
+              {getWithdrawalTerminalStatusDescription(
+                details.withdrawal.status,
+              )}
             </p>
           </CardHeader>
           <CardContent className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -182,19 +184,19 @@ export default function WithdrawalCommissionFunding({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-4 sm:py-6 md:px-6">
+    <div className="mx-auto max-w-3xl space-y-6 sm:space-y-8 ">
       <div className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full p-4 sm:p-6")}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Withdrawal commission
+              Withdrawal commission (Taxes and Platform fees)
             </p>
             <h2 className="mt-2 text-lg font-semibold text-slate-950 sm:text-xl dark:text-white">
               {details.withdrawal.sourceLabel}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
               Choose a funding method, then submit proof after you have paid the
-              commission amount shown below.
+              commission (Taxes and Platform fees) amount shown below.
             </p>
           </div>
         </div>
@@ -235,7 +237,12 @@ export default function WithdrawalCommissionFunding({
       />
 
       {details.isUnderReview ? (
-        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full border-amber-200/70 bg-amber-50/90 dark:border-amber-400/20 dark:bg-slate-900/60")}>
+        <Card
+          className={cn(
+            DASHBOARD_PAGE_PANEL_CLASS,
+            "w-full border-amber-200/70 bg-amber-50/90 dark:border-amber-400/20 dark:bg-slate-900/60",
+          )}
+        >
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Commission under review
@@ -287,7 +294,12 @@ export default function WithdrawalCommissionFunding({
                 </p>
               </div>
 
-              <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "inline-flex max-w-full items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300")}>
+              <div
+                className={cn(
+                  DASHBOARD_PAGE_SURFACE_CLASS,
+                  "inline-flex max-w-full items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300",
+                )}
+              >
                 {cryptoSelected ? (
                   <>
                     <Bitcoin className="h-4 w-4 shrink-0 text-amber-400" />
@@ -420,7 +432,7 @@ export default function WithdrawalCommissionFunding({
                   </div>
 
                   {bankMethod?.walletAddress ? (
-                  <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/90 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-slate-900/60">
+                    <div className="rounded-[1.15rem] border border-amber-200/20 bg-amber-50/90 p-4 shadow-sm sm:rounded-[1.25rem] dark:border-amber-300/20 dark:bg-slate-900/60">
                       <p className="text-xs uppercase tracking-[0.18em] text-amber-700/80 dark:text-amber-200/80">
                         Platform wallet address
                       </p>
@@ -551,7 +563,12 @@ export default function WithdrawalCommissionFunding({
       ) : null}
 
       {details.isSettled ? (
-        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full border-emerald-200/70 bg-emerald-50/90 dark:border-emerald-400/20 dark:bg-slate-900/60")}>
+        <Card
+          className={cn(
+            DASHBOARD_PAGE_PANEL_CLASS,
+            "w-full border-emerald-200/70 bg-emerald-50/90 dark:border-emerald-400/20 dark:bg-slate-900/60",
+          )}
+        >
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
               Commission settled
@@ -604,7 +621,12 @@ export default function WithdrawalCommissionFunding({
         />
       ) : null}
 
-      <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300")}>
+      <div
+        className={cn(
+          DASHBOARD_PAGE_SURFACE_CLASS,
+          "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300",
+        )}
+      >
         <Shield className="h-4 w-4 text-sky-500" />
         <span className="max-w-[32rem] text-center sm:text-left">
           Secure and encrypted payment flow
