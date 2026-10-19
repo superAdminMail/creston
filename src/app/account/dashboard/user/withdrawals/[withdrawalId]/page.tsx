@@ -280,7 +280,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
     commissionPayment?.reviewStatus === "PENDING_REVIEW";
 
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-10rem)] w-full max-w-6xl ">
+    <div className="relative mx-auto min-h-[calc(100vh-9rem)] w-full max-w-6xl ">
       <div className="absolute inset-x-4 top-8 -z-10 h-40 rounded-[2rem] bg-[#3c9ee0]/10 blur-3xl" />
 
       <div className="space-y-6">
