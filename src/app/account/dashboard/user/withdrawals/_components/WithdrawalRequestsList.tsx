@@ -81,7 +81,7 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
             Withdrawal Requests
           </h4>
           <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-          Recent withdrawal submissions and their current status.
+            Recent withdrawal submissions and their current status.
           </p>
         </div>
       </div>
@@ -99,13 +99,19 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <p className="break-words text-sm font-medium text-slate-950 dark:text-white">
-                    {formatCurrency(Number(order.amount), order.currency ?? "USD")}
+                    {formatCurrency(
+                      Number(order.amount),
+                      order.currency ?? "USD",
+                    )}
                   </p>
                   <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                     {getSourceLabel(order)}
                   </p>
                 </div>
-                <span title={formatEnumLabel(order.status)} className="self-start">
+                <span
+                  title={formatEnumLabel(order.status)}
+                  className="self-start"
+                >
                   {isWithdrawalCompletedStatus(order.status) ? (
                     <CheckCircle2
                       className="h-5 w-5 shrink-0 text-emerald-500 dark:text-emerald-400"
@@ -155,7 +161,12 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
               </div>
 
               {getAllocationModeLabel(order) || getAllocationSummary(order) ? (
-                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "mt-3 p-3 text-xs")}>
+                <div
+                  className={cn(
+                    DASHBOARD_PAGE_SURFACE_CLASS,
+                    "mt-3 p-3 text-xs",
+                  )}
+                >
                   {getAllocationModeLabel(order) ? (
                     <p className="uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                       {getAllocationModeLabel(order)}
@@ -199,7 +210,7 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                     className="w-full rounded-full bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                   >
                     <Link href={buildWithdrawalCommissionCheckoutUrl(order.id)}>
-                      Pay commission
+                      Pay commission (Taxes and Platform fees)
                     </Link>
                   </Button>
                 </div>
@@ -209,9 +220,11 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                 <Button
                   asChild
                   variant="outline"
-                  className="rounded-full border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
+                  className="rounded-full border-border/60 bg-white/75 text-slate-700 hover:bg-slate-50 hover:text-slate-800 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:hover:bg-white/[0.08]"
                 >
-                  <Link href={`/account/dashboard/user/withdrawals/${order.id}`}>
+                  <Link
+                    href={`/account/dashboard/user/withdrawals/${order.id}`}
+                  >
                     View details
                   </Link>
                 </Button>
@@ -221,7 +234,9 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
                 <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                   {order.payoutSnapshot.withdrawalMode === "EARLY_WITHDRAWAL"
                     ? `Early withdrawal penalty applied: ${formatCurrency(
-                        Number(order.payoutSnapshot.earlyWithdrawalPenalty ?? 0),
+                        Number(
+                          order.payoutSnapshot.earlyWithdrawalPenalty ?? 0,
+                        ),
                         order.currency ?? "USD",
                       )}`
                     : "Normal withdrawal request"}
@@ -231,7 +246,12 @@ export default function WithdrawalRequestsList({ withdrawalOrders }: Props) {
           ))}
         </div>
       ) : (
-        <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-xl border-dashed p-4 text-sm text-slate-600 dark:text-slate-400")}>
+        <div
+          className={cn(
+            DASHBOARD_PAGE_SURFACE_CLASS,
+            "rounded-xl border-dashed p-4 text-sm text-slate-600 dark:text-slate-400",
+          )}
+        >
           No withdrawal requests have been submitted yet.
         </div>
       )}

@@ -280,7 +280,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
     commissionPayment?.reviewStatus === "PENDING_REVIEW";
 
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-5rem)] w-full max-w-6xl ">
+    <div className="relative mx-auto min-h-[calc(100vh-10rem)] w-full max-w-6xl ">
       <div className="absolute inset-x-4 top-8 -z-10 h-40 rounded-[2rem] bg-[#3c9ee0]/10 blur-3xl" />
 
       <div className="space-y-6">
@@ -398,7 +398,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                     }
                   />
                   <ReceiptRow
-                    label="Calculated commission / fee"
+                    label="Calculated commission (Taxes and Platform fees)"
                     value={formatCurrency(
                       commissionDueAmount,
                       withdrawal.currency,
@@ -437,7 +437,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 space-y-1">
                       <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
-                        Commission payment
+                        Commission (Taxes and Platform fees) payment
                       </p>
                       <p className="break-words text-lg font-medium text-balance text-slate-900 dark:text-white">
                         {isCommissionUnderReview
@@ -472,7 +472,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                             withdrawal.id,
                           )}
                         >
-                          Pay commission{" "}
+                          Pay commission (Taxes and Platform fees)
                           {formatCurrency(
                             commissionDueAmount,
                             withdrawal.currency,
@@ -607,7 +607,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                     Updated payout details have been submitted.
                   </p>
                   <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-100/80">
-                    The current payout method is now{" "}
+                    The current payout method is now
                     {effectivePaymentMethodLabel}.
                   </p>
                 </div>
