@@ -25,37 +25,31 @@ export function WithdrawalTerminalNotice({
   className,
 }: WithdrawalTerminalNoticeProps) {
   const isCompleted = isWithdrawalCompletedStatus(status);
+
   const toneClassName = isCompleted
     ? variant === "compact"
       ? "border-emerald-200/50 bg-emerald-50/80 text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100"
       : "border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/80 text-emerald-950 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-50"
     : variant === "compact"
-      ? "border-rose-200/40 bg-rose-500/10 text-rose-700 dark:border-rose-400/20 dark:text-rose-100"
-      : "border-rose-400/20 bg-rose-500/10 text-rose-950 dark:text-rose-50";
+      ? "border-rose-200/40 bg-rose-500/10 text-rose-700 dark:border-rose-400/20 dark:text-rose-200"
+      : "border-rose-400/20 bg-rose-500/10 text-rose-950 dark:text-rose-200";
 
   const titleToneClassName = isCompleted
-    ? variant === "compact"
-      ? "text-emerald-700 dark:text-emerald-200"
-      : "text-emerald-700 dark:text-emerald-200"
-    : variant === "compact"
-      ? "text-rose-700 dark:text-rose-200"
-      : "text-rose-700 dark:text-rose-200";
+    ? "text-emerald-700 dark:text-emerald-200"
+    : "text-rose-700 dark:text-rose-300";
 
   const descriptionToneClassName = isCompleted
     ? variant === "compact"
       ? "text-emerald-700/90 dark:text-emerald-100/80"
       : "text-emerald-900/90 dark:text-emerald-100/90"
-    : variant === "compact"
-      ? "text-rose-700/90 dark:text-rose-100/80"
-      : "text-rose-100/90";
+    : "text-rose-700 dark:text-rose-300";
 
   const bodyToneClassName = isCompleted
     ? variant === "compact"
       ? "text-emerald-700/90 dark:text-emerald-100/80"
       : "text-emerald-700 dark:text-emerald-100/80"
-    : variant === "compact"
-      ? "text-rose-700/90 dark:text-rose-100/80"
-      : "text-rose-100/80";
+    : "text-rose-700 dark:text-rose-300";
+
   const showReasonLine = !isCompleted || Boolean(reason?.trim());
 
   return (
@@ -76,6 +70,7 @@ export function WithdrawalTerminalNotice({
       >
         {getWithdrawalTerminalStatusTitle(status)}
       </p>
+
       <p
         className={cn(
           variant === "compact"
@@ -86,6 +81,7 @@ export function WithdrawalTerminalNotice({
       >
         {getWithdrawalTerminalStatusDescription(status)}
       </p>
+
       {showReasonLine ? (
         <p
           className={cn(
@@ -94,7 +90,7 @@ export function WithdrawalTerminalNotice({
           )}
         >
           {getWithdrawalTerminalStatusReasonLabel(status)}:{" "}
-          {reason ?? getWithdrawalTerminalStatusFallbackReason(status)}
+          {reason?.trim() || getWithdrawalTerminalStatusFallbackReason(status)}
         </p>
       ) : null}
     </div>
