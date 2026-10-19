@@ -125,7 +125,7 @@ export default function WithdrawalCommissionFunding({
     );
 
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-5xl">
         <Card
           className={cn(
             DASHBOARD_PAGE_PANEL_CLASS,
@@ -184,7 +184,7 @@ export default function WithdrawalCommissionFunding({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 sm:space-y-8 ">
+    <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8 ">
       <div className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full p-4 sm:p-6")}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">

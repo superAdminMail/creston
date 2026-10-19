@@ -32,7 +32,7 @@ export function DashboardRouteShell({
       className={cn(
         DASHBOARD_PAGE_SHELL_CLASS,
         mode === "viewport" && "super-admin-shell--viewport",
-        "rounded-[2rem] border border-slate-200/80 px-3 py-5 md:px-5 lg:px-7 dark:border-white/10",
+        "rounded-[2rem] border border-slate-200/80 px-3 py-4 md:px-4 lg:px-5 dark:border-white/10",
         className,
       )}
     >
