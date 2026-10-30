@@ -1110,14 +1110,14 @@ export function AdminWithdrawalDetailsClient({
 
             {commissionReviewStatus === "PENDING_REVIEW" &&
             !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus) ? (
-              <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-5 text-amber-50">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-amber-200">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-slate-950 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-50">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-amber-800 dark:text-amber-200">
                   Commission under review
                 </p>
                 <p className="mt-2 text-lg font-medium">
                   The submitted commission proof is waiting for admin review.
                 </p>
-                <p className="mt-1 text-sm text-amber-100/80">
+                <p className="mt-1 text-sm text-slate-600 dark:text-amber-100/80">
                   Use the review actions below to settle or reject this proof.
                 </p>
               </div>
@@ -1310,13 +1310,13 @@ export function AdminWithdrawalDetailsClient({
           </Card>
 
           {canReviewCommission ? (
-            <Card className="rounded-[1.75rem] border border-amber-400/20 bg-amber-500/10">
+            <Card className="rounded-[1.75rem] border border-amber-200 bg-amber-50 text-slate-950 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-white">
               <CardContent className="space-y-5 p-6">
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                   Commission proof review
                 </h2>
 
-                <p className="text-sm leading-6 text-amber-100/80">
+                <p className="text-sm leading-6 text-slate-600 dark:text-amber-100/80">
                   Review the proof details shown in the receipt and record the
                   correct outcome below.
                 </p>
@@ -1324,7 +1324,7 @@ export function AdminWithdrawalDetailsClient({
                 <div className="grid max-w-sm gap-2">
                   <Label
                     htmlFor="commissionReviewAmount"
-                    className="text-sm font-medium text-white"
+                    className="text-sm font-medium text-slate-800 dark:text-white"
                   >
                     Review amount
                   </Label>
@@ -1336,10 +1336,10 @@ export function AdminWithdrawalDetailsClient({
                     value={reviewAmount}
                     onChange={(event) => setReviewAmount(event.target.value)}
                     disabled={reviewPending}
-                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                    className="rounded-2xl border-amber-200 bg-white text-slate-950 placeholder:text-slate-400 focus-visible:ring-amber-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-slate-300">
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
                     Enter the amount that was actually received. Use the full
                     button for the submitted amount or reduce it before marking
                     partial.
@@ -1349,7 +1349,7 @@ export function AdminWithdrawalDetailsClient({
                 <div className="grid gap-2">
                   <Label
                     htmlFor="commissionReviewNote"
-                    className="text-sm font-medium text-white"
+                    className="text-sm font-medium text-slate-800 dark:text-white"
                   >
                     Review note
                   </Label>
@@ -1359,14 +1359,14 @@ export function AdminWithdrawalDetailsClient({
                     value={reviewNote}
                     onChange={(event) => setReviewNote(event.target.value)}
                     disabled={reviewPending}
-                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                    className="rounded-2xl border-amber-200 bg-white text-slate-950 placeholder:text-slate-400 focus-visible:ring-amber-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
                   />
                 </div>
 
                 <div className="grid gap-2">
                   <Label
                     htmlFor="commissionRejectionReason"
-                    className="text-sm font-medium text-white"
+                    className="text-sm font-medium text-slate-800 dark:text-white"
                   >
                     Rejection reason
                   </Label>
@@ -1382,10 +1382,10 @@ export function AdminWithdrawalDetailsClient({
                     }}
                     aria-invalid={Boolean(rejectionReasonError)}
                     disabled={reviewPending}
-                    className="rounded-2xl border-white/10 bg-white/[0.03] text-white placeholder:text-slate-500"
+                    className="rounded-2xl border-amber-200 bg-white text-slate-950 placeholder:text-slate-400 focus-visible:ring-amber-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500"
                   />
                   {rejectionReasonError ? (
-                    <p className="text-xs text-rose-300">
+                    <p className="text-xs text-rose-700 dark:text-rose-300">
                       {rejectionReasonError}
                     </p>
                   ) : null}
