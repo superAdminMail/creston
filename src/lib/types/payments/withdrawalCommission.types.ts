@@ -18,6 +18,7 @@ export type WithdrawalCommissionPaymentSnapshot = {
   transferReference: string | null;
   note: string | null;
   receiptFileId: string | null;
+  receiptUrl: string | null;
   submittedAt: string | null;
   reviewStatus: WithdrawalCommissionReviewStatus | null;
   approvedAmount: number | null;

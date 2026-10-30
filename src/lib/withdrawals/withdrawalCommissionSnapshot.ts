@@ -90,6 +90,7 @@ export function readWithdrawalCommissionPaymentSnapshot(
     ),
     note: readNullableString(commissionPayment.note),
     receiptFileId: readNullableString(commissionPayment.receiptFileId),
+    receiptUrl: null,
     submittedAt: readNullableString(commissionPayment.submittedAt),
     reviewStatus: readReviewStatus(commissionPayment.reviewStatus),
     approvedAmount:

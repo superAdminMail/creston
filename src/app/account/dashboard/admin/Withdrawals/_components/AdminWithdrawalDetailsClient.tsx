@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy } from "lucide-react";
+import { Copy, ExternalLink } from "lucide-react";
 
 import { approveWithdrawalCommission } from "@/actions/admin/withdrawals/approveWithdrawalCommission";
 import { approveWithdrawalFee } from "@/actions/admin/withdrawals/approveWithdrawalFee";
@@ -1061,7 +1061,33 @@ export function AdminWithdrawalDetailsClient({
                   />
                   <ReceiptRow
                     label="Receipt file"
-                    value={commissionPayment.receiptFileId ?? "Not available"}
+                    value={
+                      commissionPayment.receiptUrl ? (
+                        <Button
+                          asChild
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 rounded-full border-sky-200 bg-white px-3 text-sky-700 shadow-sm hover:bg-sky-50 hover:text-sky-800 dark:border-sky-400/30 dark:bg-sky-400/10 dark:text-sky-100 dark:hover:bg-sky-400/20 dark:hover:text-white"
+                        >
+                          <a
+                            href={commissionPayment.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                            Preview receipt
+                          </a>
+                        </Button>
+                      ) : (
+                        "Not available"
+                      )
+                    }
+                    helperText={
+                      commissionPayment.receiptUrl
+                        ? "Opens the uploaded proof in a new tab."
+                        : undefined
+                    }
                   />
                   <ReceiptRow
                     label="Submitted at"

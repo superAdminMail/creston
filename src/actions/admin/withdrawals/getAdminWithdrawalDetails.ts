@@ -174,6 +174,12 @@ export async function getAdminWithdrawalDetails(
     currentWithdrawal.payoutSnapshot,
   );
   const feePayment = readWithdrawalFeePaymentSnapshot(currentWithdrawal.payoutSnapshot);
+  const commissionReceipt = commissionPayment?.receiptFileId
+    ? await prisma.fileAsset.findUnique({
+        where: { id: commissionPayment.receiptFileId },
+        select: { url: true },
+      })
+    : null;
   const paymentMethodSnapshot = readWithdrawalPaymentMethodSnapshot(
     currentWithdrawal.payoutSnapshot,
   );
@@ -271,7 +277,12 @@ export async function getAdminWithdrawalDetails(
     savingsFeeAmount: currentWithdrawal.savingsFeeAmount
       ? decimalToNumber(currentWithdrawal.savingsFeeAmount)
       : null,
-    commissionPayment,
+    commissionPayment: commissionPayment
+      ? {
+          ...commissionPayment,
+          receiptUrl: commissionReceipt?.url ?? null,
+        }
+      : null,
     feePayment,
     requestedAt: currentWithdrawal.requestedAt.toISOString(),
     processedAt: currentWithdrawal.processedAt?.toISOString() ?? null,
