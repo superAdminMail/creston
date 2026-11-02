@@ -49,6 +49,11 @@ export async function getInvestmentOrderPaymentDetails(
       upgradePaymentId: true,
       upgradeRequestedAt: true,
       upgradeReviewedAt: true,
+      capitalUpdateStatus: true,
+      capitalUpdateAmount: true,
+      capitalUpdatePaymentId: true,
+      capitalUpdateRequestedAt: true,
+      capitalUpdateReviewedAt: true,
       createdAt: true,
       paymentReference: true,
       paidAt: true,
@@ -123,6 +128,7 @@ export async function getInvestmentOrderPaymentDetails(
 
   const selectedFundingMethodType =
     fundingMethodType ?? order.paymentMethodType ?? "BANK_TRANSFER";
+
   const resolvedBankMethod =
     selectedFundingMethodType === "CRYPTO_PROVIDER"
       ? await getPublicPlatformPaymentMethodForCheckout({
@@ -139,6 +145,7 @@ export async function getInvestmentOrderPaymentDetails(
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
   const latestPayment = order.payments[0] ?? null;
+
   const latestBankPaymentShortfallAmount =
     latestPayment &&
     latestPayment.status === "APPROVED" &&
@@ -161,6 +168,7 @@ export async function getInvestmentOrderPaymentDetails(
     runtimeStatus: order.runtimeStatus,
     paymentMethodType: order.paymentMethodType,
     paymentMetadata: asJsonObject(order.paymentMetadata),
+
     upgradeStatus: order.upgradeStatus,
     upgradeAmount: order.upgradeAmount
       ? decimalToNumber(order.upgradeAmount)
@@ -168,15 +176,28 @@ export async function getInvestmentOrderPaymentDetails(
     upgradePaymentId: order.upgradePaymentId,
     upgradeRequestedAt: order.upgradeRequestedAt?.toISOString() ?? null,
     upgradeReviewedAt: order.upgradeReviewedAt?.toISOString() ?? null,
+
+    capitalUpdateStatus: order.capitalUpdateStatus,
+    capitalUpdateAmount: order.capitalUpdateAmount
+      ? decimalToNumber(order.capitalUpdateAmount)
+      : null,
+    capitalUpdatePaymentId: order.capitalUpdatePaymentId,
+    capitalUpdateRequestedAt:
+      order.capitalUpdateRequestedAt?.toISOString() ?? null,
+    capitalUpdateReviewedAt:
+      order.capitalUpdateReviewedAt?.toISOString() ?? null,
+
     createdAt: order.createdAt.toISOString(),
     paymentReference: order.paymentReference ?? null,
     paidAt: order.paidAt?.toISOString() ?? null,
     confirmedAt: order.confirmedAt?.toISOString() ?? null,
+
     plan: {
       id: order.investmentPlan.id,
       name: order.investmentPlan.name,
       period: order.investmentPlan.period,
     },
+
     tier: {
       id: order.investmentPlanTier.id,
       level: order.investmentPlanTier.level,
@@ -208,6 +229,7 @@ export async function getInvestmentOrderPaymentDetails(
           : null,
       }),
     },
+
     bankMethod: resolvedBankMethod
       ? {
           id: resolvedBankMethod.id,
@@ -240,19 +262,22 @@ export async function getInvestmentOrderPaymentDetails(
           currency: resolvedBankMethod.currency ?? order.currency,
         }
       : null,
+
     hasBankMethod: Boolean(resolvedBankMethod),
     hasExistingBankInfoRequest:
       selectedFundingMethodType !== "CRYPTO_PROVIDER" &&
       bankInfoState.status === "REQUESTED",
     bankInfoRequest: null,
+
     recentPayments: order.payments.map((payment) => ({
       id: payment.id,
       type: payment.type,
       status: payment.status,
       claimedAmount: toNumber(payment.claimedAmount),
-      approvedAmount: payment.approvedAmount
-        ? toNumber(payment.approvedAmount)
-        : null,
+      approvedAmount:
+        payment.approvedAmount !== null && payment.approvedAmount !== undefined
+          ? toNumber(payment.approvedAmount)
+          : null,
       currency: payment.currency,
       depositorName: payment.depositorName ?? null,
       transferReference: payment.transferReference ?? null,
@@ -269,6 +294,7 @@ export async function getInvestmentOrderPaymentDetails(
           }
         : null,
     })),
+
     amountLabel: formatCurrency(amount, order.currency),
     amountPaidLabel: formatCurrency(amountPaid, order.currency),
     remainingAmountLabel: formatCurrency(remainingAmount, order.currency),

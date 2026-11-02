@@ -125,7 +125,7 @@ export async function createInvestmentOrderBankDepositSubmission({
   );
 
   /*
-   * Prefer the explicitly selected flow.
+   * Prefer the explicitly selected payment flow.
    *
    * For legacy callers that only provide isUpgradeFlow, retain the previous
    * behavior of selecting Capital Update when that offer is available.
@@ -347,6 +347,7 @@ export async function createInvestmentOrderBankDepositSubmission({
             proofMode === "CRYPTO_PROVIDER"
               ? InvestmentOrderPaymentType.CRYPTO_PROVIDER
               : InvestmentOrderPaymentType.BANK_DEPOSIT,
+          submissionKind: isOfferPaymentFlow ? "UPGRADE" : "STANDARD",
           status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
           platformPaymentMethodId: platformPaymentMethod.id,
           submittedByUserId: userId,
@@ -359,7 +360,11 @@ export async function createInvestmentOrderBankDepositSubmission({
           receiptFileId: normalizedReceiptFileId,
           note: note?.trim() || null,
           metadata: {
-            kind: isOfferPaymentFlow ? selectedPaymentFlow : "STANDARD",
+            kind: isCapitalUpdateFlow
+              ? "CAPITAL_UPDATE"
+              : isUpgradeOfferFlow
+                ? "UPGRADE"
+                : "STANDARD",
             paymentMode,
             proofMode,
             splitNumber: chargeCalculation?.splitNumber ?? null,
@@ -384,12 +389,19 @@ export async function createInvestmentOrderBankDepositSubmission({
       let nextPaymentMetadata: Prisma.InputJsonValue;
 
       if (isOfferPaymentFlow) {
-        if (isCapitalUpdateFlow) {
-          delete orderMetadata.capitalUpdate;
-        } else {
+        if (isUpgradeOfferFlow) {
+          // Preserve the existing Upgrade metadata behavior.
           delete orderMetadata.upgrade;
         }
 
+        /*
+         * Do not delete orderMetadata.capitalUpdate here.
+         *
+         * The Capital Update offer helper checks capitalUpdate.enabled.
+         * Dedicated capitalUpdate* database fields track its payment and
+         * review lifecycle; preserving the metadata keeps the offer's
+         * configuration and reason intact.
+         */
         nextPaymentMetadata = toJsonValue(orderMetadata);
       } else {
         nextPaymentMetadata = toJsonValue({

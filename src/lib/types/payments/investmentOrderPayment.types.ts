@@ -8,11 +8,19 @@ export type InvestmentOrderPaymentDetails = {
   runtimeStatus: string;
   paymentMethodType: string | null;
   paymentMetadata: Record<string, unknown> | null;
+
   upgradeStatus: string;
   upgradeAmount: number | null;
   upgradePaymentId: string | null;
   upgradeRequestedAt: string | null;
   upgradeReviewedAt: string | null;
+
+  capitalUpdateStatus: string;
+  capitalUpdateAmount: number | null;
+  capitalUpdatePaymentId: string | null;
+  capitalUpdateRequestedAt: string | null;
+  capitalUpdateReviewedAt: string | null;
+
   createdAt: string;
   paymentReference: string | null;
   paidAt: string | null;
