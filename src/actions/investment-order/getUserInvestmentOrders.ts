@@ -20,6 +20,11 @@ import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { redirect } from "next/navigation";
 
+type InvestmentOrderAction = {
+  label: string;
+  href: string;
+};
+
 type UserInvestmentOrderListItem = {
   id: string;
   amount: number;
@@ -62,10 +67,13 @@ type UserInvestmentOrderListItem = {
   upgradePaymentId: string | null;
   upgradeRequestedAt: string | null;
   upgradeReviewedAt: string | null;
-  primaryAction: {
-    label: string;
-    href: string;
-  };
+  capitalUpdateStatus: string;
+  capitalUpdateAmount: number | null;
+  capitalUpdatePaymentId: string | null;
+  capitalUpdateRequestedAt: string | null;
+  capitalUpdateReviewedAt: string | null;
+  primaryAction: InvestmentOrderAction;
+  secondaryActions: InvestmentOrderAction[];
 };
 
 export type UserInvestmentOrdersData = {
@@ -81,18 +89,26 @@ function getPrimaryAction(
     "id" | "status" | "linkedInvestmentAccountId" | "runtimeStatus"
   > & {
     paymentMetadata: Record<string, unknown> | null;
+    upgradeStatus: string;
+    upgradeAmount: number | null;
+    upgradePaymentId: string | null;
+    upgradeRequestedAt: string | null;
+    upgradeReviewedAt: string | null;
+    capitalUpdateStatus: string;
+    capitalUpdateAmount: number | null;
+    capitalUpdatePaymentId: string | null;
+    capitalUpdateRequestedAt: string | null;
+    capitalUpdateReviewedAt: string | null;
   },
-) {
+): InvestmentOrderAction {
   if (hasInvestmentOrderCapitalUpdateOffer(order.runtimeStatus, order)) {
     return {
       label: "Update order capital",
-      href: `/account/dashboard/user/investment-orders/${order.id}`,
+      href: `/account/dashboard/user/investment-orders/${order.id}/update-capital`,
     };
   }
 
-  if (
-    hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order)
-  ) {
+  if (hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order)) {
     return {
       label: "Upgrade",
       href: buildInvestmentOrderUpgradePath(order.id),
@@ -123,6 +139,7 @@ function getPrimaryAction(
             label: "Open order details",
             href: `/account/dashboard/user/investment-orders/${order.id}`,
           };
+
     case InvestmentOrderStatus.CANCELLED:
     case InvestmentOrderStatus.REJECTED:
     case InvestmentOrderStatus.PAID:
@@ -133,6 +150,48 @@ function getPrimaryAction(
         href: `/account/dashboard/user/investment-orders/${order.id}`,
       };
   }
+}
+
+function getSecondaryActions(
+  order: Pick<
+    UserInvestmentOrderListItem,
+    "id" | "status" | "linkedInvestmentAccountId" | "runtimeStatus"
+  > & {
+    paymentMetadata: Record<string, unknown> | null;
+    upgradeStatus: string;
+    upgradeAmount: number | null;
+    upgradePaymentId: string | null;
+    upgradeRequestedAt: string | null;
+    upgradeReviewedAt: string | null;
+    capitalUpdateStatus: string;
+    capitalUpdateAmount: number | null;
+    capitalUpdatePaymentId: string | null;
+    capitalUpdateRequestedAt: string | null;
+    capitalUpdateReviewedAt: string | null;
+  },
+  primaryAction: InvestmentOrderAction,
+): InvestmentOrderAction[] {
+  const actions: InvestmentOrderAction[] = [];
+
+  if (hasInvestmentOrderCapitalUpdateOffer(order.runtimeStatus, order)) {
+    actions.push({
+      label: "Update order capital",
+      href: `/account/dashboard/user/investment-orders/${order.id}/update-capital`,
+    });
+  }
+
+  if (hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order)) {
+    actions.push({
+      label: "Upgrade",
+      href: buildInvestmentOrderUpgradePath(order.id),
+    });
+  }
+
+  return actions.filter(
+    (action) =>
+      action.href !== primaryAction.href ||
+      action.label !== primaryAction.label,
+  );
 }
 
 export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersData> {
@@ -171,6 +230,11 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
           upgradePaymentId: true,
           upgradeRequestedAt: true,
           upgradeReviewedAt: true,
+          capitalUpdateStatus: true,
+          capitalUpdateAmount: true,
+          capitalUpdatePaymentId: true,
+          capitalUpdateRequestedAt: true,
+          capitalUpdateReviewedAt: true,
           investmentPlan: {
             select: {
               id: true,
@@ -244,10 +308,23 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
       linkedInvestmentAccountId: order.investmentAccountId,
       paymentMetadata: order.paymentMetadata as Record<string, unknown> | null,
       upgradeStatus: order.upgradeStatus,
-      upgradeAmount: order.upgradeAmount ? decimalToNumber(order.upgradeAmount) : null,
+      upgradeAmount:
+        order.upgradeAmount !== null
+          ? decimalToNumber(order.upgradeAmount)
+          : null,
       upgradePaymentId: order.upgradePaymentId,
       upgradeRequestedAt: order.upgradeRequestedAt?.toISOString() ?? null,
       upgradeReviewedAt: order.upgradeReviewedAt?.toISOString() ?? null,
+      capitalUpdateStatus: order.capitalUpdateStatus,
+      capitalUpdateAmount:
+        order.capitalUpdateAmount !== null
+          ? decimalToNumber(order.capitalUpdateAmount)
+          : null,
+      capitalUpdatePaymentId: order.capitalUpdatePaymentId,
+      capitalUpdateRequestedAt:
+        order.capitalUpdateRequestedAt?.toISOString() ?? null,
+      capitalUpdateReviewedAt:
+        order.capitalUpdateReviewedAt?.toISOString() ?? null,
       plan: {
         id: order.investmentPlan.id,
         name: order.investmentPlan.name,
@@ -298,9 +375,14 @@ export async function getUserInvestmentOrders(): Promise<UserInvestmentOrdersDat
         label: "",
         href: "",
       },
+      secondaryActions: [],
     };
 
     normalizedOrder.primaryAction = getPrimaryAction(normalizedOrder);
+    normalizedOrder.secondaryActions = getSecondaryActions(
+      normalizedOrder,
+      normalizedOrder.primaryAction,
+    );
 
     return normalizedOrder;
   });

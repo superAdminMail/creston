@@ -21,6 +21,7 @@ export default async function InvestmentOrderCapitalUpdatePage({
         targetType: "INVESTMENT_ORDER",
         targetId: investmentOrderId,
         paymentMode: "FULL",
+        paymentFlow: "CAPITAL_UPDATE",
       })}
     />
   );

@@ -6,7 +6,13 @@ export const submitInvestmentBankPaymentProofSchema = z.object({
   proofMode: z.enum(["BANK_TRANSFER", "CRYPTO_PROVIDER"]).optional(),
   claimedAmount: z.number().positive(),
   usePartialPayment: z.boolean().optional(),
+
+  // Legacy flag retained for compatibility with existing callers.
   isUpgradeFlow: z.boolean().optional(),
+
+  // Explicitly identifies which investment-order offer is being paid.
+  paymentFlow: z.enum(["UPGRADE", "CAPITAL_UPDATE"]).optional(),
+
   depositorName: z.string().trim().max(120).optional(),
   depositorAccountName: z.string().trim().max(120).optional(),
   depositorAccountNo: z.string().trim().max(80).optional(),

@@ -23,6 +23,7 @@ export default async function InvestmentOrderUpgradePage({
         targetType: "INVESTMENT_ORDER",
         targetId: investmentOrderId,
         paymentMode: "FULL",
+        paymentFlow: "UPGRADE",
       })}
     />
   );

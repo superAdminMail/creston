@@ -1,12 +1,16 @@
 "use server";
 
-import { formatCurrency, formatDateLabel, formatEnumLabel } from "@/lib/formatters/formatters";
+import {
+  formatCurrency,
+  formatDateLabel,
+  formatEnumLabel,
+} from "@/lib/formatters/formatters";
 import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInvestmentTierReturnLabel";
+import { getInvestmentOrderCapitalUpdateSettings } from "@/lib/investment/investmentOrderUpgrade";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
-import { getCurrentUserRole } from "@/lib/getCurrentUser";
-import { getInvestmentOrderCapitalUpdateSettings } from "@/lib/investment/investmentOrderUpgrade";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -88,11 +92,13 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
       adminNotes: true,
       cancellationReason: true,
       paymentMetadata: true,
-      upgradeStatus: true,
-      upgradeAmount: true,
-      upgradePaymentId: true,
-      upgradeRequestedAt: true,
-      upgradeReviewedAt: true,
+
+      capitalUpdateStatus: true,
+      capitalUpdateAmount: true,
+      capitalUpdatePaymentId: true,
+      capitalUpdateRequestedAt: true,
+      capitalUpdateReviewedAt: true,
+
       investorProfile: {
         select: {
           kycStatus: true,
@@ -145,12 +151,14 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     order.investmentPlan.durationDays,
     order.confirmedAt ?? order.createdAt,
   );
+
   const capitalUpdate = getInvestmentOrderCapitalUpdateSettings(order);
+
   const canManageCapitalUpdate =
     viewerRole === "SUPER_ADMIN" &&
     order.status === "CONFIRMED" &&
-    order.upgradeStatus !== "PENDING_REVIEW" &&
-    order.upgradeStatus !== "APPROVED";
+    capitalUpdate.status !== "PENDING_REVIEW" &&
+    capitalUpdate.status !== "APPROVED";
 
   return {
     id: order.id,
@@ -172,7 +180,10 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     modelLabel: formatEnumLabel(order.investmentModel),
     accountName: `Account ${order.investmentAccount.id.slice(0, 8).toUpperCase()}`,
     accountStatusLabel: formatEnumLabel(order.investmentAccount.status),
-    accountOpenedAt: formatDateLabel(order.investmentAccount.openedAt, "Not opened"),
+    accountOpenedAt: formatDateLabel(
+      order.investmentAccount.openedAt,
+      "Not opened",
+    ),
     planName: order.investmentPlan.name,
     planPeriodLabel: formatEnumLabel(order.investmentPlan.period),
     planDurationLabel: `${order.investmentPlan.durationDays} days`,
@@ -193,10 +204,18 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
           : null,
       });
 
-      return roiPercent !== null ? `${roiPercent.toFixed(2)}%` : "Not configured";
+      return roiPercent !== null
+        ? `${roiPercent.toFixed(2)}%`
+        : "Not configured";
     })(),
-    expectedReturn: formatCurrency(decimalToNumber(order.expectedReturn), order.currency),
-    accruedProfit: formatCurrency(decimalToNumber(order.accruedProfit), order.currency),
+    expectedReturn: formatCurrency(
+      decimalToNumber(order.expectedReturn),
+      order.currency,
+    ),
+    accruedProfit: formatCurrency(
+      decimalToNumber(order.accruedProfit),
+      order.currency,
+    ),
     startDate: formatDateLabel(resolvedLifecycle.startDate, "Not started"),
     maturityDate: formatDateLabel(resolvedLifecycle.maturityDate, "Not set"),
     adminNotes: order.adminNotes ?? "",

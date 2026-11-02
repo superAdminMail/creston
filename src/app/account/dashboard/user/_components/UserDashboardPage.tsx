@@ -18,6 +18,7 @@ import {
   getMigrationStatusMeta,
 } from "@/lib/migration/migrationPresentation";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { DashboardSuccessNotices, type DashboardSuccessNotice } from "./DashboardSuccessNotices";
 
 const DASHBOARD_FLAT_SURFACE_CLASS =
   "rounded-[1.5rem] border border-border/60 bg-white text-slate-950 dark:border-white/10 dark:bg-slate-900 dark:text-white";
@@ -52,6 +53,7 @@ export type UserDashboardStats = {
     reason: string | null;
     href: string;
   } | null;
+  successNotices: DashboardSuccessNotice[];
 };
 
 function DashboardStatCard({
@@ -196,6 +198,8 @@ export default function UserDashboardPage({
           </div>
         </section>
       ) : null}
+
+      <DashboardSuccessNotices notices={stats.successNotices} />
 
       {!investmentProfileComplete ? (
         <Alert className="rounded-[1.5rem] border border-amber-200/70 bg-amber-50 px-5 py-4 text-amber-950 dark:border-amber-400/20 dark:bg-amber-950 dark:text-amber-100">

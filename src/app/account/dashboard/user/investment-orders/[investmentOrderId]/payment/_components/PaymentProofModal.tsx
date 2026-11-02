@@ -73,6 +73,7 @@ export default function PaymentProofModal({
           platformPaymentMethodId,
           proofMode: isCryptoMode ? "CRYPTO_PROVIDER" : "BANK_TRANSFER",
           isUpgradeFlow,
+          paymentFlow,
           usePartialPayment: paymentMode === "PARTIAL",
           claimedAmount: input.claimedAmount,
           depositorName: input.depositorName,

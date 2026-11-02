@@ -22,13 +22,34 @@ export type InvestmentOrderCapitalUpdateSettings =
     reason: string | null;
   };
 
+type InvestmentOrderOfferSource = {
+  upgradeStatus?: string | null;
+  upgradeAmount?: unknown;
+  upgradePaymentId?: string | null;
+  upgradeRequestedAt?: string | Date | null;
+  upgradeReviewedAt?: string | Date | null;
+
+  capitalUpdateStatus?: string | null;
+  capitalUpdateAmount?: unknown;
+  capitalUpdatePaymentId?: string | null;
+  capitalUpdateRequestedAt?: string | Date | null;
+  capitalUpdateReviewedAt?: string | Date | null;
+
+  paymentMetadata?: unknown;
+};
+
 function parsePositiveNumber(value: unknown): number | null {
   const numeric =
     typeof value === "number"
       ? value
       : typeof value === "string"
         ? Number(value)
-        : null;
+        : value !== null &&
+            typeof value === "object" &&
+            "toNumber" in value &&
+            typeof value.toNumber === "function"
+          ? value.toNumber()
+          : null;
 
   if (numeric === null || !Number.isFinite(numeric) || numeric <= 0) {
     return null;
@@ -39,7 +60,7 @@ function parsePositiveNumber(value: unknown): number | null {
 
 function parseIsoString(value: unknown): string | null {
   if (value instanceof Date) {
-    return value.toISOString();
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
   }
 
   return typeof value === "string" && value.trim().length > 0 ? value : null;
@@ -63,7 +84,9 @@ function parseUpgradeStatus(
     : null;
 }
 
-function resolveLegacyUpgradeStatus(metadata: Record<string, unknown>): InvestmentOrderUpgradeStatus {
+function resolveLegacyUpgradeStatus(
+  metadata: Record<string, unknown>,
+): InvestmentOrderUpgradeStatus {
   const legacyUpgrade = asJsonObject(metadata.upgrade);
   const allowUpgrade = legacyUpgrade.allowUpgrade === true;
   const amount = parsePositiveNumber(legacyUpgrade.amount);
@@ -85,21 +108,14 @@ function resolveLegacyUpgradeStatus(metadata: Record<string, unknown>): Investme
   return "AVAILABLE";
 }
 
-function readUpgradeFields(
-  source: {
-    upgradeStatus?: string | null;
-    upgradeAmount?: unknown;
-    upgradePaymentId?: string | null;
-    upgradeRequestedAt?: string | Date | null;
-    upgradeReviewedAt?: string | Date | null;
-    paymentMetadata?: unknown;
-  } | null | undefined,
-) {
+function readUpgradeFields(source: InvestmentOrderOfferSource | null) {
   const metadata = asJsonObject(source?.paymentMetadata);
   const legacyUpgrade = asJsonObject(metadata.upgrade);
+
   const status =
     parseUpgradeStatus(source?.upgradeStatus) ??
     resolveLegacyUpgradeStatus(metadata);
+
   const amount =
     parsePositiveNumber(source?.upgradeAmount) ??
     parsePositiveNumber(legacyUpgrade.amount);
@@ -120,19 +136,20 @@ function readUpgradeFields(
   };
 }
 
-export function getInvestmentOrderUpgradeSettings(
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
-): InvestmentOrderUpgradeSettings {
+function readOfferSource(source: unknown): InvestmentOrderOfferSource | null {
   if (!source || typeof source !== "object") {
+    return null;
+  }
+
+  return source as InvestmentOrderOfferSource;
+}
+
+export function getInvestmentOrderUpgradeSettings(
+  source: unknown,
+): InvestmentOrderUpgradeSettings {
+  const offerSource = readOfferSource(source);
+
+  if (!offerSource) {
     return {
       status: "DISABLED",
       allowUpgrade: false,
@@ -143,36 +160,17 @@ export function getInvestmentOrderUpgradeSettings(
     };
   }
 
-  const read = readUpgradeFields(source as Record<string, unknown>);
-
-  return {
-    status: read.status,
-    allowUpgrade: read.allowUpgrade,
-    amount: read.amount,
-    paymentId: read.paymentId,
-    requestedAt: read.requestedAt,
-    reviewedAt: read.reviewedAt,
-  };
+  return readUpgradeFields(offerSource);
 }
 
 export function hasInvestmentOrderUpgradeOffer(
   runtimeStatus: string,
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
-) {
+  source: unknown,
+): boolean {
   const settings = getInvestmentOrderUpgradeSettings(source);
 
   return (
     isInactiveInvestmentOrderRuntimeStatus(runtimeStatus) &&
-    !getInvestmentOrderCapitalUpdateSettings(source).enabled &&
     settings.status === "AVAILABLE" &&
     settings.amount !== null &&
     settings.paymentId === null
@@ -181,21 +179,11 @@ export function hasInvestmentOrderUpgradeOffer(
 
 export function isInvestmentOrderUpgraded(
   runtimeStatus: string,
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
-) {
+  source: unknown,
+): boolean {
   const settings = getInvestmentOrderUpgradeSettings(source);
 
   return (
-    !getInvestmentOrderCapitalUpdateSettings(source).enabled &&
     (runtimeStatus === RuntimeStatus.ONGOING ||
       runtimeStatus === RuntimeStatus.ACTIVE) &&
     settings.status === "APPROVED"
@@ -203,47 +191,92 @@ export function isInvestmentOrderUpgraded(
 }
 
 export function getInvestmentOrderCapitalUpdateSettings(
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
+  source: unknown,
 ): InvestmentOrderCapitalUpdateSettings {
-  const upgrade = getInvestmentOrderUpgradeSettings(source);
-  const metadata = asJsonObject(
-    source && typeof source === "object"
-      ? (source as { paymentMetadata?: unknown }).paymentMetadata
-      : null,
-  );
+  const offerSource = readOfferSource(source);
+
+  if (!offerSource) {
+    return {
+      status: "DISABLED",
+      allowUpgrade: false,
+      amount: null,
+      paymentId: null,
+      requestedAt: null,
+      reviewedAt: null,
+      enabled: false,
+      reason: null,
+    };
+  }
+
+  const metadata = asJsonObject(offerSource.paymentMetadata);
   const capitalUpdate = asJsonObject(metadata.capitalUpdate);
   const enabled = capitalUpdate.enabled === true;
 
+  /*
+   * Capital Update now uses its own database fields.
+   *
+   * The upgrade* and legacy metadata fallbacks below are retained
+   * for orders created before Capital Update received separate fields.
+   * New writes should use capitalUpdate* fields exclusively.
+   */
+  const legacyUpgrade = asJsonObject(metadata.upgrade);
+
+  const status =
+    parseUpgradeStatus(offerSource.capitalUpdateStatus) ??
+    parseUpgradeStatus(capitalUpdate.status) ??
+    (enabled
+      ? (parseUpgradeStatus(offerSource.upgradeStatus) ??
+        resolveLegacyUpgradeStatus(metadata))
+      : "DISABLED");
+
+  const amount =
+    parsePositiveNumber(offerSource.capitalUpdateAmount) ??
+    parsePositiveNumber(capitalUpdate.amount) ??
+    (enabled
+      ? (parsePositiveNumber(offerSource.upgradeAmount) ??
+        parsePositiveNumber(legacyUpgrade.amount))
+      : null);
+
+  const paymentId =
+    offerSource.capitalUpdatePaymentId ??
+    parseIsoString(capitalUpdate.pendingPaymentId) ??
+    (enabled
+      ? (offerSource.upgradePaymentId ??
+        parseIsoString(legacyUpgrade.pendingPaymentId))
+      : null);
+
+  const requestedAt =
+    parseIsoString(offerSource.capitalUpdateRequestedAt) ??
+    parseIsoString(capitalUpdate.submittedAt) ??
+    (enabled
+      ? (parseIsoString(offerSource.upgradeRequestedAt) ??
+        parseIsoString(legacyUpgrade.submittedAt))
+      : null);
+
+  const reviewedAt =
+    parseIsoString(offerSource.capitalUpdateReviewedAt) ??
+    parseIsoString(capitalUpdate.approvedAt) ??
+    (enabled
+      ? (parseIsoString(offerSource.upgradeReviewedAt) ??
+        parseIsoString(legacyUpgrade.approvedAt))
+      : null);
+
   return {
-    ...upgrade,
+    status,
+    allowUpgrade: enabled && status !== "DISABLED",
+    amount,
+    paymentId,
+    requestedAt,
+    reviewedAt,
     enabled,
-    allowUpgrade: enabled && upgrade.allowUpgrade,
     reason: parseText(capitalUpdate.reason),
   };
 }
 
 export function hasInvestmentOrderCapitalUpdateOffer(
   _runtimeStatus: string,
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
-) {
+  source: unknown,
+): boolean {
   const settings = getInvestmentOrderCapitalUpdateSettings(source);
 
   return (
@@ -256,29 +289,18 @@ export function hasInvestmentOrderCapitalUpdateOffer(
 
 export function isInvestmentOrderCapitalUpdated(
   _runtimeStatus: string,
-  source:
-    | {
-        upgradeStatus?: string | null;
-        upgradeAmount?: unknown;
-        upgradePaymentId?: string | null;
-        upgradeRequestedAt?: string | Date | null;
-        upgradeReviewedAt?: string | Date | null;
-        paymentMetadata?: unknown;
-      }
-    | unknown,
-) {
+  source: unknown,
+): boolean {
   const settings = getInvestmentOrderCapitalUpdateSettings(source);
 
-  return (
-    settings.enabled && settings.status === "APPROVED"
-  );
+  return settings.enabled && settings.status === "APPROVED";
 }
 
-export function buildInvestmentOrderUpgradePath(orderId: string) {
+export function buildInvestmentOrderUpgradePath(orderId: string): string {
   return `/account/dashboard/user/investment-orders/${orderId}/upgrade`;
 }
 
-export function buildInvestmentOrderCapitalUpdatePath(orderId: string) {
+export function buildInvestmentOrderCapitalUpdatePath(orderId: string): string {
   return `/account/dashboard/user/investment-orders/${orderId}/update-capital`;
 }
 
@@ -290,6 +312,7 @@ export function setInvestmentOrderUpgradeSettings(
   const nextMetadata: Record<string, unknown> = {
     ...metadata,
   };
+
   if (!settings.allowUpgrade || !settings.amount || settings.amount <= 0) {
     delete nextMetadata.upgrade;
     return toJsonValue(nextMetadata);
@@ -314,7 +337,10 @@ export function markInvestmentOrderUpgradeApproved(
   const metadata = asJsonObject(paymentMetadata);
   const upgrade = asJsonObject(metadata.upgrade);
 
-  if (upgrade.allowUpgrade !== true || parsePositiveNumber(upgrade.amount) === null) {
+  if (
+    upgrade.allowUpgrade !== true ||
+    parsePositiveNumber(upgrade.amount) === null
+  ) {
     return toJsonValue(metadata);
   }
 
@@ -322,7 +348,8 @@ export function markInvestmentOrderUpgradeApproved(
     ...metadata,
     upgrade: {
       ...upgrade,
-      approvedAt: parseIsoString(upgrade.approvedAt) ?? approvedAt.toISOString(),
+      approvedAt:
+        parseIsoString(upgrade.approvedAt) ?? approvedAt.toISOString(),
       pendingPaymentId: null,
     },
   });
@@ -336,7 +363,10 @@ export function markInvestmentOrderUpgradePending(
   const metadata = asJsonObject(paymentMetadata);
   const upgrade = asJsonObject(metadata.upgrade);
 
-  if (upgrade.allowUpgrade !== true || parsePositiveNumber(upgrade.amount) === null) {
+  if (
+    upgrade.allowUpgrade !== true ||
+    parsePositiveNumber(upgrade.amount) === null
+  ) {
     return toJsonValue(metadata);
   }
 
@@ -357,7 +387,10 @@ export function markInvestmentOrderUpgradeRejected(
   const metadata = asJsonObject(paymentMetadata);
   const upgrade = asJsonObject(metadata.upgrade);
 
-  if (upgrade.allowUpgrade !== true || parsePositiveNumber(upgrade.amount) === null) {
+  if (
+    upgrade.allowUpgrade !== true ||
+    parsePositiveNumber(upgrade.amount) === null
+  ) {
     return toJsonValue(metadata);
   }
 

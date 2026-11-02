@@ -50,12 +50,23 @@ export async function approveInvestmentOrderPaymentReview({
           amountPaid: true,
           status: true,
           runtimeStatus: true,
+
           upgradeStatus: true,
           upgradeAmount: true,
           upgradePaymentId: true,
+
+          capitalUpdateStatus: true,
+          capitalUpdateAmount: true,
+          capitalUpdatePaymentId: true,
+
           investorProfile: {
             select: {
               userId: true,
+            },
+          },
+          investmentPlan: {
+            select: {
+              name: true,
             },
           },
         },
@@ -68,10 +79,24 @@ export async function approveInvestmentOrderPaymentReview({
   }
 
   const paymentKind = readPaymentKind(payment.submissionKind);
+  const paymentMetadata = asJsonObject(payment.metadata);
+
   const isCapitalUpdate =
-    paymentKind === "UPGRADE" &&
-    asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE";
+    paymentKind === "UPGRADE" && paymentMetadata.kind === "CAPITAL_UPDATE";
+
+  const investmentPlanName = payment.investmentOrder.investmentPlan.name;
+
+  const paymentSubmissionTarget = isCapitalUpdate
+    ? `the capital update for your ${investmentPlanName} investment order`
+    : paymentKind === "UPGRADE"
+      ? `your ${investmentPlanName} investment upgrade`
+      : `your ${investmentPlanName} investment order`;
+
   const claimedAmount = payment.claimedAmount.toNumber();
+
+  if (payment.status !== "PENDING_REVIEW") {
+    throw new Error("This payment submission has already been reviewed.");
+  }
 
   if (
     payment.investmentOrder.status === "CONFIRMED" &&
@@ -80,6 +105,10 @@ export async function approveInvestmentOrderPaymentReview({
     throw new Error(
       "This order is already confirmed and can no longer be reviewed here.",
     );
+  }
+
+  if (!Number.isFinite(approvedAmount) || approvedAmount <= 0) {
+    throw new Error("Approved amount must be greater than zero.");
   }
 
   if (approvedAmount > claimedAmount) {
@@ -98,12 +127,6 @@ export async function approveInvestmentOrderPaymentReview({
     );
   }
 
-  // if (approvalMode === "PARTIAL" && approvedAmount >= claimedAmount) {
-  //   throw new Error(
-  //     "Partial approval amount must be lower than the claimed amount.",
-  //   );
-  // }
-
   const orderAmount = payment.investmentOrder.amount.toNumber();
   const currentPaid = payment.investmentOrder.amountPaid.toNumber();
   const remaining = Math.max(orderAmount - currentPaid, 0);
@@ -114,21 +137,32 @@ export async function approveInvestmentOrderPaymentReview({
     );
   }
 
-  const isCryptoProof =
-    proofMode === "CRYPTO_PROVIDER" || payment.type === "CRYPTO_PROVIDER";
   const isActiveUpgradeOffer =
     paymentKind === "UPGRADE" &&
+    !isCapitalUpdate &&
     payment.investmentOrder.upgradeStatus === "PENDING_REVIEW" &&
     payment.investmentOrder.upgradeAmount !== null &&
     payment.investmentOrder.upgradePaymentId === payment.id &&
     payment.investmentOrder.runtimeStatus !== "NOT_STARTED" &&
-    payment.claimedAmount.toNumber() ===
-      payment.investmentOrder.upgradeAmount.toNumber();
+    claimedAmount === payment.investmentOrder.upgradeAmount.toNumber();
 
-  if (paymentKind === "UPGRADE" && !isActiveUpgradeOffer) {
-    throw new Error(
-      `The ${isCapitalUpdate ? "capital update" : "upgrade"} offer is no longer available.`,
-    );
+  const isActiveCapitalUpdateOffer =
+    paymentKind === "UPGRADE" &&
+    isCapitalUpdate &&
+    payment.investmentOrder.capitalUpdateStatus === "PENDING_REVIEW" &&
+    payment.investmentOrder.capitalUpdateAmount !== null &&
+    payment.investmentOrder.capitalUpdatePaymentId === payment.id &&
+    payment.investmentOrder.runtimeStatus !== "NOT_STARTED" &&
+    claimedAmount === payment.investmentOrder.capitalUpdateAmount.toNumber();
+
+  if (paymentKind === "UPGRADE") {
+    if (isCapitalUpdate && !isActiveCapitalUpdateOffer) {
+      throw new Error("The capital update offer is no longer available.");
+    }
+
+    if (!isCapitalUpdate && !isActiveUpgradeOffer) {
+      throw new Error("The upgrade offer is no longer available.");
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -151,13 +185,15 @@ export async function approveInvestmentOrderPaymentReview({
       throw new Error("This payment submission has already been reviewed.");
     }
 
+    const reviewedAt = new Date();
+
     if (paymentKind === "UPGRADE" && isCapitalUpdate) {
       await tx.investmentOrder.update({
         where: { id: payment.investmentOrderId },
         data: {
-          upgradeStatus: "APPROVED",
-          upgradeReviewedAt: new Date(),
-          lastPaymentReviewedAt: new Date(),
+          capitalUpdateStatus: "APPROVED",
+          capitalUpdateReviewedAt: reviewedAt,
+          lastPaymentReviewedAt: reviewedAt,
         },
       });
     } else if (paymentKind === "UPGRADE") {
@@ -171,8 +207,8 @@ export async function approveInvestmentOrderPaymentReview({
             increment: approvedAmount,
           },
           upgradeStatus: "APPROVED",
-          upgradeReviewedAt: new Date(),
-          lastPaymentReviewedAt: new Date(),
+          upgradeReviewedAt: reviewedAt,
+          lastPaymentReviewedAt: reviewedAt,
         },
       });
     } else {
@@ -187,34 +223,17 @@ export async function approveInvestmentOrderPaymentReview({
         approvalMode === "FULL"
           ? paymentKind === "UPGRADE"
             ? isCapitalUpdate
-              ? "Order capital update approved"
-              : "Investment upgrade approved"
-            : isCryptoProof
-              ? "Investment crypto payment approved"
-              : "Investment payment approved"
+              ? "Order capital update approval confirmed"
+              : "Investment upgrade approval confirmed"
+            : "Investment payment approval confirmed"
           : paymentKind === "UPGRADE"
             ? isCapitalUpdate
-              ? "Order capital update partially approved"
-              : "Investment upgrade partially approved"
-            : isCryptoProof
-              ? "Investment crypto payment partially approved"
-              : "Investment payment partially approved",
-      message:
-        approvalMode === "FULL"
-          ? paymentKind === "UPGRADE"
-            ? isCapitalUpdate
-              ? "Your order capital update proof was approved."
-              : "Your investment upgrade proof was approved."
-            : isCryptoProof
-              ? "Your crypto payment proof was approved."
-              : "Your investment payment proof was approved."
-          : paymentKind === "UPGRADE"
-            ? isCapitalUpdate
-              ? "Your order capital update proof was partially approved."
-              : "Your investment upgrade proof was partially approved."
-            : isCryptoProof
-              ? "Your crypto payment proof was partially approved."
-              : "Your investment payment proof was partially approved.",
+              ? "Partial order capital update approval confirmed"
+              : "Partial investment upgrade approval confirmed"
+            : "Partial investment payment approval confirmed",
+      message: `Congratulations. Your ${
+        approvalMode === "FULL" ? "full" : "partial"
+      } payment submission for ${paymentSubmissionTarget} has been approved and recorded.`,
       link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
       metadata: {
         paymentId: payment.id,
@@ -225,11 +244,16 @@ export async function approveInvestmentOrderPaymentReview({
         reviewedByUserId: adminUserId,
         submissionKind: paymentKind,
         flow: isCapitalUpdate ? "CAPITAL_UPDATE" : paymentKind,
+        dashboardNoticeKind: "INVESTMENT_PAYMENT_APPROVED",
+        investmentPlanName,
       },
     });
   });
 
-  return { ok: true, investmentOrderId: payment.investmentOrderId };
+  return {
+    ok: true,
+    investmentOrderId: payment.investmentOrderId,
+  };
 }
 
 export async function rejectInvestmentOrderPaymentReview({
@@ -244,6 +268,7 @@ export async function rejectInvestmentOrderPaymentReview({
     where: { id: paymentId },
     select: {
       id: true,
+      status: true,
       investmentOrderId: true,
       submissionKind: true,
       metadata: true,
@@ -252,6 +277,11 @@ export async function rejectInvestmentOrderPaymentReview({
           upgradeStatus: true,
           upgradeAmount: true,
           upgradePaymentId: true,
+
+          capitalUpdateStatus: true,
+          capitalUpdateAmount: true,
+          capitalUpdatePaymentId: true,
+
           investorProfile: {
             select: {
               userId: true,
@@ -266,10 +296,37 @@ export async function rejectInvestmentOrderPaymentReview({
     throw new Error("Payment submission not found.");
   }
 
+  if (payment.status !== "PENDING_REVIEW") {
+    throw new Error("This payment submission has already been reviewed.");
+  }
+
   const paymentKind = readPaymentKind(payment.submissionKind);
+  const paymentMetadata = asJsonObject(payment.metadata);
+
   const isCapitalUpdate =
-    paymentKind === "UPGRADE" &&
-    asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE";
+    paymentKind === "UPGRADE" && paymentMetadata.kind === "CAPITAL_UPDATE";
+
+  if (paymentKind === "UPGRADE") {
+    const isActiveUpgradeOffer =
+      !isCapitalUpdate &&
+      payment.investmentOrder.upgradeStatus === "PENDING_REVIEW" &&
+      payment.investmentOrder.upgradeAmount !== null &&
+      payment.investmentOrder.upgradePaymentId === payment.id;
+
+    const isActiveCapitalUpdateOffer =
+      isCapitalUpdate &&
+      payment.investmentOrder.capitalUpdateStatus === "PENDING_REVIEW" &&
+      payment.investmentOrder.capitalUpdateAmount !== null &&
+      payment.investmentOrder.capitalUpdatePaymentId === payment.id;
+
+    if (isCapitalUpdate && !isActiveCapitalUpdateOffer) {
+      throw new Error("The capital update offer is no longer available.");
+    }
+
+    if (!isCapitalUpdate && !isActiveUpgradeOffer) {
+      throw new Error("The upgrade offer is no longer available.");
+    }
+  }
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.investmentOrderPayment.updateMany({
@@ -291,13 +348,24 @@ export async function rejectInvestmentOrderPaymentReview({
       throw new Error("This payment submission has already been reviewed.");
     }
 
-    if (paymentKind === "UPGRADE") {
+    const reviewedAt = new Date();
+
+    if (paymentKind === "UPGRADE" && isCapitalUpdate) {
+      await tx.investmentOrder.update({
+        where: { id: payment.investmentOrderId },
+        data: {
+          capitalUpdateStatus: "REJECTED",
+          capitalUpdateReviewedAt: reviewedAt,
+          lastPaymentReviewedAt: reviewedAt,
+        },
+      });
+    } else if (paymentKind === "UPGRADE") {
       await tx.investmentOrder.update({
         where: { id: payment.investmentOrderId },
         data: {
           upgradeStatus: "REJECTED",
-          upgradeReviewedAt: new Date(),
-          lastPaymentReviewedAt: new Date(),
+          upgradeReviewedAt: reviewedAt,
+          lastPaymentReviewedAt: reviewedAt,
         },
       });
     } else {
@@ -332,5 +400,8 @@ export async function rejectInvestmentOrderPaymentReview({
     });
   });
 
-  return { ok: true, investmentOrderId: payment.investmentOrderId };
+  return {
+    ok: true,
+    investmentOrderId: payment.investmentOrderId,
+  };
 }

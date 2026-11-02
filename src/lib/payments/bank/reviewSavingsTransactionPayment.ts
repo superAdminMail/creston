@@ -68,6 +68,7 @@ export async function approveSavingsTransactionPaymentReview({
               savingsProduct: {
                 select: {
                   maxBalance: true,
+                  name: true,
                 },
               },
             },
@@ -179,10 +180,6 @@ export async function approveSavingsTransactionPaymentReview({
       ? SavingsFundingIntentStatus.CREDITED
       : SavingsFundingIntentStatus.PARTIALLY_PAID;
 
-  const isCryptoProof =
-    proofMode === "CRYPTO_PROVIDER" ||
-    payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER;
-
   const savingsTransactionId = await prisma.$transaction(async (tx) => {
     const updateResult = await tx.savingsTransactionPayment.updateMany({
       where: {
@@ -265,20 +262,12 @@ export async function approveSavingsTransactionPaymentReview({
       key: `savings-payment-review:${payment.id}:${approvalMode}`,
       title:
         approvalMode === "FULL"
-          ? isCryptoProof
-            ? "Savings crypto payment approved"
-            : "Savings payment approved"
-          : isCryptoProof
-            ? "Savings crypto payment partially approved"
-            : "Savings payment partially approved",
+          ? "Savings payment approval confirmed"
+          : "Partial savings payment approval confirmed",
       message:
         approvalMode === "FULL"
-          ? isCryptoProof
-            ? "Your crypto payment proof was approved and credited."
-            : "Your savings deposit proof was approved and credited."
-          : isCryptoProof
-            ? "Your crypto payment proof was partially approved and credited."
-            : "Your savings deposit proof was partially approved and credited.",
+          ? `Congratulations. Your full payment submission for ${payment.savingsFundingIntent.savingsAccount.savingsProduct.name} savings has been approved and recorded.`
+          : `Congratulations. Your partial payment submission for ${payment.savingsFundingIntent.savingsAccount.savingsProduct.name} savings has been approved and recorded.`,
       link: `/account/dashboard/checkout?targetType=SAVINGS_FUNDING&targetId=${payment.savingsFundingIntent.savingsAccount.id}&fundingMethodType=${
         payment.type === SavingsTransactionPaymentType.CRYPTO_PROVIDER
           ? "CRYPTO_PROVIDER"
@@ -292,6 +281,9 @@ export async function approveSavingsTransactionPaymentReview({
         proofMode: proofMode ?? payment.type,
         approvedAmount: approvedAmountDecimal.toString(),
         reviewedByUserId: adminUserId,
+        dashboardNoticeKind: "SAVINGS_PAYMENT_APPROVED",
+        savingsProductName:
+          payment.savingsFundingIntent.savingsAccount.savingsProduct.name,
       },
     });
 

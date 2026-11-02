@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
-import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
-import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import {
+  formatInvestmentOrderRuntimeStatusLabel,
+  isInactiveInvestmentOrderRuntimeStatus,
+} from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import {
   buildInvestmentOrderCapitalUpdatePath,
   buildInvestmentOrderUpgradePath,
@@ -96,11 +98,20 @@ export default async function Page({ params }: PageProps) {
           amount: true,
         },
       },
+
+      // Upgrade offer fields
       upgradeStatus: true,
       upgradeAmount: true,
       upgradePaymentId: true,
       upgradeRequestedAt: true,
       upgradeReviewedAt: true,
+
+      // Capital Update fields must be read independently of Upgrade.
+      capitalUpdateStatus: true,
+      capitalUpdateAmount: true,
+      capitalUpdatePaymentId: true,
+      capitalUpdateRequestedAt: true,
+      capitalUpdateReviewedAt: true,
     },
   });
 
@@ -124,23 +135,30 @@ export default async function Page({ params }: PageProps) {
       ? toNumber(order.investmentPlanTier.projectedRoiMax)
       : null,
   });
+
   const paymentMethodLabel = order.paymentMethodType
     ? formatEnumLabel(order.paymentMethodType)
     : "Not set";
+
   const hasUpgradeOffer = hasInvestmentOrderUpgradeOffer(
     order.runtimeStatus,
     order,
   );
+
   const hasCapitalUpdateOffer = hasInvestmentOrderCapitalUpdateOffer(
     order.runtimeStatus,
     order,
   );
+
   const capitalUpdateSettings = getInvestmentOrderCapitalUpdateSettings(order);
+
   const isUpgraded = isInvestmentOrderUpgraded(order.runtimeStatus, order);
+
   const isCapitalUpdated = isInvestmentOrderCapitalUpdated(
     order.runtimeStatus,
     order,
   );
+
   const resolvedLifecycle = resolveInvestmentOrderSchedule(
     order.startDate,
     order.maturityDate,
@@ -150,16 +168,20 @@ export default async function Page({ params }: PageProps) {
 
   const canMakePayment =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
+
+  // Keep the existing payment eligibility rule while evaluating
+  // Upgrade and Capital Update independently.
   const canUpgrade = hasUpgradeOffer && !canMakePayment;
   const canUpdateCapital = hasCapitalUpdateOffer && !canMakePayment;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6  text-white/90 dark:text-gray-300">
+    <div className="mx-auto max-w-3xl space-y-6 text-white/90 dark:text-gray-300">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold">
             {order.investmentPlan.investment.name}
           </h1>
+
           <p className="text-sm text-muted-foreground">
             {order.investmentPlan.name}
           </p>
@@ -213,9 +235,11 @@ export default async function Page({ params }: PageProps) {
       <div className="flex items-center justify-between rounded-xl border p-4">
         <div>
           <p className="text-sm font-medium">Status</p>
+
           <p className="text-xs text-muted-foreground">
             {formatEnumLabel(order.status)}
           </p>
+
           <p className="mt-1 text-xs text-muted-foreground">
             Runtime:{" "}
             {formatInvestmentOrderRuntimeStatusLabel(order.runtimeStatus)}
@@ -275,6 +299,7 @@ export default async function Page({ params }: PageProps) {
 
       <div className="space-y-2 rounded-xl border p-4">
         <p className="text-sm font-medium">Lifecycle</p>
+
         <p className="text-xs text-muted-foreground">
           Start and maturity dates are anchored when the order is confirmed.
         </p>

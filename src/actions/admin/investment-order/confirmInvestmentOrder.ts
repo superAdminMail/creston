@@ -69,6 +69,7 @@ export async function confirmInvestmentOrder(
       },
       investmentPlan: {
         select: {
+          name: true,
           durationDays: true,
         },
       },
@@ -154,13 +155,30 @@ export async function confirmInvestmentOrder(
     console.error("[confirmInvestmentOrder.referrals]", error);
   }
 
-  await prisma.notification.create({
-    data: {
+  await prisma.notification.upsert({
+    where: { key: `investment-order-confirmed:${order.id}` },
+    create: {
       userId: order.investorProfile.userId,
       type: "INVESTMENT_ORDER_CONFIRMED",
-      title: "Investment Order Confirmed",
-      message:
-        "Your investment order has been confirmed. You can now access your account.",
+      key: `investment-order-confirmed:${order.id}`,
+      title: "Investment order confirmed",
+      message: `Congratulations. Your ${order.investmentPlan.name} investment order is now confirmed and active.`,
+      link: `/account/dashboard/user/investment-orders/${order.id}`,
+      metadata: {
+        dashboardNoticeKind: "INVESTMENT_ORDER_CONFIRMED",
+        investmentOrderId: order.id,
+        investmentPlanName: order.investmentPlan.name,
+      },
+    },
+    update: {
+      title: "Investment order confirmed",
+      message: `Congratulations. Your ${order.investmentPlan.name} investment order is now confirmed and active.`,
+      link: `/account/dashboard/user/investment-orders/${order.id}`,
+      metadata: {
+        dashboardNoticeKind: "INVESTMENT_ORDER_CONFIRMED",
+        investmentOrderId: order.id,
+        investmentPlanName: order.investmentPlan.name,
+      },
     },
   });
 

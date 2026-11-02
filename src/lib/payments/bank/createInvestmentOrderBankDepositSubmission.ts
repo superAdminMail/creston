@@ -19,6 +19,8 @@ import {
   hasInvestmentOrderUpgradeOffer,
 } from "@/lib/investment/investmentOrderUpgrade";
 
+type InvestmentOrderPaymentFlow = "UPGRADE" | "CAPITAL_UPDATE";
+
 type CreateInvestmentOrderBankDepositSubmissionInput = {
   investmentOrderId: string;
   userId: string;
@@ -33,6 +35,7 @@ type CreateInvestmentOrderBankDepositSubmissionInput = {
   note?: string | null;
   receiptFileId: string;
   isUpgradeFlow?: boolean;
+  paymentFlow?: InvestmentOrderPaymentFlow;
 };
 
 export type CreateInvestmentOrderBankDepositSubmissionResult = {
@@ -60,6 +63,7 @@ export async function createInvestmentOrderBankDepositSubmission({
   note,
   receiptFileId,
   isUpgradeFlow = false,
+  paymentFlow,
 }: CreateInvestmentOrderBankDepositSubmissionInput): Promise<CreateInvestmentOrderBankDepositSubmissionResult> {
   const order = await prisma.investmentOrder.findFirst({
     where: {
@@ -80,6 +84,14 @@ export async function createInvestmentOrderBankDepositSubmission({
       bankInfoRespondedAt: true,
       upgradeStatus: true,
       upgradeAmount: true,
+      upgradePaymentId: true,
+      upgradeRequestedAt: true,
+      upgradeReviewedAt: true,
+      capitalUpdateStatus: true,
+      capitalUpdateAmount: true,
+      capitalUpdatePaymentId: true,
+      capitalUpdateRequestedAt: true,
+      capitalUpdateReviewedAt: true,
       platformPaymentMethodId: true,
       paymentMetadata: true,
       platformPaymentMethod: true,
@@ -102,33 +114,53 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("Investment order not found");
   }
 
-  const isCapitalUpdateFlow = hasInvestmentOrderCapitalUpdateOffer(
+  const hasCapitalUpdateOffer = hasInvestmentOrderCapitalUpdateOffer(
     order.runtimeStatus,
     order,
   );
-  const isApprovedUpgradeFlow = hasInvestmentOrderUpgradeOffer(
-    order.runtimeStatus,
-    order,
-  );
-  const offerSettings = isCapitalUpdateFlow
-    ? getInvestmentOrderCapitalUpdateSettings(order)
-    : getInvestmentOrderUpgradeSettings(order);
 
-  if (
-    (!isUpgradeFlow &&
-      (order.status === InvestmentOrderStatus.PAID ||
-        order.status === InvestmentOrderStatus.CONFIRMED)) ||
-    (isUpgradeFlow && order.status !== InvestmentOrderStatus.CONFIRMED)
-  ) {
-    throw new Error(
-      isUpgradeFlow
-        ? "This upgrade can only be submitted for a confirmed investment order"
-        : "This investment order has already been paid",
-    );
+  const hasUpgradeOffer = hasInvestmentOrderUpgradeOffer(
+    order.runtimeStatus,
+    order,
+  );
+
+  /*
+   * Prefer the explicitly selected flow.
+   *
+   * For legacy callers that only provide isUpgradeFlow, retain the previous
+   * behavior of selecting Capital Update when that offer is available.
+   */
+  const selectedPaymentFlow: InvestmentOrderPaymentFlow | null =
+    paymentFlow ??
+    (isUpgradeFlow
+      ? hasCapitalUpdateOffer
+        ? "CAPITAL_UPDATE"
+        : "UPGRADE"
+      : null);
+
+  const isCapitalUpdateFlow = selectedPaymentFlow === "CAPITAL_UPDATE";
+  const isUpgradeOfferFlow = selectedPaymentFlow === "UPGRADE";
+  const isOfferPaymentFlow = selectedPaymentFlow !== null;
+
+  if (isCapitalUpdateFlow && !hasCapitalUpdateOffer) {
+    throw new Error("This order does not have an active capital update offer.");
   }
 
-  if (isUpgradeFlow && !isCapitalUpdateFlow && !isApprovedUpgradeFlow) {
-    throw new Error("This order does not have an active capital update offer.");
+  if (isUpgradeOfferFlow && !hasUpgradeOffer) {
+    throw new Error("This order does not have an active upgrade offer.");
+  }
+
+  if (isOfferPaymentFlow) {
+    if (order.status !== InvestmentOrderStatus.CONFIRMED) {
+      throw new Error(
+        "Offer payments can only be submitted for a confirmed investment order",
+      );
+    }
+  } else if (
+    order.status === InvestmentOrderStatus.PAID ||
+    order.status === InvestmentOrderStatus.CONFIRMED
+  ) {
+    throw new Error("This investment order has already been paid");
   }
 
   if (
@@ -137,6 +169,12 @@ export async function createInvestmentOrderBankDepositSubmission({
   ) {
     throw new Error("This investment order can no longer be paid");
   }
+
+  const offerSettings = isCapitalUpdateFlow
+    ? getInvestmentOrderCapitalUpdateSettings(order)
+    : isUpgradeOfferFlow
+      ? getInvestmentOrderUpgradeSettings(order)
+      : null;
 
   const bankInfoState =
     proofMode === "CRYPTO_PROVIDER"
@@ -151,6 +189,7 @@ export async function createInvestmentOrderBankDepositSubmission({
           },
           userId,
         );
+
   const selectedPlatformPaymentMethodId =
     platformPaymentMethodId?.trim() ||
     order.platformPaymentMethod?.id ||
@@ -224,7 +263,7 @@ export async function createInvestmentOrderBankDepositSubmission({
   });
 
   const chargeCalculation =
-    !isUpgradeFlow && proofMode !== "CRYPTO_PROVIDER"
+    !isOfferPaymentFlow && proofMode !== "CRYPTO_PROVIDER"
       ? calculateInvestmentOrderBankChargeAmount({
           totalAmount: order.amount,
           amountPaid: order.amountPaid,
@@ -234,38 +273,41 @@ export async function createInvestmentOrderBankDepositSubmission({
       : null;
 
   const paymentMode =
-    isUpgradeFlow || proofMode === "CRYPTO_PROVIDER"
+    isOfferPaymentFlow || proofMode === "CRYPTO_PROVIDER"
       ? "FULL"
       : chargeCalculation!.isPartialPayment
         ? "PARTIAL"
         : "FULL";
 
   const submittedClaimedAmount =
-    isUpgradeFlow || proofMode === "CRYPTO_PROVIDER"
+    isOfferPaymentFlow || proofMode === "CRYPTO_PROVIDER"
       ? new Prisma.Decimal(claimedAmount ?? 0)
       : chargeCalculation!.chargeAmount;
 
-  if (isUpgradeFlow) {
-    if (!claimedAmount || claimedAmount <= 0) {
-      throw new Error("Upgrade amount is required");
+  if (isOfferPaymentFlow) {
+    const flowLabel = isCapitalUpdateFlow ? "Capital update" : "Upgrade";
+
+    if (claimedAmount === undefined || claimedAmount <= 0) {
+      throw new Error(`${flowLabel} amount is required`);
     }
 
-    if (new Prisma.Decimal(claimedAmount).lte(0)) {
-      throw new Error("Upgrade amount must be greater than zero");
+    if (offerSettings?.amount == null) {
+      throw new Error(
+        `This ${flowLabel.toLowerCase()} offer has no valid amount.`,
+      );
     }
 
-    if (
-      offerSettings.amount === null ||
-      !new Prisma.Decimal(claimedAmount).eq(offerSettings.amount)
-    ) {
-      throw new Error("Claim amount must match the approved capital update amount.");
+    if (!new Prisma.Decimal(claimedAmount).eq(offerSettings.amount)) {
+      throw new Error(
+        `Claim amount must match the approved ${flowLabel.toLowerCase()} amount.`,
+      );
     }
   } else if (proofMode === "CRYPTO_PROVIDER") {
     const remainingAmount = new Prisma.Decimal(order.amount).minus(
       order.amountPaid,
     );
 
-    if (!claimedAmount || claimedAmount <= 0) {
+    if (claimedAmount === undefined || claimedAmount <= 0) {
       throw new Error("Claim amount is required");
     }
 
@@ -274,135 +316,155 @@ export async function createInvestmentOrderBankDepositSubmission({
     }
   }
 
-  const payment = await prisma.$transaction(async (tx) => {
-    const pendingPayment = await tx.investmentOrderPayment.findFirst({
-      where: {
-        investmentOrderId: order.id,
-        status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
-        type: {
-          in: [
-            InvestmentOrderPaymentType.BANK_DEPOSIT,
-            InvestmentOrderPaymentType.CRYPTO_PROVIDER,
-          ],
+  const payment = await prisma.$transaction(
+    async (tx) => {
+      const pendingPayment = await tx.investmentOrderPayment.findFirst({
+        where: {
+          investmentOrderId: order.id,
+          status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
+          type: {
+            in: [
+              InvestmentOrderPaymentType.BANK_DEPOSIT,
+              InvestmentOrderPaymentType.CRYPTO_PROVIDER,
+            ],
+          },
         },
-      },
-      select: {
-        id: true,
-      },
-    });
+        select: {
+          id: true,
+        },
+      });
 
-    if (pendingPayment) {
-      throw new Error(
-        "There is already a pending payment submission for this order",
-      );
-    }
+      if (pendingPayment) {
+        throw new Error(
+          "There is already a pending payment submission for this order",
+        );
+      }
 
-    const createdPayment = await tx.investmentOrderPayment.create({
-      data: {
-        investmentOrderId: order.id,
-        type:
-          proofMode === "CRYPTO_PROVIDER"
-            ? InvestmentOrderPaymentType.CRYPTO_PROVIDER
-            : InvestmentOrderPaymentType.BANK_DEPOSIT,
-        status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
-        platformPaymentMethodId: platformPaymentMethod.id,
-        submittedByUserId: userId,
-        claimedAmount: submittedClaimedAmount,
-        currency: order.currency,
-        depositorName: depositorName?.trim() || null,
-        depositorAccountName: depositorAccountName?.trim() || null,
-        depositorAccountNo: depositorAccountNo?.trim() || null,
-        transferReference: transferReference?.trim() || null,
-        receiptFileId: normalizedReceiptFileId,
-        note: note?.trim() || null,
-        metadata: {
-          kind: isUpgradeFlow
-            ? isCapitalUpdateFlow
-              ? "CAPITAL_UPDATE"
-              : "UPGRADE"
-            : "STANDARD",
+      const createdPayment = await tx.investmentOrderPayment.create({
+        data: {
+          investmentOrderId: order.id,
+          type:
+            proofMode === "CRYPTO_PROVIDER"
+              ? InvestmentOrderPaymentType.CRYPTO_PROVIDER
+              : InvestmentOrderPaymentType.BANK_DEPOSIT,
+          status: InvestmentOrderPaymentStatus.PENDING_REVIEW,
+          platformPaymentMethodId: platformPaymentMethod.id,
+          submittedByUserId: userId,
+          claimedAmount: submittedClaimedAmount,
+          currency: order.currency,
+          depositorName: depositorName?.trim() || null,
+          depositorAccountName: depositorAccountName?.trim() || null,
+          depositorAccountNo: depositorAccountNo?.trim() || null,
+          transferReference: transferReference?.trim() || null,
+          receiptFileId: normalizedReceiptFileId,
+          note: note?.trim() || null,
+          metadata: {
+            kind: isOfferPaymentFlow ? selectedPaymentFlow : "STANDARD",
+            paymentMode,
+            proofMode,
+            splitNumber: chargeCalculation?.splitNumber ?? null,
+            remainingBeforeCharge:
+              chargeCalculation?.remainingBeforeCharge.toString() ?? null,
+            investmentPlanId: order.investmentPlanId,
+            investmentPlanName: order.investmentPlan.name,
+            investmentName: order.investmentPlan.investment.name,
+          },
+        },
+        select: {
+          id: true,
+          claimedAmount: true,
+          currency: true,
+          status: true,
+        },
+      });
+
+      const now = new Date();
+      const orderMetadata = asJsonObject(order.paymentMetadata);
+
+      let nextPaymentMetadata: Prisma.InputJsonValue;
+
+      if (isOfferPaymentFlow) {
+        if (isCapitalUpdateFlow) {
+          delete orderMetadata.capitalUpdate;
+        } else {
+          delete orderMetadata.upgrade;
+        }
+
+        nextPaymentMetadata = toJsonValue(orderMetadata);
+      } else {
+        nextPaymentMetadata = toJsonValue({
+          ...orderMetadata,
+          provider: proofMode,
+          paymentId: createdPayment.id,
           paymentMode,
           proofMode,
           splitNumber: chargeCalculation?.splitNumber ?? null,
           remainingBeforeCharge:
             chargeCalculation?.remainingBeforeCharge.toString() ?? null,
-          investmentPlanId: order.investmentPlanId,
-          investmentPlanName: order.investmentPlan.name,
-          investmentName: order.investmentPlan.investment.name,
+        });
+      }
+
+      await tx.investmentOrder.update({
+        where: { id: order.id },
+        data: {
+          lastPaymentSubmittedAt: now,
+          paymentReference: transferReference?.trim() || createdPayment.id,
+          paymentMetadata: nextPaymentMetadata,
+
+          ...(isUpgradeOfferFlow
+            ? {
+                upgradeStatus: "PENDING_REVIEW" as const,
+                upgradeAmount: submittedClaimedAmount,
+                upgradePaymentId: createdPayment.id,
+                upgradeRequestedAt: now,
+                upgradeReviewedAt: null,
+              }
+            : {}),
+
+          ...(isCapitalUpdateFlow
+            ? {
+                capitalUpdateStatus: "PENDING_REVIEW" as const,
+                capitalUpdateAmount: submittedClaimedAmount,
+                capitalUpdatePaymentId: createdPayment.id,
+                capitalUpdateRequestedAt: now,
+                capitalUpdateReviewedAt: null,
+              }
+            : {}),
         },
-      },
-      select: {
-        id: true,
-        claimedAmount: true,
-        currency: true,
-        status: true,
-      },
-    });
+      });
 
-    await tx.investmentOrder.update({
-      where: { id: order.id },
-      data: {
-        lastPaymentSubmittedAt: new Date(),
-        paymentReference: transferReference?.trim() || createdPayment.id,
-        paymentMetadata: isUpgradeFlow
-          ? (() => {
-              const metadata = asJsonObject(order.paymentMetadata);
-              delete metadata.upgrade;
+      await upsertBankDepositSubmissionNotifications(
+        tx,
+        admins.map((admin) => ({
+          key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
+          userId: admin.id,
+          title: "Investment payment proof submitted",
+          message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
+          link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
+          metadata: {
+            kind: isOfferPaymentFlow
+              ? isCapitalUpdateFlow
+                ? "INVESTMENT_ORDER_CAPITAL_UPDATE_SUBMITTED"
+                : "INVESTMENT_ORDER_UPGRADE_SUBMITTED"
+              : "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
+            orderId: order.id,
+            paymentId: createdPayment.id,
+            submittedByUserId: userId,
+            investmentPlanName: order.investmentPlan.name,
+            currency: order.currency,
+            submissionKind: isOfferPaymentFlow
+              ? selectedPaymentFlow
+              : "STANDARD",
+          },
+        })),
+      );
 
-              return toJsonValue(metadata);
-            })()
-          : toJsonValue({
-              ...asJsonObject(order.paymentMetadata),
-              provider: proofMode,
-              paymentId: createdPayment.id,
-              paymentMode,
-              proofMode,
-              splitNumber: chargeCalculation?.splitNumber ?? null,
-              remainingBeforeCharge:
-                chargeCalculation?.remainingBeforeCharge.toString() ?? null,
-            }),
-        upgradeStatus: isUpgradeFlow ? "PENDING_REVIEW" : order.upgradeStatus,
-        upgradeAmount: isUpgradeFlow
-          ? new Prisma.Decimal(claimedAmount ?? 0)
-          : order.upgradeAmount,
-        upgradePaymentId: isUpgradeFlow ? createdPayment.id : null,
-        upgradeRequestedAt: isUpgradeFlow ? new Date() : null,
-        upgradeReviewedAt: null,
-      },
-    });
-
-    await upsertBankDepositSubmissionNotifications(
-      tx,
-      admins.map((admin) => ({
-        key: `investment-order-bank-deposit-submitted:${createdPayment.id}:${admin.id}`,
-        userId: admin.id,
-        title: "Investment payment proof submitted",
-        message: `A payment proof was submitted for investment order ${order.id} (${order.investmentPlan.name}) in ${order.currency}.`,
-        link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
-        metadata: {
-          kind: isUpgradeFlow
-            ? isCapitalUpdateFlow
-              ? "INVESTMENT_ORDER_CAPITAL_UPDATE_SUBMITTED"
-              : "INVESTMENT_ORDER_UPGRADE_SUBMITTED"
-            : "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
-          orderId: order.id,
-          paymentId: createdPayment.id,
-          submittedByUserId: userId,
-          investmentPlanName: order.investmentPlan.name,
-          currency: order.currency,
-          submissionKind: isUpgradeFlow
-            ? isCapitalUpdateFlow
-              ? "CAPITAL_UPDATE"
-              : "UPGRADE"
-            : "STANDARD",
-        },
-      })),
-    );
-
-    return createdPayment;
-  }, {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+      return createdPayment;
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    },
+  );
 
   return {
     paymentId: payment.id,

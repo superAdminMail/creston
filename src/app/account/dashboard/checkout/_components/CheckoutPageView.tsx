@@ -27,6 +27,8 @@ type CheckoutTargetType =
   | "WITHDRAWAL_ORDER"
   | "WITHDRAWAL_FEE";
 
+type InvestmentOrderPaymentFlow = "UPGRADE" | "CAPITAL_UPDATE";
+
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -37,6 +39,7 @@ type CheckoutRouteInput = {
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
   suggestedAmount: number | null;
+  paymentFlow: InvestmentOrderPaymentFlow | null;
 };
 
 function single(value: string | string[] | undefined) {
@@ -62,6 +65,18 @@ function parseCheckoutFundingMethodType(
 
   if (isCheckoutFundingMethodType(fundingMethodType)) {
     return fundingMethodType;
+  }
+
+  return null;
+}
+
+function parseInvestmentOrderPaymentFlow(
+  value: string | string[] | undefined,
+): InvestmentOrderPaymentFlow | null {
+  const paymentFlow = single(value);
+
+  if (paymentFlow === "UPGRADE" || paymentFlow === "CAPITAL_UPDATE") {
+    return paymentFlow;
   }
 
   return null;
@@ -102,6 +117,9 @@ function parseCheckoutRouteInput(
       searchParams.fundingMethodType,
     );
     const suggestedAmount = parsePositiveAmount(searchParams.suggestedAmount);
+    const paymentFlow = parseInvestmentOrderPaymentFlow(
+      searchParams.paymentFlow,
+    );
 
     if (!targetId) {
       return null;
@@ -122,16 +140,30 @@ function parseCheckoutRouteInput(
       return null;
     }
 
+    // Investment-order offer flows are only valid for investment orders.
+    if (paymentFlow !== null && targetType !== "INVESTMENT_ORDER") {
+      return null;
+    }
+
+    // Reject an explicitly supplied but invalid payment flow.
+    if (
+      searchParams.paymentFlow !== undefined &&
+      targetType === "INVESTMENT_ORDER" &&
+      paymentFlow === null
+    ) {
+      return null;
+    }
+
     return {
       targetType,
       targetId,
       fundingMethodType,
       paymentMode: targetType === "WITHDRAWAL_ORDER" ? null : paymentMode,
       suggestedAmount:
-        targetType === "WITHDRAWAL_ORDER" ||
-        targetType === "WITHDRAWAL_FEE"
+        targetType === "WITHDRAWAL_ORDER" || targetType === "WITHDRAWAL_FEE"
           ? suggestedAmount
           : null,
+      paymentFlow: targetType === "INVESTMENT_ORDER" ? paymentFlow : null,
     };
   }
 
@@ -152,43 +184,75 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         routeInput.targetId,
         routeInput.fundingMethodType,
       );
-      const upgradeSettings = getInvestmentOrderUpgradeSettings(
-        order,
-      );
-      const capitalUpdateSettings = getInvestmentOrderCapitalUpdateSettings(
-        order,
-      );
-      const isUpgradeFlow = hasInvestmentOrderUpgradeOffer(
+
+      const upgradeSettings = getInvestmentOrderUpgradeSettings(order);
+      const capitalUpdateSettings =
+        getInvestmentOrderCapitalUpdateSettings(order);
+
+      const hasUpgradeOffer = hasInvestmentOrderUpgradeOffer(
         order.runtimeStatus,
         order,
       );
-      const isCapitalUpdateFlow = hasInvestmentOrderCapitalUpdateOffer(
+
+      const hasCapitalUpdateOffer = hasInvestmentOrderCapitalUpdateOffer(
         order.runtimeStatus,
         order,
       );
+
+      /*
+       * When an offer flow is explicitly supplied, honor that selection.
+       * For legacy checkout links without paymentFlow, retain the previous
+       * availability-based behavior.
+       */
+      const isUpgradeFlow =
+        routeInput.paymentFlow !== null
+          ? routeInput.paymentFlow === "UPGRADE" && hasUpgradeOffer
+          : hasUpgradeOffer && !hasCapitalUpdateOffer;
+
+      const isCapitalUpdateFlow =
+        routeInput.paymentFlow !== null
+          ? routeInput.paymentFlow === "CAPITAL_UPDATE" && hasCapitalUpdateOffer
+          : hasCapitalUpdateOffer;
+
+      /*
+       * A selected offer must still be available. If an explicitly selected
+       * offer is no longer available, do not silently charge for another
+       * offer or fall back to the regular investment-order payment.
+       */
+      if (
+        routeInput.paymentFlow !== null &&
+        !isUpgradeFlow &&
+        !isCapitalUpdateFlow
+      ) {
+        notFound();
+      }
+
       const isOfferPaymentFlow = isUpgradeFlow || isCapitalUpdateFlow;
+
       const isInvestmentOrderSettled =
         !isOfferPaymentFlow &&
         (order.remainingAmount <= 0 ||
           order.status === "PAID" ||
           order.status === "CONFIRMED");
+
       const selectedFundingMethodType =
         routeInput.fundingMethodType ??
         order.paymentMethodType ??
         "BANK_TRANSFER";
-      const selectedAmount =
-        isInvestmentOrderSettled
-          ? 0
-          : isOfferPaymentFlow &&
-              (isCapitalUpdateFlow
-                ? capitalUpdateSettings.amount
-                : upgradeSettings.amount) !== null
-            ? (isCapitalUpdateFlow
-                ? capitalUpdateSettings.amount
-                : upgradeSettings.amount)!
-            : routeInput.paymentMode === "PARTIAL" &&
-                (selectedFundingMethodType === "BANK_TRANSFER" ||
-                  selectedFundingMethodType === "CRYPTO_PROVIDER")
+
+      const selectedOfferAmount = isCapitalUpdateFlow
+        ? capitalUpdateSettings.amount
+        : isUpgradeFlow
+          ? upgradeSettings.amount
+          : null;
+
+      const selectedAmount = isInvestmentOrderSettled
+        ? 0
+        : isOfferPaymentFlow && selectedOfferAmount !== null
+          ? selectedOfferAmount
+          : routeInput.paymentMode === "PARTIAL" &&
+              (selectedFundingMethodType === "BANK_TRANSFER" ||
+                selectedFundingMethodType === "CRYPTO_PROVIDER")
             ? calculateInvestmentOrderBankChargeAmount({
                 totalAmount: order.amount,
                 amountPaid: order.amountPaid,
@@ -213,6 +277,7 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         />
       );
     }
+
     case "SAVINGS_FUNDING":
       return (
         <SavingsFunding
@@ -221,6 +286,7 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
           paymentMode={routeInput.paymentMode}
         />
       );
+
     case "WITHDRAWAL_ORDER": {
       const details = await getWithdrawalCommissionCheckoutDetails(
         routeInput.targetId,
@@ -239,6 +305,7 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         />
       );
     }
+
     case "WITHDRAWAL_FEE": {
       const details = await getWithdrawalFeeCheckoutDetails(
         routeInput.targetId,
@@ -257,6 +324,7 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         />
       );
     }
+
     default:
       notFound();
   }

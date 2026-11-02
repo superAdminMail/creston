@@ -39,16 +39,13 @@ export async function pauseAdminInvestmentOrder(
 
   if (
     allowUpgrade &&
-    (upgradeAmount === null || !Number.isFinite(upgradeAmount) || upgradeAmount <= 0)
+    (upgradeAmount === null ||
+      !Number.isFinite(upgradeAmount) ||
+      upgradeAmount <= 0)
   ) {
-    return createErrorFormState(
-      "Please review the highlighted fields.",
-      {
-        upgradeAmount: [
-          "Enter a valid upgrade amount greater than zero.",
-        ],
-      },
-    );
+    return createErrorFormState("Please review the highlighted fields.", {
+      upgradeAmount: ["Enter a valid upgrade amount greater than zero."],
+    });
   }
 
   try {
@@ -88,18 +85,27 @@ export async function pauseAdminInvestmentOrder(
         upgradeReviewedAt: null,
         paymentMetadata: (() => {
           const metadata = asJsonObject(existingOrder.paymentMetadata);
+
           delete metadata.upgrade;
+
           return toJsonValue(metadata);
         })(),
       },
     });
 
-    revalidatePath("/account/dashboard/admin/investment-orders");
-    revalidatePath(`/account/dashboard/admin/investment-orders/${orderId}`);
-    revalidatePath("/account/dashboard/user/investment-orders");
-    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}`);
-    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/upgrade`);
-    revalidatePath(`/account/dashboard/user/investment-orders/${orderId}/payment`);
+    const paths = [
+      "/account/dashboard/admin/investment-orders",
+      "/account/dashboard/super-admin/investment-orders",
+      `/account/dashboard/admin/investment-orders/${orderId}`,
+      `/account/dashboard/super-admin/investment-orders/${orderId}`,
+      "/account/dashboard/user/investment-orders",
+      `/account/dashboard/user/investment-orders/${orderId}`,
+      `/account/dashboard/user/investment-orders/${orderId}/upgrade`,
+      `/account/dashboard/user/investment-orders/${orderId}/update-capital`,
+      `/account/dashboard/user/investment-orders/${orderId}/payment`,
+    ];
+
+    paths.forEach((path) => revalidatePath(path));
 
     return createSuccessFormState("Investment order paused successfully.");
   } catch (error) {

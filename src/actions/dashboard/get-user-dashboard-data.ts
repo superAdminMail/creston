@@ -20,6 +20,14 @@ import {
   getInvestmentOrderCapitalUpdateSettings,
   hasInvestmentOrderCapitalUpdateOffer,
 } from "@/lib/investment/investmentOrderUpgrade";
+import { asJsonObject } from "@/lib/payments/paymentJson";
+
+type DashboardSuccessNotice = {
+  id: string;
+  title: string;
+  message: string;
+  href: string | null;
+};
 
 export type UserDashboardAsset = {
   orderId: string;
@@ -50,6 +58,7 @@ export type UserDashboardStats = {
     reason: string | null;
     href: string;
   } | null;
+  successNotices: DashboardSuccessNotice[];
   assets: UserDashboardAsset[];
 };
 
@@ -67,11 +76,12 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     throw new Error("Unauthorized");
   }
 
-  const investorProfile = await prisma.investorProfile.findUnique({
-    where: {
-      userId: user.id,
-    },
-    select: {
+  const [investorProfile, notifications] = await Promise.all([
+    prisma.investorProfile.findUnique({
+      where: {
+        userId: user.id,
+      },
+      select: {
       investmentOrders: {
         where: {
           status: {
@@ -116,7 +126,42 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           },
         },
       },
-    },
+      },
+    }),
+    prisma.notification.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        link: true,
+        metadata: true,
+      },
+    }),
+  ]);
+
+  const successNotices = notifications.flatMap((notification) => {
+    const metadata = asJsonObject(notification.metadata);
+    const kind = metadata.dashboardNoticeKind;
+
+    if (
+      metadata.dashboardDismissedAt ||
+      (kind !== "INVESTMENT_PAYMENT_APPROVED" &&
+        kind !== "SAVINGS_PAYMENT_APPROVED" &&
+        kind !== "INVESTMENT_ORDER_CONFIRMED")
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        href: notification.link,
+      },
+    ];
   });
 
   const orders = investorProfile?.investmentOrders ?? [];
@@ -205,6 +250,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
             href: `/account/dashboard/user/investment-orders/${capitalUpdateOrder.id}`,
           }
         : null,
+      successNotices,
       assets,
     },
   };

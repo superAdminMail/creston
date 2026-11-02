@@ -49,10 +49,9 @@ export async function updateInvestmentOrderCapitalOffer(
       select: {
         id: true,
         status: true,
-        runtimeStatus: true,
         amount: true,
         paymentMetadata: true,
-        upgradeStatus: true,
+        capitalUpdateStatus: true,
       },
     });
 
@@ -67,11 +66,11 @@ export async function updateInvestmentOrderCapitalOffer(
     }
 
     if (
-      order.upgradeStatus === "PENDING_REVIEW" ||
-      order.upgradeStatus === "APPROVED"
+      order.capitalUpdateStatus === "PENDING_REVIEW" ||
+      order.capitalUpdateStatus === "APPROVED"
     ) {
       return createErrorFormState(
-        "This capital update can no longer be changed after payment submission or approval.",
+        "Capital update availability can no longer be changed after payment submission or approval.",
       );
     }
 
@@ -79,6 +78,7 @@ export async function updateInvestmentOrderCapitalOffer(
 
     if (enabled) {
       metadata.capitalUpdate = {
+        ...asJsonObject(metadata.capitalUpdate),
         enabled: true,
         reason: capitalUpdateReason!.trim(),
       };
@@ -89,11 +89,11 @@ export async function updateInvestmentOrderCapitalOffer(
     await prisma.investmentOrder.update({
       where: { id: order.id },
       data: {
-        upgradeStatus: enabled ? "AVAILABLE" : "DISABLED",
-        upgradeAmount: enabled ? order.amount : null,
-        upgradePaymentId: null,
-        upgradeRequestedAt: null,
-        upgradeReviewedAt: null,
+        capitalUpdateStatus: enabled ? "AVAILABLE" : "DISABLED",
+        capitalUpdateAmount: enabled ? order.amount : null,
+        capitalUpdatePaymentId: null,
+        capitalUpdateRequestedAt: null,
+        capitalUpdateReviewedAt: null,
         paymentMetadata: toJsonValue(metadata),
       },
     });
@@ -106,6 +106,7 @@ export async function updateInvestmentOrderCapitalOffer(
       "/account/dashboard/user/investment-orders",
       `/account/dashboard/user/investment-orders/${orderId}`,
       `/account/dashboard/user/investment-orders/${orderId}/payment`,
+      `/account/dashboard/user/investment-orders/${orderId}/upgrade`,
       `/account/dashboard/user/investment-orders/${orderId}/update-capital`,
     ];
 

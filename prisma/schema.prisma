@@ -342,64 +342,69 @@ model InvestmentPlanTier {
 }
 
 model InvestmentOrder {
-  id                      String                       @id @default(cuid())
-  investorProfileId       String
-  investmentPlanId        String
-  investmentAccountId     String
-  investmentPlanTierId    String
-  investmentModel         InvestmentModel
-  promotionCampaignId     String?
-  startDate               DateTime?
-  maturityDate            DateTime?
-  expectedReturn          Decimal?                     @db.Decimal(18, 2)
-  accruedProfit           Decimal                      @default(0) @db.Decimal(18, 2)
-  lastAccruedAt           DateTime?
-  completedAt             DateTime?
-  dailyProfitAccumulated  Decimal                      @default(0)
-  lastProfitResetAt       DateTime?
-  units                   Decimal?                     @db.Decimal(18, 8)
-  entryPrice              Decimal?                     @db.Decimal(18, 8)
-  currentValue            Decimal?                     @db.Decimal(18, 2)
-  lastValuationAt         DateTime?
-  isMatured               Boolean                      @default(false)
-  isWithdrawn             Boolean                      @default(false)
-  status                  InvestmentOrderStatus        @default(PENDING_PAYMENT)
-  paymentMethodType       InvestmentPaymentMethodType?
-  platformPaymentMethodId String?
-  amountPaid              Decimal                      @default(0) @db.Decimal(18, 2)
-  amount                  Decimal                      @db.Decimal(18, 2)
-  currency                String                       @default("USD")
-  lastPaymentSubmittedAt  DateTime?
-  lastPaymentReviewedAt   DateTime?
-  paymentMetadata         Json?
-  paymentReference        String?
-  paidAt                  DateTime?
-  confirmedAt             DateTime?
-  cancelledAt             DateTime?
-  cancellationReason      String?
-  adminNotes              String?
-  createdAt               DateTime                     @default(now())
-  updatedAt               DateTime                     @updatedAt
-  runtimeStatus           RuntimeStatus                @default(NOT_STARTED)
-  upgradeAmount           Decimal?                     @db.Decimal(18, 2)
-  upgradePaymentId        String?
-  upgradeRequestedAt      DateTime?
-  upgradeReviewedAt       DateTime?
-  upgradeStatus           InvestmentOrderUpgradeStatus @default(DISABLED)
-  bankInfoRequestedAt     DateTime?
-  bankInfoRespondedAt     DateTime?
-  cryptoFundingIntents    CryptoFundingIntent[]
-  investmentEarnings      InvestmentEarning[]
-  investmentAccount       InvestmentAccount            @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
-  investmentPlan          InvestmentPlan               @relation(fields: [investmentPlanId], references: [id])
-  investmentPlanTier      InvestmentPlanTier           @relation(fields: [investmentPlanTierId], references: [id])
-  investorProfile         InvestorProfile              @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
-  platformPaymentMethod   PlatformPaymentMethod?       @relation(fields: [platformPaymentMethodId], references: [id])
-  promotionCampaign       PromotionCampaign?           @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
-  adjustments             InvestmentOrderAdjustment[]
-  payments                InvestmentOrderPayment[]
-  withdrawalOrders        WithdrawalOrder[]
-  withdrawalAllocations   WithdrawalOrderAllocation[]
+  id                       String                       @id @default(cuid())
+  investorProfileId        String
+  investmentPlanId         String
+  investmentAccountId      String
+  investmentPlanTierId     String
+  investmentModel          InvestmentModel
+  promotionCampaignId      String?
+  startDate                DateTime?
+  maturityDate             DateTime?
+  expectedReturn           Decimal?                     @db.Decimal(18, 2)
+  accruedProfit            Decimal                      @default(0) @db.Decimal(18, 2)
+  lastAccruedAt            DateTime?
+  completedAt              DateTime?
+  dailyProfitAccumulated   Decimal                      @default(0)
+  lastProfitResetAt        DateTime?
+  units                    Decimal?                     @db.Decimal(18, 8)
+  entryPrice               Decimal?                     @db.Decimal(18, 8)
+  currentValue             Decimal?                     @db.Decimal(18, 2)
+  lastValuationAt          DateTime?
+  isMatured                Boolean                      @default(false)
+  isWithdrawn              Boolean                      @default(false)
+  status                   InvestmentOrderStatus        @default(PENDING_PAYMENT)
+  paymentMethodType        InvestmentPaymentMethodType?
+  platformPaymentMethodId  String?
+  amountPaid               Decimal                      @default(0) @db.Decimal(18, 2)
+  amount                   Decimal                      @db.Decimal(18, 2)
+  currency                 String                       @default("USD")
+  lastPaymentSubmittedAt   DateTime?
+  lastPaymentReviewedAt    DateTime?
+  paymentMetadata          Json?
+  paymentReference         String?
+  paidAt                   DateTime?
+  confirmedAt              DateTime?
+  cancelledAt              DateTime?
+  cancellationReason       String?
+  adminNotes               String?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  runtimeStatus            RuntimeStatus                @default(NOT_STARTED)
+  upgradeAmount            Decimal?                     @db.Decimal(18, 2)
+  upgradePaymentId         String?
+  upgradeRequestedAt       DateTime?
+  capitalUpdateStatus      InvestmentOrderUpgradeStatus @default(DISABLED)
+  capitalUpdateAmount      Decimal?
+  capitalUpdatePaymentId   String?
+  capitalUpdateRequestedAt DateTime?
+  capitalUpdateReviewedAt  DateTime?
+  upgradeReviewedAt        DateTime?
+  upgradeStatus            InvestmentOrderUpgradeStatus @default(DISABLED)
+  bankInfoRequestedAt      DateTime?
+  bankInfoRespondedAt      DateTime?
+  cryptoFundingIntents     CryptoFundingIntent[]
+  investmentEarnings       InvestmentEarning[]
+  investmentAccount        InvestmentAccount            @relation(fields: [investmentAccountId], references: [id], onDelete: Cascade)
+  investmentPlan           InvestmentPlan               @relation(fields: [investmentPlanId], references: [id])
+  investmentPlanTier       InvestmentPlanTier           @relation(fields: [investmentPlanTierId], references: [id])
+  investorProfile          InvestorProfile              @relation(fields: [investorProfileId], references: [id], onDelete: Cascade)
+  platformPaymentMethod    PlatformPaymentMethod?       @relation(fields: [platformPaymentMethodId], references: [id])
+  promotionCampaign        PromotionCampaign?           @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
+  adjustments              InvestmentOrderAdjustment[]
+  payments                 InvestmentOrderPayment[]
+  withdrawalOrders         WithdrawalOrder[]
+  withdrawalAllocations    WithdrawalOrderAllocation[]
 
   @@index([paymentMethodType])
   @@index([platformPaymentMethodId])
