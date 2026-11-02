@@ -199,11 +199,6 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
         order,
       );
 
-      /*
-       * When an offer flow is explicitly supplied, honor that selection.
-       * For legacy checkout links without paymentFlow, retain the previous
-       * availability-based behavior.
-       */
       const isUpgradeFlow =
         routeInput.paymentFlow !== null
           ? routeInput.paymentFlow === "UPGRADE" && hasUpgradeOffer
@@ -214,11 +209,6 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
           ? routeInput.paymentFlow === "CAPITAL_UPDATE" && hasCapitalUpdateOffer
           : hasCapitalUpdateOffer;
 
-      /*
-       * A selected offer must still be available. If an explicitly selected
-       * offer is no longer available, do not silently charge for another
-       * offer or fall back to the regular investment-order payment.
-       */
       if (
         routeInput.paymentFlow !== null &&
         !isUpgradeFlow &&

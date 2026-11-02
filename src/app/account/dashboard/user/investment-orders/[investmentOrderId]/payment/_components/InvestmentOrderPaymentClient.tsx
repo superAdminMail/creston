@@ -125,7 +125,7 @@ export default function InvestmentOrderPaymentClient({
       : "Investment upgrade";
   const flowDescription =
     paymentFlow === "CAPITAL_UPDATE"
-      ? "Submit the capital update approved for this paused investment order."
+      ? "Update your capital and reactivate your investment plan."
       : "Upgrade and reactivate your investment plan.";
   const bankProofActionLabel = isOrderFullySettled
     ? "Payment complete"

@@ -30,7 +30,7 @@ export async function updateInvestmentOrderCapitalOffer(
   const parsed = updateInvestmentOrderCapitalSchema.safeParse({
     orderId: formData.get("orderId"),
     allowCapitalUpdate: formData.get("allowCapitalUpdate"),
-    capitalUpdateReason: formData.get("capitalUpdateReason"),
+    capitalUpdateReason: formData.get("capitalUpdateReason") ?? undefined,
   });
 
   if (!parsed.success) {
