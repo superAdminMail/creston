@@ -213,21 +213,38 @@ export function getInvestmentOrderCapitalUpdateSettings(
   const enabled = capitalUpdate.enabled === true;
 
   /*
-   * Capital Update now uses its own database fields.
+   * Capital Update uses its own database fields.
    *
-   * The upgrade* and legacy metadata fallbacks below are retained
+   * The upgrade* fields and legacy metadata fallbacks are retained
    * for orders created before Capital Update received separate fields.
-   * New writes should use capitalUpdate* fields exclusively.
    */
   const legacyUpgrade = asJsonObject(metadata.upgrade);
 
-  const status =
-    parseUpgradeStatus(offerSource.capitalUpdateStatus) ??
-    parseUpgradeStatus(capitalUpdate.status) ??
-    (enabled
-      ? (parseUpgradeStatus(offerSource.upgradeStatus) ??
-        resolveLegacyUpgradeStatus(metadata))
-      : "DISABLED");
+  const databaseStatus = parseUpgradeStatus(offerSource.capitalUpdateStatus);
+
+  const metadataStatus = parseUpgradeStatus(capitalUpdate.status);
+
+  const legacyStatus =
+    parseUpgradeStatus(offerSource.upgradeStatus) ??
+    resolveLegacyUpgradeStatus(metadata);
+
+  /*
+   * A database status of DISABLED must not hide an enabled offer
+   * that has a valid status in metadata or the legacy fields.
+   *
+   * For enabled offers, prefer an active database status. Otherwise,
+   * fall back to active metadata/legacy status and finally AVAILABLE.
+   * For disabled offers, preserve the stored status or DISABLED.
+   */
+  const status: InvestmentOrderUpgradeStatus = !enabled
+    ? (databaseStatus ?? metadataStatus ?? "DISABLED")
+    : databaseStatus !== null && databaseStatus !== "DISABLED"
+      ? databaseStatus
+      : metadataStatus !== null && metadataStatus !== "DISABLED"
+        ? metadataStatus
+        : legacyStatus !== "DISABLED"
+          ? legacyStatus
+          : "AVAILABLE";
 
   const amount =
     parsePositiveNumber(offerSource.capitalUpdateAmount) ??
