@@ -6,6 +6,7 @@ import {
   decimalToNumber,
   reviewUserSelect,
 } from "@/lib/payments/review/paymentReviewMappers";
+import { asJsonObject } from "@/lib/payments/paymentJson";
 
 export async function getInvestmentPaymentReviewList(): Promise<
   InvestmentPaymentReviewListItem[]
@@ -21,6 +22,7 @@ export async function getInvestmentPaymentReviewList(): Promise<
       type: true,
       status: true,
       submissionKind: true,
+      metadata: true,
       claimedAmount: true,
       approvedAmount: true,
       currency: true,
@@ -52,6 +54,11 @@ export async function getInvestmentPaymentReviewList(): Promise<
     paymentStatus: payment.status,
     type: payment.type,
     submissionKind: payment.submissionKind,
+    flow:
+      payment.submissionKind === "UPGRADE" &&
+      asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE"
+        ? "CAPITAL_UPDATE"
+        : payment.submissionKind,
     claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
       ? decimalToNumber(payment.approvedAmount)

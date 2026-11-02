@@ -16,6 +16,10 @@ import {
   computeInvestmentOrderRecognizedProfit,
 } from "@/lib/services/investment/valuationService";
 import { getPrices } from "@/lib/services/price/priceService";
+import {
+  getInvestmentOrderCapitalUpdateSettings,
+  hasInvestmentOrderCapitalUpdateOffer,
+} from "@/lib/investment/investmentOrderUpgrade";
 
 export type UserDashboardAsset = {
   orderId: string;
@@ -38,6 +42,12 @@ export type UserDashboardStats = {
   inactiveInvestmentOrder: {
     id: string;
     planName: string;
+    href: string;
+  } | null;
+  capitalUpdateOrder: {
+    id: string;
+    planName: string;
+    reason: string | null;
     href: string;
   } | null;
   assets: UserDashboardAsset[];
@@ -79,6 +89,12 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           accruedProfit: true,
           investmentModel: true,
           runtimeStatus: true,
+          paymentMetadata: true,
+          upgradeStatus: true,
+          upgradeAmount: true,
+          upgradePaymentId: true,
+          upgradeRequestedAt: true,
+          upgradeReviewedAt: true,
           units: true,
           currentValue: true,
           investmentEarnings: {
@@ -150,6 +166,12 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   const inactiveInvestmentOrder = orders.find(
     (order) => isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus),
   );
+  const capitalUpdateOrder = orders.find((order) =>
+    hasInvestmentOrderCapitalUpdateOffer(order.runtimeStatus, order),
+  );
+  const capitalUpdateSettings = capitalUpdateOrder
+    ? getInvestmentOrderCapitalUpdateSettings(capitalUpdateOrder)
+    : null;
   const currentInvestment = latestOrder
     ? decimalToNumber(
         toDecimal(latestOrder.amountPaid).greaterThan(0)
@@ -173,6 +195,14 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
             id: inactiveInvestmentOrder.id,
             planName: inactiveInvestmentOrder.investmentPlan.name,
             href: `/account/dashboard/user/investment-orders/${inactiveInvestmentOrder.id}`,
+          }
+        : null,
+      capitalUpdateOrder: capitalUpdateOrder
+        ? {
+            id: capitalUpdateOrder.id,
+            planName: capitalUpdateOrder.investmentPlan.name,
+            reason: capitalUpdateSettings?.reason ?? null,
+            href: `/account/dashboard/user/investment-orders/${capitalUpdateOrder.id}`,
           }
         : null,
       assets,

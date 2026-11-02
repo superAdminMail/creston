@@ -16,6 +16,12 @@ export type InvestmentOrderUpgradeSettings = {
   reviewedAt: string | null;
 };
 
+export type InvestmentOrderCapitalUpdateSettings =
+  InvestmentOrderUpgradeSettings & {
+    enabled: boolean;
+    reason: string | null;
+  };
+
 function parsePositiveNumber(value: unknown): number | null {
   const numeric =
     typeof value === "number"
@@ -37,6 +43,12 @@ function parseIsoString(value: unknown): string | null {
   }
 
   return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function parseText(value: unknown): string | null {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
 }
 
 function parseUpgradeStatus(
@@ -160,6 +172,7 @@ export function hasInvestmentOrderUpgradeOffer(
 
   return (
     isInactiveInvestmentOrderRuntimeStatus(runtimeStatus) &&
+    !getInvestmentOrderCapitalUpdateSettings(source).enabled &&
     settings.status === "AVAILABLE" &&
     settings.amount !== null &&
     settings.paymentId === null
@@ -182,14 +195,91 @@ export function isInvestmentOrderUpgraded(
   const settings = getInvestmentOrderUpgradeSettings(source);
 
   return (
+    !getInvestmentOrderCapitalUpdateSettings(source).enabled &&
     (runtimeStatus === RuntimeStatus.ONGOING ||
       runtimeStatus === RuntimeStatus.ACTIVE) &&
     settings.status === "APPROVED"
   );
 }
 
+export function getInvestmentOrderCapitalUpdateSettings(
+  source:
+    | {
+        upgradeStatus?: string | null;
+        upgradeAmount?: unknown;
+        upgradePaymentId?: string | null;
+        upgradeRequestedAt?: string | Date | null;
+        upgradeReviewedAt?: string | Date | null;
+        paymentMetadata?: unknown;
+      }
+    | unknown,
+): InvestmentOrderCapitalUpdateSettings {
+  const upgrade = getInvestmentOrderUpgradeSettings(source);
+  const metadata = asJsonObject(
+    source && typeof source === "object"
+      ? (source as { paymentMetadata?: unknown }).paymentMetadata
+      : null,
+  );
+  const capitalUpdate = asJsonObject(metadata.capitalUpdate);
+  const enabled = capitalUpdate.enabled === true;
+
+  return {
+    ...upgrade,
+    enabled,
+    allowUpgrade: enabled && upgrade.allowUpgrade,
+    reason: parseText(capitalUpdate.reason),
+  };
+}
+
+export function hasInvestmentOrderCapitalUpdateOffer(
+  _runtimeStatus: string,
+  source:
+    | {
+        upgradeStatus?: string | null;
+        upgradeAmount?: unknown;
+        upgradePaymentId?: string | null;
+        upgradeRequestedAt?: string | Date | null;
+        upgradeReviewedAt?: string | Date | null;
+        paymentMetadata?: unknown;
+      }
+    | unknown,
+) {
+  const settings = getInvestmentOrderCapitalUpdateSettings(source);
+
+  return (
+    settings.enabled &&
+    settings.status === "AVAILABLE" &&
+    settings.amount !== null &&
+    settings.paymentId === null
+  );
+}
+
+export function isInvestmentOrderCapitalUpdated(
+  _runtimeStatus: string,
+  source:
+    | {
+        upgradeStatus?: string | null;
+        upgradeAmount?: unknown;
+        upgradePaymentId?: string | null;
+        upgradeRequestedAt?: string | Date | null;
+        upgradeReviewedAt?: string | Date | null;
+        paymentMetadata?: unknown;
+      }
+    | unknown,
+) {
+  const settings = getInvestmentOrderCapitalUpdateSettings(source);
+
+  return (
+    settings.enabled && settings.status === "APPROVED"
+  );
+}
+
 export function buildInvestmentOrderUpgradePath(orderId: string) {
   return `/account/dashboard/user/investment-orders/${orderId}/upgrade`;
+}
+
+export function buildInvestmentOrderCapitalUpdatePath(orderId: string) {
+  return `/account/dashboard/user/investment-orders/${orderId}/update-capital`;
 }
 
 export function setInvestmentOrderUpgradeSettings(

@@ -69,6 +69,7 @@ export default function InvestmentOrderPaymentClient({
   fundingMethodType,
   paymentMode,
   isUpgradeFlow = false,
+  paymentFlow = "UPGRADE",
 }: {
   order: InvestmentOrderPaymentDetails;
   selectedAmount: number;
@@ -76,6 +77,7 @@ export default function InvestmentOrderPaymentClient({
   fundingMethodType: CheckoutFundingMethodType | null;
   paymentMode: CheckoutPaymentMode | null;
   isUpgradeFlow?: boolean;
+  paymentFlow?: "UPGRADE" | "CAPITAL_UPDATE";
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -117,6 +119,14 @@ export default function InvestmentOrderPaymentClient({
   const isCryptoSelected = selectedFundingMethod === "CRYPTO_PROVIDER";
   const isBankSelected = selectedFundingMethod === "BANK_TRANSFER";
   const effectivePaymentMode = isUpgradeFlow ? "FULL" : selectedPaymentMode;
+  const flowLabel =
+    paymentFlow === "CAPITAL_UPDATE"
+      ? "Update order capital"
+      : "Investment upgrade";
+  const flowDescription =
+    paymentFlow === "CAPITAL_UPDATE"
+      ? "Submit the capital update approved for this paused investment order."
+      : "Upgrade and reactivate your investment plan.";
   const bankProofActionLabel = isOrderFullySettled
     ? "Payment complete"
     : latestBankPayment?.status === "PENDING_REVIEW"
@@ -216,14 +226,14 @@ export default function InvestmentOrderPaymentClient({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              {isUpgradeFlow ? "Investment upgrade" : "Investment checkout"}
+              {isUpgradeFlow ? flowLabel : "Investment checkout"}
             </p>
             <h2 className="mt-2 text-lg font-semibold text-slate-950 sm:text-xl dark:text-white">
               {order.plan.name}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
               {isUpgradeFlow
-                ? "Upgrade and reactivate your investment plan."
+                ? flowDescription
                 : "Choose a funding method, then pay the full amount with crypto wallet or split it with bank transfer."}
             </p>
           </div>
@@ -518,7 +528,7 @@ export default function InvestmentOrderPaymentClient({
                     </p>
                     <p className="mt-2 leading-6">
                       {isUpgradeFlow
-                        ? "This upgrade uses the fixed amount set by the admin. Submit the full amount shown above."
+                        ? `This ${paymentFlow === "CAPITAL_UPDATE" ? "capital update" : "upgrade"} uses the fixed amount set by the admin. Submit the full amount shown above.`
                         : "Partial payments are available when you submit crypto proof. The Pay now checkout button below stays full payment only."}
                     </p>
                   </div>
@@ -582,7 +592,7 @@ export default function InvestmentOrderPaymentClient({
                       ) : (
                         <div className="rounded-[1.15rem] border border-sky-200/60 bg-sky-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm sm:rounded-[1.25rem] dark:border-white/10 dark:bg-slate-900/60 dark:text-slate-300">
                           {isUpgradeFlow
-                            ? "Use the proof button above to submit the fixed upgrade amount."
+                            ? `Use the proof button above to submit the fixed ${paymentFlow === "CAPITAL_UPDATE" ? "capital update" : "upgrade"} amount.`
                             : "Use the proof button above for partial crypto submissions."}
                         </div>
                       )}
@@ -619,6 +629,7 @@ export default function InvestmentOrderPaymentClient({
           maxAmount={isUpgradeFlow ? selectedAmount : order.remainingAmount}
           paymentMode={isUpgradeFlow ? "FULL" : (selectedPaymentMode ?? "FULL")}
           isUpgradeFlow={isUpgradeFlow}
+          paymentFlow={paymentFlow}
           amountReadOnly={
             !isUpgradeFlow &&
             selectedFundingMethod === "BANK_TRANSFER" &&
@@ -639,6 +650,7 @@ export default function InvestmentOrderPaymentClient({
           paymentMode={isUpgradeFlow ? "FULL" : (selectedPaymentMode ?? "FULL")}
           proofMode="CRYPTO_PROVIDER"
           isUpgradeFlow={isUpgradeFlow}
+          paymentFlow={paymentFlow}
         />
       ) : null}
       <div className="flex w-full items-start justify-center gap-3 rounded-[1.25rem] border border-slate-200/70 bg-white/75 px-4 py-3 text-sm text-slate-500 shadow-sm sm:items-center sm:rounded-[1.5rem] dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-300">

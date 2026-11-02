@@ -5,6 +5,8 @@ import { resolveInvestmentTierRoiPercentValue } from "@/lib/investment/formatInv
 import { prisma } from "@/lib/prisma";
 import { decimalToNumber } from "@/lib/services/investment/decimal";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
+import { getCurrentUserRole } from "@/lib/getCurrentUser";
+import { getInvestmentOrderCapitalUpdateSettings } from "@/lib/investment/investmentOrderUpgrade";
 
 import {
   assertAdminInvestmentOrderAccess,
@@ -52,10 +54,17 @@ export type AdminInvestmentOrderDetails = {
   canResume: boolean;
   canDelete: boolean;
   canCancel: boolean;
+  canManageCapitalUpdate: boolean;
+  capitalUpdate: {
+    enabled: boolean;
+    amount: number | null;
+    reason: string | null;
+  };
 };
 
 export async function getAdminInvestmentOrderDetails(orderId: string) {
   await assertAdminInvestmentOrderAccess();
+  const viewerRole = await getCurrentUserRole();
 
   const order = await prisma.investmentOrder.findUnique({
     where: {
@@ -78,6 +87,12 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
       maturityDate: true,
       adminNotes: true,
       cancellationReason: true,
+      paymentMetadata: true,
+      upgradeStatus: true,
+      upgradeAmount: true,
+      upgradePaymentId: true,
+      upgradeRequestedAt: true,
+      upgradeReviewedAt: true,
       investorProfile: {
         select: {
           kycStatus: true,
@@ -130,6 +145,12 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     order.investmentPlan.durationDays,
     order.confirmedAt ?? order.createdAt,
   );
+  const capitalUpdate = getInvestmentOrderCapitalUpdateSettings(order);
+  const canManageCapitalUpdate =
+    viewerRole === "SUPER_ADMIN" &&
+    order.status === "CONFIRMED" &&
+    order.upgradeStatus !== "PENDING_REVIEW" &&
+    order.upgradeStatus !== "APPROVED";
 
   return {
     id: order.id,
@@ -191,5 +212,11 @@ export async function getAdminInvestmentOrderDetails(orderId: string) {
     ),
     canDelete: order.status === "PENDING_PAYMENT",
     canCancel: order.status === "PENDING_PAYMENT",
+    canManageCapitalUpdate,
+    capitalUpdate: {
+      enabled: capitalUpdate.enabled,
+      amount: capitalUpdate.amount,
+      reason: capitalUpdate.reason,
+    },
   } satisfies AdminInvestmentOrderDetails;
 }

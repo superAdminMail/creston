@@ -9,7 +9,10 @@ import {
   formatInvestmentOrderRuntimeStatusLabel,
   isInactiveInvestmentOrderRuntimeStatus,
 } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
-import { isInvestmentOrderUpgraded } from "@/lib/investment/investmentOrderUpgrade";
+import {
+  isInvestmentOrderCapitalUpdated,
+  isInvestmentOrderUpgraded,
+} from "@/lib/investment/investmentOrderUpgrade";
 import { cn } from "@/lib/utils";
 import type { UserInvestmentOrdersData } from "@/actions/investment-order/getUserInvestmentOrders";
 
@@ -121,6 +124,15 @@ export function UserInvestmentOrderCard({
             ) ? (
               <Badge className="rounded-full border-emerald-200/70 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 shadow-sm hover:bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/10">
                 UPGRADED
+              </Badge>
+            ) : null}
+
+            {isInvestmentOrderCapitalUpdated(
+              order.runtimeStatus,
+              order,
+            ) ? (
+              <Badge className="rounded-full border-sky-200/70 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-800 shadow-sm hover:bg-sky-50 dark:border-sky-400/20 dark:bg-sky-500/10 dark:text-sky-200 dark:hover:bg-sky-500/10">
+                CAPITAL UPDATED
               </Badge>
             ) : null}
           </div>

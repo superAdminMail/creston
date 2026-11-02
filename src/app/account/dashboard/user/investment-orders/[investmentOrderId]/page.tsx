@@ -9,8 +9,12 @@ import { formatEnumLabel } from "@/lib/formatters/formatters";
 import { formatInvestmentOrderRuntimeStatusLabel } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import {
+  buildInvestmentOrderCapitalUpdatePath,
   buildInvestmentOrderUpgradePath,
+  getInvestmentOrderCapitalUpdateSettings,
+  hasInvestmentOrderCapitalUpdateOffer,
   hasInvestmentOrderUpgradeOffer,
+  isInvestmentOrderCapitalUpdated,
   isInvestmentOrderUpgraded,
 } from "@/lib/investment/investmentOrderUpgrade";
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
@@ -127,7 +131,16 @@ export default async function Page({ params }: PageProps) {
     order.runtimeStatus,
     order,
   );
+  const hasCapitalUpdateOffer = hasInvestmentOrderCapitalUpdateOffer(
+    order.runtimeStatus,
+    order,
+  );
+  const capitalUpdateSettings = getInvestmentOrderCapitalUpdateSettings(order);
   const isUpgraded = isInvestmentOrderUpgraded(order.runtimeStatus, order);
+  const isCapitalUpdated = isInvestmentOrderCapitalUpdated(
+    order.runtimeStatus,
+    order,
+  );
   const resolvedLifecycle = resolveInvestmentOrderSchedule(
     order.startDate,
     order.maturityDate,
@@ -138,6 +151,7 @@ export default async function Page({ params }: PageProps) {
   const canMakePayment =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
   const canUpgrade = hasUpgradeOffer && !canMakePayment;
+  const canUpdateCapital = hasCapitalUpdateOffer && !canMakePayment;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6  text-white/90 dark:text-gray-300">
@@ -176,6 +190,17 @@ export default async function Page({ params }: PageProps) {
             </Button>
           ) : null}
 
+          {canUpdateCapital ? (
+            <Button
+              asChild
+              className="rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-500 text-white"
+            >
+              <Link href={buildInvestmentOrderCapitalUpdatePath(order.id)}>
+                Update order capital
+              </Link>
+            </Button>
+          ) : null}
+
           {order.status === "PENDING_PAYMENT" ? (
             <CancelPendingInvestmentOrderButton
               orderId={order.id}
@@ -204,6 +229,12 @@ export default async function Page({ params }: PageProps) {
         {isUpgraded ? (
           <Badge className="rounded-full border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-400/10">
             UPGRADED
+          </Badge>
+        ) : null}
+
+        {isCapitalUpdated ? (
+          <Badge className="rounded-full border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200 hover:bg-sky-400/10">
+            CAPITAL UPDATED
           </Badge>
         ) : null}
       </div>
@@ -252,6 +283,15 @@ export default async function Page({ params }: PageProps) {
           <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-200">
             This investment order is inactive. Please contact support to
             reactivate your order.
+          </div>
+        ) : null}
+
+        {hasCapitalUpdateOffer ? (
+          <div className="rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-xs leading-5 text-sky-100">
+            A capital update is required for this order.
+            {capitalUpdateSettings.reason
+              ? ` ${capitalUpdateSettings.reason}`
+              : ""}
           </div>
         ) : null}
 

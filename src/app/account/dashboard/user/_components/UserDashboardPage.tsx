@@ -46,6 +46,12 @@ export type UserDashboardStats = {
     planName: string;
     href: string;
   } | null;
+  capitalUpdateOrder: {
+    id: string;
+    planName: string;
+    reason: string | null;
+    href: string;
+  } | null;
 };
 
 function DashboardStatCard({
@@ -249,6 +255,29 @@ export default function UserDashboardPage({
                 View order
               </Link>
             </div>
+          </AlertTitle>
+        </Alert>
+      ) : null}
+
+      {stats.capitalUpdateOrder ? (
+        <Alert className="rounded-[1.5rem] border border-sky-200/70 bg-sky-50 px-5 py-4 text-sky-950 dark:border-sky-400/20 dark:bg-sky-950 dark:text-sky-100">
+          <AlertTriangle className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+          <AlertTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm font-semibold">
+              One of your orders capital needs to be updated
+              {stats.capitalUpdateOrder.planName
+                ? `: ${stats.capitalUpdateOrder.planName}`
+                : "."}
+              {stats.capitalUpdateOrder.reason
+                ? ` ${stats.capitalUpdateOrder.reason}`
+                : ""}
+            </span>
+            <Link
+              href={stats.capitalUpdateOrder.href}
+              className="inline-flex w-fit items-center rounded-full border border-sky-200/80 bg-white px-3 py-1 text-xs font-medium text-sky-900 transition hover:text-sky-600 dark:border-sky-400/20 dark:bg-slate-900 dark:text-sky-100"
+            >
+              View order
+            </Link>
           </AlertTitle>
         </Alert>
       ) : null}

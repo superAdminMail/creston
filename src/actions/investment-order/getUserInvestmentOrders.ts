@@ -12,6 +12,7 @@ import {
 } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import {
   buildInvestmentOrderUpgradePath,
+  hasInvestmentOrderCapitalUpdateOffer,
   hasInvestmentOrderUpgradeOffer,
 } from "@/lib/investment/investmentOrderUpgrade";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
@@ -82,6 +83,13 @@ function getPrimaryAction(
     paymentMetadata: Record<string, unknown> | null;
   },
 ) {
+  if (hasInvestmentOrderCapitalUpdateOffer(order.runtimeStatus, order)) {
+    return {
+      label: "Update order capital",
+      href: `/account/dashboard/user/investment-orders/${order.id}`,
+    };
+  }
+
   if (
     hasInvestmentOrderUpgradeOffer(order.runtimeStatus, order)
   ) {

@@ -43,9 +43,12 @@ export default function InvestmentPaymentReviewDetail({
   const [rejectionReasonError, setRejectionReasonError] = useState("");
   const [pending, startTransition] = useTransition();
   const isCryptoProof = payment.type === "CRYPTO_PROVIDER";
-  const isUpgradeProof = payment.submissionKind === "UPGRADE";
-  const paymentTypeLabel = isUpgradeProof
-    ? "Upgrade proof"
+  const isUpgradeProof = payment.flow === "UPGRADE";
+  const isCapitalUpdateProof = payment.flow === "CAPITAL_UPDATE";
+  const paymentTypeLabel = isCapitalUpdateProof
+    ? "Capital update proof"
+    : isUpgradeProof
+      ? "Upgrade proof"
     : isCryptoProof
       ? "Crypto proof"
       : "Bank transfer";
@@ -202,19 +205,21 @@ export default function InvestmentPaymentReviewDetail({
 
         <CardContent className="space-y-4 px-4 pb-5 sm:px-6 sm:pb-6">
           <div className="grid gap-4 md:grid-cols-2">
-            {isUpgradeProof ? (
+            {isUpgradeProof || isCapitalUpdateProof ? (
               <>
                 <div className={surfaceTileClass()}>
                   <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                     Proof type
                   </span>
                   <p className="mt-2 font-semibold text-slate-950 dark:text-white">
-                    Upgrade payment proof
+                    {isCapitalUpdateProof
+                      ? "Capital update payment proof"
+                      : "Upgrade payment proof"}
                   </p>
                 </div>
                 <div className={surfaceTileClass()}>
                   <span className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                    Upgrade amount
+                    {isCapitalUpdateProof ? "Capital update amount" : "Upgrade amount"}
                   </span>
                   <p className="mt-2 font-semibold text-slate-950 dark:text-white">
                     {payment.claimedAmount.toLocaleString()} {payment.currency}
@@ -324,8 +329,10 @@ export default function InvestmentPaymentReviewDetail({
         <Card className="overflow-hidden rounded-[2rem] border border-border/60 bg-card shadow-sm">
           <CardHeader className="space-y-2 px-4 pt-5 sm:px-6 sm:pt-6">
             <CardTitle className="text-lg text-slate-950 dark:text-white">
-              {isUpgradeProof
-                ? "Upgrade proof"
+              {isCapitalUpdateProof
+                ? "Capital update proof"
+                : isUpgradeProof
+                  ? "Upgrade proof"
                 : isCryptoProof
                   ? "Crypto proof"
                   : "Receipt"}
@@ -338,8 +345,10 @@ export default function InvestmentPaymentReviewDetail({
               rel="noreferrer"
               className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-900 underline-offset-4 transition hover:bg-sky-100 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100"
             >
-              {isUpgradeProof
-                ? "View uploaded upgrade proof"
+              {isCapitalUpdateProof
+                ? "View uploaded capital update proof"
+                : isUpgradeProof
+                  ? "View uploaded upgrade proof"
                 : isCryptoProof
                   ? "View uploaded crypto proof"
                   : "View uploaded receipt"}
@@ -358,7 +367,11 @@ export default function InvestmentPaymentReviewDetail({
         <CardContent className="space-y-4 px-4 pb-5 sm:px-6 sm:pb-6">
           <div className="rounded-[1.5rem] border border-border/60 bg-muted/20 p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              {isUpgradeProof ? "Upgrade amount" : "Submitted amount"}
+              {isCapitalUpdateProof
+                ? "Capital update amount"
+                : isUpgradeProof
+                  ? "Upgrade amount"
+                  : "Submitted amount"}
             </p>
             <p className="mt-2 font-semibold text-slate-950 dark:text-white">
               {payment.claimedAmount.toLocaleString()} {payment.currency}
@@ -426,9 +439,13 @@ export default function InvestmentPaymentReviewDetail({
                 disabled={pending}
                 className="rounded-2xl px-4 py-2.5 text-sm font-medium"
               >
-                {isUpgradeProof ? "Approve upgrade" : "Approve full payment"}
+                {isCapitalUpdateProof
+                  ? "Approve capital update"
+                  : isUpgradeProof
+                    ? "Approve upgrade"
+                    : "Approve full payment"}
               </Button>
-              {!isUpgradeProof && payment.canOfferPartialApproval ? (
+              {!isUpgradeProof && !isCapitalUpdateProof && payment.canOfferPartialApproval ? (
                 <Button
                   variant="secondary"
                   onClick={handleMarkPartiallyPaid}
@@ -444,7 +461,11 @@ export default function InvestmentPaymentReviewDetail({
                 disabled={pending}
                 className="rounded-2xl px-4 py-2.5 text-sm font-medium"
               >
-                {isUpgradeProof ? "Reject upgrade" : "Reject payment"}
+                {isCapitalUpdateProof
+                  ? "Reject capital update"
+                  : isUpgradeProof
+                    ? "Reject upgrade"
+                    : "Reject payment"}
               </Button>
             </div>
           ) : (

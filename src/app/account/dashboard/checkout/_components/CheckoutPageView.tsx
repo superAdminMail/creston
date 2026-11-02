@@ -10,6 +10,8 @@ import { getWithdrawalFeeCheckoutDetails } from "../_lib/getWithdrawalFeeCheckou
 import { calculateInvestmentOrderBankChargeAmount } from "@/lib/payments/bank/calculateInvestmentOrderBankChargeAmount";
 import {
   getInvestmentOrderUpgradeSettings,
+  getInvestmentOrderCapitalUpdateSettings,
+  hasInvestmentOrderCapitalUpdateOffer,
   hasInvestmentOrderUpgradeOffer,
 } from "@/lib/investment/investmentOrderUpgrade";
 import {
@@ -153,12 +155,20 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
       const upgradeSettings = getInvestmentOrderUpgradeSettings(
         order,
       );
+      const capitalUpdateSettings = getInvestmentOrderCapitalUpdateSettings(
+        order,
+      );
       const isUpgradeFlow = hasInvestmentOrderUpgradeOffer(
         order.runtimeStatus,
         order,
       );
+      const isCapitalUpdateFlow = hasInvestmentOrderCapitalUpdateOffer(
+        order.runtimeStatus,
+        order,
+      );
+      const isOfferPaymentFlow = isUpgradeFlow || isCapitalUpdateFlow;
       const isInvestmentOrderSettled =
-        !isUpgradeFlow &&
+        !isOfferPaymentFlow &&
         (order.remainingAmount <= 0 ||
           order.status === "PAID" ||
           order.status === "CONFIRMED");
@@ -169,8 +179,13 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
       const selectedAmount =
         isInvestmentOrderSettled
           ? 0
-          : isUpgradeFlow && upgradeSettings.amount !== null
-            ? upgradeSettings.amount
+          : isOfferPaymentFlow &&
+              (isCapitalUpdateFlow
+                ? capitalUpdateSettings.amount
+                : upgradeSettings.amount) !== null
+            ? (isCapitalUpdateFlow
+                ? capitalUpdateSettings.amount
+                : upgradeSettings.amount)!
             : routeInput.paymentMode === "PARTIAL" &&
                 (selectedFundingMethodType === "BANK_TRANSFER" ||
                   selectedFundingMethodType === "CRYPTO_PROVIDER")
@@ -193,7 +208,8 @@ export default async function CheckoutPageView({ searchParams }: PageProps) {
           isSettled={isInvestmentOrderSettled}
           fundingMethodType={routeInput.fundingMethodType}
           paymentMode={routeInput.paymentMode}
-          isUpgradeFlow={isUpgradeFlow}
+          isUpgradeFlow={isOfferPaymentFlow}
+          paymentFlow={isCapitalUpdateFlow ? "CAPITAL_UPDATE" : "UPGRADE"}
         />
       );
     }

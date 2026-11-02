@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createReviewNotification } from "@/lib/notifications/createReviewNotification";
 import { reconcileInvestmentOrderPaymentState } from "@/app/account/dashboard/admin/investment-payments/_lib/reconcileInvestmentOrderPaymentState";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
+import { asJsonObject } from "@/lib/payments/paymentJson";
 
 type ReviewInvestmentOrderPaymentBase = {
   paymentId: string;
@@ -39,6 +40,7 @@ export async function approveInvestmentOrderPaymentReview({
       status: true,
       type: true,
       submissionKind: true,
+      metadata: true,
       claimedAmount: true,
       investmentOrderId: true,
       investmentOrder: {
@@ -66,6 +68,9 @@ export async function approveInvestmentOrderPaymentReview({
   }
 
   const paymentKind = readPaymentKind(payment.submissionKind);
+  const isCapitalUpdate =
+    paymentKind === "UPGRADE" &&
+    asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE";
   const claimedAmount = payment.claimedAmount.toNumber();
 
   if (
@@ -82,12 +87,14 @@ export async function approveInvestmentOrderPaymentReview({
   }
 
   if (paymentKind === "UPGRADE" && approvalMode !== "FULL") {
-    throw new Error("Upgrade proofs must be approved in full.");
+    throw new Error(
+      `${isCapitalUpdate ? "Capital update" : "Upgrade"} proofs must be approved in full.`,
+    );
   }
 
   if (paymentKind === "UPGRADE" && approvedAmount !== claimedAmount) {
     throw new Error(
-      "Upgrade approval must match the submitted upgrade amount.",
+      `${isCapitalUpdate ? "Capital update" : "Upgrade"} approval must match the submitted amount.`,
     );
   }
 
@@ -101,7 +108,7 @@ export async function approveInvestmentOrderPaymentReview({
   const currentPaid = payment.investmentOrder.amountPaid.toNumber();
   const remaining = Math.max(orderAmount - currentPaid, 0);
 
-  if (approvedAmount > remaining) {
+  if (paymentKind !== "UPGRADE" && approvedAmount > remaining) {
     throw new Error(
       "Approved amount cannot exceed the remaining order balance.",
     );
@@ -119,7 +126,9 @@ export async function approveInvestmentOrderPaymentReview({
       payment.investmentOrder.upgradeAmount.toNumber();
 
   if (paymentKind === "UPGRADE" && !isActiveUpgradeOffer) {
-    throw new Error("The upgrade offer is no longer available.");
+    throw new Error(
+      `The ${isCapitalUpdate ? "capital update" : "upgrade"} offer is no longer available.`,
+    );
   }
 
   await prisma.$transaction(async (tx) => {
@@ -142,7 +151,16 @@ export async function approveInvestmentOrderPaymentReview({
       throw new Error("This payment submission has already been reviewed.");
     }
 
-    if (paymentKind === "UPGRADE") {
+    if (paymentKind === "UPGRADE" && isCapitalUpdate) {
+      await tx.investmentOrder.update({
+        where: { id: payment.investmentOrderId },
+        data: {
+          upgradeStatus: "APPROVED",
+          upgradeReviewedAt: new Date(),
+          lastPaymentReviewedAt: new Date(),
+        },
+      });
+    } else if (paymentKind === "UPGRADE") {
       await tx.investmentOrder.update({
         where: { id: payment.investmentOrderId },
         data: {
@@ -168,24 +186,32 @@ export async function approveInvestmentOrderPaymentReview({
       title:
         approvalMode === "FULL"
           ? paymentKind === "UPGRADE"
-            ? "Investment upgrade approved"
+            ? isCapitalUpdate
+              ? "Order capital update approved"
+              : "Investment upgrade approved"
             : isCryptoProof
               ? "Investment crypto payment approved"
               : "Investment payment approved"
           : paymentKind === "UPGRADE"
-            ? "Investment upgrade partially approved"
+            ? isCapitalUpdate
+              ? "Order capital update partially approved"
+              : "Investment upgrade partially approved"
             : isCryptoProof
               ? "Investment crypto payment partially approved"
               : "Investment payment partially approved",
       message:
         approvalMode === "FULL"
           ? paymentKind === "UPGRADE"
-            ? "Your investment upgrade proof was approved."
+            ? isCapitalUpdate
+              ? "Your order capital update proof was approved."
+              : "Your investment upgrade proof was approved."
             : isCryptoProof
               ? "Your crypto payment proof was approved."
               : "Your investment payment proof was approved."
           : paymentKind === "UPGRADE"
-            ? "Your investment upgrade proof was partially approved."
+            ? isCapitalUpdate
+              ? "Your order capital update proof was partially approved."
+              : "Your investment upgrade proof was partially approved."
             : isCryptoProof
               ? "Your crypto payment proof was partially approved."
               : "Your investment payment proof was partially approved.",
@@ -198,6 +224,7 @@ export async function approveInvestmentOrderPaymentReview({
         approvedAmount,
         reviewedByUserId: adminUserId,
         submissionKind: paymentKind,
+        flow: isCapitalUpdate ? "CAPITAL_UPDATE" : paymentKind,
       },
     });
   });
@@ -219,6 +246,7 @@ export async function rejectInvestmentOrderPaymentReview({
       id: true,
       investmentOrderId: true,
       submissionKind: true,
+      metadata: true,
       investmentOrder: {
         select: {
           upgradeStatus: true,
@@ -239,6 +267,9 @@ export async function rejectInvestmentOrderPaymentReview({
   }
 
   const paymentKind = readPaymentKind(payment.submissionKind);
+  const isCapitalUpdate =
+    paymentKind === "UPGRADE" &&
+    asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE";
 
   await prisma.$transaction(async (tx) => {
     const updateResult = await tx.investmentOrderPayment.updateMany({
@@ -279,11 +310,15 @@ export async function rejectInvestmentOrderPaymentReview({
       key: `investment-payment-review:${payment.id}:REJECTED:${paymentKind}`,
       title:
         paymentKind === "UPGRADE"
-          ? "Investment upgrade rejected"
+          ? isCapitalUpdate
+            ? "Order capital update rejected"
+            : "Investment upgrade rejected"
           : "Investment payment rejected",
       message:
         paymentKind === "UPGRADE"
-          ? "Your investment upgrade proof was rejected by the admin team."
+          ? isCapitalUpdate
+            ? "Your order capital update proof was rejected by the admin team."
+            : "Your investment upgrade proof was rejected by the admin team."
           : "Your investment payment proof was rejected by the admin team.",
       link: `/account/dashboard/user/investment-orders/${payment.investmentOrderId}/payment`,
       metadata: {
@@ -292,6 +327,7 @@ export async function rejectInvestmentOrderPaymentReview({
         rejectionReason,
         reviewedByUserId: adminUserId,
         submissionKind: paymentKind,
+        flow: isCapitalUpdate ? "CAPITAL_UPDATE" : paymentKind,
       },
     });
   });

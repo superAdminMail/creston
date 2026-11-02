@@ -14,6 +14,7 @@ type Props = {
   proofMode?: "BANK_TRANSFER" | "CRYPTO_PROVIDER";
   paymentMode?: "FULL" | "PARTIAL";
   isUpgradeFlow?: boolean;
+  paymentFlow?: "UPGRADE" | "CAPITAL_UPDATE";
 };
 
 export default function PaymentProofModal({
@@ -28,6 +29,7 @@ export default function PaymentProofModal({
   proofMode = "BANK_TRANSFER",
   paymentMode = "FULL",
   isUpgradeFlow = false,
+  paymentFlow = "UPGRADE",
 }: Props) {
   const isCryptoMode = proofMode === "CRYPTO_PROVIDER";
 
@@ -39,12 +41,12 @@ export default function PaymentProofModal({
       description={
         isCryptoMode
           ? isUpgradeFlow
-            ? "Enter the fixed upgrade amount shown above, then attach a clear receipt image."
+            ? `Enter the fixed ${paymentFlow === "CAPITAL_UPDATE" ? "capital update" : "upgrade"} amount shown above, then attach a clear receipt image.`
             : "Enter the amount you sent and attach a clear receipt image. Partial crypto submissions are supported."
           : "Attach proof for admin review."
       }
       defaultAmount={defaultAmount}
-      amountLabel={`${isUpgradeFlow ? "Upgrade amount" : "Claim amount"} (${currency})`}
+      amountLabel={`${isUpgradeFlow ? (paymentFlow === "CAPITAL_UPDATE" ? "Capital update amount" : "Upgrade amount") : "Claim amount"} (${currency})`}
       amountMin={isUpgradeFlow ? maxAmount : 1}
       amountMax={maxAmount}
       amountReadOnly={amountReadOnly}

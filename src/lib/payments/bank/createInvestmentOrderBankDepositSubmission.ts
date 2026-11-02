@@ -12,6 +12,12 @@ import { resolveInvestmentOrderBankInfoState } from "@/lib/payments/bank/investm
 import { asJsonObject, toJsonValue } from "@/lib/payments/paymentJson";
 import { calculateInvestmentOrderBankChargeAmount } from "./calculateInvestmentOrderBankChargeAmount";
 import type { CheckoutFundingMethodType } from "@/lib/types/payments/checkout.types";
+import {
+  getInvestmentOrderCapitalUpdateSettings,
+  getInvestmentOrderUpgradeSettings,
+  hasInvestmentOrderCapitalUpdateOffer,
+  hasInvestmentOrderUpgradeOffer,
+} from "@/lib/investment/investmentOrderUpgrade";
 
 type CreateInvestmentOrderBankDepositSubmissionInput = {
   investmentOrderId: string;
@@ -65,6 +71,7 @@ export async function createInvestmentOrderBankDepositSubmission({
     select: {
       id: true,
       status: true,
+      runtimeStatus: true,
       amount: true,
       amountPaid: true,
       currency: true,
@@ -95,6 +102,18 @@ export async function createInvestmentOrderBankDepositSubmission({
     throw new Error("Investment order not found");
   }
 
+  const isCapitalUpdateFlow = hasInvestmentOrderCapitalUpdateOffer(
+    order.runtimeStatus,
+    order,
+  );
+  const isApprovedUpgradeFlow = hasInvestmentOrderUpgradeOffer(
+    order.runtimeStatus,
+    order,
+  );
+  const offerSettings = isCapitalUpdateFlow
+    ? getInvestmentOrderCapitalUpdateSettings(order)
+    : getInvestmentOrderUpgradeSettings(order);
+
   if (
     (!isUpgradeFlow &&
       (order.status === InvestmentOrderStatus.PAID ||
@@ -106,6 +125,10 @@ export async function createInvestmentOrderBankDepositSubmission({
         ? "This upgrade can only be submitted for a confirmed investment order"
         : "This investment order has already been paid",
     );
+  }
+
+  if (isUpgradeFlow && !isCapitalUpdateFlow && !isApprovedUpgradeFlow) {
+    throw new Error("This order does not have an active capital update offer.");
   }
 
   if (
@@ -230,6 +253,13 @@ export async function createInvestmentOrderBankDepositSubmission({
     if (new Prisma.Decimal(claimedAmount).lte(0)) {
       throw new Error("Upgrade amount must be greater than zero");
     }
+
+    if (
+      offerSettings.amount === null ||
+      !new Prisma.Decimal(claimedAmount).eq(offerSettings.amount)
+    ) {
+      throw new Error("Claim amount must match the approved capital update amount.");
+    }
   } else if (proofMode === "CRYPTO_PROVIDER") {
     const remainingAmount = new Prisma.Decimal(order.amount).minus(
       order.amountPaid,
@@ -286,7 +316,11 @@ export async function createInvestmentOrderBankDepositSubmission({
         receiptFileId: normalizedReceiptFileId,
         note: note?.trim() || null,
         metadata: {
-          kind: isUpgradeFlow ? "UPGRADE" : "STANDARD",
+          kind: isUpgradeFlow
+            ? isCapitalUpdateFlow
+              ? "CAPITAL_UPDATE"
+              : "UPGRADE"
+            : "STANDARD",
           paymentMode,
           proofMode,
           splitNumber: chargeCalculation?.splitNumber ?? null,
@@ -347,14 +381,20 @@ export async function createInvestmentOrderBankDepositSubmission({
         link: `/account/dashboard/admin/investment-payments/${createdPayment.id}`,
         metadata: {
           kind: isUpgradeFlow
-            ? "INVESTMENT_ORDER_UPGRADE_SUBMITTED"
+            ? isCapitalUpdateFlow
+              ? "INVESTMENT_ORDER_CAPITAL_UPDATE_SUBMITTED"
+              : "INVESTMENT_ORDER_UPGRADE_SUBMITTED"
             : "INVESTMENT_ORDER_BANK_DEPOSIT_SUBMITTED",
           orderId: order.id,
           paymentId: createdPayment.id,
           submittedByUserId: userId,
           investmentPlanName: order.investmentPlan.name,
           currency: order.currency,
-          submissionKind: isUpgradeFlow ? "UPGRADE" : "STANDARD",
+          submissionKind: isUpgradeFlow
+            ? isCapitalUpdateFlow
+              ? "CAPITAL_UPDATE"
+              : "UPGRADE"
+            : "STANDARD",
         },
       })),
     );

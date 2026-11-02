@@ -9,6 +9,7 @@ import {
   FileText,
   PauseCircle,
   PlayCircle,
+  CircleDollarSign,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +21,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { InvestmentOrderRuntimeStatusDialog } from "../../_components/InvestmentOrderRuntimeStatusDialog";
+import { CapitalUpdateOfferDialog } from "../../_components/CapitalUpdateOfferDialog";
 
 const initialState = { status: "idle" as const };
 function InfoCard({
@@ -126,6 +128,24 @@ export function AdminInvestmentOrderDetailsClient({
                 title="Resume investment order"
                 description="Resume this paused investment order so accrual can continue."
                 submitLabel="Resume order"
+              />
+            ) : null}
+
+            {order.canManageCapitalUpdate ? (
+              <CapitalUpdateOfferDialog
+                orderId={order.id}
+                orderAmount={order.amount}
+                currentReason={order.capitalUpdate.reason}
+                isEnabled={order.capitalUpdate.enabled}
+                trigger={
+                  <Button
+                    type="button"
+                    className="rounded-2xl border border-sky-400/20 bg-sky-400/10 text-sky-100 hover:bg-sky-400/15"
+                  >
+                    <CircleDollarSign className="h-4 w-4" />
+                    Update order capital
+                  </Button>
+                }
               />
             ) : null}
           </div>

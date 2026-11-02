@@ -43,6 +43,10 @@ export async function rejectInvestmentOrderPayment(
     revalidatePath(
       `/account/dashboard/user/investment-orders/${result.investmentOrderId}/payment`,
     );
+    revalidatePath(
+      `/account/dashboard/user/investment-orders/${result.investmentOrderId}/update-capital`,
+    );
+    revalidatePath("/account/dashboard/user");
     revalidatePath("/account/dashboard/notifications");
 
     return {

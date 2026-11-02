@@ -10,6 +10,7 @@ import {
   reviewReceiptSelect,
   reviewUserSelect,
 } from "@/lib/payments/review/paymentReviewMappers";
+import { asJsonObject } from "@/lib/payments/paymentJson";
 
 export async function getInvestmentPaymentReviewDetails(
   paymentId: string,
@@ -23,6 +24,7 @@ export async function getInvestmentPaymentReviewDetails(
       type: true,
       status: true,
       submissionKind: true,
+      metadata: true,
       claimedAmount: true,
       approvedAmount: true,
       currency: true,
@@ -116,6 +118,11 @@ export async function getInvestmentPaymentReviewDetails(
     type: payment.type,
     status: payment.status,
     submissionKind: payment.submissionKind,
+    flow:
+      payment.submissionKind === "UPGRADE" &&
+      asJsonObject(payment.metadata).kind === "CAPITAL_UPDATE"
+        ? "CAPITAL_UPDATE"
+        : payment.submissionKind,
     claimedAmount: decimalToNumber(payment.claimedAmount),
     approvedAmount: payment.approvedAmount
       ? decimalToNumber(payment.approvedAmount)

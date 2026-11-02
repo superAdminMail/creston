@@ -284,9 +284,12 @@ export default function InvestmentPaymentReviewList({
                       >
                         {formatEnumLabel(payment.paymentStatus)}
                       </Badge>
-                      {payment.submissionKind === "UPGRADE" ? (
+                      {payment.flow === "UPGRADE" ||
+                      payment.flow === "CAPITAL_UPDATE" ? (
                         <Badge className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/10 dark:text-emerald-200">
-                          Upgrade
+                          {payment.flow === "CAPITAL_UPDATE"
+                            ? "Capital update"
+                            : "Upgrade"}
                         </Badge>
                       ) : null}
                       <Badge
