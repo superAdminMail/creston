@@ -305,14 +305,14 @@ export default async function Page({ params }: PageProps) {
         </p>
 
         {isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus) ? (
-          <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-200">
+          <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-900">
             This investment order is inactive. Please contact support to
             reactivate your order.
           </div>
         ) : null}
 
         {hasCapitalUpdateOffer ? (
-          <div className="rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-xs leading-5 text-sky-100">
+          <div className="rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-xs leading-5 text-sky-900">
             A capital update is required for this order.
             {capitalUpdateSettings.reason
               ? ` ${capitalUpdateSettings.reason}`
