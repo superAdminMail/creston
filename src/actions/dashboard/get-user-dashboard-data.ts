@@ -5,10 +5,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { InvestmentOrderStatus } from "@/generated/prisma";
 import { getCurrentSessionUser } from "@/lib/getCurrentSessionUser";
 import { prisma } from "@/lib/prisma";
-import {
-  decimalToNumber,
-  toDecimal,
-} from "@/lib/services/investment/decimal";
+import { decimalToNumber, toDecimal } from "@/lib/services/investment/decimal";
 import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import { calculateInvestmentAccountBalance } from "@/lib/services/investment/investmentBalanceService";
 import {
@@ -82,55 +79,64 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
         userId: user.id,
       },
       select: {
-      investmentOrders: {
-        where: {
-          status: {
-            in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          amount: true,
-          amountPaid: true,
-          status: true,
-          accruedProfit: true,
-          investmentModel: true,
-          runtimeStatus: true,
-          paymentMetadata: true,
-          upgradeStatus: true,
-          upgradeAmount: true,
-          upgradePaymentId: true,
-          upgradeRequestedAt: true,
-          upgradeReviewedAt: true,
-          units: true,
-          currentValue: true,
-          investmentEarnings: {
-            select: {
-              amount: true,
+        investmentOrders: {
+          where: {
+            status: {
+              in: [InvestmentOrderStatus.PAID, InvestmentOrderStatus.CONFIRMED],
             },
           },
-          investmentPlan: {
-            select: {
-              name: true,
-              investment: {
-                select: {
-                  name: true,
-                  type: true,
-                  symbol: true,
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: {
+            id: true,
+            amount: true,
+            amountPaid: true,
+            status: true,
+            accruedProfit: true,
+            investmentModel: true,
+            runtimeStatus: true,
+            paymentMetadata: true,
+            upgradeStatus: true,
+            upgradeAmount: true,
+            upgradePaymentId: true,
+            upgradeRequestedAt: true,
+            upgradeReviewedAt: true,
+            capitalUpdateStatus: true,
+            capitalUpdateAmount: true,
+            capitalUpdatePaymentId: true,
+            capitalUpdateRequestedAt: true,
+            capitalUpdateReviewedAt: true,
+            units: true,
+            currentValue: true,
+            investmentEarnings: {
+              select: {
+                amount: true,
+              },
+            },
+            investmentPlan: {
+              select: {
+                name: true,
+                investment: {
+                  select: {
+                    name: true,
+                    type: true,
+                    symbol: true,
+                  },
                 },
               },
             },
           },
         },
       },
-      },
     }),
     prisma.notification.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
       select: {
         id: true,
         title: true,
@@ -165,6 +171,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   });
 
   const orders = investorProfile?.investmentOrders ?? [];
+
   const symbols = Array.from(
     new Set(
       orders
@@ -188,6 +195,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
     const currentValue = computeInvestmentOrderCurrentValue(order, price);
     const realizedProfit = computeInvestmentOrderRecognizedProfit(order);
     const principal = toDecimal(order.amount);
+
     const profitPercent = principal.greaterThan(0)
       ? decimalToNumber(realizedProfit.div(principal).mul(100))
       : 0;
@@ -208,15 +216,19 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
   const totalInvestment = balanceSummary.totalPrincipalNumber;
   const allEarnedProfits = balanceSummary.totalEarnedProfitsNumber;
   const latestOrder = activeOrders[0];
-  const inactiveInvestmentOrder = orders.find(
-    (order) => isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus),
+
+  const inactiveInvestmentOrder = orders.find((order) =>
+    isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus),
   );
+
   const capitalUpdateOrder = orders.find((order) =>
     hasInvestmentOrderCapitalUpdateOffer(order.runtimeStatus, order),
   );
+
   const capitalUpdateSettings = capitalUpdateOrder
     ? getInvestmentOrderCapitalUpdateSettings(capitalUpdateOrder)
     : null;
+
   const currentInvestment = latestOrder
     ? decimalToNumber(
         toDecimal(latestOrder.amountPaid).greaterThan(0)
@@ -224,6 +236,7 @@ export async function getUserDashboardDataAction(): Promise<UserDashboardData> {
           : latestOrder.amount,
       )
     : 0;
+
   const latestActivePlan = latestOrder?.investmentPlan?.name ?? "Not selected";
 
   return {
