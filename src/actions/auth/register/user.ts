@@ -98,10 +98,7 @@ export async function registerUserAction(
     const updatedUser = await prisma.user.update({
       where: { email },
       data: {
-        accountStatus: "PENDING_VERIFICATION",
         emailVerificationRequired: true,
-        emailVerified: false,
-        emailVerifiedAt: null,
         isDisposableEmail: false,
         disposableEmailChecked: true,
         disposableEmailDomain: domain,
@@ -110,26 +107,41 @@ export async function registerUserAction(
       },
       select: {
         id: true,
-        accountId: true,
       },
     });
 
-    if (referralCode) {
-      await createReferralForNewUser({
-        newUserId: updatedUser.id,
-        referralCode,
-      });
-    } else if (promoCode) {
-      await createPendingPlatformPromoRewardForUser({
-        userId: updatedUser.id,
-        promoCode,
-      });
+    if (referralCode || promoCode) {
+      try {
+        if (referralCode) {
+          await createReferralForNewUser({
+            newUserId: updatedUser.id,
+            referralCode,
+          });
+        } else if (promoCode) {
+          await createPendingPlatformPromoRewardForUser({
+            userId: updatedUser.id,
+            promoCode,
+          });
+        }
+      } catch (rewardError) {
+        console.error(
+          "[AUTH] Account created, but referral/promo processing failed:",
+          {
+            userId: updatedUser.id,
+            referralCode: referralCode ? "[PROVIDED]" : null,
+            promoCode: promoCode ? "[PROVIDED]" : null,
+            error: rewardError,
+          },
+        );
+      }
     }
 
     return { ok: true };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unable to create account.";
+
+    console.error("[AUTH] Registration failed:", error);
 
     return {
       ok: false,

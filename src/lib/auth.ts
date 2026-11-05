@@ -1,14 +1,16 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/resend/mail";
-import PasswordResetEmailTemplate from "./password-reset/PasswordResetEmailTemplate";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
-import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
 import { sendPostVerificationWelcome } from "@/lib/welcome/sendPostVerificationWelcome";
 import { generateAccountId } from "@/lib/auth/accountID";
-import { APIError, createAuthMiddleware } from "better-auth/api";
 import { UserAccountStatus } from "@/generated/prisma";
+
+import PasswordResetEmailTemplate from "./password-reset/PasswordResetEmailTemplate";
+import VerifyEmailTemplate from "./verify-email/VerifyEmailTemplate";
 
 function normalizeOrigin(value: string | undefined | null) {
   if (!value) return null;
@@ -148,6 +150,7 @@ export const auth = betterAuth({
           data: {
             ...user,
             accountId: generateAccountId(),
+            accountStatus: UserAccountStatus.PENDING_VERIFICATION,
           },
         }),
       },
@@ -200,8 +203,8 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60,
 
-    async onEmailVerification(user: { id: string }) {
-      await prisma.user.updateMany({
+    afterEmailVerification: async (user) => {
+      const activation = await prisma.user.updateMany({
         where: {
           id: user.id,
           accountStatus: UserAccountStatus.PENDING_VERIFICATION,
@@ -213,9 +216,12 @@ export const auth = betterAuth({
           accountStatus: UserAccountStatus.ACTIVE,
         },
       });
-    },
 
-    afterEmailVerification: async (user) => {
+      if (activation.count !== 1) {
+        console.warn(`[AUTH] Account activation skipped for user ${user.id}.`);
+        return;
+      }
+
       await sendPostVerificationWelcome({
         id: user.id,
         name: user.name,
