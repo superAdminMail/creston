@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,9 +22,10 @@ import { cn } from "@/lib/utils";
 import { DashboardSectionCard } from "@/app/account/dashboard/_components/DashboardSectionCard";
 import { DASHBOARD_PAGE_SURFACE_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
 import PasswordForm from "@/app/auth/_components/PasswordForm";
-import { useRouter } from "next/navigation";
 import { AlertTriangle, UserRoundX } from "lucide-react";
 import { deactivateCurrentUserAccount } from "@/actions/auth/deactivateCurrentUserAccount";
+import { signOut } from "@/lib/auth-client";
+import { useAuthStore } from "@/stores/useAuthstore";
 
 type SecuritySectionProps = {
   siteName?: string;
@@ -31,38 +33,47 @@ type SecuritySectionProps = {
 
 export default function SecuritySection({ siteName }: SecuritySectionProps) {
   const [open, setOpen] = useState(false);
+  const [closeAccountOpen, setCloseAccountOpen] = useState(false);
+  const [isClosingAccount, setIsClosingAccount] = useState(false);
+  const [closureError, setClosureError] = useState<string | null>(null);
 
-  const router = useRouter();
+  const queryClient = useQueryClient();
+  const resolvedSiteName = siteName?.trim() || "Havenstone";
 
-  const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [isDeactivating, setIsDeactivating] = useState(false);
-  const [deactivationError, setDeactivationError] = useState<string | null>(
-    null,
-  );
+  async function handleCloseAccount() {
+    if (isClosingAccount) return;
 
-  async function handleDeactivateAccount() {
-    if (isDeactivating) return;
-
-    setIsDeactivating(true);
-    setDeactivationError(null);
+    setIsClosingAccount(true);
+    setClosureError(null);
 
     try {
       const result = await deactivateCurrentUserAccount();
 
       if ("error" in result) {
-        setDeactivationError(result.error);
+        setClosureError(result.error);
         return;
       }
 
-      setDeactivateOpen(false);
-      router.replace("/auth/login?account=deactivated");
-      router.refresh();
+      setCloseAccountOpen(false);
+
+      try {
+        await signOut();
+      } catch (error) {
+        console.error("Sign-out after account closure failed:", error);
+      } finally {
+        useAuthStore.getState().logout();
+        queryClient.clear();
+
+        window.location.replace(
+          result.outcome === "DELETED"
+            ? "/auth/login?account=deleted"
+            : "/auth/login?account=deactivated",
+        );
+      }
     } catch {
-      setDeactivationError(
-        "We couldn't deactivate your account. Please try again.",
-      );
+      setClosureError("We couldn't close your account. Please try again.");
     } finally {
-      setIsDeactivating(false);
+      setIsClosingAccount(false);
     }
   }
 
@@ -159,7 +170,7 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
         </DashboardSectionCard>
 
         <div className="space-y-6">
-          <DashboardSectionCard className="space-y-4 hidden p-5 sm:p-6">
+          <DashboardSectionCard className="hidden space-y-4 p-5 sm:p-6">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
                 Security posture
@@ -217,12 +228,14 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-100">
-                    Deactivate My Account
+                  <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                    Close My Account
                   </p>
 
-                  <p className="max-w-xl text-sm leading-6 text-slate-400">
-                    Deactivate your account and remove it from {siteName}.
+                  <p className="max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Permanently delete your account if you have no financial
+                    records, or deactivate it if financial records must be
+                    retained.
                   </p>
                 </div>
               </div>
@@ -232,11 +245,11 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
                 variant="destructive"
                 className="shrink-0 uppercase"
                 onClick={() => {
-                  setDeactivationError(null);
-                  setDeactivateOpen(true);
+                  setClosureError(null);
+                  setCloseAccountOpen(true);
                 }}
               >
-                Deactivate
+                Close account
               </Button>
             </div>
           </DashboardSectionCard>
@@ -263,11 +276,11 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
       </Dialog>
 
       <Dialog
-        open={deactivateOpen}
+        open={closeAccountOpen}
         onOpenChange={(nextOpen) => {
-          if (isDeactivating) return;
-          setDeactivateOpen(nextOpen);
-          if (!nextOpen) setDeactivationError(null);
+          if (isClosingAccount) return;
+          setCloseAccountOpen(nextOpen);
+          if (!nextOpen) setClosureError(null);
         }}
       >
         <DialogContent className="max-h-[92dvh] w-[min(96vw,32rem)] overflow-y-auto !rounded-[1.75rem] !border-slate-200/80 !bg-none !bg-white/95 !p-6 !text-slate-950 !shadow-[0_24px_70px_rgba(15,23,42,0.18)] dark:!border-white/10 dark:!bg-zinc-950/95 dark:!text-white dark:!shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
@@ -276,38 +289,44 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
               <AlertTriangle className="size-5 text-red-500 dark:text-red-400" />
             </div>
 
-            <DialogTitle>Deactivate your account?</DialogTitle>
+            <DialogTitle>Close your account?</DialogTitle>
 
             <DialogDescription className="text-slate-600 dark:text-slate-400">
-              Are you sure you want to deactivate your account? You will lose
-              access to your {siteName} account.
+              You are about to close your {resolvedSiteName} account. This
+              action will end your access to the account.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
             <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-              Before you continue
+              What happens when you continue?
             </p>
 
             <ul className="space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
               <li>
-                • You will be signed out and unable to sign in while your
-                account is deactivated.
+                • If you have no financial records, your account will be
+                permanently deleted.
               </li>
-              <li>• Your financial records will be retained.</li>
               <li>
-                • To request reinstatement, contact {siteName} support. Approval
-                is subject to review by an authorized Administrator.
+                • If financial records exist, your account will be deactivated
+                and those records will be retained.
+              </li>
+              <li>
+                • You will be signed out and will no longer be able to sign in.
+              </li>
+              <li>
+                • Deactivated accounts may request reinstatement through{" "}
+                {resolvedSiteName} support, subject to review and approval.
               </li>
             </ul>
           </div>
 
-          {deactivationError && (
+          {closureError && (
             <p
               role="alert"
               className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300"
             >
-              {deactivationError}
+              {closureError}
             </p>
           )}
 
@@ -315,8 +334,8 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
             <Button
               type="button"
               variant="outline"
-              disabled={isDeactivating}
-              onClick={() => setDeactivateOpen(false)}
+              disabled={isClosingAccount}
+              onClick={() => setCloseAccountOpen(false)}
               className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-600 dark:border-white/10 dark:bg-zinc-900 dark:text-slate-200 dark:hover:bg-white/[0.08]"
             >
               Keep my account
@@ -325,10 +344,12 @@ export default function SecuritySection({ siteName }: SecuritySectionProps) {
             <Button
               type="button"
               variant="destructive"
-              disabled={isDeactivating}
-              onClick={handleDeactivateAccount}
+              disabled={isClosingAccount}
+              onClick={handleCloseAccount}
             >
-              {isDeactivating ? "Deactivating..." : "Confirm deactivation"}
+              {isClosingAccount
+                ? "Closing account..."
+                : "Confirm account closure"}
             </Button>
           </div>
         </DialogContent>
