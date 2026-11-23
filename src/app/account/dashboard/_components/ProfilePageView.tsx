@@ -12,6 +12,12 @@ import {
   Share2,
   ShieldCheck,
   User2,
+  ArrowUpRight,
+  Users,
+  Gift,
+  Clock3,
+  BadgeCheck,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -92,20 +98,22 @@ export default function ProfilePageView({
 
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
-
   const [accountIdCopied, setAccountIdCopied] = useState(false);
-
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
+
   const avatarFallback = getUserInitials({
     name: user.name ?? undefined,
     email: user.email ?? "",
     username: user.username ?? undefined,
   });
+
   const canReviewInvestmentProfile = user.role === "USER";
   const legacyBadge = getLegacyAccountBadgeMeta(Boolean(user.isLegacyUser));
   const migrationMeta = getMigrationStatusMeta(user.migrationStatus ?? null);
+
   const hasCompletedMigration =
     Boolean(user.migratedAt) || user.migrationStatus === "MIGRATED";
+
   const referralSummary = referrals.reduce(
     (acc, referral) => {
       acc.total += 1;
@@ -175,52 +183,57 @@ export default function ProfilePageView({
 
   return (
     <div className={PROFILE_PANEL_CLASS}>
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 border-b border-slate-200/70 pb-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pb-6 dark:border-white/10">
-        <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Personal Profile
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="flex flex-col gap-5 border-b border-slate-200/70 pb-6 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-sky-800 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Account settings
+            </div>
+
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl dark:text-white">
+              Personal Profile
+            </h1>
+
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+              View and manage your personal account information, security
+              details, and referral activity.
+            </p>
           </div>
 
-          <h1 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl dark:text-white">
-            Personal Profile
-          </h1>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
-            Manage your account name, username, and profile image here.
-          </p>
-        </div>
-
-        <div className="flex w-full flex-col gap-3 lg:max-w-sm">
-          <Button
-            asChild
-            className="inline-flex w-full items-center justify-center rounded-2xl bg-[#3c9ee0] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.22)] transition hover:bg-[#2f8bd0] sm:px-5"
-          >
-            <Link href="/account/dashboard/profile/update">Edit Profile</Link>
-          </Button>
-
-          {canReviewInvestmentProfile ? (
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-44">
             <Button
               asChild
-              variant="outline"
-              className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-950 sm:px-5 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
+              className="w-full rounded-2xl bg-[#3c9ee0] px-5 text-white shadow-[0_10px_30px_rgba(37,99,235,0.18)] hover:bg-[#2f8bd0]"
             >
-              <Link href="/account/dashboard/user/investment-profile">
-                Review investment profile
+              <Link href="/account/dashboard/profile/update">
+                Edit Profile
+                <ArrowUpRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-          ) : null}
-        </div>
-      </div>
 
-      <div className="mt-5 flex justify-center lg:mt-6">
-        <div className="w-full max-w-5xl space-y-4 sm:space-y-6">
+            {canReviewInvestmentProfile ? (
+              <Button
+                asChild
+                variant="outline"
+                className="w-full rounded-2xl border-slate-200/80 bg-white/80 dark:border-white/10 dark:bg-white/[0.04]"
+              >
+                <Link href="/account/dashboard/user/investment-profile">
+                  Investment profile
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            ) : null}
+          </div>
+        </header>
+
+        <div className="mt-6 space-y-5 sm:space-y-6">
           <section className={PROFILE_SURFACE_CLASS}>
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => setAvatarPreviewOpen(true)}
-                className="group relative h-24 w-24 overflow-hidden rounded-full border border-slate-200/80 bg-white/80 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/25 sm:h-28 sm:w-28 dark:border-white/10 dark:bg-white/[0.04]"
+                className="group relative mx-auto h-24 w-24 shrink-0 overflow-hidden rounded-full border border-slate-200/80 bg-white/80 shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/25 sm:mx-0 sm:h-28 sm:w-28 dark:border-white/10 dark:bg-white/[0.04]"
                 aria-label="Preview profile image"
               >
                 <Avatar className="h-full w-full">
@@ -234,63 +247,78 @@ export default function ProfilePageView({
                   </AvatarFallback>
                 </Avatar>
 
-                <span className="absolute inset-x-0 bottom-0 bg-slate-950/55 py-1 text-[10px] font-medium uppercase tracking-[0.22em] text-white opacity-0 transition group-hover:opacity-100 dark:bg-black/50">
+                <span className="absolute inset-x-0 bottom-0 bg-slate-950/55 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white opacity-0 transition group-hover:opacity-100">
                   Preview
                 </span>
               </button>
 
-              {user.isEmailVerified ? (
-                <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Email verified
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  {user.isEmailVerified ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-100">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Email verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
+                      Email not verified
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <div className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200">
-                  Email not verified
-                </div>
-              )}
 
-              {legacyBadge ? (
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <span
-                    className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${legacyBadge.className}`}
-                  >
-                    {legacyBadge.label}
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${migrationMeta.className}`}
-                  >
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+                  {user.name}
+                </h2>
+
+                <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
+                  {user.role ?? "Investor"}
+                </p>
+
+                <p className="mt-1 break-all text-sm text-slate-600 dark:text-slate-400">
+                  {user.email}
+                </p>
+
+                {legacyBadge ? (
+                  <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
-                    />
-                    {migrationMeta.label}
-                  </span>
-                </div>
-              ) : null}
-
-              <h2 className="mt-4 text-xl font-semibold text-slate-950 dark:text-white">
-                {user.name}
-              </h2>
-
-              <p className="mt-1 text-sm text-sky-700 dark:text-sky-200">
-                {user.role ?? "Investor"}
-              </p>
+                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] ${legacyBadge.className}`}
+                    >
+                      {legacyBadge.label}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] ${migrationMeta.className}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
+                      />
+                      {migrationMeta.label}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </section>
 
           <section className={PROFILE_SURFACE_CLASS}>
-            <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-              Account Information
-            </h3>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Manage your personal account details here.
-            </p>
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                  Account overview
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
+                  Account Information
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Your registered account details.
+                </p>
+              </div>
+            </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "min-w-0 p-4")}>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-sky-700 dark:text-sky-300" />
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
                     Account ID
                   </p>
                 </div>
@@ -324,6 +352,7 @@ export default function ProfilePageView({
                 label="Full Name"
                 value={user.name}
               />
+
               <InfoCard
                 icon={
                   <Mail className="h-4 w-4 text-sky-700 dark:text-sky-300" />
@@ -331,6 +360,7 @@ export default function ProfilePageView({
                 label="Email Address"
                 value={user.email}
               />
+
               <InfoCard
                 icon={
                   <User2 className="h-4 w-4 text-sky-700 dark:text-sky-300" />
@@ -343,29 +373,32 @@ export default function ProfilePageView({
 
           {user.isLegacyUser ? (
             <section className={PROFILE_SURFACE_CLASS}>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                    Migration timeline
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                    Account history
+                  </p>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
+                    Migration Timeline
                   </h3>
-                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                    Legacy account history for your {resolvedSiteName}
-                    {""} profile.
+                  <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Legacy account history for your {resolvedSiteName} profile.
                   </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${migrationMeta.className}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] ${migrationMeta.className}`}
                   >
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${migrationMeta.dotClassName}`}
                     />
                     {migrationMeta.label}
                   </span>
+
                   {legacyBadge ? (
                     <span
-                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] ${legacyBadge.className}`}
+                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] ${legacyBadge.className}`}
                     >
                       {legacyBadge.label}
                     </span>
@@ -374,25 +407,30 @@ export default function ProfilePageView({
               </div>
 
               {hasCompletedMigration ? (
-                <div className="mt-5 rounded-[1.4rem] border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(236,253,245,0.92))] p-4 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-800 dark:text-sky-200">
-                    {getMigrationTimelineTitle()}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+                <div className="mt-5 rounded-2xl border border-sky-200/70 bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(236,253,245,0.92))] p-5 dark:border-sky-400/20 dark:bg-sky-400/10">
+                  <div className="flex items-center gap-2 text-sky-800 dark:text-sky-200">
+                    <BadgeCheck className="h-5 w-5" />
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em]">
+                      {getMigrationTimelineTitle()}
+                    </p>
+                  </div>
+
+                  <p className="mt-3 text-base font-semibold text-slate-950 dark:text-white">
                     {formatMigrationTimelineTimestamp(user.migratedAt)}
                   </p>
+
                   <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-200">
                     {getMigrationCompletedMessage(resolvedSiteName)}
                   </p>
                 </div>
               ) : (
-                <div className="mt-5 rounded-[1.4rem] border border-slate-200/70 bg-white/80 p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                    Migration timeline
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
-                    Migration pending
-                  </p>
+                <div className="mt-5 rounded-2xl border border-slate-200/70 bg-white/80 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                  <div className="flex items-center gap-2">
+                    <Clock3 className="h-5 w-5 text-slate-500" />
+                    <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                      Migration pending
+                    </p>
+                  </div>
                   <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
                     Migration status has not been completed yet.
                   </p>
@@ -402,163 +440,213 @@ export default function ProfilePageView({
           ) : null}
 
           {canReviewInvestmentProfile ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <section className={cn(PROFILE_SURFACE_CLASS, "p-4 sm:p-5")}>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
-                  Next step
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  Keep your investment profile up to date separately so your
-                  account records stay clean and easy to review.
+            <section className={PROFILE_SURFACE_CLASS}>
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                  Account management
                 </p>
+                <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
+                  Investment Profile & Security
+                </h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Manage your investment information and account security.
+                </p>
+              </div>
 
-                <div className="mt-4">
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700 dark:bg-sky-400/10 dark:text-sky-300">
+                    <User2 className="h-5 w-5" />
+                  </div>
+
+                  <h4 className="mt-4 text-sm font-semibold text-slate-950 dark:text-white">
+                    Investment Profile
+                  </h4>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Keep your investment profile up to date separately so your
+                    account records stay clean and easy to review.
+                  </p>
+
                   <Button
                     asChild
-                    className="w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
+                    className="mt-4 w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0]"
                   >
                     <Link href="/account/dashboard/user/investment-profile">
                       Open investment profile
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
-              </section>
 
-              <section className={cn(PROFILE_SURFACE_CLASS, "p-4 sm:p-5")}>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
-                  Security Notice
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                  Your account is protected by a password and you can change it
-                  at any time.
-                </p>
-              </section>
-            </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+
+                  <h4 className="mt-4 text-sm font-semibold text-slate-950 dark:text-white">
+                    Security Notice
+                  </h4>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Your account is protected by a password and you can change
+                    it at any time.
+                  </p>
+                </div>
+              </div>
+            </section>
           ) : (
             <section className={PROFILE_SURFACE_CLASS}>
-              <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                Security Notice
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                Your account is protected by a password and you can change it at
-                any time.
-              </p>
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
+                    Security Notice
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                    Your account is protected by a password and you can change
+                    it at any time.
+                  </p>
+                </div>
+              </div>
             </section>
           )}
 
           {canReviewInvestmentProfile ? (
-            <section className={PROFILE_SURFACE_CLASS}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                    Referral Code
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Share this code so your referral reward can be tracked.
-                  </p>
+            <>
+              <section className={PROFILE_SURFACE_CLASS}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                      Referral programme
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
+                      Your Referral Code
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      Share your code so your referral activity can be tracked.
+                    </p>
+                  </div>
+
+                  <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-sky-800 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
+                    <Gift className="h-3.5 w-3.5" />
+                    Ready
+                  </span>
                 </div>
 
-                <div className="rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-sky-800 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
-                  Ready
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.04]">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                  Your code
-                </p>
-
-                <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="break-all font-mono text-lg font-semibold tracking-[0.2em] text-slate-950 dark:text-white">
-                    {user.referralCode ?? "Generating..."}
+                <div className="mt-5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.04]">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    Your referral code
                   </p>
 
-                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                    <Button
-                      type="button"
-                      onClick={handleCopyReferralCode}
-                      disabled={!user.referralCode}
-                      variant="outline"
-                      className="w-full rounded-2xl border border-slate-200/80 bg-white/80 px-4 text-slate-700 hover:bg-slate-50 hover:text-slate-950 sm:w-auto dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:bg-white/[0.08] dark:hover:text-white"
-                    >
-                      {copied ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                      {copied ? "Copied" : "Copy code"}
-                    </Button>
+                  <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="break-all font-mono text-xl font-semibold tracking-[0.18em] text-slate-950 dark:text-white">
+                      {user.referralCode ?? "Generating..."}
+                    </p>
 
-                    <Button
-                      type="button"
-                      onClick={handleShareReferralLink}
-                      disabled={!user.referralCode}
-                      className="w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0] sm:w-auto"
-                    >
-                      {shared ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <Share2 className="h-4 w-4" />
-                      )}
-                      {shared ? "Shared" : "Share link"}
-                    </Button>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                      <Button
+                        type="button"
+                        onClick={handleCopyReferralCode}
+                        disabled={!user.referralCode}
+                        variant="outline"
+                        className="w-full rounded-2xl border-slate-200/80 bg-white/80 sm:w-auto dark:border-white/10 dark:bg-white/[0.04]"
+                      >
+                        {copied ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                        {copied ? "Copied" : "Copy code"}
+                      </Button>
+
+                      <Button
+                        type="button"
+                        onClick={handleShareReferralLink}
+                        disabled={!user.referralCode}
+                        className="w-full rounded-2xl bg-[#3c9ee0] text-white hover:bg-[#2f8bd0] sm:w-auto"
+                      >
+                        {shared ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Share2 className="h-4 w-4" />
+                        )}
+                        {shared ? "Shared" : "Share link"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
-          ) : null}
+              </section>
 
-          {canReviewInvestmentProfile ? (
-            <section className={PROFILE_SURFACE_CLASS}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-950 dark:text-white">
-                    Referral Activity
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    View your referral activity.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                <ReferralSummaryCard
-                  label="Total"
-                  value={referralSummary.total}
-                />
-                <ReferralSummaryCard
-                  label="Pending"
-                  value={referralSummary.pending}
-                  tone="amber"
-                />
-                <ReferralSummaryCard
-                  label="Activated"
-                  value={referralSummary.active}
-                  tone="blue"
-                />
-                <ReferralSummaryCard
-                  label="Rewarded"
-                  value={referralSummary.rewarded}
-                  tone="emerald"
-                />
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {referrals.length > 0 ? (
-                  referrals.map((referral) => (
-                    <ReferralActivityRow
-                      key={referral.id}
-                      referral={referral}
-                    />
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-400">
-                    No one has used your referral code yet. Once someone signs
-                    up with your link, their status will appear here.
+              <section className={PROFILE_SURFACE_CLASS}>
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                      Referral programme
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-slate-950 dark:text-white">
+                      Referral Activity
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      Track the progress of people who joined using your code.
+                    </p>
                   </div>
-                )}
-              </div>
-            </section>
+
+                  <div className="mt-2 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 sm:mt-0">
+                    <Users className="h-4 w-4" />
+                    {referralSummary.total} total referrals
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                  <ReferralSummaryCard
+                    label="Total"
+                    value={referralSummary.total}
+                  />
+                  <ReferralSummaryCard
+                    label="Pending"
+                    value={referralSummary.pending}
+                    tone="amber"
+                  />
+                  <ReferralSummaryCard
+                    label="Activated"
+                    value={referralSummary.active}
+                    tone="blue"
+                  />
+                  <ReferralSummaryCard
+                    label="Rewarded"
+                    value={referralSummary.rewarded}
+                    tone="emerald"
+                  />
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  {referrals.length > 0 ? (
+                    referrals.map((referral) => (
+                      <ReferralActivityRow
+                        key={referral.id}
+                        referral={referral}
+                      />
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200/80 bg-white/80 px-5 py-8 text-center dark:border-white/10 dark:bg-white/[0.04]">
+                      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-400">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-slate-950 dark:text-white">
+                        No referrals yet
+                      </p>
+                      <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">
+                        No one has used your referral code yet. Once someone
+                        signs up with your link, their status will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </>
           ) : null}
         </div>
       </div>

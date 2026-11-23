@@ -55,11 +55,11 @@ export const DASHBOARD_MENU = {
           href: "/account/dashboard/user",
           icon: LayoutDashboard,
         },
-        {
-          name: "Asset Price Checker",
-          href: "/account/dashboard/user/asset-checker",
-          icon: SearchCheck,
-        },
+        // {
+        //   name: "Asset Price Checker",
+        //   href: "/account/dashboard/user/asset-checker",
+        //   icon: SearchCheck,
+        // },
       ],
     },
     {

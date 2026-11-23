@@ -1,15 +1,9 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
 import { formatEnumLabel } from "@/lib/formatters/formatters";
-import {
-  formatInvestmentOrderRuntimeStatusLabel,
-  isInactiveInvestmentOrderRuntimeStatus,
-} from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
+import { isInactiveInvestmentOrderRuntimeStatus } from "@/lib/investment/formatInvestmentOrderRuntimeStatusLabel";
 import {
   buildInvestmentOrderCapitalUpdatePath,
   buildInvestmentOrderUpgradePath,
@@ -22,7 +16,8 @@ import {
 import { formatInvestmentTierReturnLabel } from "@/lib/investment/formatInvestmentTierReturnLabel";
 import { resolveInvestmentOrderSchedule } from "@/lib/services/investment/orderLifecycle";
 import { computeInvestmentOrderRecognizedProfit } from "@/lib/services/investment/valuationService";
-import { CancelPendingInvestmentOrderButton } from "@/components/account/CancelPendingInvestmentOrderButton";
+
+import InvestmentOrderDetailsClient from "../_components/InvestmentOrderDetailsClient";
 
 type DecimalLike = {
   toNumber(): number;
@@ -62,15 +57,12 @@ export default async function Page({ params }: PageProps) {
       runtimeStatus: true,
       isMatured: true,
       paymentMethodType: true,
-      paymentMetadata: true,
       startDate: true,
       maturityDate: true,
       paidAt: true,
       confirmedAt: true,
       paymentReference: true,
       createdAt: true,
-      currentValue: true,
-      accruedProfit: true,
       investmentPlanTier: {
         select: {
           fixedRoiPercent: true,
@@ -98,15 +90,11 @@ export default async function Page({ params }: PageProps) {
           amount: true,
         },
       },
-
-      // Upgrade offer fields
       upgradeStatus: true,
       upgradeAmount: true,
       upgradePaymentId: true,
       upgradeRequestedAt: true,
       upgradeReviewedAt: true,
-
-      // Capital Update fields must be read independently of Upgrade.
       capitalUpdateStatus: true,
       capitalUpdateAmount: true,
       capitalUpdatePaymentId: true,
@@ -121,8 +109,8 @@ export default async function Page({ params }: PageProps) {
   const expectedReturn = toNumber(order.expectedReturn);
   const amountPaid = toNumber(order.amountPaid);
   const remainingAmount = Math.max(amount - amountPaid, 0);
-  const earnedProfit = computeInvestmentOrderRecognizedProfit(order);
 
+  const earnedProfit = Number(computeInvestmentOrderRecognizedProfit(order));
   const returnLabel = formatInvestmentTierReturnLabel({
     investmentModel: order.investmentModel,
     fixedRoiPercent: order.investmentPlanTier.fixedRoiPercent
@@ -169,191 +157,56 @@ export default async function Page({ params }: PageProps) {
   const canMakePayment =
     order.status === "PENDING_PAYMENT" || order.status === "PARTIALLY_PAID";
 
-  // Keep the existing payment eligibility rule while evaluating
-  // Upgrade and Capital Update independently.
   const canUpgrade = hasUpgradeOffer && !canMakePayment;
   const canUpdateCapital = hasCapitalUpdateOffer && !canMakePayment;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 text-white/90 dark:text-gray-300">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {order.investmentPlan.investment.name}
-          </h1>
-
-          <p className="text-sm text-muted-foreground">
-            {order.investmentPlan.name}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          {canMakePayment ? (
-            <Button
-              asChild
-              className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white"
-            >
-              <Link
-                href={`/account/dashboard/user/investment-orders/${order.id}/payment`}
-              >
-                Make Payment
-              </Link>
-            </Button>
-          ) : null}
-
-          {canUpgrade ? (
-            <Button
-              asChild
-              className="rounded-2xl bg-gradient-to-r from-green-800 to-sky-500 text-white"
-            >
-              <Link href={buildInvestmentOrderUpgradePath(order.id)}>
-                Upgrade
-              </Link>
-            </Button>
-          ) : null}
-
-          {canUpdateCapital ? (
-            <Button
-              asChild
-              className="rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-500 text-white"
-            >
-              <Link href={buildInvestmentOrderCapitalUpdatePath(order.id)}>
-                Update order capital
-              </Link>
-            </Button>
-          ) : null}
-
-          {order.status === "PENDING_PAYMENT" ? (
-            <CancelPendingInvestmentOrderButton
-              orderId={order.id}
-              className="rounded-2xl"
-            />
-          ) : null}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border p-4">
-        <div>
-          <p className="text-sm font-medium">Status</p>
-
-          <p className="text-xs text-muted-foreground">
-            {formatEnumLabel(order.status)}
-          </p>
-
-          <p className="mt-1 text-xs text-muted-foreground">
-            Runtime:{" "}
-            {formatInvestmentOrderRuntimeStatusLabel(order.runtimeStatus)}
-          </p>
-        </div>
-
-        {order.isMatured && (
-          <span className="text-xs font-medium text-green-500">Matured</span>
-        )}
-
-        {isUpgraded ? (
-          <Badge className="rounded-full border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-400/10">
-            UPGRADED
-          </Badge>
-        ) : null}
-
-        {isCapitalUpdated ? (
-          <Badge className="rounded-full border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs font-medium text-sky-200 hover:bg-sky-400/10">
-            CAPITAL UPDATED
-          </Badge>
-        ) : null}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Invested</p>
-          <p className="text-lg font-semibold">${amount.toFixed(2)}</p>
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Return</p>
-          <p className="text-lg font-semibold">
-            {returnLabel ?? "Not configured"}
-          </p>
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Earned</p>
-          <p className="text-lg font-semibold">${earnedProfit.toFixed(2)}</p>
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Expected Return</p>
-          <p className="text-lg font-semibold">${expectedReturn.toFixed(2)}</p>
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Amount Paid</p>
-          <p className="text-lg font-semibold">${amountPaid.toFixed(2)}</p>
-        </div>
-
-        <div className="rounded-xl border p-4">
-          <p className="text-xs text-muted-foreground">Remaining</p>
-          <p className="text-lg font-semibold">${remainingAmount.toFixed(2)}</p>
-        </div>
-      </div>
-
-      <div className="space-y-2 rounded-xl border p-4">
-        <p className="text-sm font-medium">Lifecycle</p>
-
-        <p className="text-xs text-muted-foreground">
-          Start and maturity dates are anchored when the order is confirmed.
-        </p>
-
-        {isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus) ? (
-          <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-900">
-            This investment order is inactive. Please contact support to
-            reactivate your order.
-          </div>
-        ) : null}
-
-        {hasCapitalUpdateOffer ? (
-          <div className="rounded-lg border border-sky-400/20 bg-sky-400/10 px-3 py-2 text-xs leading-5 text-sky-900">
-            A capital update is required for this order.
-            {capitalUpdateSettings.reason
-              ? ` ${capitalUpdateSettings.reason}`
-              : ""}
-          </div>
-        ) : null}
-
-        <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
-          <p>
-            Start:{" "}
-            {resolvedLifecycle.startDate
-              ? new Date(resolvedLifecycle.startDate).toLocaleDateString()
-              : "Not started"}
-          </p>
-
-          <p>
-            Maturity:{" "}
-            {resolvedLifecycle.maturityDate
-              ? new Date(resolvedLifecycle.maturityDate).toLocaleDateString()
-              : "Not set"}
-          </p>
-
-          <p>Payment method: {paymentMethodLabel}</p>
-
-          <p>Payment reference: {order.paymentReference || "Not provided"}</p>
-
-          <p>
-            Paid at:{" "}
-            {order.paidAt
-              ? new Date(order.paidAt).toLocaleDateString()
-              : "Not paid yet"}
-          </p>
-
-          <p>
-            Confirmed at:{" "}
-            {order.confirmedAt
-              ? new Date(order.confirmedAt).toLocaleDateString()
-              : "Awaiting confirmation"}
-          </p>
-        </div>
-      </div>
-    </div>
+    <InvestmentOrderDetailsClient
+      order={{
+        id: order.id,
+        amount,
+        amountPaid,
+        expectedReturn,
+        earnedProfit,
+        remainingAmount,
+        currency: order.currency,
+        investmentModel: order.investmentModel,
+        status: order.status,
+        runtimeStatus: order.runtimeStatus,
+        isMatured: order.isMatured,
+        paymentMethodLabel,
+        paymentReference: order.paymentReference,
+        startDate: resolvedLifecycle.startDate?.toISOString() ?? null,
+        maturityDate: resolvedLifecycle.maturityDate?.toISOString() ?? null,
+        paidAt: order.paidAt?.toISOString() ?? null,
+        confirmedAt: order.confirmedAt?.toISOString() ?? null,
+        createdAt: order.createdAt.toISOString(),
+        investmentPlan: {
+          name: order.investmentPlan.name,
+          durationDays: order.investmentPlan.durationDays,
+          investmentModel: order.investmentPlan.investmentModel,
+          investment: {
+            name: order.investmentPlan.investment.name,
+            type: order.investmentPlan.investment.type,
+            symbol: order.investmentPlan.investment.symbol,
+          },
+        },
+        investmentPlanTier: {
+          level: order.investmentPlanTier.level,
+        },
+        returnLabel,
+        capitalUpdateReason: capitalUpdateSettings.reason ?? null,
+        hasUpgradeOffer,
+        hasCapitalUpdateOffer,
+        isUpgraded,
+        isCapitalUpdated,
+        canMakePayment,
+        canUpgrade,
+        canUpdateCapital,
+      }}
+      isInactive={isInactiveInvestmentOrderRuntimeStatus(order.runtimeStatus)}
+      upgradePath={buildInvestmentOrderUpgradePath(order.id)}
+      capitalUpdatePath={buildInvestmentOrderCapitalUpdatePath(order.id)}
+    />
   );
 }

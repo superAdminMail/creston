@@ -35,7 +35,7 @@ export default async function NewInvestmentOrderPage({
   const promoCode = params?.promo?.trim() || null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <CreateInvestmentOrderHeader siteName={siteName} />
 
       {shouldRenderEmptyState(data) ? (

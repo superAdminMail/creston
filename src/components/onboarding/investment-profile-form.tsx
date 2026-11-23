@@ -10,7 +10,15 @@ import {
   type AddressAutofillSuggestion,
 } from "@mapbox/search-js-core";
 import { format, parseISO } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import {
+  CalendarIcon,
+  CheckCircle2,
+  Contact,
+  Home,
+  Loader2,
+  MapPin,
+  UserRound,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { getAgeFromIsoDate } from "@/lib/formatters/age";
@@ -36,7 +44,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { DASHBOARD_FIELD_CLASS } from "@/app/account/dashboard/_components/dashboardSurfaces";
+import {
+  DASHBOARD_FIELD_CLASS,
+  DASHBOARD_PAGE_SURFACE_CLASS,
+} from "@/app/account/dashboard/_components/dashboardSurfaces";
 import { cn } from "@/lib/utils";
 
 import {
@@ -91,8 +102,10 @@ export function InvestmentProfileForm({
   const [isPending, startTransition] = useTransition();
   const queryClient = useQueryClient();
   const router = useRouter();
+
   const initialCountry = initialValues?.country ?? "United States";
   const previousCountryRef = useRef(initialCountry);
+
   const addressAutofill = useMemo(
     () =>
       MAPBOX_PUBLIC_TOKEN
@@ -100,14 +113,17 @@ export function InvestmentProfileForm({
         : null,
     [],
   );
+
   const addressSessionTokenRef = useRef(createAddressSessionToken());
   const selectedAddressLineRef = useRef("");
+
   const hasPrefilledAddressDetails = Boolean(
     initialValues?.addressLine1?.trim() ||
     initialValues?.country?.trim() ||
     initialValues?.state?.trim() ||
     initialValues?.city?.trim(),
   );
+
   const [showAddressDetails, setShowAddressDetails] = useState(
     hasPrefilledAddressDetails,
   );
@@ -138,11 +154,30 @@ export function InvestmentProfileForm({
     control: form.control,
     name: "country",
   });
+
   const watchedAddressLine1 = useWatch({
     control: form.control,
     name: "addressLine1",
   });
+
   const addressQuery = watchedAddressLine1?.trim() ?? "";
+
+  const selectedDateOfBirth = useWatch({
+    control: form.control,
+    name: "dateOfBirth",
+  });
+
+  const derivedAge = getAgeFromIsoDate(selectedDateOfBirth);
+  const isAdult = derivedAge !== null && derivedAge >= 18;
+
+  const watchedConfirmAdultAge = useWatch({
+    control: form.control,
+    name: "confirmAdultAge",
+    defaultValue: false,
+  });
+
+  const hasConfirmedAdultAge = compactFields ? true : watchedConfirmAdultAge;
+  const isDashboardTone = tone === "dashboard";
 
   const applySelectedAddress = (
     selectedAddress: OnboardingAddressFields,
@@ -155,6 +190,7 @@ export function InvestmentProfileForm({
 
     if (nextAddressLine1) {
       selectedAddressLineRef.current = nextAddressLine1;
+
       form.setValue("addressLine1", nextAddressLine1, {
         shouldDirty: true,
         shouldValidate: true,
@@ -186,9 +222,7 @@ export function InvestmentProfileForm({
   const selectAddressSuggestion = async (
     suggestion: AddressAutofillSuggestion,
   ) => {
-    if (!addressAutofill) {
-      return;
-    }
+    if (!addressAutofill) return;
 
     try {
       const retrieved = await addressAutofill.retrieve(suggestion, {
@@ -196,9 +230,8 @@ export function InvestmentProfileForm({
       });
 
       const selectedAddress = mapMapboxAddressToOnboardingFields(retrieved);
-      if (!selectedAddress) {
-        return;
-      }
+
+      if (!selectedAddress) return;
 
       const fallbackAddressLine1 =
         suggestion.place_name ??
@@ -215,13 +248,12 @@ export function InvestmentProfileForm({
   };
 
   useEffect(() => {
-    if (previousCountryRef.current === watchedCountry) {
-      return;
-    }
+    if (previousCountryRef.current === watchedCountry) return;
 
     const previousDefault = getDefaultCountryCallingCode(
       previousCountryRef.current,
     );
+
     const nextDefault = getDefaultCountryCallingCode(watchedCountry);
     const currentCallingCode = form.getValues("countryCallingCode");
 
@@ -245,6 +277,7 @@ export function InvestmentProfileForm({
         setAddressSuggestions([]);
         setIsSearchingAddress(false);
       });
+
       return;
     }
 
@@ -257,10 +290,12 @@ export function InvestmentProfileForm({
     const timeout = window.setTimeout(async () => {
       try {
         setIsSearchingAddress(true);
+
         const response = await addressAutofill.suggest(addressQuery, {
           sessionToken: addressSessionTokenRef.current,
           language: "en",
         });
+
         setAddressSuggestions(response.suggestions ?? []);
       } catch (error) {
         console.error(error);
@@ -276,15 +311,14 @@ export function InvestmentProfileForm({
   const handleSubmit = (values: OnboardingSchemaType) => {
     startTransition(async () => {
       form.clearErrors();
+
       const result = await onSubmitAction(values);
 
       if (result.fieldErrors) {
         Object.entries(result.fieldErrors).forEach(([fieldName, messages]) => {
           const message = messages?.[0];
 
-          if (!message) {
-            return;
-          }
+          if (!message) return;
 
           form.setError(fieldName as keyof OnboardingSchemaInput, {
             type: "server",
@@ -300,6 +334,7 @@ export function InvestmentProfileForm({
 
       if (result.currentUser !== undefined) {
         queryClient.setQueryData(CURRENT_USER_QUERY_KEY, result.currentUser);
+
         void queryClient.invalidateQueries({
           queryKey: CURRENT_USER_QUERY_KEY,
         });
@@ -309,459 +344,571 @@ export function InvestmentProfileForm({
 
       if (redirectHref) {
         router.push(redirectHref);
-        // router.refresh();
       }
     });
   };
 
-  const selectedDateOfBirth = useWatch({
-    control: form.control,
-    name: "dateOfBirth",
-  });
-  const derivedAge = getAgeFromIsoDate(selectedDateOfBirth);
-  const isAdult = derivedAge !== null && derivedAge >= 18;
-  const watchedConfirmAdultAge = useWatch({
-    control: form.control,
-    name: "confirmAdultAge",
-    defaultValue: false,
-  });
-  const hasConfirmedAdultAge = compactFields ? true : watchedConfirmAdultAge;
-  const isDashboardTone = tone === "dashboard";
   const labelClassName = isDashboardTone
-    ? "text-slate-600 dark:text-slate-300"
+    ? "text-slate-700 dark:text-slate-300"
     : "text-white/80";
+
   const descriptionClassName = isDashboardTone
     ? "text-sm text-slate-500 dark:text-slate-400"
     : "text-sm text-slate-400";
+
   const inputClassName = cn(
-    "h-11  rounded-xl",
+    "h-11 rounded-xl",
     isDashboardTone
       ? `${DASHBOARD_FIELD_CLASS} px-3 shadow-sm focus-visible:ring-sky-400/30`
       : "input-premium",
   );
+
   const dateTriggerClassName = cn(
-    "w-full justify-between rounded-xl border text-left font-normal transition-colors",
+    "h-11 w-full justify-between rounded-xl border text-left font-normal transition-colors",
     isDashboardTone
       ? `${DASHBOARD_FIELD_CLASS} !text-slate-700 hover:border-sky-200/80 hover:bg-sky-50/70 hover:!text-slate-950 focus-visible:ring-sky-400/30 dark:!text-slate-200 dark:hover:bg-white/[0.06] dark:hover:!text-white`
       : "input-premium hover:bg-white/5",
   );
+
   const popoverContentClassName = isDashboardTone
     ? "w-auto border-border/60 bg-white p-0 text-slate-950 shadow-xl dark:bg-[var(--card)] dark:text-[var(--foreground)]"
     : "w-auto border-white/10 bg-[var(--card)] p-0 text-[var(--foreground)]";
+
   const suggestionPanelClassName = isDashboardTone
     ? "absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-border/60 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.14)]"
     : "absolute left-0 right-0 top-full z-[70] mt-2 overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(10,19,41,0.98),rgba(7,12,24,0.98))] shadow-[0_24px_70px_rgba(0,0,0,0.34)]";
+
   const suggestionItemClassName = isDashboardTone
     ? "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-sky-50"
     : "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5";
+
   const suggestionTitleClassName = isDashboardTone
     ? "truncate text-sm font-medium text-slate-950"
     : "truncate text-sm font-medium text-white";
+
   const suggestionDescriptionClassName = isDashboardTone
     ? "mt-0.5 truncate text-xs text-slate-500"
     : "mt-0.5 truncate text-xs text-slate-400";
+
   const confirmationShellClassName = isDashboardTone
-    ? "items-start gap-3 rounded-xl border border-border/60 bg-white/75 px-4 py-3"
-    : "items-start gap-3 rounded-xl border border-white/8 px-4 py-3";
+    ? "items-start gap-3 rounded-xl border border-border/60 bg-white/75 px-4 py-3 dark:bg-white/[0.035]"
+    : "items-start gap-3 rounded-xl border border-white/10 px-4 py-3";
+
   const confirmationTextClassName = isDashboardTone
-    ? "text-sm font-medium text-slate-700"
+    ? "text-sm font-medium text-slate-700 dark:text-slate-200"
     : "text-sm font-medium text-white";
+
   const confirmationDescriptionClassName = isDashboardTone
     ? "text-sm text-slate-500 dark:text-slate-400"
     : "text-sm text-slate-400";
+
   const checkboxClassName = isDashboardTone
     ? "mt-0.5 border-border/70 data-[state=checked]:border-sky-500 data-[state=checked]:bg-sky-500"
     : "mt-0.5 border-white/20 data-[state=checked]:border-[var(--primary)] data-[state=checked]:bg-[var(--primary)]";
 
+  const sectionClassName = isDashboardTone
+    ? cn(DASHBOARD_PAGE_SURFACE_CLASS, "space-y-5 p-5 sm:p-6")
+    : "space-y-5 rounded-2xl border border-white/10 bg-white/[0.025] p-5 sm:p-6";
+
+  const sectionTitleClassName = isDashboardTone
+    ? "text-base font-semibold tracking-tight text-slate-950 dark:text-white"
+    : "text-base font-semibold tracking-tight text-white";
+
+  const sectionDescriptionClassName = isDashboardTone
+    ? "mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400"
+    : "mt-1 text-sm leading-6 text-slate-400";
+
   return (
-    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
-      <FieldGroup>
-        <Field>
-          <FieldLabel className={labelClassName}>Contact number</FieldLabel>
-          <FieldContent>
-            {compactFields ? (
-              <div className="flex gap-2">
-                <div className="w-20 shrink-0">
-                  <Controller
-                    control={form.control}
-                    name="countryCallingCode"
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid || undefined}>
-                        <FieldContent>
-                          <Input
-                            {...field}
-                            disabled={isPending}
-                            inputMode="tel"
-                            placeholder="+1"
-                            className={cn(inputClassName)}
-                          />
-                        </FieldContent>
-                      </Field>
-                    )}
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <Controller
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid || undefined}>
-                        <FieldContent>
-                          <Input
-                            {...field}
-                            disabled={isPending}
-                            inputMode="tel"
-                            autoComplete="tel-national"
-                            placeholder="555 123 4567"
-                            className={inputClassName}
-                          />
-                        </FieldContent>
-                      </Field>
-                    )}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <div className="w-20 shrink-0">
-                  <Controller
-                    control={form.control}
-                    name="countryCallingCode"
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid || undefined}>
-                        <FieldContent>
-                          <Input
-                            {...field}
-                            disabled={isPending}
-                            inputMode="tel"
-                            placeholder="+1"
-                            className={cn(inputClassName, "w-20")}
-                          />
-                        </FieldContent>
-                      </Field>
-                    )}
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <Controller
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid || undefined}>
-                        <FieldContent>
-                          <Input
-                            {...field}
-                            disabled={isPending}
-                            inputMode="tel"
-                            autoComplete="tel-national"
-                            placeholder="555 123 4567"
-                            className={inputClassName}
-                          />
-                        </FieldContent>
-                      </Field>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-            <FieldDescription className={cn("pt-1", descriptionClassName)}>
-              We will use this number for important account updates and
-              servicing messages.
-            </FieldDescription>
-            <FieldError
-              errors={
-                compactFields
-                  ? [
-                      form.formState.errors.countryCallingCode,
-                      form.formState.errors.phoneNumber,
-                    ]
-                  : [
-                      form.formState.errors.countryCallingCode,
-                      form.formState.errors.phoneNumber,
-                    ]
-              }
-            />
-          </FieldContent>
-        </Field>
-
-        <Controller
-          control={form.control}
-          name="dateOfBirth"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className={labelClassName}>Date of birth</FieldLabel>
-              <FieldContent>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isPending}
-                      className={cn(
-                        dateTriggerClassName,
-                        !field.value && "text-slate-400",
-                      )}
-                    >
-                      <span>
-                        {field.value
-                          ? format(parseISO(field.value), "MMMM d, yyyy")
-                          : "Select date of birth"}
-                      </span>
-                      <CalendarIcon className="h-4 w-4 text-slate-400" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="start"
-                    className={popoverContentClassName}
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? parseISO(field.value) : undefined}
-                      onSelect={(date) => {
-                        const nextDate = date ? format(date, "yyyy-MM-dd") : "";
-
-                        field.onChange(nextDate);
-                        form.setValue("confirmAdultAge", compactFields, {
-                          shouldValidate: true,
-                          shouldDirty: true,
-                        });
-                      }}
-                      captionLayout="dropdown"
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
-
-        {compactFields ? null : (
-          <Controller
-            control={form.control}
-            name="confirmAdultAge"
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid || undefined}>
-                <FieldLabel className={cn(confirmationShellClassName)}>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      const nextValue = checked === true;
-
-                      field.onChange(nextValue);
-                      if (nextValue) {
-                        form.clearErrors("confirmAdultAge");
-                      } else {
-                        void form.trigger("confirmAdultAge");
-                      }
-                    }}
-                    disabled={isPending || !derivedAge || !isAdult}
-                    className={checkboxClassName}
-                  />
-                  <div className="space-y-1">
-                    <span className={confirmationTextClassName}>
-                      {derivedAge
-                        ? `Yes, I confirm I am ${derivedAge} years old.`
-                        : "Select your date of birth to confirm your age."}
-                    </span>
-                    <FieldDescription
-                      className={confirmationDescriptionClassName}
-                    >
-                      {derivedAge && !isAdult
-                        ? siteName?.trim()
-                          ? `${siteName.trim()} onboarding is only available to adults age 18 and above.`
-                          : "Onboarding is only available to adults age 18 and above."
-                        : "We use this confirmation to verify age eligibility before account setup."}
-                    </FieldDescription>
-                  </div>
-                </FieldLabel>
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </Field>
-            )}
-          />
-        )}
-
-        <Controller
-          control={form.control}
-          name="addressLine1"
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid || undefined}>
-              <FieldLabel className={labelClassName}>
-                Residential address
-              </FieldLabel>
-              <FieldContent className="relative overflow-visible">
-                {MAPBOX_PUBLIC_TOKEN ? (
-                  <div className="relative z-50 overflow-visible">
-                    <div className="relative overflow-visible">
-                      <Input
-                        value={field.value ?? ""}
-                        onChange={(event) => {
-                          const nextValue = event.target.value;
-                          selectedAddressLineRef.current = "";
-                          setHasAddressAutocomplete(true);
-                          field.onChange(nextValue);
-                        }}
-                        disabled={isPending}
-                        inputMode="text"
-                        autoComplete="shipping address-line1"
-                        placeholder="Start typing your address"
-                        className={inputClassName}
-                      />
-                      {hasAddressAutocomplete &&
-                        addressQuery.length >= 3 &&
-                        addressQuery !== selectedAddressLineRef.current &&
-                        (addressSuggestions.length > 0 ||
-                          isSearchingAddress) && (
-                          <div className={suggestionPanelClassName}>
-                            <div className="max-h-72 overflow-auto py-1">
-                              {isSearchingAddress &&
-                              addressSuggestions.length === 0 ? (
-                                <div
-                                  className={cn(
-                                    "px-4 py-3 text-sm",
-                                    isDashboardTone
-                                      ? "text-slate-500"
-                                      : "text-slate-400",
-                                  )}
-                                >
-                                  Searching addresses...
-                                </div>
-                              ) : null}
-
-                              {addressSuggestions.map((suggestion, index) => (
-                                <button
-                                  key={`${suggestion.mapbox_id}-${index}`}
-                                  type="button"
-                                  className={suggestionItemClassName}
-                                  onMouseDown={(event) => {
-                                    event.preventDefault();
-                                    void selectAddressSuggestion(suggestion);
-                                  }}
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    <p className={suggestionTitleClassName}>
-                                      {suggestion.feature_name}
-                                    </p>
-                                    <p
-                                      className={suggestionDescriptionClassName}
-                                    >
-                                      {suggestion.description}
-                                    </p>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                ) : (
-                  <Input
-                    {...field}
-                    disabled={isPending}
-                    inputMode="text"
-                    autoComplete="shipping address-line1"
-                    placeholder="Start typing your address"
-                    className={inputClassName}
-                  />
-                )}
-                <FieldDescription className={cn("pt-1", descriptionClassName)}>
-                  Start typing your address to get suggestions.
-                </FieldDescription>
-                {fieldState.error ? (
-                  <FieldError errors={[fieldState.error]} />
-                ) : null}
-              </FieldContent>
-            </Field>
-          )}
-        />
-
-        {showAddressDetails ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-3">
-              <Controller
-                control={form.control}
-                name="country"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className={labelClassName}>
-                      Country of residence
-                    </FieldLabel>
-                    <FieldContent>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        placeholder="Country"
-                        className={inputClassName}
-                      />
-                      {fieldState.error ? (
-                        <FieldError errors={[fieldState.error]} />
-                      ) : null}
-                    </FieldContent>
-                  </Field>
-                )}
-              />
-
-              <Controller
-                control={form.control}
-                name="state"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className={labelClassName}>
-                      State / province
-                    </FieldLabel>
-                    <FieldContent>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        placeholder="State"
-                        className={inputClassName}
-                      />
-                      {fieldState.error ? (
-                        <FieldError errors={[fieldState.error]} />
-                      ) : null}
-                    </FieldContent>
-                  </Field>
-                )}
-              />
-
-              <Controller
-                control={form.control}
-                name="city"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid || undefined}>
-                    <FieldLabel className={labelClassName}>
-                      City / locality
-                    </FieldLabel>
-                    <FieldContent>
-                      <Input
-                        {...field}
-                        disabled={isPending}
-                        placeholder="City"
-                        className={inputClassName}
-                      />
-                      {fieldState.error ? (
-                        <FieldError errors={[fieldState.error]} />
-                      ) : null}
-                    </FieldContent>
-                  </Field>
+    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <FieldGroup className="space-y-5">
+        <section className={sectionClassName}>
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                isDashboardTone
+                  ? "border border-sky-400/20 bg-sky-500/10"
+                  : "border border-white/10 bg-white/[0.06]",
+              )}
+            >
+              <Contact
+                className={cn(
+                  "size-5",
+                  isDashboardTone
+                    ? "text-sky-700 dark:text-sky-300"
+                    : "text-sky-300",
                 )}
               />
             </div>
-          </>
-        ) : null}
+
+            <div>
+              <h3 className={sectionTitleClassName}>Contact information</h3>
+              <p className={sectionDescriptionClassName}>
+                Provide a reliable phone number for important account updates
+                and servicing messages.
+              </p>
+            </div>
+          </div>
+
+          <Controller
+            control={form.control}
+            name="countryCallingCode"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldLabel className={labelClassName}>
+                  Contact number
+                </FieldLabel>
+
+                <FieldContent>
+                  <div className="flex gap-2">
+                    <div className="w-24 shrink-0">
+                      <Input
+                        {...field}
+                        disabled={isPending}
+                        inputMode="tel"
+                        placeholder="+1"
+                        className={inputClassName}
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <Controller
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({
+                          field: phoneField,
+                          fieldState: phoneState,
+                        }) => (
+                          <Field data-invalid={phoneState.invalid || undefined}>
+                            <FieldContent>
+                              <Input
+                                {...phoneField}
+                                disabled={isPending}
+                                inputMode="tel"
+                                autoComplete="tel-national"
+                                placeholder="555 123 4567"
+                                className={inputClassName}
+                              />
+                            </FieldContent>
+                          </Field>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <FieldDescription
+                    className={cn("pt-1", descriptionClassName)}
+                  >
+                    Enter your country calling code and phone number.
+                  </FieldDescription>
+
+                  <FieldError
+                    errors={[
+                      fieldState.error,
+                      form.formState.errors.phoneNumber,
+                    ]}
+                  />
+                </FieldContent>
+              </Field>
+            )}
+          />
+        </section>
+
+        <section className={sectionClassName}>
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                isDashboardTone
+                  ? "border border-sky-400/20 bg-sky-500/10"
+                  : "border border-white/10 bg-white/[0.06]",
+              )}
+            >
+              <UserRound
+                className={cn(
+                  "size-5",
+                  isDashboardTone
+                    ? "text-sky-700 dark:text-sky-300"
+                    : "text-sky-300",
+                )}
+              />
+            </div>
+
+            <div>
+              <h3 className={sectionTitleClassName}>Personal information</h3>
+              <p className={sectionDescriptionClassName}>
+                Your date of birth is used to establish age eligibility for
+                account services.
+              </p>
+            </div>
+          </div>
+
+          <Controller
+            control={form.control}
+            name="dateOfBirth"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldLabel className={labelClassName}>
+                  Date of birth
+                </FieldLabel>
+
+                <FieldContent>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isPending}
+                        className={cn(
+                          dateTriggerClassName,
+                          !field.value && "text-slate-400",
+                        )}
+                      >
+                        <span>
+                          {field.value
+                            ? format(parseISO(field.value), "MMMM d, yyyy")
+                            : "Select date of birth"}
+                        </span>
+
+                        <CalendarIcon className="size-4 text-slate-400" />
+                      </Button>
+                    </PopoverTrigger>
+
+                    <PopoverContent
+                      align="start"
+                      className={popoverContentClassName}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={
+                          field.value ? parseISO(field.value) : undefined
+                        }
+                        onSelect={(date) => {
+                          const nextDate = date
+                            ? format(date, "yyyy-MM-dd")
+                            : "";
+
+                          field.onChange(nextDate);
+
+                          form.setValue("confirmAdultAge", compactFields, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }}
+                        captionLayout="dropdown"
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {fieldState.error ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </FieldContent>
+              </Field>
+            )}
+          />
+
+          {compactFields ? null : (
+            <Controller
+              control={form.control}
+              name="confirmAdultAge"
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid || undefined}>
+                  <FieldLabel
+                    className={cn("flex", confirmationShellClassName)}
+                  >
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        const nextValue = checked === true;
+
+                        field.onChange(nextValue);
+
+                        if (nextValue) {
+                          form.clearErrors("confirmAdultAge");
+                        } else {
+                          void form.trigger("confirmAdultAge");
+                        }
+                      }}
+                      disabled={isPending || !derivedAge || !isAdult}
+                      className={checkboxClassName}
+                    />
+
+                    <div className="space-y-1">
+                      <span className={confirmationTextClassName}>
+                        {derivedAge
+                          ? `Yes, I confirm I am ${derivedAge} years old.`
+                          : "Select your date of birth to confirm your age."}
+                      </span>
+
+                      <FieldDescription
+                        className={confirmationDescriptionClassName}
+                      >
+                        {derivedAge && !isAdult
+                          ? siteName?.trim()
+                            ? `${siteName.trim()} onboarding is only available to adults age 18 and above.`
+                            : "Onboarding is only available to adults age 18 and above."
+                          : "We use this confirmation to verify age eligibility before account setup."}
+                      </FieldDescription>
+                    </div>
+                  </FieldLabel>
+
+                  {fieldState.error ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </Field>
+              )}
+            />
+          )}
+        </section>
+
+        <section className={sectionClassName}>
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                isDashboardTone
+                  ? "border border-sky-400/20 bg-sky-500/10"
+                  : "border border-white/10 bg-white/[0.06]",
+              )}
+            >
+              <Home
+                className={cn(
+                  "size-5",
+                  isDashboardTone
+                    ? "text-sky-700 dark:text-sky-300"
+                    : "text-sky-300",
+                )}
+              />
+            </div>
+
+            <div>
+              <h3 className={sectionTitleClassName}>Residential address</h3>
+              <p className={sectionDescriptionClassName}>
+                Provide your current residential address for account records and
+                verification.
+              </p>
+            </div>
+          </div>
+
+          <Controller
+            control={form.control}
+            name="addressLine1"
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid || undefined}>
+                <FieldLabel className={labelClassName}>
+                  Street address
+                </FieldLabel>
+
+                <FieldContent className="relative overflow-visible">
+                  {MAPBOX_PUBLIC_TOKEN ? (
+                    <div className="relative z-50 overflow-visible">
+                      <div className="relative overflow-visible">
+                        <Input
+                          value={field.value ?? ""}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+
+                            selectedAddressLineRef.current = "";
+                            setHasAddressAutocomplete(true);
+                            field.onChange(nextValue);
+                          }}
+                          disabled={isPending}
+                          inputMode="text"
+                          autoComplete="shipping address-line1"
+                          placeholder="Start typing your address"
+                          className={inputClassName}
+                        />
+
+                        {hasAddressAutocomplete &&
+                          addressQuery.length >= 3 &&
+                          addressQuery !== selectedAddressLineRef.current &&
+                          (addressSuggestions.length > 0 ||
+                            isSearchingAddress) && (
+                            <div className={suggestionPanelClassName}>
+                              <div className="max-h-72 overflow-auto py-1">
+                                {isSearchingAddress &&
+                                addressSuggestions.length === 0 ? (
+                                  <div
+                                    className={cn(
+                                      "px-4 py-3 text-sm",
+                                      isDashboardTone
+                                        ? "text-slate-500"
+                                        : "text-slate-400",
+                                    )}
+                                  >
+                                    Searching addresses...
+                                  </div>
+                                ) : null}
+
+                                {addressSuggestions.map((suggestion, index) => (
+                                  <button
+                                    key={`${suggestion.mapbox_id}-${index}`}
+                                    type="button"
+                                    disabled={isPending}
+                                    className={suggestionItemClassName}
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
+                                      void selectAddressSuggestion(suggestion);
+                                    }}
+                                  >
+                                    <MapPin
+                                      className={cn(
+                                        "mt-0.5 size-4 shrink-0",
+                                        isDashboardTone
+                                          ? "text-sky-600"
+                                          : "text-sky-300",
+                                      )}
+                                    />
+
+                                    <div className="min-w-0 flex-1">
+                                      <p className={suggestionTitleClassName}>
+                                        {suggestion.feature_name}
+                                      </p>
+
+                                      <p
+                                        className={
+                                          suggestionDescriptionClassName
+                                        }
+                                      >
+                                        {suggestion.description}
+                                      </p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    </div>
+                  ) : (
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      inputMode="text"
+                      autoComplete="shipping address-line1"
+                      placeholder="Enter your residential address"
+                      className={inputClassName}
+                    />
+                  )}
+
+                  <FieldDescription
+                    className={cn("pt-1", descriptionClassName)}
+                  >
+                    {MAPBOX_PUBLIC_TOKEN
+                      ? "Start typing to find and select your residential address."
+                      : "Enter your residential address."}
+                  </FieldDescription>
+
+                  {fieldState.error ? (
+                    <FieldError errors={[fieldState.error]} />
+                  ) : null}
+                </FieldContent>
+              </Field>
+            )}
+          />
+
+          {showAddressDetails ? (
+            <div className="space-y-4 border-t border-border/60 pt-5 dark:border-white/10">
+              <div>
+                <h4 className={sectionTitleClassName}>Address details</h4>
+                <p className={sectionDescriptionClassName}>
+                  Confirm the location details associated with your address.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <Controller
+                  control={form.control}
+                  name="country"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldLabel className={labelClassName}>
+                        Country
+                      </FieldLabel>
+
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="Country"
+                          className={inputClassName}
+                        />
+
+                        {fieldState.error ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="state"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldLabel className={labelClassName}>
+                        State / province
+                      </FieldLabel>
+
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="State or province"
+                          className={inputClassName}
+                        />
+
+                        {fieldState.error ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="city"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid || undefined}>
+                      <FieldLabel className={labelClassName}>
+                        City / locality
+                      </FieldLabel>
+
+                      <FieldContent>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="City"
+                          className={inputClassName}
+                        />
+
+                        {fieldState.error ? (
+                          <FieldError errors={[fieldState.error]} />
+                        ) : null}
+                      </FieldContent>
+                    </Field>
+                  )}
+                />
+              </div>
+            </div>
+          ) : null}
+        </section>
       </FieldGroup>
 
-      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+      <div
+        className={cn(
+          "flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:items-center sm:justify-between",
+          isDashboardTone
+            ? "border-border/60 dark:border-white/10"
+            : "border-white/10",
+        )}
+      >
         {onCreateLater ? (
           <Button
             type="button"
@@ -786,16 +933,21 @@ export function InvestmentProfileForm({
           >
             Create later
           </Button>
-        ) : null}
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <CheckCircle2 className="size-4 text-emerald-500" />
+            Your information is handled securely.
+          </div>
+        )}
 
         <Button
           type="submit"
           disabled={isPending || !isAdult || !hasConfirmedAdultAge}
-          className="btn-primary rounded-xl"
+          className="btn-primary min-h-11 rounded-xl px-6"
         >
           {isPending ? (
             <span className="inline-flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
               {pendingLabel}
             </span>
           ) : (

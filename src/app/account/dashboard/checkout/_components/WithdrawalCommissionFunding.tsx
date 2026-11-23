@@ -43,11 +43,16 @@ function normalizeFundingMethodType(
 
 function SummaryChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "rounded-2xl p-4")}>
-      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+    <div
+      className={cn(
+        DASHBOARD_PAGE_SURFACE_CLASS,
+        "group min-w-0 rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-sm transition-colors hover:border-sky-300/50 dark:border-white/[0.08] dark:bg-white/[0.025] dark:hover:border-sky-400/20",
+      )}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-2 text-sm font-medium text-slate-950 dark:text-white">
+      <p className="mt-2 break-words text-base font-semibold tracking-tight text-slate-950 dark:text-white">
         {value}
       </p>
     </div>
@@ -184,8 +189,13 @@ export default function WithdrawalCommissionFunding({
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 sm:space-y-8 ">
-      <div className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full p-4 sm:p-6")}>
+    <div className="mx-auto max-w-6xl space-y-5 px-1 pb-2 sm:space-y-7 sm:px-0">
+      <div
+        className={cn(
+          DASHBOARD_PAGE_PANEL_CLASS,
+          "relative isolate w-full overflow-hidden rounded-[1.6rem] border border-slate-200/70 bg-white/90 p-4 shadow-[0_18px_55px_-35px_rgba(15,23,42,0.35)] sm:rounded-[1.9rem] sm:p-6 dark:border-white/[0.08] dark:bg-slate-950/70",
+        )}
+      >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -244,7 +254,7 @@ export default function WithdrawalCommissionFunding({
           )}
         >
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+            <CardTitle className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg dark:text-white">
               Commission under review
             </CardTitle>
             <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
@@ -260,9 +270,14 @@ export default function WithdrawalCommissionFunding({
       !details.isUnderReview &&
       selectedFundingMethod === "BANK_TRANSFER" &&
       !bankMethod ? (
-        <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
+        <Card
+          className={cn(
+            DASHBOARD_PAGE_PANEL_CLASS,
+            "w-full rounded-[1.5rem] border border-slate-200/70 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.45)] dark:border-white/[0.08]",
+          )}
+        >
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+            <CardTitle className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg dark:text-white">
               Bank details unavailable
             </CardTitle>
           </CardHeader>
@@ -279,10 +294,15 @@ export default function WithdrawalCommissionFunding({
       selectedFundingMethod &&
       (cryptoSelected || bankMethod) ? (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,.75fr)]">
-          <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
+          <Card
+            className={cn(
+              DASHBOARD_PAGE_PANEL_CLASS,
+              "w-full rounded-[1.5rem] border border-slate-200/70 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.45)] dark:border-white/[0.08]",
+            )}
+          >
             <CardHeader className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
               <div className="min-w-0">
-                <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+                <CardTitle className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg dark:text-white">
                   {cryptoSelected
                     ? "Crypto wallet funding"
                     : "Bank transfer funding"}
@@ -394,9 +414,14 @@ export default function WithdrawalCommissionFunding({
             </CardContent>
           </Card>
 
-          <Card className={cn(DASHBOARD_PAGE_PANEL_CLASS, "w-full")}>
+          <Card
+            className={cn(
+              DASHBOARD_PAGE_PANEL_CLASS,
+              "w-full rounded-[1.5rem] border border-slate-200/70 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.45)] dark:border-white/[0.08]",
+            )}
+          >
             <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+              <CardTitle className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg dark:text-white">
                 {cryptoSelected ? "Crypto wallet preview" : "Funding proof"}
               </CardTitle>
             </CardHeader>
@@ -570,7 +595,7 @@ export default function WithdrawalCommissionFunding({
           )}
         >
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-base text-slate-950 sm:text-lg dark:text-white">
+            <CardTitle className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg dark:text-white">
               Commission settled
             </CardTitle>
             <p className="mt-1 text-sm leading-6 text-slate-600 sm:text-[15px] dark:text-slate-400">
@@ -624,7 +649,7 @@ export default function WithdrawalCommissionFunding({
       <div
         className={cn(
           DASHBOARD_PAGE_SURFACE_CLASS,
-          "flex w-full items-start justify-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm text-slate-500 sm:items-center sm:rounded-[1.5rem] dark:text-slate-300",
+          "flex w-full items-start justify-center gap-3 rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-3 text-sm text-slate-500 shadow-sm sm:items-center dark:border-white/[0.08] dark:bg-white/[0.025] dark:text-slate-300",
         )}
       >
         <Shield className="h-4 w-4 text-sky-500" />

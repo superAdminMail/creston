@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Landmark, Plus } from "lucide-react";
+import { ArrowUpRight, Plus, TrendingUp } from "lucide-react";
 
 type UserInvestmentsHeaderProps = {
   siteName: string;
@@ -11,26 +11,39 @@ export function UserInvestmentsHeader({
   showNewOrderButton,
 }: UserInvestmentsHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
-          Track active orders
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base dark:text-slate-400">
-          Review payment progress, confirmation state, and order actions for
-          each {siteName} investment in one structured workspace.
-        </p>
-      </div>
+    <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-white/75 p-6 shadow-sm sm:p-8 dark:border-white/10 dark:bg-white/[0.035]">
+      <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-blue-500/[0.07] blur-3xl" />
 
-      {showNewOrderButton ? (
-        <Link
-          href="/account/dashboard/user/investment-orders/new"
-          className="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Create order
-        </Link>
-      ) : null}
-    </div>
+      <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-2xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-200">
+            <TrendingUp className="h-3.5 w-3.5" />
+            Investment portfolio
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl dark:text-white">
+              My orders
+            </h1>
+
+            <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base dark:text-slate-400">
+              Manage your {siteName} investment orders, monitor payment progress
+              and keep track of your investment activity.
+            </p>
+          </div>
+        </div>
+
+        {showNewOrderButton && (
+          <Link
+            href="/account/dashboard/user/investment-orders/new"
+            className="btn-primary inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm"
+          >
+            <Plus className="h-4 w-4" />
+            Create investment
+            <ArrowUpRight className="h-4 w-4 opacity-70" />
+          </Link>
+        )}
+      </div>
+    </header>
   );
 }
