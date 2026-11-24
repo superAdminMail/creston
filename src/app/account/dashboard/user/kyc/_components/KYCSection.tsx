@@ -424,8 +424,8 @@ export default function KYCSection({
       <div className="flex items-center gap-2 px-1 text-xs text-slate-500">
         <Fingerprint className="h-4 w-4 shrink-0" />
         <span>
-          Identity verification helps protect your Havenstone account and
-          financial activities.
+          Identity verification helps protect your account and financial
+          activities.
         </span>
       </div>
     </div>
