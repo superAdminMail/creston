@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { getInvestmentAccountDetails } from "@/actions/investment-account/getInvestmentAccountDetails";
 import { getSiteConfigurationCached } from "@/lib/site/getSiteConfigurationCached";
+
 import { InvestmentAccountActivityCard } from "./_components/InvestmentAccountActivityCard";
 import { InvestmentAccountDetailsHeader } from "./_components/InvestmentAccountDetailsHeader";
 import { InvestmentAccountMetaCard } from "./_components/InvestmentAccountMetaCard";
@@ -15,35 +16,39 @@ type PageProps = {
   }>;
 };
 
-export default async function Page(
-  props: PageProps,
-) {
-  const { investmentAccountId } = await props.params;
-  const account = await getInvestmentAccountDetails(investmentAccountId);
-  const site = await getSiteConfigurationCached();
+export default async function Page({ params }: PageProps) {
+  const { investmentAccountId } = await params;
+
+  const [account, site] = await Promise.all([
+    getInvestmentAccountDetails(investmentAccountId),
+    getSiteConfigurationCached(),
+  ]);
 
   if (!account) {
     notFound();
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 pb-8">
       <InvestmentAccountDetailsHeader
         account={account}
         siteName={site?.siteName ?? ""}
       />
+
       <InvestmentAccountSummaryCards account={account} />
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="min-w-0 space-y-6">
           <InvestmentPlanOverviewCard account={account} />
+
           <InvestmentProductCard account={account} />
         </div>
 
-        <div className="space-y-6">
+        <aside className="min-w-0 space-y-6">
           <InvestmentAccountMetaCard account={account} />
+
           <InvestmentAccountActivityCard account={account} />
-        </div>
+        </aside>
       </section>
     </div>
   );

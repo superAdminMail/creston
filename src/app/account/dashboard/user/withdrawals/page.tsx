@@ -10,7 +10,7 @@ import {
   readWithdrawalPaymentMethodSnapshot,
   resolveWithdrawalPaymentMethodLabel,
 } from "@/lib/withdrawals/withdrawalPaymentMethodReview";
-import WithdrawalsClient from "../_components/WithdrawalsClient";
+import WithdrawalsClient from "./_components/WithdrawalsClient";
 
 export default async function Page() {
   const userId = await getCurrentUserId();
@@ -124,7 +124,10 @@ export default async function Page() {
                         return null;
                       }
 
-                      const typedAllocation = allocation as Record<string, unknown>;
+                      const typedAllocation = allocation as Record<
+                        string,
+                        unknown
+                      >;
 
                       return {
                         sourceType:
@@ -184,59 +187,64 @@ export default async function Page() {
                   : null,
               withdrawalMode: normalizedWithdrawalMode,
               earlyWithdrawalPenalty: normalizedEarlyWithdrawalPenalty,
-              allocations:
-                Array.isArray(payoutSnapshot.allocations)
-                  ? payoutSnapshot.allocations
-                      .map((allocation) => {
-                        if (!allocation || typeof allocation !== "object") {
-                          return null;
-                        }
+              allocations: Array.isArray(payoutSnapshot.allocations)
+                ? payoutSnapshot.allocations
+                    .map((allocation) => {
+                      if (!allocation || typeof allocation !== "object") {
+                        return null;
+                      }
 
-                        const typedAllocation = allocation as Record<string, unknown>;
-                        const allocationSourceType =
-                          typeof typedAllocation.sourceType === "string"
-                            ? typedAllocation.sourceType
-                            : null;
+                      const typedAllocation = allocation as Record<
+                        string,
+                        unknown
+                      >;
+                      const allocationSourceType =
+                        typeof typedAllocation.sourceType === "string"
+                          ? typedAllocation.sourceType
+                          : null;
 
-                        if (
-                          allocationSourceType !== "INVESTMENT_ORDER" &&
-                          allocationSourceType !== "SAVINGS_ACCOUNT"
-                        ) {
-                          return null;
-                        }
+                      if (
+                        allocationSourceType !== "INVESTMENT_ORDER" &&
+                        allocationSourceType !== "SAVINGS_ACCOUNT"
+                      ) {
+                        return null;
+                      }
 
-                        const sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" =
-                          allocationSourceType;
+                      const sourceType: "INVESTMENT_ORDER" | "SAVINGS_ACCOUNT" =
+                        allocationSourceType;
 
-                        return {
-                          sourceType,
-                          sourceLabel:
-                            typeof typedAllocation.sourceLabel === "string"
-                              ? typedAllocation.sourceLabel
-                              : "Withdrawal source",
-                          sourceGrossAmount:
-                            typeof typedAllocation.sourceGrossAmount === "string"
-                              ? typedAllocation.sourceGrossAmount
-                              : "0",
-                          sourcePenaltyAmount:
-                            typeof typedAllocation.sourcePenaltyAmount === "string"
-                              ? typedAllocation.sourcePenaltyAmount
-                              : "0",
-                          sourceNetAmount:
-                            typeof typedAllocation.sourceNetAmount === "string"
-                              ? typedAllocation.sourceNetAmount
-                              : "0",
-                          currency:
-                            typeof typedAllocation.currency === "string"
-                              ? typedAllocation.currency
-                              : order.currency,
-                        };
-                      })
-                      .filter(
-                        (allocation): allocation is NonNullable<typeof allocation> =>
-                          allocation !== null,
-                      )
-                  : undefined,
+                      return {
+                        sourceType,
+                        sourceLabel:
+                          typeof typedAllocation.sourceLabel === "string"
+                            ? typedAllocation.sourceLabel
+                            : "Withdrawal source",
+                        sourceGrossAmount:
+                          typeof typedAllocation.sourceGrossAmount === "string"
+                            ? typedAllocation.sourceGrossAmount
+                            : "0",
+                        sourcePenaltyAmount:
+                          typeof typedAllocation.sourcePenaltyAmount ===
+                          "string"
+                            ? typedAllocation.sourcePenaltyAmount
+                            : "0",
+                        sourceNetAmount:
+                          typeof typedAllocation.sourceNetAmount === "string"
+                            ? typedAllocation.sourceNetAmount
+                            : "0",
+                        currency:
+                          typeof typedAllocation.currency === "string"
+                            ? typedAllocation.currency
+                            : order.currency,
+                      };
+                    })
+                    .filter(
+                      (
+                        allocation,
+                      ): allocation is NonNullable<typeof allocation> =>
+                        allocation !== null,
+                    )
+                : undefined,
             }
           : null,
         commissionReviewStatus: commissionPayment?.reviewStatus ?? null,

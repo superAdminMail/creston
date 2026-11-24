@@ -90,14 +90,22 @@ export default async function Page() {
   }));
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-white/90">
-          Create investment account
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Create a new investment account to track your investments.
-        </p>
+    <div className="mx-auto max-w-7xl space-y-8">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm font-medium text-sky-800 dark:text-sky-400">
+          <span className="h-2 w-2 rounded-full bg-sky-500" />
+          Investment accounts
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            Create investment account
+          </h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Choose an investment plan to open a new account and keep your
+            investment activity organized in one place.
+          </p>
+        </div>
       </div>
 
       <CreateInvestmentAccountForm plans={plans} />

@@ -1,6 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  FileText,
+  Landmark,
+  Wallet,
+  AlertCircle,
+  Layers3,
+  ReceiptText,
+  ShieldAlert,
+} from "lucide-react";
 
 import { formatCurrency, formatEnumLabel } from "@/lib/formatters/formatters";
 import { getCurrentUserId } from "@/lib/getCurrentUser";
@@ -43,30 +58,160 @@ type Props = {
   }>;
 };
 
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-800 dark:text-sky-300">
+        {eyebrow}
+      </p>
+      <h2 className="text-base font-semibold tracking-tight text-slate-950 dark:text-white">
+        {title}
+      </h2>
+      {description ? (
+        <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function ReceiptRow({
   label,
   value,
   helperText,
+  icon,
 }: {
   label: string;
   value: ReactNode;
   helperText?: ReactNode;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="grid gap-3 py-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:items-start sm:py-4">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-slate-600 sm:pt-1 dark:text-slate-400">
-        {label}
-      </p>
-      <div className="min-w-0 space-y-1 sm:text-right">
-        <div className="break-words text-sm font-medium leading-6 text-slate-950 sm:text-base dark:text-white">
+    <div className="flex flex-col gap-2 border-b border-slate-200/70 py-4 last:border-b-0 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="flex min-w-0 items-start gap-2.5">
+        {icon ? (
+          <span className="mt-0.5 text-slate-500 dark:text-slate-400">
+            {icon}
+          </span>
+        ) : null}
+        <span className="text-sm text-slate-600 dark:text-slate-400">
+          {label}
+        </span>
+      </div>
+      <div className="min-w-0 space-y-1 sm:max-w-[60%] sm:text-right">
+        <div className="break-words text-sm font-semibold leading-6 text-slate-950 dark:text-white">
           {value}
         </div>
         {helperText ? (
-          <div className="break-words text-xs leading-5 text-slate-600 sm:text-right dark:text-slate-400">
+          <div className="break-words text-xs leading-5 text-slate-600 dark:text-slate-400">
             {helperText}
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function InformationCard({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        DASHBOARD_PAGE_SURFACE_CLASS,
+        "min-w-0 p-4 sm:p-5",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ActionNotice({
+  tone,
+  eyebrow,
+  title,
+  description,
+  icon,
+  children,
+}: {
+  tone: "amber" | "sky" | "emerald";
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon: ReactNode;
+  children?: ReactNode;
+}) {
+  const styles = {
+    amber: {
+      wrapper:
+        "border-amber-300/80 bg-amber-50/80 dark:border-amber-400/20 dark:bg-amber-500/[0.08]",
+      icon: "bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200",
+      eyebrow: "text-amber-800 dark:text-amber-300",
+      title: "text-amber-950 dark:text-amber-50",
+      description: "text-amber-900/80 dark:text-amber-100/80",
+    },
+    sky: {
+      wrapper:
+        "border-sky-200 bg-sky-50/80 dark:border-sky-400/20 dark:bg-sky-500/[0.08]",
+      icon: "bg-sky-100 text-sky-800 dark:bg-sky-400/10 dark:text-sky-200",
+      eyebrow: "text-sky-800 dark:text-sky-300",
+      title: "text-slate-950 dark:text-white",
+      description: "text-slate-700 dark:text-slate-300",
+    },
+    emerald: {
+      wrapper:
+        "border-emerald-200 bg-emerald-50/80 dark:border-emerald-400/20 dark:bg-emerald-500/[0.08]",
+      icon: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-200",
+      eyebrow: "text-emerald-800 dark:text-emerald-300",
+      title: "text-slate-950 dark:text-white",
+      description: "text-emerald-900/80 dark:text-emerald-100/80",
+    },
+  }[tone];
+
+  return (
+    <div className={cn("rounded-2xl border p-4 sm:p-5", styles.wrapper)}>
+      <div className="flex items-start gap-3">
+        <div
+          className={cn(
+            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+            styles.icon,
+          )}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              "text-[10px] font-semibold uppercase tracking-[0.2em]",
+              styles.eyebrow,
+            )}
+          >
+            {eyebrow}
+          </p>
+          <h3 className={cn("mt-1 text-base font-semibold", styles.title)}>
+            {title}
+          </h3>
+          <p className={cn("mt-1 text-sm leading-6", styles.description)}>
+            {description}
+          </p>
+        </div>
+      </div>
+      {children ? <div className="mt-4">{children}</div> : null}
     </div>
   );
 }
@@ -157,11 +302,13 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
           }>;
         })
       : null;
+
   const storedPenaltyAmount =
     payoutSnapshot?.penaltyAmount &&
     payoutSnapshot.penaltyAmount.trim().length > 0
       ? payoutSnapshot.penaltyAmount
       : null;
+
   const normalizedWithdrawalMode =
     payoutSnapshot?.withdrawalMode === "EARLY_WITHDRAWAL" ||
     payoutSnapshot?.withdrawalMode === "NORMAL"
@@ -169,6 +316,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
       : storedPenaltyAmount && Number(storedPenaltyAmount) > 0
         ? "EARLY_WITHDRAWAL"
         : null;
+
   const normalizedEarlyWithdrawalPenalty =
     payoutSnapshot?.earlyWithdrawalPenalty &&
     payoutSnapshot.earlyWithdrawalPenalty.trim().length > 0
@@ -176,20 +324,25 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
       : storedPenaltyAmount && Number(storedPenaltyAmount) > 0
         ? storedPenaltyAmount
         : null;
+
   const requestedAmount =
     payoutSnapshot?.requestedAmount &&
     payoutSnapshot.requestedAmount.trim().length > 0
       ? payoutSnapshot.requestedAmount
       : withdrawal.amount.toString();
+
   const commissionPayment = readWithdrawalCommissionPaymentSnapshot(
     withdrawal.payoutSnapshot,
   );
+
   const feePayment = readWithdrawalFeePaymentSnapshot(
     withdrawal.payoutSnapshot,
   );
+
   const paymentMethodSnapshot = readWithdrawalPaymentMethodSnapshot(
     withdrawal.payoutSnapshot,
   );
+
   const effectivePaymentMethodLabel = resolveWithdrawalPaymentMethodLabel(
     withdrawal.payoutMethod,
     paymentMethodSnapshot,
@@ -209,16 +362,20 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
   );
 
   const statusTone = getWithdrawalStatusTone(withdrawal.status);
+
   const supportFeeBaseAmount =
     payoutSnapshot?.netPayoutAmount &&
     Number.isFinite(Number(payoutSnapshot.netPayoutAmount))
       ? Number(payoutSnapshot.netPayoutAmount)
       : Number(requestedAmount);
+
   const supportFeeAmount =
     Number.isFinite(supportFeeBaseAmount) && supportFeeBaseAmount > 0
       ? calculateWithdrawalAppliedFeeAmount(supportFeeBaseAmount)
       : null;
+
   const isFeeUnderReview = feePayment?.reviewStatus === "PENDING_REVIEW";
+
   const isFeeSettled =
     feePayment !== null &&
     (feePayment.reviewStatus === "APPROVED" || feePayment.remainingAmount <= 0);
@@ -230,14 +387,17 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
       : withdrawal.investmentAccountId
         ? "SAVINGS_ACCOUNT"
         : null);
+
   const allocationMode = payoutSnapshot?.allocationMode ?? null;
   const allocations = payoutSnapshot?.allocations ?? [];
   const isAutoAllocation = allocationMode === "AUTO";
+
   const commissionSourceType = getWithdrawalCommissionSourceType({
     investmentOrderId: withdrawal.investmentOrderId,
     sourceType: payoutSnapshot?.sourceType ?? null,
     allocationMode,
   });
+
   const commissionAllocations = allocations
     .map((allocation) => {
       if (
@@ -260,6 +420,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
         sourceGrossAmount: number;
       } => allocation !== null,
     );
+
   const commissionDueAmount = withdrawal.hasCommissionFees
     ? calculateWithdrawalCommissionDueAmount({
         sourceType: commissionSourceType,
@@ -272,90 +433,113 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
         allocations: commissionAllocations,
       })
     : 0;
+
   const canShowCommissionCallout =
     !isWithdrawalTerminalStatus(withdrawal.status) &&
     withdrawal.hasCommissionFees &&
     !isWithdrawalCommissionSettledStatus(withdrawal.commissionStatus);
+
   const isCommissionUnderReview =
     commissionPayment?.reviewStatus === "PENDING_REVIEW";
 
+  const isTerminal = isWithdrawalTerminalStatus(withdrawal.status);
+  const isPaymentMethodUnavailable =
+    paymentMethodSnapshot.review.status === "UNAVAILABLE" && !isTerminal;
+  const isPaymentMethodUpdated =
+    paymentMethodSnapshot.review.status === "UPDATED";
+
+  const withdrawalModeLabel =
+    normalizedWithdrawalMode === "EARLY_WITHDRAWAL"
+      ? "Early withdrawal"
+      : "Normal withdrawal";
+
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-9rem)] w-full max-w-6xl ">
+    <div className="relative mx-auto min-h-[calc(100vh-9rem)] w-full max-w-6xl">
       <div className="absolute inset-x-4 top-8 -z-10 h-40 rounded-[2rem] bg-[#3c9ee0]/10 blur-3xl" />
 
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         <Link
           href="/account/dashboard/user/withdrawals"
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
         >
-          <span aria-hidden="true">←</span>
+          <ArrowLeft className="size-4" />
           Back to withdrawals
         </Link>
 
         <section className={cn(DASHBOARD_PAGE_PANEL_CLASS, "overflow-hidden")}>
-          <div className="relative p-4 sm:p-6 md:p-8">
-            <div className="relative space-y-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0 space-y-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-sky-50 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-sky-800 shadow-sm dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-100">
-                    Withdrawal Receipt
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      Withdrawal amount
-                    </p>
-                    <h1 className="mt-2 break-words text-3xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-4xl dark:text-white">
-                      {formatCurrency(
-                        Number(requestedAmount),
-                        withdrawal.currency,
-                      )}
-                    </h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700 dark:text-slate-400">
-                      {sourceLabel}
-                    </p>
-                    {paymentMethodSnapshot.review.status === "UNAVAILABLE" &&
-                    !isWithdrawalTerminalStatus(withdrawal.status) ? (
-                      <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
-                          Payment method unavailable
-                        </p>
-                        <p className="mt-2 text-base font-medium text-balance text-amber-900 dark:text-amber-50">
-                          Alternate payout details are required before this
-                          withdrawal can be processed.
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-amber-800 dark:text-amber-100/80">
-                          {paymentMethodSnapshot.review.reason ??
-                            "Please update the payout method to continue."}
-                        </p>
-                        <div className="mt-4">
-                          <WithdrawalPaymentMethodUpdateDrawer
-                            withdrawalId={withdrawal.id}
-                            paymentMethodLabel={effectivePaymentMethodLabel}
-                            unavailableReason={
-                              paymentMethodSnapshot.review.reason
-                            }
-                          />
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
+          <div className="space-y-6 p-4 sm:p-6 md:p-8">
+            <div className="flex flex-col gap-5 border-b border-slate-200/70 pb-6 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-800 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200">
+                  <ReceiptText className="size-3.5" />
+                  Withdrawal receipt
                 </div>
 
-                <span
-                  className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] shadow-sm ${statusTone}`}
-                >
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80" />
-                  {formatEnumLabel(withdrawal.status)}
-                </span>
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Requested withdrawal amount
+                  </p>
+                  <h1 className="mt-2 break-words text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl md:text-5xl dark:text-white">
+                    {formatCurrency(
+                      Number(requestedAmount),
+                      withdrawal.currency,
+                    )}
+                  </h1>
+                  <p className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                    <Layers3 className="size-4 shrink-0" />
+                    {sourceLabel}
+                  </p>
+                </div>
               </div>
 
-              <div className="grid gap-4 xl:grid-cols-2">
-                <div
-                  className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "px-4 sm:px-5")}
+              <div className="flex flex-col items-start gap-2 sm:items-end">
+                <span
+                  className={cn(
+                    "inline-flex w-fit items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold",
+                    statusTone,
+                  )}
                 >
+                  <span className="size-1.5 rounded-full bg-current" />
+                  {formatEnumLabel(withdrawal.status)}
+                </span>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Requested {withdrawal.requestedAt.toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            {isPaymentMethodUnavailable ? (
+              <ActionNotice
+                tone="amber"
+                eyebrow="Action required"
+                title="Your payout method is unavailable"
+                description={
+                  paymentMethodSnapshot.review.reason ??
+                  "Alternate payout details are required before this withdrawal can be processed."
+                }
+                icon={<ShieldAlert className="size-5" />}
+              >
+                <WithdrawalPaymentMethodUpdateDrawer
+                  withdrawalId={withdrawal.id}
+                  paymentMethodLabel={effectivePaymentMethodLabel}
+                  unavailableReason={paymentMethodSnapshot.review.reason}
+                />
+              </ActionNotice>
+            ) : null}
+
+            <div className="grid gap-5 xl:grid-cols-2">
+              <InformationCard>
+                <SectionHeading
+                  eyebrow="Request information"
+                  title="Withdrawal details"
+                  description="The details submitted with this withdrawal request."
+                />
+
+                <div className="mt-3">
                   <ReceiptRow
                     label="Requested at"
                     value={withdrawal.requestedAt.toLocaleString()}
+                    icon={<CalendarDays className="size-4" />}
                   />
                   <ReceiptRow
                     label="Payment method"
@@ -367,14 +551,12 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                           ? "Updated payout details have been submitted."
                           : null
                     }
+                    icon={<CreditCard className="size-4" />}
                   />
                   <ReceiptRow
                     label="Withdrawal mode"
-                    value={
-                      normalizedWithdrawalMode === "EARLY_WITHDRAWAL"
-                        ? "Early withdrawal"
-                        : "Normal withdrawal"
-                    }
+                    value={withdrawalModeLabel}
+                    icon={<Wallet className="size-4" />}
                   />
                   <ReceiptRow
                     label="Status"
@@ -382,23 +564,31 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                     helperText={getWithdrawalReceiptStatusHelperText(
                       withdrawal.status,
                     )}
+                    icon={<Clock3 className="size-4" />}
                   />
                 </div>
+              </InformationCard>
 
-                <div
-                  className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "px-4 sm:px-5")}
-                >
+              <InformationCard>
+                <SectionHeading
+                  eyebrow="Financial summary"
+                  title="Charges and payout"
+                  description="A breakdown of the fees and amounts associated with this request."
+                />
+
+                <div className="mt-3">
                   <ReceiptRow
-                    label="Source"
+                    label="Withdrawal source"
                     value={sourceLabel}
                     helperText={
                       isAutoAllocation
                         ? "Automatically split across eligible balances."
                         : null
                     }
+                    icon={<Landmark className="size-4" />}
                   />
                   <ReceiptRow
-                    label="Calculated commission (Taxes and Platform fees)"
+                    label="Commission (Taxes and Platform fees)"
                     value={formatCurrency(
                       commissionDueAmount,
                       withdrawal.currency,
@@ -410,6 +600,7 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                           ? "Calculated from the mixed withdrawal allocation."
                           : "Calculated from the withdrawal commission settings."
                     }
+                    icon={<ReceiptText className="size-4" />}
                   />
                   {normalizedWithdrawalMode === "EARLY_WITHDRAWAL" ? (
                     <ReceiptRow
@@ -418,198 +609,222 @@ export default async function WithdrawalDetailsPage({ params }: Props) {
                         Number(normalizedEarlyWithdrawalPenalty ?? 0),
                         withdrawal.currency,
                       )}
+                      icon={<AlertCircle className="size-4" />}
                     />
                   ) : null}
                   {payoutSnapshot?.netPayoutAmount ? (
-                    <ReceiptRow
-                      label="Net payout"
-                      value={formatCurrency(
-                        Number(payoutSnapshot.netPayoutAmount),
-                        withdrawal.currency,
-                      )}
-                    />
-                  ) : null}
-                </div>
-              </div>
-
-              {canShowCommissionCallout ? (
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 space-y-1">
-                      <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
-                        Commission (Taxes and Platform fees) payment
+                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-400/20 dark:bg-emerald-500/[0.08]">
+                      <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300">
+                        Net payout
                       </p>
-                      <p className="break-words text-lg font-medium text-balance text-slate-900 dark:text-white">
-                        {isCommissionUnderReview
-                          ? "Your commission proof is under review."
-                          : `Pay commission`}
-                      </p>
-                      <p className="text-sm leading-6 text-slate-700 dark:text-amber-100/80">
-                        {isCommissionUnderReview
-                          ? "You can check back once the admin team confirms the payment."
-                          : "Submit commission payment to complete this withdrawal."}
+                      <p className="mt-1 break-words text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-100">
+                        {formatCurrency(
+                          Number(payoutSnapshot.netPayoutAmount),
+                          withdrawal.currency,
+                        )}
                       </p>
                     </div>
+                  ) : null}
+                </div>
+              </InformationCard>
+            </div>
 
-                    {isCommissionUnderReview ? (
+            {isAutoAllocation && allocations.length > 0 ? (
+              <InformationCard>
+                <SectionHeading
+                  eyebrow="Funding breakdown"
+                  title="Allocation details"
+                  description="How the requested amount was distributed across eligible withdrawal sources."
+                />
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {allocations.map((allocation, index) => (
+                    <div
+                      key={`${allocation.sourceType ?? "source"}-${allocation.sourceLabel ?? "allocation"}-${index}`}
+                      className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-white/[0.03]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="break-words text-sm font-semibold text-slate-950 dark:text-white">
+                            {allocation.sourceLabel ?? "Withdrawal source"}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            {formatEnumLabel(allocation.sourceType ?? "SOURCE")}
+                          </p>
+                        </div>
+                        <span className="rounded-lg bg-white p-2 text-slate-500 shadow-sm dark:bg-white/[0.06] dark:text-slate-300">
+                          <Wallet className="size-4" />
+                        </span>
+                      </div>
+
+                      <div className="mt-4 space-y-2 border-t border-slate-200/70 pt-3 dark:border-white/10">
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <span className="text-slate-600 dark:text-slate-400">
+                            Gross amount
+                          </span>
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            {formatCurrency(
+                              Number(allocation.sourceGrossAmount ?? 0),
+                              allocation.currency ?? withdrawal.currency,
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 text-xs">
+                          <span className="text-slate-600 dark:text-slate-400">
+                            Penalty
+                          </span>
+                          <span className="font-medium text-slate-900 dark:text-white">
+                            {formatCurrency(
+                              Number(allocation.sourcePenaltyAmount ?? 0),
+                              allocation.currency ?? withdrawal.currency,
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 border-t border-slate-200/70 pt-2 text-xs dark:border-white/10">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">
+                            Net amount
+                          </span>
+                          <span className="font-semibold text-slate-950 dark:text-white">
+                            {formatCurrency(
+                              Number(allocation.sourceNetAmount ?? 0),
+                              allocation.currency ?? withdrawal.currency,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </InformationCard>
+            ) : null}
+
+            {canShowCommissionCallout ? (
+              <ActionNotice
+                tone="amber"
+                eyebrow="Commission payment"
+                title={
+                  isCommissionUnderReview
+                    ? "Your commission proof is under review"
+                    : "Commission payment is required"
+                }
+                description={
+                  isCommissionUnderReview
+                    ? "You can check back once the admin team confirms the payment."
+                    : "Submit commission payment to complete this withdrawal."
+                }
+                icon={<ReceiptText className="size-5" />}
+              >
+                {isCommissionUnderReview ? (
+                  <Button
+                    type="button"
+                    disabled
+                    className="w-full rounded-full sm:w-auto"
+                  >
+                    Payment under review
+                  </Button>
+                ) : (
+                  <Button asChild className="w-full rounded-full sm:w-auto">
+                    <Link
+                      href={buildWithdrawalCommissionCheckoutUrl(withdrawal.id)}
+                    >
+                      Pay{" "}
+                      {formatCurrency(commissionDueAmount, withdrawal.currency)}
+                      <ArrowUpRight className="ml-2 size-4" />
+                    </Link>
+                  </Button>
+                )}
+              </ActionNotice>
+            ) : null}
+
+            {isPaymentMethodUpdated ? (
+              <ActionNotice
+                tone="sky"
+                eyebrow="Payout details updated"
+                title="Your alternate payout details have been submitted"
+                description="For Western Union and cash delivery, a 2% fee is applied. Contact support for more information."
+                icon={<CheckCircle2 className="size-5" />}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  {supportFeeAmount !== null && !isFeeSettled ? (
+                    isFeeUnderReview ? (
                       <Button
                         type="button"
                         disabled
-                        className="w-full rounded-full bg-amber-50 text-slate-950 hover:bg-white sm:w-auto"
+                        className="w-full rounded-full sm:w-auto"
                       >
                         Payment under review
                       </Button>
                     ) : (
-                      <Button
-                        asChild
-                        variant={"ghost"}
-                        className="w-full rounded-full border bg-amber-50 text-slate-950 hover:bg-white hover:text-slate-900 sm:w-auto"
-                      >
+                      <Button asChild className="w-full rounded-full sm:w-auto">
                         <Link
-                          href={buildWithdrawalCommissionCheckoutUrl(
-                            withdrawal.id,
-                          )}
+                          href={buildWithdrawalFeeCheckoutUrl(withdrawal.id, {
+                            suggestedAmount: supportFeeAmount,
+                          })}
                         >
-                          Pay{" "}
+                          Pay fee{" "}
                           {formatCurrency(
-                            commissionDueAmount,
+                            supportFeeAmount,
                             withdrawal.currency,
                           )}
+                          <ArrowUpRight className="ml-2 size-4" />
                         </Link>
                       </Button>
-                    )}
-                  </div>
-                </div>
-              ) : null}
+                    )
+                  ) : null}
 
-              {paymentMethodSnapshot.review.status === "UPDATED" ? (
-                <div className="rounded-2xl border border-sky-400/20 bg-sky-500/10 p-4 text-slate-950 shadow-sm sm:p-5 dark:text-sky-50">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-sky-700 dark:text-sky-200">
-                    Support note
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-800 dark:text-slate-100">
-                    For Western Union and cash delivery, a 2% fee is applied.
-                    Contact support for more information.
-                  </p>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    {supportFeeAmount !== null && !isFeeSettled ? (
-                      isFeeUnderReview ? (
-                        <Button
-                          type="button"
-                          disabled
-                          className="w-full rounded-full bg-sky-50 text-slate-950 hover:bg-white sm:w-auto"
-                        >
-                          Payment under review
-                        </Button>
-                      ) : (
-                        <Button
-                          asChild
-                          className="w-full rounded-full bg-sky-50 text-slate-950 hover:bg-white sm:w-auto"
-                        >
-                          <Link
-                            href={buildWithdrawalFeeCheckoutUrl(withdrawal.id, {
-                              suggestedAmount: supportFeeAmount,
-                            })}
-                          >
-                            Pay fee
-                            {formatCurrency(
-                              supportFeeAmount,
-                              withdrawal.currency,
-                            )}
-                          </Link>
-                        </Button>
-                      )
-                    ) : null}
-                    <WithdrawalPrivateSupportChatButton
-                      withdrawalId={withdrawal.id}
-                    />
-                  </div>
+                  <WithdrawalPrivateSupportChatButton
+                    withdrawalId={withdrawal.id}
+                  />
                 </div>
-              ) : null}
+              </ActionNotice>
+            ) : null}
 
-              {isAutoAllocation ? (
-                <div className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4 sm:p-5")}>
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                    Allocation breakdown
-                  </p>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {allocations.map((allocation) => (
-                      <div
-                        key={`${allocation.sourceType ?? "source"}-${allocation.sourceLabel ?? "allocation"}-${allocation.sourceGrossAmount ?? "0"}`}
-                        className={cn(DASHBOARD_PAGE_SURFACE_CLASS, "p-4")}
-                      >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="min-w-0">
-                            <p className="break-words text-sm text-slate-950 dark:text-white">
-                              {allocation.sourceLabel ?? "Withdrawal source"}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                              Gross:
-                              {formatCurrency(
-                                Number(allocation.sourceGrossAmount ?? 0),
-                                allocation.currency ?? withdrawal.currency,
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-xs text-slate-600 dark:text-slate-400 sm:text-right">
-                            <p>
-                              Penalty:
-                              {formatCurrency(
-                                Number(allocation.sourcePenaltyAmount ?? 0),
-                                allocation.currency ?? withdrawal.currency,
-                              )}
-                            </p>
-                            <p className="mt-1 text-slate-950 dark:text-white">
-                              Net:{" "}
-                              {formatCurrency(
-                                Number(allocation.sourceNetAmount ?? 0),
-                                allocation.currency ?? withdrawal.currency,
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+            {isTerminal ? (
+              <WithdrawalTerminalNotice
+                status={withdrawal.status}
+                reason={withdrawal.rejectionReason}
+              />
+            ) : commissionPayment?.reviewStatus === "PENDING_REVIEW" &&
+              !isWithdrawalCommissionSettledStatus(
+                withdrawal.commissionStatus,
+              ) ? (
+              <ActionNotice
+                tone="amber"
+                eyebrow="Commission under review"
+                title="Your commission proof is awaiting admin review"
+                description="You can check back once the admin team confirms the payment."
+                icon={<Clock3 className="size-5" />}
+              />
+            ) : null}
 
-              {isWithdrawalTerminalStatus(withdrawal.status) ? (
-                <WithdrawalTerminalNotice
-                  status={withdrawal.status}
-                  reason={withdrawal.rejectionReason}
-                />
-              ) : commissionPayment?.reviewStatus === "PENDING_REVIEW" &&
-                !isWithdrawalCommissionSettledStatus(
-                  withdrawal.commissionStatus,
-                ) ? (
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4 text-amber-950 shadow-sm sm:p-5 dark:text-amber-50">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-amber-700 dark:text-amber-200">
-                    Commission under review
-                  </p>
-                  <p className="mt-2 text-lg font-medium text-balance text-slate-900 dark:text-white">
-                    Your withdrawal commission proof is awaiting admin review.
-                  </p>
-                  <p className="mt-1 text-sm text-amber-800 dark:text-amber-100/80">
-                    You can check back once the admin team confirms the payment.
-                  </p>
-                </div>
-              ) : null}
+            {isPaymentMethodUpdated ? (
+              <ActionNotice
+                tone="emerald"
+                eyebrow="Payment method updated"
+                title="Updated payout details have been submitted"
+                description={`The current payout method is now ${effectivePaymentMethodLabel}.`}
+                icon={<CheckCircle2 className="size-5" />}
+              />
+            ) : null}
 
-              {paymentMethodSnapshot.review.status === "UPDATED" ? (
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-emerald-950 shadow-sm sm:p-5 dark:text-emerald-50">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-200">
-                    Payment method updated
-                  </p>
-                  <p className="mt-2 text-lg font-medium text-balance text-slate-900 dark:text-white">
-                    Updated payout details have been submitted.
-                  </p>
-                  <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-100/80">
-                    The current payout method is now
-                    {effectivePaymentMethodLabel}.
-                  </p>
-                </div>
-              ) : null}
+            <div className="flex flex-col gap-3 border-t border-slate-200/70 pt-5 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                <FileText className="mt-0.5 size-4 shrink-0" />
+                <p>
+                  Keep this receipt for your records. You can return to your
+                  withdrawal history to review other requests.
+                </p>
+              </div>
+              <Button
+                asChild
+                variant="default"
+                className="w-full rounded-full sm:w-auto"
+              >
+                <Link href="/account/dashboard/user/withdrawals">
+                  View withdrawals
+                  <ArrowUpRight className="ml-2 size-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
